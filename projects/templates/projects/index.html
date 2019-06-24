@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  <ul>
+    {% for project in project_list %}
+      <li>{{ project.title }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

@@ -1,0 +1,56 @@
+<!-- This is a generated file -->
+<style>
+  textarea {
+    resize: none;
+  }
+
+  .article .message-body {
+    height: 520px;
+    overflow-y: scroll;
+    text-align: justify;
+  }
+
+  .markers {
+    height: 100px;
+  }
+
+  .marker.tag:hover {
+    cursor: pointer;
+  }
+</style>
+
+<div class="columns">
+  <div class="column is-three-quarters">
+    <article class="article message is-dark">
+      <div class="message-header">
+        <p>Article</p>
+      </div>
+      <div class="selector message-body">{{text|linebreaksbr}}</div>
+    </article>
+    <article class="markers message is-dark">
+      <div class="message-header">
+        <p>Markers</p>
+      </div>
+      <div class="message-body">
+        {% for marker in task_markers %}
+          <span class="marker tag is-{{marker.color}}">{{marker.label_name}}</span>
+        {% endfor %}
+        {% for marker in project.marker_set.all %}
+          <span class="marker tag is-{{marker.color}}">{{marker.label_name}}</span>
+        {% endfor %}
+      </div>
+    </article>
+
+    <button id='pointSubmit' class='button'>Submit</button>
+  </div>
+  <div class="column">
+    <article class="article message is-info">
+      <div class="message-header">
+        <p>Achievements</p>
+      </div>
+      <div class="selector message-body">
+        You scored 23 points!
+      </div>
+    </article>
+  </div>
+</div>

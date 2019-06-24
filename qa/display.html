@@ -1,0 +1,102 @@
+<!-- This is a generated file -->
+<style>
+  textarea {
+    resize: none;
+  }
+
+  .article .message-body {
+    height: 520px;
+    overflow-y: scroll;
+    text-align: justify;
+  }
+
+  .markers {
+    height: 100px;
+  }
+
+  .marker.tag:hover {
+    cursor: pointer;
+  }
+
+  .tt-level {
+    text-align: center;
+  }
+
+  .tt-level .tt-header {
+    font-weight: bold;
+    font-size: 3em;
+  }
+
+  .tt-level .tt-title {
+    font-size: 2em;
+  }
+</style>
+
+<div class="columns">
+  <div class="column is-three-quarters">
+    <article class="article message is-dark">
+      <div class="message-header">
+        <p>Article</p>
+      </div>
+      <div class="selector message-body">{{text|linebreaksbr}}</div>
+    </article>
+    <article class="markers message is-dark">
+      <div class="message-header">
+        <p>Markers</p>
+      </div>
+      <div class="message-body">
+        {% for marker in task_markers %}
+          <span class="marker tag is-{{marker.color}}">{{marker.label_name}}</span>
+        {% endfor %}
+        {% for marker in project.marker_set.all %}
+          <span class="marker tag is-{{marker.color}}">{{marker.label_name}}</span>
+        {% endfor %}
+      </div>
+    </article>
+    <article class="question message is-primary">
+      <div class="message-header">
+        <p>Your question</p>
+      </div>
+      <div class="message-body">
+        <form id="inputForm" action="{% url 'record_datapoint' %}">
+          {% csrf_token %}
+          <input type="hidden" name="pid" value="{{project.pk}}">
+          <div class="field">
+            <div class="control">
+              <input class='question input' type="text" name="question" placeholder="Type in your question here">
+            </div>
+          </div>
+          <div class="field">
+            <div class="control">
+              <button class='submit button'>Submit</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </article>
+  </div>
+  <div class="column">
+    <article class="article message is-info">
+      <div class="message-header">
+        <p>Achievements</p>
+      </div>
+      <div class="selector message-body">
+        <div class="tt-level">
+          <div class="tt-header">Level 1</div>
+          <div class="tt-image"></div>
+          <div class="tt-title">Brilliant mind</div>
+        </div>
+        Next goal
+        <div class="tt-set-size tt-charts-container">
+          <div class="tt-pie-wrapper progress-30">
+            <span class="tt-label">300<span class="smaller">p</span></span>
+            <div class="tt-pie">
+              <div class="left-side half-circle"></div>
+              <div class="right-side half-circle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</div>

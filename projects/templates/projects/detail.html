@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="columns no-margin">
+  <div class="column hero is-one-quarter is-fullheight">
+    <div class="card">
+      <header class="card-header">
+        <p class="card-header-title">
+          {{project.title}}
+        </p>
+      </header>
+      <div class="card-content">
+        <div class="content">
+          <p class='has-text-weight-bold'>Guidelines</p>
+          <p>{{project.guideline|truncatechars:1000}}</p>
+        </div>
+        <div class='content'>
+          <p class='has-text-weight-bold'>Contact information</p>
+          <table class='table'>
+            <tbody>
+              <tr>
+                <td>Responsible</td>
+                <td>{{project.author.first_name}} {{project.author.last_name}}</td>
+              </tr>
+              <tr>
+                <td>Contact email</td>
+                <td>{{project.author.email}}</td>
+              </tr>
+              <tr>
+                <td>Published at</td>
+                <td>{{project.dt_publish|date:'Y-m-d H:i'}}</td>
+              </tr>
+              <tr>
+                <td>To be finished at</td>
+                <td>
+                  {{project.dt_finish|date:'Y-m-d H:i'}}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="column">
+    {{task_type_template}}
+  </div>
+</div>
+{% endblock %}
