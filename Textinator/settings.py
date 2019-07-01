@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'sass_processor',
+    # 'prettyjson',
+    'django_admin_json_editor',
     'projects',
 ]
 
@@ -56,6 +58,20 @@ ROOT_URLCONF = 'Textinator.urls'
 
 TEMPLATES = [
     {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': [os.path.join(BASE_DIR, 'jinja2')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'environment': 'Textinator.jinja2.environment',
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ]
+        },
+    },
+    {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
@@ -66,8 +82,11 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'common_extras': 'Textinator.templatetags.common_extras',
+            },
         },
-    },
+    }
 ]
 
 WSGI_APPLICATION = 'Textinator.wsgi.application'

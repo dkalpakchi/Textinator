@@ -1,0 +1,31 @@
+<table class="table is-fullwidth">
+  <thead>
+    <tr>
+      <th><abbr title="Rank">Rank</abbr></th>
+      <th><abbr title="Username">User</abbr></th>
+      <th><abbr title="Points">P</abbr></th>
+      <th><abbr title="Level">Lvl</abbr></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% with upl=user_profiles|length %}
+      {% for up in user_profiles %}
+        {% if loop.index <= 3 or up.user == user or loop.last %}
+          <tr class="{% if up.user == user %}is-selected{% endif %}">
+            <th>{{loop.index}}</th>
+            <td>{{up.user.username}}</td>
+            <td>{{up.points}}</td>
+            <td>{{up.level.number or up.level().number}}</td>
+          </tr>
+        {% endif %}
+        {% if upl > 5 %}
+          {% if loop.index == 3 or up.user == user %}
+            <tr>
+              <td class='has-text-centered' colspan="4">&#8942;</td>
+            </tr>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endwith %}
+  </tbody>
+</table>

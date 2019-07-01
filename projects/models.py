@@ -1,9 +1,14 @@
+import random
+
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
+from django.core.cache import caches
 
 from .datasources import *
 from .helpers import hash_text, truncate
+
+from dewiki.parser import Parser
 
 
 # Create your models here.
@@ -29,6 +34,9 @@ class Project(models.Model):
 
     title = models.CharField(max_length=50)
     guideline = models.TextField(null=True)
+    # TODO: implement a context of a sentence
+    # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
+    context_size = models.CharField(max_length=2, choices=[('no', 'No context'), ('t', 'Text'), ('p', 'Paragraph')])
     task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES)
     dt_publish = models.DateTimeField()
     dt_finish = models.DateTimeField()
@@ -40,15 +48,25 @@ class Project(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__data = []
 
     def data(self):
-        if not self.__data:
-            for source in self.datasources.all():
-                source_cls = DataSource.type2class(source.source_type)
-                if source_cls:
-                    self.__data.append(source_cls(source.spec))
-        return self.__data
+        datasources = []
+        for source in self.datasources.all():
+            source_cls = DataSource.type2class(source.source_type)
+            if source_cls:
+                ds_instance = source_cls(source.spec.replace('\r\n', ' ').replace('\n', ' '))
+                datasources.append(ds_instance)
+
+        # take a random data point from data
+        nds = len(datasources)
+        ds = datasources[random.randint(0, nds - 1)]
+        return ds.get_random_datapoint()
+
+    def get_profile_for(self, user):
+        try:
+            return UserProfile.objects.get(project=self, user=user)
+        except UserProfile.DoesNotExist:
+            return None
 
     def save(self, *args, **kwargs):
         
@@ -87,7 +105,6 @@ class Context(models.Model):
         return hash_text(self.content)
 
     def save(self, *args, **kwargs):
-        self.content_hash = hash_text(self.content)
         super(Context, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -96,7 +113,7 @@ class Context(models.Model):
 
 class Input(models.Model):
     content = models.TextField()
-    context = models.ForeignKey(Context, on_delete=models.CASCADE)
+    context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     impossible = models.BooleanField(default=False)
 
@@ -114,6 +131,11 @@ class Label(models.Model):
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     input = models.ForeignKey(Input, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+    @property
+    def text(self):
+        return self.input.context.content[self.start:self.end]
+
 
 
 class UserProfile(models.Model):

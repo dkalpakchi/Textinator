@@ -1,5 +1,8 @@
 from django.contrib import admin
+from django import forms
 from django.contrib.auth.models import User, Permission
+from django_admin_json_editor import JSONEditorWidget
+
 from .models import *
 
 
@@ -62,9 +65,37 @@ class InputAdmin(admin.ModelAdmin):
 
 @admin.register(Label)
 class LabelAdmin(admin.ModelAdmin):
-    pass
+    readonly_fields = ('text',)
 
 
-admin.site.register(DataSource)
+class DataSourceForm(forms.ModelForm):
+    class Meta:
+        model = DataSource
+        fields = '__all__'
+        # TODO: fork django-admin-json-editor and make SQL syntax highlighting with AceEditor
+        DATA_SCHEMA = {
+            'type': 'object',
+            'title': 'DataSource',
+            'properties': {
+                'rand_dp_query': {
+                    'format': 'textarea',
+                    'propertyOrder': 1001
+                }
+            },
+        }
+        widgets = {
+            'spec': JSONEditorWidget(DATA_SCHEMA, collapsed=False),
+        }
+
+
+@admin.register(DataSource)
+class DataSourceAdmin(admin.ModelAdmin):
+    form = DataSourceForm
+
+
 admin.site.register(Marker)
 admin.site.register(Level)
+
+admin.site.site_header = 'Textinator admin'
+admin.site.site_title = 'Textinator admin'
+

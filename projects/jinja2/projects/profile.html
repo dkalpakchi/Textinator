@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  <div class="profile hero">
+    <div class="container is-centered is-flex is-vcentered">
+      <div class="image is-64x64 media-left">
+        <img class="is-rounded" width="64" height="64" avatar="{{user.username}}">    
+      </div>
+      <div class="profile title">
+        {{user.username}}
+      </div>
+    </div>
+  </div>
+  <nav class="level">
+    <div class="level-item has-text-centered">
+      <div>
+        <p class="heading">Challenges</p>
+        <p class="title">{{total_participated}}</p>
+      </div>
+    </div>
+    <div class="level-item has-text-centered">
+      <div>
+        <p class="heading">Points</p>
+        <p class="title">{{total_points}}</p>
+      </div>
+    </div>
+    <div class="level-item has-text-centered">
+      <div>
+        <p class="heading">Games won</p>
+        <p class="title">0</p>
+      </div>
+    </div>
+    <div class="level-item has-text-centered">
+      <div>
+        <p class="heading">XP</p>
+        <p class="title">0</p>
+      </div>
+    </div>
+  </nav>
+{% endblock %}

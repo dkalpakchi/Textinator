@@ -1,4 +1,8 @@
+import re
+import json
 import hashlib
+import requests
+from django.template.defaultfilters import linebreaksbr
 
 
 def hash_text(text):
@@ -13,7 +17,6 @@ def hash_text(text):
 def retrieve_by_hash(key, model_cls, cache):
     key_hash = hash_text(key)
     obj_id = cache.get(key_hash)
-    print(obj_id)
     try:
         if obj_id:
             obj = model_cls.objects.get(pk=obj_id)
@@ -49,3 +52,13 @@ def truncate(value, limit=80):
     
     # Join the words and return
     return ' '.join(words) + '...'
+
+
+def get_new_article(project):
+    ds = project.data()
+    
+    # parse Wikimedia markup
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    r = requests.post('http://localhost:3000', data=json.dumps({'wikitext': ds}), headers=headers)
+    wiki_text = re.sub('(""|\'\'|\*(?=\n+))', '', re.sub('\n{3,}', '\n', r.text))
+    return linebreaksbr(wiki_text)

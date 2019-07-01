@@ -1,0 +1,62 @@
+<div class="tabs">
+  <ul>
+    <li class='logo'>
+      Textinator
+    </li>
+    {% if request.path == url('projects:index') %}
+    <li {% if request.GET.n == 'p' or 'n' not in request.GET %}class='is-active'{% endif %} data-tab="participations">
+      <a>
+    {% else %}
+    <li>
+      <a href="{{ url('projects:index') }}?n=p">
+    {% endif %}
+        <span class="icon is-small"><i class="fas fa-medal" aria-hidden="true"></i></span>
+        <span>Challenges</span>
+      </a>
+    </li>
+    {% if user_projects %}
+      {% if request.path == url('projects:index') %}
+      <li {% if request.GET.n == 'mp' %}class='is-active'{% endif %} data-tab="my-projects">
+        <a>
+      {% else %}
+      <li>
+        <a href="{{ url('projects:index') }}?n=mp">
+      {% endif %}
+          <span class="icon is-small"><i class="fas fa-project-diagram" aria-hidden="true"></i></span>
+          <span>My projects</span>
+        </a>
+      </li>
+    {% endif %}
+    {% if shared_projects %}
+      {% if request.path == url('projects:index') %}
+      <li {% if request.GET.n == 'sp' %}class='is-active'{% endif %} data-tab="shared-projects">
+        <a>
+      {% else %}
+      <li>
+        <a href="{{ url('projects:index') }}?n=sp">
+      {% endif %}
+          <span class="icon is-small"><i class="fas fa-users" aria-hidden="true"></i></span>
+          <span>Shared projects</span>
+        </a>
+      </li>
+    {% endif %}
+    <li>
+      <a href="{{ url('projects:profile', kwargs={'username': user.username}) }}">
+        <span class="icon is-small"><i class="fas fa-id-badge" aria-hidden="true"></i></span>
+        <span>Profile</span>
+      </a>
+    </li>
+    <li class='is-pulled-right'>
+      {% if user.is_staff %}
+        <a href="{{ url('admin:index') }}">
+          <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
+          <span>Admin</span>
+        </a>
+      {% endif %}
+      <a href="{{ url('logout') }}?next=/">
+        <span class="icon is-small"><i class="fas fa-sign-out-alt"></i></span>
+        Logout
+      </a>
+    </li>
+  </ul>
+</div>

@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  <div id="tab-content" class='container is-fluid'>
+    <div data-content="my-projects" {% if request.GET.n == 'mp' %}class='is-active'{% endif %}>
+      {% if user_projects %}
+        <div class="my-projects tile is-ancestor is-parent">
+          {% for project in user_projects %}
+            <div data-link="{{ url('projects:detail', kwargs={'pk': project.id}) }}" class="project is-child notification has-even-padding is-info tile box is-3">
+              <div class="content">
+                <p class="title">{{project.title}}</p>
+                <div class="content has-text-justified">{{project.guideline|truncate}}</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <div data-content="shared-projects" {% if request.GET.n == 'sp' %}class='is-active'{% endif %}>
+      {% if shared_projects %}
+        <div class="shared-projects">
+          {% for project in shared_projects %}
+            <li>{{ project.title }}</li>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <div data-content="participations" {% if request.GET.n == 'p' or 'n' not in request.GET %}class='is-active'{% endif %}>
+      {% if participations %}
+        <div class="participations tile is-ancestor is-parent">
+          {% for project in participations %}
+            <div data-link="{{ url('projects:detail', kwargs={'pk': project.id}) }}" class="is-child notification has-even-padding is-link tile is-3">
+              <div class="content">
+                <p class="title">{{project.title}}</p>
+                <div class="content has-text-justified">{{project.guideline|truncate}}</div>
+              </div>
+              <footer class="tile-footer">
+                {% set user_profile=project.get_profile_for(user) %}
+                <div class="tile-footer-item">
+                  <span class="icon">
+                    <i class="fas fa-star"></i>
+                  </span>
+                  Level {{user_profile.level().number}}
+                </div>
+                <div class="tile-footer-item">
+                  <span class="icon">
+                    <i class="fas fa-trophy"></i>
+                  </span>
+                  {{user_profile.points}}p
+                </div>
+              </footer>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

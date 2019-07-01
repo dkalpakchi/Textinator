@@ -1,0 +1,103 @@
+@font-face {
+  font-family: 'Terminator Real NFI';
+  font-style: normal;
+  font-weight: normal;
+  src: local('Terminator Real NFI'), url('/static/styles/webfonts/terminator_real_nfi.woff') format('woff');
+}
+.no-margin {
+  margin: 0 !important;
+}
+
+.participations .tile.is-child:hover,
+.my-projects .tile.is-child:hover,
+.shared-projects .tile.is-child:hover {
+  cursor: pointer;
+}
+
+.project.card {
+  max-width: 400px;
+}
+
+#tab-content div[data-content] {
+  display: none;
+}
+
+pre {
+  margin: 20px 0;
+  padding: 20px;
+  background: #fafafa;
+}
+
+#tab-content div[data-content].is-active {
+  display: block;
+}
+
+.tile-footer {
+  background-color: transparent;
+  border-top: 1px solid #dbdbdb;
+  align-items: stretch;
+  display: flex;
+}
+
+.tile-footer-item {
+  align-items: center;
+  display: flex;
+  flex-basis: 0;
+  flex-grow: 1;
+  flex-shrink: 0;
+  justify-content: center;
+  padding: .75rem;
+}
+
+.notification.has-even-padding {
+  padding: 1.25rem 1.5rem 1.25rem 1.5rem;
+}
+
+.tabs li.is-pulled-right {
+  margin-left: auto;
+}
+
+.tabs li.is-pulled-right a {
+  display: inline-block;
+}
+
+.logo {
+  font-family: 'Terminator Real NFI';
+  font-size: 2.5em;
+}
+
+.small.logo {
+  font-size: 1.5em;
+}
+
+.tabs .logo {
+  font-size: 1em;
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.is-flex.is-vcentered {
+  align-items: center;
+}
+
+.profile.title {
+  margin-bottom: 5px;
+}
+
+.profile.hero {
+  margin-top: 5px;
+  margin-bottom: 30px;
+}
+
+.textinator.columns > .column {
+  padding-top: 0px;
+}
+
+.guidelines.card {
+  height: 100%;
+}
+
+.guidelines.card .card-content .content:first-child {
+  max-height: 510px;
+  overflow-y: auto;
+}

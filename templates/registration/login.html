@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="section hero is-large">
+  <div class="container box is-vcentered is-centered">
+    <div class="logo has-text-centered">Textinator</div>
+    <div class="container">
+      {% if form.errors %}
+        <p>Your username and password didn't match. Please try again.</p>
+      {% endif %}
+
+      {% if next %}
+        {% if user.is_authenticated %}
+          <p>Your account doesn't have access to this page. To proceed, please login with an account that has access.</p>
+        {% else %}
+          <p>Please login to see this page.</p>
+        {% endif %}
+      {% endif %}
+
+      <form method="post" action="{% url 'login' %}" class='form'>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'projects:index' %}">
+        <div class="field">
+          <label for="username" class="label">{{ form.username.label_tag }}</label>
+          <div class="control">
+            <input class="input" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" type="text" required /> 
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password" class="label">{{ form.password.label_tag }}</label>
+          <div class="control">
+            <input class="input" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" type="password" required /> 
+          </div>
+        </div>
+
+        <div class="field is-grouped">
+          <div class="control">
+            <input class='button is-link' type="submit" value="Login">
+          </div>
+          <div class="control">
+            {# Assumes you setup the password_reset view in your URLconf #}
+            <a href="{% url 'password_reset' %}" class='button is-text'>Forgot password?</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

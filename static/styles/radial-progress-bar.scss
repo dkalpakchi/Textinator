@@ -6,6 +6,8 @@ $default-size: 1em;
 $label-font-size: $default-size / 4;
 $label-font-size-redo: $default-size * 4;
 
+$colors: #3498DB, #3398D9, #3398D8, #3399D6, #3299D5, #3299D3, #329AD2, #329AD1, #319ACF, #319BCE, #319BCC, #319BCB, #309CCA, #309CC8, #309CC7, #309DC5, #2F9DC4, #2F9DC3, #2F9EC1, #2F9EC0, #2E9EBE, #2E9FBD, #2E9FBC, #2D9FBA, #2DA0B9, #2DA0B7, #2DA0B6, #2CA1B5, #2CA1B3, #2CA1B2, #2CA2B0, #2BA2AF, #2BA2AE, #2BA3AC, #2BA3AB, #2AA4A9, #2AA4A8, #2AA4A7, #2AA5A5, #29A5A4, #29A5A2, #29A6A1, #28A6A0, #28A69E, #28A79D, #28A79B, #27A79A, #27A899, #27A897, #27A896, #26A994, #26A993, #26A991, #26AA90, #25AA8F, #25AA8D, #25AB8C, #25AB8A, #24AB89, #24AC88, #24AC86, #23AC85, #23AD83, #23AD82, #23AD81, #22AE7F, #22AE7E, #22AF7C, #22AF7B, #21AF7A, #21B078, #21B077, #21B075, #20B174, #20B173, #20B171, #20B270, #1FB26E, #1FB26D, #1FB36C, #1EB36A, #1EB369, #1EB467, #1EB466, #1DB465, #1DB563, #1DB562, #1DB560, #1CB65F, #1CB65E, #1CB65C, #1CB75B, #1BB759, #1BB758, #1BB857, #1BB855, #1AB854, #1AB952, #1AB951, #1ABA50;
+
 // -- mixins
 @mixin size($width, $height) {
   height: $height;
@@ -140,28 +142,10 @@ $label-font-size-redo: $default-size * 4;
     }
   }
 
-  &.progress-30 {
-    @include draw-progress(30, #3498db);
-  }
-
-  &.progress-60 {
-    @include draw-progress(60, #9b59b6);
-  }
-
-  &.progress-90 {
-    @include draw-progress(90, #e67e22);
-  }
-
-  &.progress-45 {
-    @include draw-progress(45, #1abc9c);
-  }
-
-  &.progress-75 {
-    @include draw-progress(75, #8e44ad);
-  }
-
-  &.progress-95 {
-    @include draw-progress(95, #e74c3c);
+  @for $i from 1 to 100 {
+    &.progress-#{$i} {
+      @include draw-progress($i, nth($colors, $i));
+    }
   }
 }
 

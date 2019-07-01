@@ -1,4 +1,6 @@
 import json
+import random
+import mysql.connector
 
 
 class AbsentSpecError(Exception):
@@ -30,6 +32,9 @@ class DataSource:
     def data(self):
         return self.__data
 
+    def get_random_datapoint(self):
+        pass
+
     def __getitem__(self, key):
         return self.__data[key]
 
@@ -51,7 +56,58 @@ class ElasticSource(DataSource):
 
 
 class DbSource(DataSource):
-    pass
+    def __init__(self, spec_data):
+        super().__init__(spec_data)
+        self._required_keys = ['db_type', 'user', 'database', 'password', 'rand_dp_query']
+        self.check_constraints()
+
+        self.__db_type = self.get_spec('db_type')
+        self.__user = self.get_spec('user')
+        self.__database = self.get_spec('database')
+        self.__rand_dp_query = self.get_spec('rand_dp_query')
+        # TODO: make safer
+        self.__password = self.get_spec('password')
+        self.__conn = self.__connect()
+        self.__ids = None
+        self.__N = None
+
+    def __connect(self):
+        try:
+            return {
+                'mysql': self.__connect_mysql
+            }[self.__db_type]()
+        except AttributeError:
+            raise NotImplementedError('{} is not supported'.format(self.__db_type)) from None
+
+    def __connect_mysql(self):
+        return mysql.connector.connect(user=self.__user, database=self.__database, password=self.__password)
+
+    #
+    # SELECT CONCAT(REPLACE(page_title, '_', ' '), '\n\n', old_text) 
+    # FROM (
+    #   SELECT page_title, page_latest, page_id
+    #   FROM page WHERE page_is_redirect = 0 AND page_len > 3000
+    # ) pg INNER JOIN text ON page_latest = old_id WHERE page_id >= ROUND(RAND() * (SELECT MAX(page_id) FROM page)) LIMIT 1;
+    #
+    def get_random_datapoint(self):
+        # self.cache_datapoint_ids()
+        if self.__rand_dp_query:
+            cur = self.__conn.cursor()
+            cur.execute(self.__rand_dp_query)
+            text = next(cur)[0]
+            cur.close()
+            return text
+        else:
+            raise NotImplementedError('Please set `rand_dp_query` in your settings')
+
+
+    def get_datapoints(self, query):
+        texts = []
+        with self.__conn.cursor() as cur:
+            cur.execute(query)
+            for text in cur:
+                texts.append(text)
+        return texts
 
 
 class JsonSource(DataSource):

@@ -1,13 +1,24 @@
-<!-- This is a generated file -->
+{% load common_extras %}
+
 <style>
   textarea {
     resize: none;
   }
 
   .article .message-body {
-    height: 520px;
+    height: 475px;
     overflow-y: scroll;
     text-align: justify;
+  }
+
+  .achievements {
+    height: 100%;
+  }
+
+  .achievements .message-body {
+    height: 100%;
+    max-height: 830px;
+    overflow-y: scroll;
   }
 
   .markers {
@@ -38,7 +49,7 @@
       <div class="message-header">
         <p>Article</p>
       </div>
-      <div class="selector message-body">{{text|linebreaksbr}}</div>
+      <div class="selector element message-body">{{text|safe}}</div>
     </article>
     <article class="markers message is-dark">
       <div class="message-header">
@@ -58,7 +69,7 @@
         <p>Your question</p>
       </div>
       <div class="message-body">
-        <form id="inputForm" action="{% url 'record_datapoint' %}">
+        <form id="inputForm" action="{% url 'projects:record_datapoint' %}">
           {% csrf_token %}
           <input type="hidden" name="pid" value="{{project.pk}}">
           <div class="field">
@@ -66,9 +77,12 @@
               <input class='question input' type="text" name="question" placeholder="Type in your question here">
             </div>
           </div>
-          <div class="field">
+          <div class="field is-grouped">
             <div class="control">
               <button class='submit button'>Submit</button>
+            </div>
+            <div class='control'>
+              <a href="{% url 'projects:new_article' proj=project.pk %}" class="button" id="getNewArticle">Get new article</a>
             </div>
           </div>
         </form>
@@ -76,26 +90,29 @@
     </article>
   </div>
   <div class="column">
-    <article class="article message is-info">
+    <article class="achievements message is-info">
       <div class="message-header">
         <p>Achievements</p>
       </div>
-      <div class="selector message-body">
-        <div class="tt-level">
-          <div class="tt-header">Level 1</div>
-          <div class="tt-image"></div>
-          <div class="tt-title">Brilliant mind</div>
+      <div class="message-body">
+        <div id="leaderboard" class="content">
+          {{leaderboard_template|safe}}          
         </div>
-        Next goal
-        <div class="tt-set-size tt-charts-container">
-          <div class="tt-pie-wrapper progress-30">
-            <span class="tt-label">300<span class="smaller">p</span></span>
-            <div class="tt-pie">
-              <div class="left-side half-circle"></div>
-              <div class="right-side half-circle"></div>
+
+        {% if next_level_points %}
+          <div class="content">
+            <div class="has-text-centered no-margin title is-4">Until next level</div>
+            <div class="tt-set-size tt-charts-container">
+              <div class="tt-pie-wrapper progress-{{progress}}">
+                <span class="tt-label">{{next_level_points|subtract:level.points}}<span class="smaller">p</span></span>
+                <div class="tt-pie">
+                  <div class="left-side half-circle"></div>
+                  <div class="right-side half-circle"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        {% endif %}
       </div>
     </article>
   </div>
