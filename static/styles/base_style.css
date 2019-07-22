@@ -2,7 +2,7 @@
   font-family: 'Terminator Real NFI';
   font-style: normal;
   font-weight: normal;
-  src: local('Terminator Real NFI'), url('/static/styles/webfonts/terminator_real_nfi.woff') format('woff');
+  src: local('Terminator Real NFI'), url('/textinator/static/styles/webfonts/terminator_real_nfi.woff') format('woff');
 }
 .no-margin {
   margin: 0 !important;

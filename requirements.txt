@@ -1,7 +1,8 @@
-requests==2.18.4
-dewiki==0.1.0
-Django==2.2.2
-django_admin_json_editor==0.2.0
 Markdown==3.0.1
-mysql_connector_repackaged==0.3.1
+django_admin_json_editor==0.2.0
+dewiki==0.1.0
+PyMySQL==0.9.3
+Django==2.2.2
+requests==2.9.1
 PyYAML==5.1.1
+python-memcached==1.59

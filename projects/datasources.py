@@ -1,6 +1,6 @@
 import json
 import random
-import mysql.connector
+import pymysql
 
 
 class AbsentSpecError(Exception):
@@ -80,7 +80,7 @@ class DbSource(DataSource):
             raise NotImplementedError('{} is not supported'.format(self.__db_type)) from None
 
     def __connect_mysql(self):
-        return mysql.connector.connect(user=self.__user, database=self.__database, password=self.__password)
+        return pymysql.connect(user=self.__user, database=self.__database, password=self.__password)
 
     #
     # SELECT CONCAT(REPLACE(page_title, '_', ' '), '\n\n', old_text) 
@@ -94,9 +94,9 @@ class DbSource(DataSource):
         if self.__rand_dp_query:
             cur = self.__conn.cursor()
             cur.execute(self.__rand_dp_query)
-            text = next(cur)[0]
+            text = cur.fetchone()[0]
             cur.close()
-            return text
+            return text.decode('utf8')
         else:
             raise NotImplementedError('Please set `rand_dp_query` in your settings')
 

@@ -26,7 +26,10 @@ SECRET_KEY = '^d2t^k2=%u2sh)wdrtiqtabthn&^*_%4!9*zsegm19j&2e3rz-'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    'traktor.csc.kth.se'
+]
 
 
 # Application definition
@@ -121,6 +124,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# TODO: make it more elegant
+LOGOUT_REDIRECT_URL = '/textinator/accounts/login'
+
 
 # Caches
 CACHES = {
@@ -160,7 +166,7 @@ USE_TZ = True
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
-STATIC_URL = '/static/'
+STATIC_URL = '/textinator/static/'
 
 # Django Sass
 SASS_PROCESSOR_ROOT = os.path.join(BASE_DIR, 'static')
