@@ -45,6 +45,7 @@ class Project(models.Model):
     participants = models.ManyToManyField(User, related_name='participations', through='UserProfile', blank=True)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     datasources = models.ManyToManyField(DataSource)
+    is_open = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

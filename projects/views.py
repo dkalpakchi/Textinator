@@ -27,6 +27,7 @@ class IndexView(LoginRequiredMixin, generic.ListView):
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
         data['profiles'] = UserProfile.objects.filter(user=self.request.user).all()
+        data['open_projects'] = Project.objects.filter(is_open=True).all()
         return data
 
 
@@ -165,6 +166,18 @@ def record_datapoint(request):
             'user_profiles': UserProfile.objects.filter(project=project).order_by('-points').all(),
             'user': user
         })
+    })
+
+
+@login_required
+@require_http_methods("POST")
+def join_project(request, proj):
+    project = get_object_or_404(Project, pk=proj)
+    current_user = request.user
+    project.participants.add(current_user)
+    project.save()
+    return JsonResponse({
+        "joined": True
     })
 
 

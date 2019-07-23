@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'sass_processor',
     # 'prettyjson',
     'django_admin_json_editor',
+    'django_registration',
     'projects',
 ]
 

@@ -26,6 +26,20 @@ gulp.task('fontawesome', gulp.series(['fontawesome:css', 'fontawesome:webfonts']
   done();
 }));
 
-gulp.task('default', gulp.series(['bulma', 'jquery', 'fontawesome'], function(done) {
+gulp.task('shepherd:css', function() {
+  return gulp.src(FOLDER + '/shepherd.js/dist/css/*')
+    .pipe(gulp.dest('static/styles'))
+})
+
+gulp.task('shepherd:js', function() {
+  return gulp.src(FOLDER + '/shepherd.js/dist/js/shepherd.min.js')
+    .pipe(gulp.dest('static/scripts'))
+})
+
+gulp.task("shepherd", gulp.series(['shepherd:css', 'shepherd:js'], function(done) {
+  done();
+}))
+
+gulp.task('default', gulp.series(['bulma', 'jquery', 'fontawesome', 'shepherd'], function(done) {
   done();
 }));

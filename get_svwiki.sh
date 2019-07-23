@@ -1,0 +1,1 @@
+wget https://dumps.wikimedia.org/svwiki/20190701/svwiki-20190701-pages-articles-multistream.xml.bz2

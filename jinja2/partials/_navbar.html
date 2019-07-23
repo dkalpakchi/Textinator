@@ -4,22 +4,33 @@
       Textinator
     </li>
     {% if request.path == url('projects:index') %}
-    <li {% if request.GET.n == 'p' or 'n' not in request.GET %}class='is-active'{% endif %} data-tab="participations">
+    <li class="challenges{% if request.GET.n == 'p' or 'n' not in request.GET %} is-active{% endif %}" data-tab="participations">
       <a>
     {% else %}
-    <li>
+    <li class='challenges'>
       <a href="{{ url('projects:index') }}?n=p">
     {% endif %}
         <span class="icon is-small"><i class="fas fa-medal" aria-hidden="true"></i></span>
-        <span>Challenges</span>
+        <span>My Challenges</span>
+      </a>
+    </li>
+    {% if request.path == url('projects:index') %}
+    <li class="open-challenges{% if request.GET.n == 'o' %} is-active{% endif %}" data-tab="open-projects">
+      <a>
+    {% else %}
+    <li class='open-challenges'>
+      <a href="{{ url('projects:index') }}?n=o">
+    {% endif %}
+        <span class="icon is-small"><i class="fas fa-trophy" aria-hidden="true"></i></span>
+        <span>Open Challenges</span>
       </a>
     </li>
     {% if user_projects %}
       {% if request.path == url('projects:index') %}
-      <li {% if request.GET.n == 'mp' %}class='is-active'{% endif %} data-tab="my-projects">
+      <li {% if request.GET.n == 'mp' %}class='is-active'{% endif %} data-tab="my-projects" class='my-projects'>
         <a>
       {% else %}
-      <li>
+      <li class='my-projects'>
         <a href="{{ url('projects:index') }}?n=mp">
       {% endif %}
           <span class="icon is-small"><i class="fas fa-project-diagram" aria-hidden="true"></i></span>
@@ -29,10 +40,10 @@
     {% endif %}
     {% if shared_projects %}
       {% if request.path == url('projects:index') %}
-      <li {% if request.GET.n == 'sp' %}class='is-active'{% endif %} data-tab="shared-projects">
+      <li {% if request.GET.n == 'sp' %}class='is-active'{% endif %} data-tab="shared-projects" class='shared-projects'>
         <a>
       {% else %}
-      <li>
+      <li class='shared-projects'>
         <a href="{{ url('projects:index') }}?n=sp">
       {% endif %}
           <span class="icon is-small"><i class="fas fa-users" aria-hidden="true"></i></span>
@@ -40,7 +51,7 @@
         </a>
       </li>
     {% endif %}
-    <li>
+    <li class='profile'>
       <a href="{{ url('projects:profile', kwargs={'username': user.username}) }}">
         <span class="icon is-small"><i class="fas fa-id-badge" aria-hidden="true"></i></span>
         <span>Profile</span>
@@ -48,7 +59,7 @@
     </li>
     <li class='is-pulled-right'>
       {% if user.is_staff %}
-        <a href="{{ url('admin:index') }}">
+        <a href="{{ url('admin:index') }}" class='admin'>
           <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
           <span>Admin</span>
         </a>
