@@ -1,0 +1,26 @@
+{% if open_projects %}
+  <div class="tile open-projects is-ancestor is-12">
+    {% for project in open_projects %}
+      <div class="tile is-parent is-vertical is-3">
+        <div class="tile is-child notification has-even-padding is-link">
+          <div class="content">
+            <p class="title">{{project.title}}</p>
+            <div class="content has-text-justified">{{project.guideline|truncate}}</div>
+            <form class='join form' method="POST" action="{{ url('projects:join_or_leave', kwargs={'proj': project.id}) }}">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+              <input type="hidden" name="n" value="o">
+              <input class="submit button is-fullwidth is-link is-inverted is-outlined" type="submit" value="Join"/>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <article class="message is-info">
+    <div class="message-body">
+      <p>Currently there no more active Open Challenges!</p>
+      <!-- <p>Click <a class='intro-button'>here</a> if you want an introduction to the website</p> -->
+    </div>
+  </article>
+{% endif %}

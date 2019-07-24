@@ -5,22 +5,6 @@ $(document).ready(function() {
       resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n'),
       contextSize = $('#taskArea').data('context');
 
-  $.fn.serializeObject = function() {
-    var o = {};
-    var a = this.serializeArray();
-    $.each(a, function() {
-      if (o[this.name]) {
-        if (!o[this.name].push) {
-          o[this.name] = [o[this.name]];
-        }
-        o[this.name].push(this.value || '');
-      } else {
-        o[this.name] = this.value || '';
-      }
-    });
-    return o;
-  };
-
   function previousTextLength(node) {
     var len = 0;
     var prev = node.previousSibling;

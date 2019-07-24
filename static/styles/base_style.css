@@ -101,3 +101,11 @@ pre {
   max-height: 510px;
   overflow-y: auto;
 }
+
+.participations, .open-projects, .my-projects, .shared-projects {
+  flex-wrap: wrap;
+}
+
+.join.form {
+  margin-top: auto;
+}

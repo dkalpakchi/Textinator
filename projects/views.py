@@ -27,7 +27,7 @@ class IndexView(LoginRequiredMixin, generic.ListView):
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
         data['profiles'] = UserProfile.objects.filter(user=self.request.user).all()
-        data['open_projects'] = Project.objects.filter(is_open=True).all()
+        data['open_projects'] = Project.objects.filter(is_open=True).exclude(participants__in=[self.request.user]).all()
         return data
 
 
@@ -171,14 +171,21 @@ def record_datapoint(request):
 
 @login_required
 @require_http_methods("POST")
-def join_project(request, proj):
+def join_or_leave_project(request, proj):
     project = get_object_or_404(Project, pk=proj)
     current_user = request.user
-    project.participants.add(current_user)
+    res = {
+        'error': False,
+        'result': ''
+    }
+    if project.participants.filter(pk=current_user.pk).exists():
+        project.participants.remove(current_user)
+        res['result'] = 'left'
+    else:
+        project.participants.add(current_user)
+        res['result'] = 'joined'
     project.save()
-    return JsonResponse({
-        "joined": True
-    })
+    return JsonResponse(res)
 
 
 @login_required
@@ -201,3 +208,23 @@ def new_article(request, proj):
         'text': get_new_article(project)
     })
 
+
+@login_required
+@require_http_methods("GET")
+def update_participations(request):
+    n = request.GET.get('n', '')
+    template = ''
+    if n == 'p':
+        open_projects = Project.objects.filter(is_open=True).exclude(participants__in=[request.user]).all()
+        template = render_to_string('partials/_open_projects.html', {
+            'open_projects': open_projects
+        }, request=request)
+    elif n == 'o':
+        participations = request.user.participations.all()
+        template = render_to_string('partials/_participations.html', {
+            'participations': participations
+        }, request=request)
+        
+    return JsonResponse({
+        'template': template
+    })

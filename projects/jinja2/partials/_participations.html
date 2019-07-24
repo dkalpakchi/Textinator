@@ -1,0 +1,41 @@
+{% if participations %}
+  <div class="participations tile is-ancestor">
+    {% for project in participations %}
+      <div class="tile is-parent is-vertical is-3">
+        <div data-link="{{ url('projects:detail', kwargs={'pk': project.id}) }}" class="is-child notification has-even-padding is-link tile">
+          <div class="content">
+            <p class="title">{{project.title}}</p>
+            <div class="content has-text-justified">{{project.guideline|truncate}}</div>
+            <form class='join form' method="POST" action="{{ url('projects:join_or_leave', kwargs={'proj': project.id}) }}">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+              <input type="hidden" name="n" value="p">
+              <input class="submit button is-fullwidth is-link is-inverted is-outlined" type="submit" value="Leave"/>
+            </form>
+          </div>
+          <footer class="tile-footer">
+            {% set user_profile=project.get_profile_for(user) %}
+            <div class="tile-footer-item">
+              <span class="icon">
+                <i class="fas fa-star"></i>
+              </span>
+              Level {{user_profile.level().number}}
+            </div>
+            <div class="tile-footer-item">
+              <span class="icon">
+                <i class="fas fa-trophy"></i>
+              </span>
+              {{user_profile.points}}p
+            </div>
+          </footer>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <article class="message is-info">
+    <div class="message-body">
+      <p>Hello, {{user.first_name or user.username}}! Thank you for joining Textinator! You don't have any challenges yet, but you can join to one of the open challenges in the respective tab</p>
+      <!-- <p>Click <a class='intro-button'>here</a> if you want an introduction to the website</p> -->
+    </div>
+  </article>
+{% endif %}
