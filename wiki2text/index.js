@@ -16,5 +16,5 @@ app.post('/', function(request, response) {
 
 port = 3000
 app.listen(port, 'localhost', function() {
-  console.log("... port %d in %s mode", app.address().port, app.settings.env);
+  console.log("Listening on port %d", port);
 });
