@@ -89,8 +89,8 @@ pre {
   margin-bottom: 30px;
 }
 
-.textinator.columns > .column {
-  padding-top: 0px;
+.textinator {
+  padding: 0px 1em;
 }
 
 .guidelines.card {
@@ -108,4 +108,94 @@ pre {
 
 .join.form {
   margin-top: auto;
+}
+
+.countdown {
+  position: relative;
+  margin: auto;
+  margin-top: -20px;
+  height: 200px;
+  width: 200px;
+  text-align: center;
+}
+
+.countdown-number {
+  color: #333;
+  font-size: 2em;
+  display: inline-block;
+  line-height: 200px;
+}
+
+.countdown svg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  transform: rotateY(-180deg) rotateZ(-90deg);
+}
+
+.countdown svg circle {
+  stroke-dasharray: 471px;
+  stroke-dashoffset: 0px;
+  stroke-linecap: round;
+  stroke-width: 3px;
+  stroke: rgba(0, 0, 0, 0.1);
+  fill: none;
+}
+
+.countdown svg circle:last-child {
+  stroke: #333;
+  animation: countdown 60s linear forwards;
+}
+
+@keyframes countdown {
+  from {
+    stroke-dashoffset: 0px;
+  }
+  to {
+    stroke-dashoffset: 471px;
+  }
+}
+
+
+textarea {
+  resize: none;
+}
+
+.article .message-body {
+  height: 475px;
+  overflow-y: scroll;
+  text-align: justify;
+}
+
+.achievements {
+  height: 100%;
+}
+
+.achievements .message-body {
+  height: 100%;
+  max-height: 830px;
+  overflow-y: scroll;
+}
+
+.markers {
+  height: 100px;
+}
+
+.marker.tag:hover {
+  cursor: pointer;
+}
+
+.tt-level {
+  text-align: center;
+}
+
+.tt-level .tt-header {
+  font-weight: bold;
+  font-size: 3em;
+}
+
+.tt-level .tt-title {
+  font-size: 2em;
 }

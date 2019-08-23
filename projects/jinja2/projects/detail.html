@@ -1,49 +1,8 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="textinator columns no-margin">
-  <div class="column hero is-one-quarter">
-    <div class="guidelines card">
-      <header class="card-header">
-        <p class="card-header-title">
-          {{project.title}}
-        </p>
-      </header>
-      <div class="card-content">
-        <div class="content">
-          <p class='has-text-weight-bold'>Guidelines</p>
-          <p>{{project.guideline|truncate(1100)}}</p>
-        </div>
-        <div class='content'>
-          <p class='has-text-weight-bold'>Contact information</p>
-          <!-- TODO: make this table responsive -->
-          <table class='table'>
-            <tbody>
-              <tr>
-                <td>Responsible</td>
-                <td>{{project.author.first_name}} {{project.author.last_name}}</td>
-              </tr>
-              <tr>
-                <td>Contact email</td>
-                <td>{{project.author.email}}</td>
-              </tr>
-              <tr>
-                <td>Published at</td>
-                <td>{{project.dt_publish.strftime('%d %B %Y, %H:%M')}}</td>
-              </tr>
-              <tr>
-                <td>To be finished at</td>
-                <td>
-                  {{project.dt_finish.strftime('%d %B %Y, %H:%M')}}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="taskArea" class="column" data-context="{{project.context_size}}">
+<div class="textinator">
+  <div id="taskArea" data-context="{{project.context_size}}">
     {{task_type_template|safe}}
   </div>
 </div>

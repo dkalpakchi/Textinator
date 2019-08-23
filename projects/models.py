@@ -46,6 +46,7 @@ class Project(models.Model):
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     datasources = models.ManyToManyField(DataSource)
     is_open = models.BooleanField(default=False)
+    is_peer_reviewed = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -116,7 +117,7 @@ class Input(models.Model):
     content = models.TextField()
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    impossible = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     @property
     def content_hash(self):
@@ -132,11 +133,13 @@ class Label(models.Model):
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     input = models.ForeignKey(Input, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    is_review = models.BooleanField(default=False)
+    is_match = models.BooleanField(null=True) # whether the reviewed and original labels match (valid only if is_review=True)
+    impossible = models.BooleanField(default=False)
 
     @property
     def text(self):
         return self.input.context.content[self.start:self.end]
-
 
 
 class UserProfile(models.Model):
@@ -146,6 +149,15 @@ class UserProfile(models.Model):
 
     def level(self):
         return Level.objects.filter(points__lte=self.points).order_by("-number")[0]
+
+    # def discarded(self):
+    #     Label.objects.filter(is_review=True, input__user=self.user).values('input').annotate(discarded=models.Count('is_match') - models.Sum('is_match'))
+
+    def submitted(self):
+        return Input.objects.filter(user=self.user).count()
+
+    def reviewed(self):
+        return Label.objects.filter(user=self.user, is_review=True).exclude(input__user=self.user).count()
 
     def __str__(self):
         return self.user.username

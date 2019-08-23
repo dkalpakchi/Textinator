@@ -51,6 +51,11 @@ $(document).ready(function() {
               $tab.html(data['template']);
             $('.join.form .submit.button').off('click');
             $('.join.form .submit.button').on('click', joinFormSubmit);
+            $('[data-link]').off('click')
+            $('[data-link]').on('click', function(e) {
+              e.preventDefault();
+              document.location.href = $(this).attr('data-link');
+            });
           },
           error: function() {
             console.log("ERROR [GET]!")
@@ -99,4 +104,16 @@ $(document).ready(function() {
   $('.intro-button').on('click', function() {
     tour.start();
   })
+
+  var countdownNumberEl = document.querySelector('.countdown-number');
+  var countdown = 60;
+
+  countdownNumberEl.textContent = countdown;
+
+  setInterval(function() {
+    countdown = --countdown;
+
+    if (countdown >= 0)
+      countdownNumberEl.textContent = countdown;
+  }, 1000);
 });

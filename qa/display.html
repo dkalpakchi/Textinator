@@ -1,53 +1,11 @@
 {% load common_extras %}
 
-<style>
-  textarea {
-    resize: none;
-  }
-
-  .article .message-body {
-    height: 475px;
-    overflow-y: scroll;
-    text-align: justify;
-  }
-
-  .achievements {
-    height: 100%;
-  }
-
-  .achievements .message-body {
-    height: 100%;
-    max-height: 830px;
-    overflow-y: scroll;
-  }
-
-  .markers {
-    height: 100px;
-  }
-
-  .marker.tag:hover {
-    cursor: pointer;
-  }
-
-  .tt-level {
-    text-align: center;
-  }
-
-  .tt-level .tt-header {
-    font-weight: bold;
-    font-size: 3em;
-  }
-
-  .tt-level .tt-title {
-    font-size: 2em;
-  }
-</style>
-
 <div class="columns">
   <div class="column is-three-quarters">
     <article class="article message is-dark">
       <div class="message-header">
         <p>Article</p>
+        <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
       </div>
       <div class="selector element message-body">{{text|safe}}</div>
     </article>
@@ -95,25 +53,38 @@
         <p>Achievements</p>
       </div>
       <div class="message-body">
-        <div id="leaderboard" class="content">
-          {{leaderboard_template|safe}}          
+        <div class="countdown">
+          <div class="countdown-number"></div>
+          <svg>
+            <circle r="75" cx="100" cy="98"></circle>
+            <circle r="75" cx="100" cy="98"></circle>
+          </svg>
         </div>
-
-        {% if next_level_points %}
-          <div class="content">
-            <div class="has-text-centered no-margin title is-4">Until next level</div>
-            <div class="tt-set-size tt-charts-container">
-              <div class="tt-pie-wrapper progress-{{progress}}">
-                <span class="tt-label">{{next_level_points|subtract:level.points}}<span class="smaller">p</span></span>
-                <div class="tt-pie">
-                  <div class="left-side half-circle"></div>
-                  <div class="right-side half-circle"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        {% endif %}
       </div>
     </article>
   </div>
 </div>
+
+<div class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    {{guidelines|safe}}
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<script>
+  $('#guidelinesButton').on('click', function() {
+    $('.modal').addClass('is-active');
+  });
+
+  $('.modal-close').on('click', function() {
+    $('.modal').removeClass('is-active');
+  });
+
+  $('.modal-background').on('click', function() {
+    $('.modal').removeClass('is-active');
+  });
+
+  $('#guidelinesButton').click();
+</script>

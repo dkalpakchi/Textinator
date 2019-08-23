@@ -52,59 +52,11 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
         ctx = {
             'text': get_new_article(proj),
             'project': proj,
-            'task_markers': task_markers
+            'task_markers': task_markers,
+            'guidelines': render_to_string('partials/_guidelines.html', {
+                'project': proj
+            })
         }
-
-        if proj.author == self.request.user:
-            ctx.update({
-                'level': {'number': 3, 'points': 9, 'title': 'Hello world!'},
-                'points': 10,
-                'progress': 50,
-                'next_level_points': 15,
-                'leaderboard_template': render_to_string('projects/leaderboard.html', {
-                    'user_profiles': json.load(open('projects/test_users.json')),
-                    'user': {
-                        'username': 'Johny'
-                    }
-                })
-            })
-        else:
-            profile = get_object_or_404(UserProfile, user=self.request.user, project=proj)
-
-            try:
-                level = profile.level()
-            except Level.DoesNotExist:
-                raise Http404
-
-            try:
-                next_level = Level.objects.get(number=level.number + 1)
-
-                if next_level:
-                    next_level_points = next_level.points
-                    if profile:
-                        progress = round((profile.points - level.points) * 100 / (next_level.points - level.points))
-                    else:
-                        progress = 50
-                else:
-                    next_level_points = None
-                    progress = None
-            except Level.DoesNotExist:
-                if proj.author == self.request.user:
-                    next_level_points = 300
-                    progress = 50
-                else:
-                    raise Http404
-            
-            ctx.update({
-                'level': level,
-                'points': profile.points if profile else 10,
-                'progress': progress,
-                'next_level_points': next_level_points,
-                'leaderboard_template': render_to_string('projects/leaderboard.html', {
-                    'user_profiles': UserProfile.objects.filter(project=proj).order_by('-points').all(),
-                    'user': self.request.user
-                })
-            })
 
         with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
             data['task_type_template'] = Template(f.read().replace('\n', '')).render(RequestContext(self.request, ctx))
@@ -118,6 +70,8 @@ def record_datapoint(request):
     chunks = json.loads(data['chunks'])
     ctx_cache = caches['context']
     inp_cache = caches['input']
+
+    is_review = data['is_review'] == 'true'
 
     user = request.user
     try:
@@ -144,28 +98,44 @@ def record_datapoint(request):
 
             inp = retrieve_by_hash(data['question'], Input, inp_cache)
             if not inp:
-                inp = Input.objects.create(context=ctx, project=project, content=data['question'])
+                inp = Input.objects.create(context=ctx, project=project, content=data['question'], user=user)
                 inp_cache.set(inp.content_hash, inp.pk, 600)
-            lab = Label.objects.create(input=inp, start=chunk['lengthBefore'] + chunk['start'], end=chunk['lengthBefore'] + chunk['end'], marker=marker, user=user)
+
+            new_start = chunk['lengthBefore'] + chunk['start']
+            new_end = chunk['lengthBefore'] + chunk['end']
+
+            if is_review:
+                # check if matches original answer
+                original = Label.objects.filter(input=inp, is_review=False).get()
+                if original:
+                    is_match = (original.start == new_start) and (original.end == new_end)
+                else:
+                    is_match = False
+            else:
+                is_match = None
+
+            lab = Label.objects.create(input=inp, start=new_start, end=new_end, marker=marker,
+                user=user, is_review=is_review, is_match=is_match)
             u_profile.points += 1
     u_profile.save()
-    level = u_profile.level()
-    try:
-        next_level = Level.objects.get(number=level.number + 1)
-        next_level_points = next_level.points
-    except Level.DoesNotExist:
-        next_level_points = None
-    print(level.number, level.points, next_level_points)
+
+    if project.is_peer_reviewed:
+        print(u_profile.submitted())
+        if u_profile.submitted() > 5:
+            inp_query = Input.objects.exclude(user=user).values('pk')
+            rand_inp_id = random.choice(inp_query.all())['pk']
+            inp = Input.objects.get(pk=rand_inp_id)
+        else:
+            inp = None
+    else:
+        inp = None
+
     return JsonResponse({
         'error': False,
-        'points': u_profile.points,
-        'level': level.number,
-        'level_points': level.points,
-        'next_level_points': next_level_points,
-        'leaderboard_template': render_to_string('projects/leaderboard.html', {
-            'user_profiles': UserProfile.objects.filter(project=project).order_by('-points').all(),
-            'user': user
-        })
+        'input': {
+            'content': inp.content,
+            'context': inp.context.content
+        } if inp else None
     })
 
 

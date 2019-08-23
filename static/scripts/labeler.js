@@ -71,7 +71,7 @@ $(document).ready(function() {
 
       delete chunks[idc];
       mergeWithNeighbors(parent);
-      window.chunks = chunks;
+      // window.chunks = chunks;
     }, true);
     markedSpan.appendChild(deleteMarkedBtn)
 
@@ -81,21 +81,14 @@ $(document).ready(function() {
     chunk['marked'] = true;
     chunk['label'] = this.textContent;
     delete chunk['node']
-    window.chunks = chunks;
+    // window.chunks = chunks;
   });
 
-  $('.selector').on('mouseup', function(e) {
-    var isRightMB;
-    e = e || window.event;
+  function updateChunk() {
+    var selection = window.getSelection(),
+        chunk = {};
 
-    if ("which" in e)  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
-        isRightMB = e.which == 3; 
-    else if ("button" in e)  // IE, Opera 
-        isRightMB = e.button == 2; 
-
-    if (!$(e.target).hasClass('delete') && !isRightMB) {
-      var selection = window.getSelection(),
-          chunk = {};
+    if (selection) {
       chunk['node'] = selection.anchorNode;
       chunk['text'] = selection.anchorNode.data;
       if (selection.anchorOffset > selection.focusOffset) {
@@ -128,21 +121,48 @@ $(document).ready(function() {
       chunk['marked'] = false;
       chunk['label'] = null;
 
-      if (chunks.length == 0 || (chunks.length > 0 && chunks[chunks.length - 1]['marked'])) {
+      if (chunks.length == 0 || (chunks.length > 0 && chunks[chunks.length - 1] !== undefined && chunks[chunks.length - 1]['marked'])) {
         chunks.push(chunk);
       } else {
         chunks[chunks.length - 1] = chunk;
       }
     }
+  }
+
+  $('.selector').on('mouseup', function(e) {
+    var isRightMB;
+    e = e || window.event;
+
+    if ("which" in e)  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+        isRightMB = e.which == 3; 
+    else if ("button" in e)  // IE, Opera 
+        isRightMB = e.button == 2;
+
+    if (!$(e.target).hasClass('delete') && !isRightMB) {
+      updateChunk();
+    }
   })
+
+  $(document).on("keyup", function(e) {
+    var isArticleParent = window.getSelection().anchorNode.parentNode == document.querySelector('.selector');
+    if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
+      updateChunk();
+    }
+  });
 
   $('#inputForm .submit.button').on('click', function(e) {
     e.preventDefault();
 
     var $inputForm = $('#inputForm'),
         $qInput = $inputForm.find('input.question'),
-        inputFormData = $inputForm.serializeObject();
+        $questionBlock = $('article.question');
+
+    $qInput.prop("disabled", false);
+
+    var inputFormData = $inputForm.serializeObject(),
+        underReview = $questionBlock.prop('review') || false;
     inputFormData['chunks'] = JSON.stringify(chunks);
+    inputFormData['is_review'] = underReview;
 
     $.ajax({
       method: "POST",
@@ -150,29 +170,45 @@ $(document).ready(function() {
       dataType: "json",
       data: inputFormData,
       success: function(data) {
-        console.log("SUCCESS!")
         if (data['error'] == false) {
-          var curLevel = $.trim($('.tt-level .tt-header').text()).split(' ')[1]
-          if (curLevel != data['level']) {
-            $('.tt-label').html(data['next_level_points'] - data['level_points'] + '<span class="smaller">p</span>');
+          var articleNode = document.querySelector('.selector'),
+              $title = $questionBlock.find('.message-header p');
+          if (data['input'] == null) {
+            // no review task
+            $questionBlock.removeClass('is-warning');
+            $questionBlock.addClass('is-primary');
+
+            $title.html("Your question");
+
+            $qInput.prop("disabled", false);
+            $qInput.val('');
+            $qInput.focus();
+          } else {
+            // review task
+            removeAllChildren(articleNode);
+            articleNode.innerHTML = data['input']['context'];
+
+            $questionBlock.removeClass('is-primary');
+            $questionBlock.addClass('is-warning');
+            $questionBlock.prop('review', true);
+
+            $title.html("The question");
+
+            $qInput.val(data['input']['content']);
+            $qInput.prop("disabled", true);
           }
-          var ratio = Math.round((data['points'] - data['level_points']) * 100 / (data['next_level_points'] - data['level_points']));
-          if (ratio >= 100) {
-            ratio -= 100;
-          }
-          var $pie = $('.tt-pie-wrapper');
-          $pie.removeClass(function (index, className) {
-            return (className.match(/(^|\s)progress-\S+/g) || []).join(' ');
-          });
-          $pie.addClass('progress-' + ratio);
-          $('#leaderboard').html(data['leaderboard_template']);
-          $qInput.val('');
-          $qInput.focus();
+          
         }
         chunks = [];
       },
       error: function() {
         console.log("ERROR!")
+        if (underReview)
+          $qInput.prop("disabled", true)
+        else {
+          $qInput.val('');
+          $qInput.prop('disabled', false);
+        }
       }
     })
 
