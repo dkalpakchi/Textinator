@@ -183,7 +183,7 @@ textarea {
   height: 100px;
 }
 
-.marker.tag:hover {
+.marker.tags:hover {
   cursor: pointer;
 }
 

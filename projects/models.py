@@ -84,6 +84,7 @@ class Marker(models.Model):
     color = models.CharField(max_length=10, choices=settings.MARKER_COLORS)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
     for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
+    shortcut = models.CharField(max_length=10, help_text="Keyboard shortcut for marking a piece of text with this label", null=True)
 
     def save(self, *args, **kwargs):
         if (self.project and self.for_task_type):

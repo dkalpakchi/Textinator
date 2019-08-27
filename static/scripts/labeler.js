@@ -52,16 +52,16 @@ $(document).ready(function() {
     node.innerHTML = resetTextHTML;
   }
 
-  $('.marker.tag').on('click', function() {
+  $('.marker.tags').on('click', function() {
     var chunk = chunks[chunks.length - 1],
         idc = chunks.length - 1
-        cls = this.className.split(' ').filter(c => c != 'marker').join(' '),
+        color = this.getAttribute('data-color'),
         leftTextNode = document.createTextNode(chunk['text'].slice(0, chunk['start'])),
         markedSpan = document.createElement('span'),
         deleteMarkedBtn = document.createElement('button'),
         rightTextNode = document.createTextNode(chunk['text'].slice(chunk['end'])),
         parent = chunk['node'].parentNode;
-    markedSpan.className = cls + " is-medium";
+    markedSpan.className = "tag is-" + color + " is-medium";
     markedSpan.textContent = chunk['text'].slice(chunk['start'], chunk['end']);
     deleteMarkedBtn.className = 'delete is-small';
     deleteMarkedBtn.addEventListener('click', function(e) {
@@ -147,6 +147,12 @@ $(document).ready(function() {
     var isArticleParent = window.getSelection().anchorNode.parentNode == document.querySelector('.selector');
     if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
       updateChunk();
+    } else {
+      console.log(String.fromCharCode(e.which));
+      var $shortcut = $('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
+      if ($shortcut.length > 0) {
+        $shortcut.click();
+      }
     }
   });
 

@@ -52,10 +52,7 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
         ctx = {
             'text': get_new_article(proj),
             'project': proj,
-            'task_markers': task_markers,
-            'guidelines': render_to_string('partials/_guidelines.html', {
-                'project': proj
-            })
+            'task_markers': task_markers
         }
 
         with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:

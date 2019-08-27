@@ -15,10 +15,16 @@
       </div>
       <div class="message-body">
         {% for marker in task_markers %}
-          <span class="marker tag is-{{marker.color}}">{{marker.label_name}}</span>
+          <div class="marker tags has-addons" data-color="{{marker.color}}" data-shortcut="{{marker.shortcut|upper}}">
+            <span class="tag is-{{marker.color}}">{{marker.label_name}}</span>
+            <span class="tag is-dark">{{marker.shortcut|upper}}</span>
+          </div>
         {% endfor %}
         {% for marker in project.marker_set.all %}
-          <span class="marker tag is-{{marker.color}}">{{marker.label_name}}</span>
+          <div class="marker tags has-addons" data-color="{{marker.color}}" data-shortcut="{{marker.shortcut|upper}}">
+            <span class="tag is-{{marker.color}}">{{marker.label_name}}</span>
+            <span class="tag is-dark">{{marker.shortcut|upper}}</span>
+          </div>
         {% endfor %}
       </div>
     </article>
@@ -68,7 +74,48 @@
 <div class="modal">
   <div class="modal-background"></div>
   <div class="modal-content">
-    {{guidelines|safe}}
+    <div class="guidelines card">
+      <header class="card-header">
+        <p class="card-header-title">
+          {{project.title}}
+        </p>
+      </header>
+      <div class="card-content">
+        <div class="content">
+          <p class='has-text-weight-bold'>Guidelines</p>
+          <p class='has-text-justified'>{{project.guideline}}</p>
+        </div>
+        <div class="content">
+          <div id="followIntroTour" class='ui button'>Follow the intro tour</div>
+        </div>
+        <div class='content'>
+          <p class='has-text-weight-bold'>Contact information</p>
+          <!-- TODO: make this table responsive -->
+          <table class='table'>
+            <tbody>
+              <tr>
+                <td>Responsible</td>
+                <td>{{project.author.first_name}} {{project.author.last_name}}</td>
+              </tr>
+              <tr>
+                <td>Contact email</td>
+                <td>{{project.author.email}}</td>
+              </tr>
+              <tr>
+                <td>Published at</td>
+                <td>{{project.dt_publish|date:"M d, Y H:i"}}</td>
+              </tr>
+              <tr>
+                <td>To be finished at</td>
+                <td>
+                  {{project.dt_finish|date:"M d, Y H:i"}}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
   <button class="modal-close is-large" aria-label="close"></button>
 </div>
@@ -87,4 +134,66 @@
   });
 
   $('#guidelinesButton').click();
+
+  const tour = new Shepherd.Tour({
+    defaultStepOptions: {
+      scrollTo: {
+        behavior: 'smooth',
+        block: 'center'
+      },
+      showCancelLink: true,
+      tippyOptions: {
+        maxWidth: 500
+      }
+    },
+    theme: 'default',
+    useModalOverlay: true
+  });
+
+  tour.addStep('article', {
+    text: "Every time you're entering the project, you're presented with a Wikipedia article in this Article area of the screen.",
+    attachTo: { 
+      element: '.article.message', 
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Next',
+        action: tour.next
+      }
+    ]
+  });
+
+  tour.addStep('questions', {
+    text: "Your task is to ask questions based on this Wikipedia article. The questions are to be entered in this Question area of the screen",
+    attachTo: { 
+      element: '.question.message', 
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Next',
+        action: tour.next
+      }
+    ]
+  });
+
+  tour.addStep('answer', {
+    text: 'Finally, to mark the correct answer to the question, please highlight the answer in the Article area and then click on one of the markers below (or use the shortcuts that might be present in the right corner for each marker). Happy question answering!',
+    attachTo: { 
+      element: '.markers.message', 
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Finish',
+        action: tour.hide
+      }
+    ]
+  });
+
+  $('#followIntroTour').on('click', function() {
+    $('.modal').removeClass('is-active');
+    tour.start();
+  });
 </script>
