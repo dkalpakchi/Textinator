@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin, auth
 from django.urls import path, include, reverse
 from django_registration.backends.one_step.views import RegistrationView
+from django.views.generic import RedirectView
 
 from . import views
 

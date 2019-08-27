@@ -26,6 +26,20 @@ class UserProfileInline(admin.StackedInline):
     classes = ['collapse']
 
 
+class LabelInline(admin.StackedInline):
+    readonly_fields = ('text',)
+    model = Label
+    extra = 0
+    classes = ['collapse']
+
+
+class LabelReviewInline(admin.StackedInline):
+    readonly_fields = ('text',)
+    model = LabelReview
+    extra = 0
+    classes = ['collapse']
+
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     inlines = [MarkerInline, LevelInline, UserProfileInline]
@@ -61,10 +75,17 @@ class ContextAdmin(admin.ModelAdmin):
 @admin.register(Input)
 class InputAdmin(admin.ModelAdmin):
     readonly_fields = ('content_hash',)
+    inlines = [LabelInline]
 
 
 @admin.register(Label)
 class LabelAdmin(admin.ModelAdmin):
+    readonly_fields = ('text',)
+    inlines = [LabelReviewInline]
+
+
+@admin.register(LabelReview)
+class LabelReviewAdmin(admin.ModelAdmin):
     readonly_fields = ('text',)
 
 

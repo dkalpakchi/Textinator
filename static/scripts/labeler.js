@@ -175,8 +175,10 @@ $(document).ready(function() {
               $title = $questionBlock.find('.message-header p');
           if (data['input'] == null) {
             // no review task
+            resetArticle();
             $questionBlock.removeClass('is-warning');
             $questionBlock.addClass('is-primary');
+            $questionBlock.prop('review', false);
 
             $title.html("Your question");
 
@@ -192,7 +194,7 @@ $(document).ready(function() {
             $questionBlock.addClass('is-warning');
             $questionBlock.prop('review', true);
 
-            $title.html("The question");
+            $title.html("Review question");
 
             $qInput.val(data['input']['content']);
             $qInput.prop("disabled", true);

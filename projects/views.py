@@ -71,7 +71,8 @@ def record_datapoint(request):
     ctx_cache = caches['context']
     inp_cache = caches['input']
 
-    is_review = data['is_review'] == 'true'
+    is_review = data.get('is_review', 'f') == 'true'
+    is_resolution = data.get('is_resolution', 'f') == 'true'
 
     user = request.user
     try:
@@ -104,26 +105,38 @@ def record_datapoint(request):
             new_start = chunk['lengthBefore'] + chunk['start']
             new_end = chunk['lengthBefore'] + chunk['end']
 
-            if is_review:
+            if is_resolution:
+                # resolution case
+                pass
+            elif is_review:
                 # check if matches original answer
-                original = Label.objects.filter(input=inp, is_review=False).get()
+                original = Label.objects.filter(input=inp).get()
                 if original:
-                    is_match = (original.start == new_start) and (original.end == new_end)
-                else:
-                    is_match = False
+                    ambiguity_status, is_match = 'no', False
+                    no_overlap = (original.start > new_end) or (original.end < new_start)
+                    
+                    if not no_overlap:
+                        is_match = (original.start == new_start) and (original.end == new_end)
+                        if not is_match:
+                            requires_resolution = (original.start == new_start) or (original.end == new_end)
+                            if requires_resolution:
+                                ambiguity_status = 'rr'
+                    
+                    LabelReview.objects.create(
+                        original=original, start=new_start, end=new_end, user=user, marker=marker,
+                        ambiguity_status=ambiguity_status, is_match=is_match
+                    )
             else:
-                is_match = None
-
-            lab = Label.objects.create(input=inp, start=new_start, end=new_end, marker=marker,
-                user=user, is_review=is_review, is_match=is_match)
+                Label.objects.create(
+                    input=inp, start=new_start, end=new_end, marker=marker, user=user
+                )
             u_profile.points += 1
     u_profile.save()
 
     if project.is_peer_reviewed:
-        print(u_profile.submitted())
-        if u_profile.submitted() > 5:
+        if u_profile.submitted() > 5 and random.random() > 0.5:
             inp_query = Input.objects.exclude(user=user).values('pk')
-            rand_inp_id = random.choice(inp_query.all())['pk']
+            rand_inp_id = random.choice(inp_query)['pk']
             inp = Input.objects.get(pk=rand_inp_id)
         else:
             inp = None

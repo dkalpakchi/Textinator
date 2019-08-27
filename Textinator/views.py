@@ -6,5 +6,3 @@ def index(request):
         return redirect('projects:index')
     else:
         return redirect('login')
-
-

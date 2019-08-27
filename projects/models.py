@@ -133,13 +133,29 @@ class Label(models.Model):
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     input = models.ForeignKey(Input, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    is_review = models.BooleanField(default=False)
-    is_match = models.BooleanField(null=True) # whether the reviewed and original labels match (valid only if is_review=True)
     impossible = models.BooleanField(default=False)
 
     @property
     def text(self):
         return self.input.context.content[self.start:self.end]
+
+
+class LabelReview(models.Model):
+    original = models.ForeignKey(Label, on_delete=models.CASCADE)
+    is_match = models.BooleanField(null=True) # whether the reviewed and original labels match (valid only if is_review=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    ambiguity_status = models.CharField(max_length=2, default='no', choices=[
+        ('no', 'No ambiguity'), ('rr', 'Requires resolution'), ('rs', 'Resolved')
+    ])
+    resolved_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='resolved_by')
+    start = models.PositiveIntegerField(null=True)
+    end = models.PositiveIntegerField(null=True)
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    impossible = models.BooleanField(default=False)
+
+    @property
+    def text(self):
+        return self.original.input.context.content[self.start:self.end]
 
 
 class UserProfile(models.Model):
@@ -157,7 +173,7 @@ class UserProfile(models.Model):
         return Input.objects.filter(user=self.user).count()
 
     def reviewed(self):
-        return Label.objects.filter(user=self.user, is_review=True).exclude(input__user=self.user).count()
+        return LabelReview.objects.filter(user=self.user).count()
 
     def __str__(self):
         return self.user.username
