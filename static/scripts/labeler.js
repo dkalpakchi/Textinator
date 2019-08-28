@@ -3,7 +3,8 @@ $(document).ready(function() {
       selectorArea = document.querySelector('.selector'),
       resetTextHTML = selectorArea.innerHTML,
       resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n'),
-      contextSize = $('#taskArea').data('context');
+      contextSize = $('#taskArea').data('context'),
+      qStart = new Date();
 
   function previousTextLength(node) {
     var len = 0;
@@ -148,7 +149,6 @@ $(document).ready(function() {
     if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
       updateChunk();
     } else {
-      console.log(String.fromCharCode(e.which));
       var $shortcut = $('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
       if ($shortcut.length > 0) {
         $shortcut.click();
@@ -169,6 +169,7 @@ $(document).ready(function() {
         underReview = $questionBlock.prop('review') || false;
     inputFormData['chunks'] = JSON.stringify(chunks);
     inputFormData['is_review'] = underReview;
+    inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
 
     $.ajax({
       method: "POST",
@@ -205,7 +206,8 @@ $(document).ready(function() {
             $qInput.val(data['input']['content']);
             $qInput.prop("disabled", true);
           }
-          
+          if ('aat' in data)
+            $('#aat').html(data['aat'] + "s");
         }
         chunks = [];
       },

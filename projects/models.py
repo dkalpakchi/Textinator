@@ -161,11 +161,20 @@ class LabelReview(models.Model):
 
 class UserProfile(models.Model):
     points = models.IntegerField(default=0)
+    asking_time = models.IntegerField(null=True) # total asking time
+    timed_questions = models.IntegerField(null=True) # might be that some questions were not timed (like the first bunch of questions)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profiles')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='participant_profiles')
 
     def level(self):
         return Level.objects.filter(points__lte=self.points).order_by("-number")[0]
+
+    @property
+    def aat(self):
+        """
+        Average asking time
+        """
+        return round(self.asking_time / self.timed_questions, 1)
 
     # def discarded(self):
     #     Label.objects.filter(is_review=True, input__user=self.user).values('input').annotate(discarded=models.Count('is_match') - models.Sum('is_match'))

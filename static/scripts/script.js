@@ -105,15 +105,34 @@ $(document).ready(function() {
     tour.start();
   })
 
-  var countdownNumberEl = document.querySelector('.countdown-number');
-  var countdown = 60;
+  var countdown = null,
+      interval = null;
 
-  countdownNumberEl.textContent = countdown;
+  $('.countdown').on('cdAnimate', function() {
+    var countdownNumberEl = document.querySelector('.countdown-number');
+    if (countdown == null) {
+      countdown = 60;
+      var circle = $('.countdown svg circle:last-child');
+      circle.removeClass('countdown-animate')
+      circle.outerWidth();
+      circle.addClass('countdown-animate');
+    }
 
-  setInterval(function() {
-    countdown = --countdown;
+    countdownNumberEl.textContent = countdown;
 
-    if (countdown >= 0)
-      countdownNumberEl.textContent = countdown;
-  }, 1000);
+    if (interval == null) {
+      interval = setInterval(function() {
+        if (countdown == null) {
+          clearInterval(interval);
+          interval = null;
+        }
+        countdown = --countdown;
+
+        if (countdown >= 0)
+          countdownNumberEl.textContent = countdown;
+        else
+          countdown = null;
+      }, 1000);
+    }
+  });
 });

@@ -128,6 +128,9 @@ def record_datapoint(request):
                     input=inp, start=new_start, end=new_end, marker=marker, user=user
                 )
             u_profile.points += 1
+            if 'time' in data:
+                u_profile.asking_time += float(data['time'])
+                u_profile.timed_questions += 1
     u_profile.save()
 
     if project.is_peer_reviewed:
@@ -145,7 +148,8 @@ def record_datapoint(request):
         'input': {
             'content': inp.content,
             'context': inp.context.content
-        } if inp else None
+        } if inp else None,
+        'aat': u_profile.aat
     })
 
 

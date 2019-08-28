@@ -59,13 +59,53 @@
         <p>Achievements</p>
       </div>
       <div class="message-body">
-        <div class="countdown">
-          <div class="countdown-number"></div>
-          <svg>
-            <circle r="75" cx="100" cy="98"></circle>
-            <circle r="75" cx="100" cy="98"></circle>
-          </svg>
-        </div>
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Your personal qtimer</p>
+              <p class="title">
+                <div class="countdown">
+                  <div class="countdown-number">60</div>
+                  <svg>
+                    <circle r="62" cx="80" cy="80"></circle>
+                    <circle r="62" cx="80" cy="80"></circle>
+                  </svg>
+                </div>
+              </p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Asked questions today</p>
+              <p class="title">
+                <div class="tt-set-size tt-charts-container">
+                  <div class="tt-pie-wrapper no-margin">
+                    <span class="tt-label">10<span class="smaller">q</span></span>
+                    <div class="tt-pie">
+                      <div class="left-side half-circle"></div>
+                      <div class="right-side half-circle"></div>
+                    </div>
+                  </div>
+                </div>
+              </p>
+            </div>
+          </div>
+        </nav>
+
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Average asking time (AAT)</p>
+              <p id="aat" class="title">43s</p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">AAT among all users</p>
+              <p class="title">60s</p>
+            </div>
+          </div>
+        </nav>
       </div>
     </article>
   </div>
@@ -127,10 +167,12 @@
 
   $('.modal-close').on('click', function() {
     $('.modal').removeClass('is-active');
+    $('.countdown svg circle:last-child').trigger('cdAnimate');
   });
 
   $('.modal-background').on('click', function() {
     $('.modal').removeClass('is-active');
+    $('.countdown svg circle:last-child').trigger('cdAnimate');
   });
 
   $('#guidelinesButton').click();

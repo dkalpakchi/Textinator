@@ -110,12 +110,15 @@ pre {
   margin-top: auto;
 }
 
+
+/* QTimer */
 .countdown {
+  font-family: 'Lato', Tahoma, Geneva, sans-serif;
+  font-size: 1.3em;
   position: relative;
   margin: auto;
-  margin-top: -20px;
-  height: 200px;
-  width: 200px;
+  height: 160px;
+  width: 160px;
   text-align: center;
 }
 
@@ -123,20 +126,20 @@ pre {
   color: #333;
   font-size: 2em;
   display: inline-block;
-  line-height: 200px;
+  line-height: 160px;
 }
 
 .countdown svg {
   position: absolute;
   top: 0;
   right: 0;
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   transform: rotateY(-180deg) rotateZ(-90deg);
 }
 
 .countdown svg circle {
-  stroke-dasharray: 471px;
+  stroke-dasharray: 390px;
   stroke-dashoffset: 0px;
   stroke-linecap: round;
   stroke-width: 3px;
@@ -146,6 +149,9 @@ pre {
 
 .countdown svg circle:last-child {
   stroke: #333;
+}
+
+.countdown-animate {
   animation: countdown 60s linear forwards;
 }
 
@@ -154,7 +160,7 @@ pre {
     stroke-dashoffset: 0px;
   }
   to {
-    stroke-dashoffset: 471px;
+    stroke-dashoffset: 390px;
   }
 }
 
