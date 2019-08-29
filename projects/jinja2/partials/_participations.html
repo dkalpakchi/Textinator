@@ -12,21 +12,6 @@
               <input class="submit button is-fullwidth is-link is-inverted is-outlined" type="submit" value="Leave"/>
             </form>
           </div>
-          <footer class="tile-footer">
-            {% set user_profile=project.get_profile_for(user) %}
-            <div class="tile-footer-item">
-              <span class="icon">
-                <i class="fas fa-star"></i>
-              </span>
-              Level {{user_profile.level().number}}
-            </div>
-            <div class="tile-footer-item">
-              <span class="icon">
-                <i class="fas fa-trophy"></i>
-              </span>
-              {{user_profile.points}}p
-            </div>
-          </footer>
         </div>
       </div>
     {% endfor %}

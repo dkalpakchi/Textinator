@@ -49,10 +49,13 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
 
         task_markers = Marker.objects.filter(for_task_type=proj.task_type)
 
+        u_profile = UserProfile.objects.filter(user=self.request.user, project=proj).get()
+
         ctx = {
             'text': get_new_article(proj),
             'project': proj,
-            'task_markers': task_markers
+            'task_markers': task_markers,
+            'profile': u_profile
         }
 
         with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
@@ -65,8 +68,7 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
 def record_datapoint(request):
     data = request.POST
     chunks = json.loads(data['chunks'])
-    ctx_cache = caches['context']
-    inp_cache = caches['input']
+    ctx_cache, inp_cache = caches['context'], caches['input']
 
     is_review = data.get('is_review', 'f') == 'true'
     is_resolution = data.get('is_resolution', 'f') == 'true'
@@ -80,6 +82,7 @@ def record_datapoint(request):
     except UserProfile.DoesNotExist:
         return JsonResponse({'error': True})
 
+    saved_labels = 0
     for chunk in chunks:
         if chunk.get('marked', False):
             if 'context' in chunk and type(chunk['context']) == str:
@@ -91,7 +94,7 @@ def record_datapoint(request):
                 ctx = None
 
             try:
-                if not 'label' in chunk or type(chunk['label']) != str: continue
+                if (not 'label' in chunk) or (type(chunk['label']) != str): continue
                 marker = Marker.objects.get(label_name=chunk['label'].strip())
             except Marker.DoesNotExist:
                 continue
@@ -142,10 +145,14 @@ def record_datapoint(request):
                         Label.objects.create(
                             context=ctx, start=new_start, end=new_end, marker=marker, user=user
                         )
-                u_profile.points += 1
-                if 'time' in data:
-                    u_profile.asking_time += float(data['time'])
-                    u_profile.timed_questions += 1
+                    saved_labels += 1
+    
+    if saved_labels > 0:
+        # means the user has provided at least one new input
+        u_profile.points += 0.5 # asking points
+        if 'time' in data:
+            u_profile.asking_time += float(data['time'])
+            u_profile.timed_questions += 1
     u_profile.save()
 
     if project.is_peer_reviewed:

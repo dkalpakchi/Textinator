@@ -4,6 +4,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.core.cache import caches
+from django.utils import timezone
 
 from .datasources import *
 from .helpers import hash_text, truncate
@@ -11,8 +12,19 @@ from .helpers import hash_text, truncate
 from dewiki.parser import Parser
 
 
+class CommonModel(models.Model):
+    dt_created = models.DateTimeField(null=True)
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.dt_created = timezone.now()
+        super(CommonModel, self).save(*args, **kwargs)
+
+
 # Create your models here.
-class DataSource(models.Model):
+class DataSource(CommonModel):
     name = models.CharField(max_length=50)
     source_type = models.CharField(max_length=10, choices=settings.DATASOURCE_TYPES)
     spec = models.TextField(null=False) # json spec of the data source
@@ -25,7 +37,7 @@ class DataSource(models.Model):
         return self.name
 
 
-class Project(models.Model):
+class Project(CommonModel):
     class Meta:
         permissions = [
             ("view_published_project", "View published project"),
@@ -71,14 +83,13 @@ class Project(models.Model):
             return None
 
     def save(self, *args, **kwargs):
-        
         super(Project, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.title
 
 
-class Marker(models.Model):
+class Marker(CommonModel):
     label_name = models.CharField(max_length=50, unique=True)
     short = models.CharField(max_length=10, help_text='By default the capitalized first three character of the label', blank=True, null=True)
     color = models.CharField(max_length=10, choices=settings.MARKER_COLORS)
@@ -100,7 +111,7 @@ class Marker(models.Model):
         return str(self.label_name)
 
 
-class Context(models.Model):
+class Context(CommonModel):
     content = models.TextField()
 
     @property
@@ -114,7 +125,7 @@ class Context(models.Model):
         return truncate(self.content)
 
 
-class Input(models.Model):
+class Input(CommonModel):
     content = models.TextField()
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -128,7 +139,7 @@ class Input(models.Model):
         return truncate(self.content, 50)
 
 
-class Label(models.Model):
+class Label(CommonModel):
     start = models.PositiveIntegerField(null=True)
     end = models.PositiveIntegerField(null=True)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
@@ -144,7 +155,7 @@ class Label(models.Model):
         else:
             return self.context.content[self.start:self.end]
 
-class LabelReview(models.Model):
+class LabelReview(CommonModel):
     original = models.ForeignKey(Label, on_delete=models.CASCADE)
     is_match = models.BooleanField(null=True) # whether the reviewed and original labels match (valid only if is_review=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -162,7 +173,7 @@ class LabelReview(models.Model):
         return self.original.input.context.content[self.start:self.end]
 
 
-class UserProfile(models.Model):
+class UserProfile(CommonModel):
     points = models.IntegerField(default=0)
     asking_time = models.IntegerField(default=0) # total asking time
     timed_questions = models.IntegerField(default=0) # might be that some questions were not timed (like the first bunch of questions)
@@ -179,8 +190,9 @@ class UserProfile(models.Model):
         """
         return round(self.asking_time / self.timed_questions, 1) if self.asking_time > 0 and self.timed_questions > 0 else None
 
-    # def discarded(self):
-    #     Label.objects.filter(is_review=True, input__user=self.user).values('input').annotate(discarded=models.Count('is_match') - models.Sum('is_match'))
+    @property
+    def accepted(self):
+        return LabelReview.objects.filter(original__user=self.user).count() / 2
 
     def submitted(self):
         return Input.objects.filter(user=self.user).count()
@@ -192,7 +204,7 @@ class UserProfile(models.Model):
         return self.user.username
 
 
-class Level(models.Model):
+class Level(CommonModel):
     number = models.IntegerField()
     title = models.CharField(max_length=50)
     points = models.IntegerField()

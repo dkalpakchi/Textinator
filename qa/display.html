@@ -66,25 +66,35 @@
         <nav class="level">
           <div class="level-item has-text-centered">
             <div>
-              <p class="heading">Your personal qtimer</p>
+              <p class="heading">Asking points</p>
               <p class="title">
-                <div class="countdown">
-                  <div class="countdown-number">60</div>
-                  <svg>
-                    <circle r="62" cx="80" cy="80"></circle>
-                    <circle r="62" cx="80" cy="80"></circle>
-                  </svg>
+                <div class="tt-set-size tt-charts-container">
+                  <div class="tt-pie-wrapper no-margin">
+                    {% if profile.points > 1000 %}
+                      <span class="tt-label">{{profile.points|divide:1000|floatformat}}<span class="smaller">kp</span></span>
+                    {% else %}
+                      <span class="tt-label">{{profile.points|floatformat}}<span class="smaller">p</span></span>
+                    {% endif %}
+                    <div class="tt-pie">
+                      <div class="left-side half-circle"></div>
+                      <div class="right-side half-circle"></div>
+                    </div>
+                  </div>
                 </div>
               </p>
             </div>
           </div>
           <div class="level-item has-text-centered">
             <div>
-              <p class="heading">Asked questions today</p>
+              <p class="heading">Peer points</p>
               <p class="title">
                 <div class="tt-set-size tt-charts-container">
                   <div class="tt-pie-wrapper no-margin">
-                    <span class="tt-label">10<span class="smaller">q</span></span>
+                    {% if profile.accepted > 1000 %}
+                      <span class="tt-label">{{profile.accepted|divide:1000|floatformat}}<span class="smaller">kp</span></span>
+                    {% else %}
+                      <span class="tt-label">{{profile.accepted|floatformat}}<span class="smaller">p</span></span>
+                    {% endif %}
                     <div class="tt-pie">
                       <div class="left-side half-circle"></div>
                       <div class="right-side half-circle"></div>
@@ -99,8 +109,29 @@
         <nav class="level">
           <div class="level-item has-text-centered">
             <div>
+              <p class="heading">Your personal qtimer</p>
+              <p class="title">
+                <div class="countdown">
+                  <div class="countdown-number">60</div>
+                  <svg>
+                    <circle r="62" cx="80" cy="80"></circle>
+                    <circle r="62" cx="80" cy="80"></circle>
+                  </svg>
+                </div>
+              </p>
+            </div>
+          </div>
+        </nav>
+
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
               <p class="heading">Average asking time (AAT)</p>
-              <p id="aat" class="title">43s</p>
+              {% if profile.aat %}
+                <p id="aat" class="title">{{profile.aat}}s</p>
+              {% else %}
+                <p id="aat" class="title">N/A</p>
+              {% endif %}
             </div>
           </div>
           <div class="level-item has-text-centered">
