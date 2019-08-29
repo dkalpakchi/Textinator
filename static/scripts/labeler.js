@@ -215,9 +215,10 @@ $(document).ready(function() {
           }
           if ('aat' in data)
             $('#aat').html(data['aat'] + "s");
-          qStart = new Date();
         }
         chunks = [];
+        qStart = new Date();
+        $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
       },
       error: function() {
         console.log("ERROR!")
@@ -228,6 +229,7 @@ $(document).ready(function() {
           $qInput.prop('disabled', false);
         }
         qStart = new Date();
+        $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');
       }
     })
 

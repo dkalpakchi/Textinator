@@ -68,9 +68,7 @@ $(document).ready(function() {
     })
   }
 
-
   $('.join.form .submit.button').on('click', joinFormSubmit);
-
 
   const tour = new Shepherd.Tour({
     defaultStepOptions: {
@@ -108,15 +106,18 @@ $(document).ready(function() {
   var countdown = null,
       interval = null;
 
+  function resetTimer() {
+    countdown = 60;
+    var circle = $('.countdown svg circle:last-child');
+    circle.removeClass('countdown-animate')
+    circle.outerWidth();
+    circle.addClass('countdown-animate');
+  }
+
   $('.countdown').on('cdAnimate', function() {
     var countdownNumberEl = document.querySelector('.countdown-number');
-    if (countdown == null) {
-      countdown = 60;
-      var circle = $('.countdown svg circle:last-child');
-      circle.removeClass('countdown-animate')
-      circle.outerWidth();
-      circle.addClass('countdown-animate');
-    }
+
+    resetTimer();
 
     countdownNumberEl.textContent = countdown;
 
@@ -130,9 +131,13 @@ $(document).ready(function() {
 
         if (countdown >= 0)
           countdownNumberEl.textContent = countdown;
-        else
-          countdown = null;
       }, 1000);
+    }
+  });
+
+  $('.countdown').on('cdAnimateReset', function() {
+    if (interval != null) {
+      resetTimer();
     }
   });
 });
