@@ -181,7 +181,7 @@ STATICFILES_FINDERS = [
 
 # The types of tasks allowed inside the Textinator project
 # TODO: handle if the file does not exist
-TASK_TYPES = list(yaml.load(open(os.path.join(BASE_DIR, 'task_types.yaml'))).items())
+TASK_TYPES = list(yaml.load(open(os.path.join(BASE_DIR, 'task_types.yaml')), Loader=yaml.FullLoader).items())
 
 DATASOURCE_TYPES = [
     ('TextFile', 'Plain text file(s)'),

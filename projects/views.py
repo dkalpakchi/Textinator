@@ -81,56 +81,71 @@ def record_datapoint(request):
         return JsonResponse({'error': True})
 
     for chunk in chunks:
-        if chunk['marked']:
-            if chunk['context']:
+        if chunk.get('marked', False):
+            if 'context' in chunk and type(chunk['context']) == str:
                 ctx = retrieve_by_hash(chunk['context'], Context, ctx_cache)
                 if not ctx:
                     ctx = Context.objects.create(content=chunk['context'])
                     ctx_cache.set(ctx.content_hash, ctx.pk, 600)
             else:
                 ctx = None
+
             try:
-                marker = Marker.objects.get(label_name=chunk['label'])
+                if not 'label' in chunk or type(chunk['label']) != str: continue
+                marker = Marker.objects.get(label_name=chunk['label'].strip())
             except Marker.DoesNotExist:
                 continue
 
-            inp = retrieve_by_hash(data['question'], Input, inp_cache)
-            if not inp:
-                inp = Input.objects.create(context=ctx, project=project, content=data['question'], user=user)
-                inp_cache.set(inp.content_hash, inp.pk, 600)
-
-            new_start = chunk['lengthBefore'] + chunk['start']
-            new_end = chunk['lengthBefore'] + chunk['end']
-
-            if is_resolution:
-                # resolution case
-                pass
-            elif is_review:
-                # check if matches original answer
-                original = Label.objects.filter(input=inp).get()
-                if original:
-                    ambiguity_status, is_match = 'no', False
-                    no_overlap = (original.start > new_end) or (original.end < new_start)
-                    
-                    if not no_overlap:
-                        is_match = (original.start == new_start) and (original.end == new_end)
-                        if not is_match:
-                            requires_resolution = (original.start == new_start) or (original.end == new_end)
-                            if requires_resolution:
-                                ambiguity_status = 'rr'
-                    
-                    LabelReview.objects.create(
-                        original=original, start=new_start, end=new_end, user=user, marker=marker,
-                        ambiguity_status=ambiguity_status, is_match=is_match
-                    )
+            if 'input' in data:
+                inp = retrieve_by_hash(data['input'], Input, inp_cache)
+                if not inp:
+                    inp = Input.objects.create(context=ctx, project=project, content=data['input'], user=user)
+                    inp_cache.set(inp.content_hash, inp.pk, 600)
             else:
-                Label.objects.create(
-                    input=inp, start=new_start, end=new_end, marker=marker, user=user
-                )
-            u_profile.points += 1
-            if 'time' in data:
-                u_profile.asking_time += float(data['time'])
-                u_profile.timed_questions += 1
+                inp = None
+
+            if 'lengthBefore' in chunk and 'start' in chunk and 'end' in chunk:
+                new_start = chunk['lengthBefore'] + chunk['start']
+                new_end = chunk['lengthBefore'] + chunk['end']
+
+                if is_resolution:
+                    # resolution case
+                    pass
+                elif is_review:
+                    # check if matches original answer
+                    if inp:
+                        original = Label.objects.filter(input=inp).get()
+                    else:
+                        original = Label.objects.filter(context=ctx).get()
+
+                    if original:
+                        ambiguity_status, is_match = 'no', False
+                        no_overlap = (original.start > new_end) or (original.end < new_start)
+                        
+                        if not no_overlap:
+                            is_match = (original.start == new_start) and (original.end == new_end)
+                            if not is_match:
+                                requires_resolution = (original.start == new_start) or (original.end == new_end)
+                                if requires_resolution:
+                                    ambiguity_status = 'rr'
+                        
+                        LabelReview.objects.create(
+                            original=original, start=new_start, end=new_end, user=user, marker=marker,
+                            ambiguity_status=ambiguity_status, is_match=is_match
+                        )
+                else:
+                    if inp:
+                        Label.objects.create(
+                            input=inp, start=new_start, end=new_end, marker=marker, user=user
+                        )
+                    else:
+                        Label.objects.create(
+                            context=ctx, start=new_start, end=new_end, marker=marker, user=user
+                        )
+                u_profile.points += 1
+                if 'time' in data:
+                    u_profile.asking_time += float(data['time'])
+                    u_profile.timed_questions += 1
     u_profile.save()
 
     if project.is_peer_reviewed:

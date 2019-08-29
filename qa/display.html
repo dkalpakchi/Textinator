@@ -17,13 +17,17 @@
         {% for marker in task_markers %}
           <div class="marker tags has-addons" data-color="{{marker.color}}" data-shortcut="{{marker.shortcut|upper}}">
             <span class="tag is-{{marker.color}}">{{marker.label_name}}</span>
-            <span class="tag is-dark">{{marker.shortcut|upper}}</span>
+            {% if marker.shortcut %}
+              <span class="tag is-dark">{{marker.shortcut|upper}}</span>
+            {% endif %}
           </div>
         {% endfor %}
         {% for marker in project.marker_set.all %}
           <div class="marker tags has-addons" data-color="{{marker.color}}" data-shortcut="{{marker.shortcut|upper}}">
             <span class="tag is-{{marker.color}}">{{marker.label_name}}</span>
-            <span class="tag is-dark">{{marker.shortcut|upper}}</span>
+            {% if marker.shortcut %}
+              <span class="tag is-dark">{{marker.shortcut|upper}}</span>
+            {% endif %}
           </div>
         {% endfor %}
       </div>
@@ -38,7 +42,7 @@
           <input type="hidden" name="pid" value="{{project.pk}}">
           <div class="field">
             <div class="control">
-              <input class='question input' type="text" name="question" placeholder="Type in your question here">
+              <input class='question input' type="text" name="input" placeholder="Type in your question here">
             </div>
           </div>
           <div class="field is-grouped">

@@ -132,14 +132,17 @@ class Label(models.Model):
     start = models.PositiveIntegerField(null=True)
     end = models.PositiveIntegerField(null=True)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    input = models.ForeignKey(Input, on_delete=models.CASCADE)
+    input = models.ForeignKey(Input, on_delete=models.CASCADE, null=True)     # if input is there, input should be not NULL
+    context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True) # if there is no input, there must be context
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     impossible = models.BooleanField(default=False)
 
     @property
     def text(self):
-        return self.input.context.content[self.start:self.end]
-
+        if self.input:
+            return self.input.context.content[self.start:self.end]
+        else:
+            return self.context.content[self.start:self.end]
 
 class LabelReview(models.Model):
     original = models.ForeignKey(Label, on_delete=models.CASCADE)
@@ -161,8 +164,8 @@ class LabelReview(models.Model):
 
 class UserProfile(models.Model):
     points = models.IntegerField(default=0)
-    asking_time = models.IntegerField(null=True) # total asking time
-    timed_questions = models.IntegerField(null=True) # might be that some questions were not timed (like the first bunch of questions)
+    asking_time = models.IntegerField(default=0) # total asking time
+    timed_questions = models.IntegerField(default=0) # might be that some questions were not timed (like the first bunch of questions)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profiles')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='participant_profiles')
 
@@ -174,7 +177,7 @@ class UserProfile(models.Model):
         """
         Average asking time
         """
-        return round(self.asking_time / self.timed_questions, 1)
+        return round(self.asking_time / self.timed_questions, 1) if self.asking_time > 0 and self.timed_questions > 0 else None
 
     # def discarded(self):
     #     Label.objects.filter(is_review=True, input__user=self.user).values('input').annotate(discarded=models.Count('is_match') - models.Sum('is_match'))
@@ -194,4 +197,5 @@ class Level(models.Model):
     title = models.CharField(max_length=50)
     points = models.IntegerField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
+
 

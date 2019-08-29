@@ -12,7 +12,11 @@ $(document).ready(function() {
     while (prev != null) {
       if (prev.nodeType == 1) {
         if (prev.tagName == "BR") {
+          // if newline
           len += 1
+        } else if (prev.tagName == "SPAN" && prev.classList.contains("tag")) {
+          // if there is a label
+          len += prev.innerText.length
         }
       } else if (prev.nodeType == 3) {
         len += prev.length
@@ -70,9 +74,9 @@ $(document).ready(function() {
       var el = e.target,
           parent = el.parentNode; // actual span
 
-      delete chunks[idc];
+      chunks.splice(idc, 1);
       mergeWithNeighbors(parent);
-      // window.chunks = chunks;
+      window.chunks = chunks;
     }, true);
     markedSpan.appendChild(deleteMarkedBtn)
 
@@ -82,7 +86,7 @@ $(document).ready(function() {
     chunk['marked'] = true;
     chunk['label'] = this.textContent;
     delete chunk['node']
-    // window.chunks = chunks;
+    window.chunks = chunks;
   });
 
   function updateChunk() {
@@ -105,7 +109,7 @@ $(document).ready(function() {
         chunk['lengthBefore'] = 0;
       } else if (contextSize == 't') {
         // text
-        chunk['context'] = $('.selector').html().replace(/<br>/gi, '\n');
+        chunk['context'] = resetText;
         chunk['lengthBefore'] = previousTextLength(selection.anchorNode);
       } else if (contextSize == 's') {
         // TODO sentence
@@ -228,27 +232,31 @@ $(document).ready(function() {
   $('#getNewArticle').on('click', function(e) {
     e.preventDefault();
 
-    var el = $('.selector.element');
-    el.addClass('is-loading');
+    var confirmation = chunks.length > 0 ? confirm("All your unsubmitted labels will be removed. Are you sure?") : true;
 
-    $.ajax({
-      type: "POST",
-      url: $(this).attr('href'),
-      dataType: "json",
-      data: {
-        "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val()
-      },
-      success: function(d) {
-        $('.selector').html(d.text);
-        chunks = [];
-        resetTextHTML = selectorArea.innerHTML;
-        resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n');
-        el.removeClass('is-loading');
-      },
-      error: function() {
-        console.log("ERROR!")
-        el.removeClass('is-loading');
-      }
-    })
+    if (confirmation) {
+      var el = $('.selector.element');
+      el.addClass('is-loading');
+
+      $.ajax({
+        type: "POST",
+        url: $(this).attr('href'),
+        dataType: "json",
+        data: {
+          "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val()
+        },
+        success: function(d) {
+          $('.selector').html(d.text);
+          chunks = [];
+          resetTextHTML = selectorArea.innerHTML;
+          resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n');
+          el.removeClass('is-loading');
+        },
+        error: function() {
+          console.log("ERROR!")
+          el.removeClass('is-loading');
+        }
+      })
+    }
   });
 });
