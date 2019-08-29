@@ -216,6 +216,17 @@ $(document).ready(function() {
           if ('aat' in data)
             $('#aat').html(data['aat'] + "s");
         }
+        var $inpSmaller = (data['inp_points'] >= 1000) ? $('<span class="smaller">kp</span>') : $('<span class="smaller">p</span>'),
+            $inpPts = $('#inputPoints'),
+            $peerSmaller = (data['peer_points'] >= 1000) ? $('<span class="smaller">kp</span>') : $('<span class="smaller">p</span>'),
+            $peerPts = $('#peerPoints');
+        
+        $inpPts.text(data['inp_points']);
+        $inpPts.append($inpSmaller);
+        
+        $peerPts.text(data['peer_points']);
+        $peerPts.append($peerSmaller);
+        
         chunks = [];
         qStart = new Date();
         $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');

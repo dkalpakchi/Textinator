@@ -174,7 +174,7 @@ class LabelReview(CommonModel):
 
 
 class UserProfile(CommonModel):
-    points = models.IntegerField(default=0)
+    points = models.FloatField(default=0.0)
     asking_time = models.IntegerField(default=0) # total asking time
     timed_questions = models.IntegerField(default=0) # might be that some questions were not timed (like the first bunch of questions)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profiles')
@@ -192,7 +192,11 @@ class UserProfile(CommonModel):
 
     @property
     def accepted(self):
-        return LabelReview.objects.filter(original__user=self.user).count() / 2
+        return LabelReview.objects.filter(original__user=self.user).count()
+
+    @property
+    def peer_points(self):
+        return self.accepted / 2
 
     def submitted(self):
         return Input.objects.filter(user=self.user).count()

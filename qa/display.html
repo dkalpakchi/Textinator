@@ -71,9 +71,9 @@
                 <div class="tt-set-size tt-charts-container">
                   <div class="tt-pie-wrapper no-margin">
                     {% if profile.points > 1000 %}
-                      <span class="tt-label">{{profile.points|divide:1000|floatformat}}<span class="smaller">kp</span></span>
+                      <span id="inputPoints" class="tt-label">{{profile.points|divide:1000|floatformat}}<span class="smaller">kp</span></span>
                     {% else %}
-                      <span class="tt-label">{{profile.points|floatformat}}<span class="smaller">p</span></span>
+                      <span id="inputPoints" class="tt-label">{{profile.points|floatformat}}<span class="smaller">p</span></span>
                     {% endif %}
                     <div class="tt-pie">
                       <div class="left-side half-circle"></div>
@@ -90,10 +90,10 @@
               <p class="title">
                 <div class="tt-set-size tt-charts-container">
                   <div class="tt-pie-wrapper no-margin">
-                    {% if profile.accepted > 1000 %}
-                      <span class="tt-label">{{profile.accepted|divide:1000|floatformat}}<span class="smaller">kp</span></span>
+                    {% if profile.peer_points > 1000 %}
+                      <span id="peerPoints" class="tt-label">{{profile.peer_points|divide:1000|floatformat}}<span class="smaller">kp</span></span>
                     {% else %}
-                      <span class="tt-label">{{profile.accepted|floatformat}}<span class="smaller">p</span></span>
+                      <span id="peerPoints" class="tt-label">{{profile.peer_points|floatformat}}<span class="smaller">p</span></span>
                     {% endif %}
                     <div class="tt-pie">
                       <div class="left-side half-circle"></div>

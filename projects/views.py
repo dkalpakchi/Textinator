@@ -171,7 +171,9 @@ def record_datapoint(request):
             'content': inp.content,
             'context': inp.context.content
         } if inp else None,
-        'aat': u_profile.aat
+        'aat': u_profile.aat,
+        'inp_points': u_profile.points,
+        'peer_points': u_profile.peer_points
     })
 
 
