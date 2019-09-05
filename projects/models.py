@@ -13,14 +13,10 @@ from dewiki.parser import Parser
 
 
 class CommonModel(models.Model):
-    dt_created = models.DateTimeField(null=True)
+    dt_created = models.DateTimeField(null=True, default=timezone.now)
 
     class Meta:
         abstract = True
-
-    def save(self, *args, **kwargs):
-        self.dt_created = timezone.now()
-        super(CommonModel, self).save(*args, **kwargs)
 
 
 # Create your models here.
@@ -90,12 +86,12 @@ class Project(CommonModel):
 
 
 class Marker(CommonModel):
-    label_name = models.CharField(max_length=50, unique=True)
-    short = models.CharField(max_length=10, help_text='By default the capitalized first three character of the label', blank=True, null=True)
+    name = models.CharField(max_length=50, unique=True)
+    short = models.CharField(max_length=10, help_text='By default the capitalized first three character of the label', unique=True)
     color = models.CharField(max_length=10, choices=settings.MARKER_COLORS)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
     for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
-    shortcut = models.CharField(max_length=10, help_text="Keyboard shortcut for marking a piece of text with this label", null=True)
+    shortcut = models.CharField(max_length=10, help_text="Keyboard shortcut for marking a piece of text with this label", null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if (self.project and self.for_task_type):
@@ -104,11 +100,31 @@ class Marker(CommonModel):
             raise ModelValidationError("The marker should be either project-specific or task-specific")
         else:
             if not self.short:
-                self.short = self.label_name[:3].upper()
+                self.short = self.name[:3].upper()
             super(Marker, self).save(*args, **kwargs) 
 
     def __str__(self):
-        return str(self.label_name)
+        return str(self.name)
+
+
+class Relation(CommonModel):
+    name = models.CharField(max_length=50, unique=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
+    for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
+    first_node = models.ForeignKey(Marker, related_name="first_node", on_delete=models.CASCADE)
+    second_node = models.ForeignKey(Marker, related_name="second_node", on_delete=models.CASCADE)
+    direction = models.CharField(max_length=1, choices=[
+        ('0', 'Directed from the first to the second'),
+        ('1', 'Directed from the second to the first'),
+        ('2', 'Bi-directional')
+    ])
+
+    @property
+    def between(self):
+        return self.first_node.short + '-:-' + self.second_node.short
+
+    def __str__(self):
+        return str(self.name)
 
 
 class Context(CommonModel):
@@ -171,6 +187,12 @@ class LabelReview(CommonModel):
     @property
     def text(self):
         return self.original.input.context.content[self.start:self.end]
+
+
+class LabelRelation(CommonModel):
+    rule = models.ForeignKey(Relation, on_delete=models.CASCADE)
+    first_label = models.ForeignKey(Label, related_name='first_label', on_delete=models.CASCADE)
+    second_label = models.ForeignKey(Label, related_name='second_label', on_delete=models.CASCADE)
 
 
 class UserProfile(CommonModel):

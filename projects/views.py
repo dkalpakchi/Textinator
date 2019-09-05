@@ -6,11 +6,11 @@ from django.http import JsonResponse, Http404
 from django.shortcuts import render, get_object_or_404
 from django.views import generic
 from django.conf import settings
-from django.template import Context, Template, RequestContext
+from django.template import Context, RequestContext
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.core.cache import caches
-from django.template.loader import render_to_string
+from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 
 import markdown
@@ -48,18 +48,23 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
         proj = data[con]
 
         task_markers = Marker.objects.filter(for_task_type=proj.task_type)
+        task_relations = Relation.objects.filter(for_task_type=proj.task_type)
 
         u_profile = UserProfile.objects.filter(user=self.request.user, project=proj).get()
 
         ctx = {
-            'text': get_new_article(proj),
+            'text': proj.data(), #get_new_article(proj),
             'project': proj,
             'task_markers': task_markers,
+            'task_relations': task_relations,
             'profile': u_profile
         }
 
-        with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
-            data['task_type_template'] = Template(f.read().replace('\n', '')).render(RequestContext(self.request, ctx))
+        tmpl = get_template(os.path.join(proj.task_type, 'display.html'))
+        data['task_type_template'] = tmpl.render(ctx)
+
+        # with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
+        #     tmpl = Template(f.read().replace('\n', ''))
         return data
 
 

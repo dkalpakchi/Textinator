@@ -115,6 +115,7 @@ class DataSourceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Marker)
+admin.site.register(Relation)
 admin.site.register(Level)
 
 admin.site.site_header = 'Textinator admin'

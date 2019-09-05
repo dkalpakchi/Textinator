@@ -190,6 +190,10 @@ DATASOURCE_TYPES = [
     ('Json', 'JSON file(s)')
 ]
 
+MARKER_TYPES = [
+    ('lb', 'Label'),
+    ('rl', 'Relation')
+]
 
 MARKER_COLORS = [
     ('danger', 'Red'),

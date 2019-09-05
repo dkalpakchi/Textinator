@@ -189,7 +189,7 @@ textarea {
   height: 100px;
 }
 
-.marker.tags:hover {
+.marker.tags:hover, .relation.tags:hover {
   cursor: pointer;
 }
 
@@ -204,4 +204,19 @@ textarea {
 
 .tt-level .tt-title {
   font-size: 2em;
+}
+
+.selector.element span.tag:hover, .selector.element span.tag.active {
+  border: 1px solid black;
+  cursor: pointer;
+}
+
+.tag.is-grey {
+  background-color: #696969;
+  color: white;
+}
+
+.tag.arrow {
+  display: table-cell;
+  font-weight: bold;
 }

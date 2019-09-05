@@ -50,6 +50,11 @@ class TextFileSource(DataSource):
             with open(fname) as f:
                 self._add_datapoint(f.read())
 
+        self.__length = len(self.data())
+
+    def get_random_datapoint(self):
+        return self[random.randint(0, self.__length - 1)]
+
 
 class ElasticSource(DataSource):
     pass

@@ -40,6 +40,11 @@ gulp.task("shepherd", gulp.series(['shepherd:css', 'shepherd:js'], function(done
   done();
 }))
 
-gulp.task('default', gulp.series(['bulma', 'jquery', 'fontawesome', 'shepherd'], function(done) {
+gulp.task('d3', function() {
+  return gulp.src(FOLDER + '/d3/dist/d3.min.js')
+    .pipe(gulp.dest('static/scripts'))
+})
+
+gulp.task('default', gulp.series(['bulma', 'jquery', 'fontawesome', 'shepherd', 'd3'], function(done) {
   done();
 }));
