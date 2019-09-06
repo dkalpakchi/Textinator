@@ -1,7 +1,7 @@
 $(document).ready(function() {
   var chunks = [],
-      lastRelationHeight = 10,
-      lastRelationsId = 0,
+      lastRelationY = 0,
+      lastRelationId = 0,
       selectorArea = document.querySelector('.selector'),
       resetTextHTML = selectorArea.innerHTML,
       resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n'),
@@ -106,11 +106,11 @@ $(document).ready(function() {
         direction = this.getAttribute('data-d');
     if ($parts.length >= 2) {
       var nodes = {},
-          links = [],
-          withCoordinates = ($parts.length == 2);
+          links = [];
+      var startId = lastRelationId;
       $parts.each(function(i) {
-        $parts[i].id = 'rl_' + lastRelationsId;
-        lastRelationsId++;
+        $parts[i].id = 'rl_' + lastRelationId;
+        lastRelationId++;
 
         $($parts[i]).prop('in_relation', true);
 
@@ -120,21 +120,11 @@ $(document).ready(function() {
         if (!nodes.hasOwnProperty(s)) {
           nodes[s] = [];
         }
-
-        if (withCoordinates) {
-          nodes[s].push({
-            'id': $parts[i].id,
-            'name': $parts[i].innerText,
-            'x': i * 100,
-            'y': 0
-          });
-        } else {
-          nodes[s].push({
-            'id': $parts[i].id,
-            'name': $parts[i].innerText,
-            'dom': $parts[i].id
-          });
-        }
+        nodes[s].push({
+          'id': $parts[i].id,
+          'name': $parts[i].innerText,
+          'dom': $parts[i].id
+        });
       });
 
       var from = null,
@@ -149,37 +139,17 @@ $(document).ready(function() {
         to = between[0];
       }
 
-      console.log(from)
-      console.log(to)
-      console.log(nodes)
-
       nodes[from].forEach(function(f) {
         nodes[to].forEach(function(t) {
-          if (withCoordinates) {
-            links.push({
-              'source': {
-                'id': f.id,
-                'x': 's',
-                'y': 'd'
-              },
-              'target': {
-                'id': 'd',
-                'x': 'f',
-                'y': 'f'
-              }
-            })
-          } else {
-            links.push({
-              'source': f.id,
-              'target': t.id
-            })
-          }
-          
+          links.push({
+            'source': f.id,
+            'target': t.id
+          })
         })
       })
 
       drawNetwork({
-        'id': 'hello',
+        'id': "n" + startId + "__" + (lastRelationId - 1),
         'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
         'links': links
       }, (from != null && to != null))
@@ -382,35 +352,37 @@ $(document).ready(function() {
       .attr("width", "100%")
       .attr("height", "100%");
 
+
+  // TODO: this marker should be visible w.r.t. the target node
+  svg.append("svg:defs").append("svg:marker")
+    .attr("id", "triangle")
+    .attr("refX", 6)
+    .attr("refY", 6)
+    .attr("markerWidth", 20)
+    .attr("markerHeight", 20)
+    .attr("markerUnits","userSpaceOnUse")
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M 0 0 12 6 0 12 3 6")
+    .style("fill", "black");
+
   var initialMarginX = 50,
       initialMarginY = 50,
       graphId = 0,
-      rectWidth = 20,
-      rectHeight = 20;
+      radius = 10;
 
   function drawNetwork(data, arrows) {
     if (arrows === undefined) arrows = false;
 
     // Initialize the links
-    var deltaY = (initialMarginY + graphId * (rectHeight + 5));
+    var deltaY = initialMarginY;
         deltaX = initialMarginX;
+
+    var svg = d3.select("#relations svg")
 
     svg = svg.append("g")
       .attr('id', data.id)
       .attr("transform", "translate(" + deltaX + ", " + deltaY + ")")
-
-    // TODO: this marker should be visible w.r.t. the target node
-    svg.append("svg:defs").append("svg:marker")
-      .attr("id", "triangle")
-      .attr("refX", 6)
-      .attr("refY", 6)
-      .attr("markerWidth", 20)
-      .attr("markerHeight", 20)
-      .attr("markerUnits","userSpaceOnUse")
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M 0 0 12 6 0 12 3 6")
-      .style("fill", "black");
 
     var link = svg
       .selectAll("line")
@@ -424,13 +396,12 @@ $(document).ready(function() {
 
     // Initialize the nodes
     var node = svg
-      .selectAll("rect")
+      .selectAll("circle")
       .data(data.nodes)
       .enter()
-      .append("rect")
-        .attr("width", rectWidth)
-        .attr("height", rectHeight)
-        .attr("data-name", function(x) { return x.name })
+      .append("circle")
+        .attr("r", radius)
+        .attr('data-id', function(d) { return d.id })
         .style("fill", "#69b3a2")
         .on("mouseover", function(d, i) {
           $('#' + d.dom).addClass('active');
@@ -439,40 +410,101 @@ $(document).ready(function() {
           $('#' + d.dom).removeClass('active');
         })
 
-    if (data.nodes.length > 2) {
-      // Let's list the force we wanna apply on the network
-      var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
-          .force("link", d3.forceLink()                               // This force provides links between nodes
-                .id(function(d) { return d.id; })                     // This provide  the id of a node
-                .links(data.links)                                    // and this the list of links
-          )
-          .force("charge", d3.forceManyBody().strength(-500))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-          .force("center", d3.forceCenter(rectWidth/2, 10));                   // This force attracts nodes to the center of the svg area
+    var text = svg.selectAll("text")
+      .data(data.nodes)
+      .enter().append("text")
+        .text(function(d) { return d.name; });
 
-      simulation.on("tick", ticked);
+    // Let's list the force we wanna apply on the network
+    var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
+        .force("link", d3.forceLink()                               // This force provides links between nodes
+              .id(function(d) { return d.id; })                     // This provide  the id of a node
+              .links(data.links)                                    // and this the list of links
+        )
+        .force("charge", d3.forceManyBody().strength(-300))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+        .force("center", d3.forceCenter(radius, 10));                   // This force attracts nodes to the center of the svg area
 
-      // This function is run at each iteration of the force algorithm, updating the nodes position.
-      function ticked() {
-        link
-          .attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
+    simulation.on("tick", ticked);
 
-        node
-         .attr("x", function (d) { return d.x - rectWidth/2; })
-         .attr("y", function(d) { return d.y; });
-      }
-    } else if (data.nodes.length == 2) {
+    function linkArc(d) {
+      var targetX = d.target.x - d.target.started,
+          targetY = d.target.y - d.target.started;
+      d.target.x = targetX;
+      d.target.y = targetY;
+      return d;
+    }
+
+    // This function is run at each iteration of the force algorithm, updating the nodes position.
+    function ticked() {
+      text
+        .attr("x", function(d) { return d.x + radius * 1.2; })
+        .attr("y", function(d) { return d.y; })
+
       link
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
         .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
+        .attr("y2", function(d) { 
+          if (d.target.y > d.source.y) {
+            // means arrow down
+            return d.target.y - 12;
+          } else {
+            // means arrow up
+            return d.target.y + 12;
+          }
+        });
 
       node
-       .attr("x", function (d) { return d.x; })
-       .attr("y", function(d) { return d.y; });
+       .attr("cx", function(d) { return d.x; })
+       .attr("cy", function(d) { return d.y; });
     }
+
+    function onCloseClick(d) {
+      $(this.parentNode).find('circle[data-id]').each(function(i, d) { 
+        var $el = $('#' + d.getAttribute('data-id'));
+        if ($el.length > 0) {
+          $el.prop('in_relation', false);
+          $el.attr('id', '');
+        }
+      });
+      d3.select(this.parentNode).remove();
+    }
+
+    simulation.on('end', function() {
+      var group = d3.select('g#' + data.id);
+
+      if (!group.empty()) {
+        var bbox = group.node().getBBox();
+
+        svg.append("circle")
+          .attr('cx', bbox['x'] + bbox['width'] + 25)
+          .attr('cy', bbox['y'] + 15)
+          .attr("r", 10)
+          .attr("stroke", "black")
+          .attr('stroke-width', '2px')
+          .attr('fill-opacity', 0)
+          .on('click', onCloseClick)
+
+        svg.append('line')
+          .attr('x1', bbox['x'] + bbox['width'] + 20)
+          .attr('y1', bbox['y'] + 10)
+          .attr('x2', bbox['x'] + bbox['width'] + 30)
+          .attr('y2', bbox['y'] + 20)
+          .attr('stroke-width', '2px')
+          .style("stroke", "black")
+          .on('click', onCloseClick)
+
+        svg.append('line')
+          .attr('x1', bbox['x'] + bbox['width'] + 30)
+          .attr('y1', bbox['y'] + 10)
+          .attr('x2', bbox['x'] + bbox['width'] + 20)
+          .attr('y2', bbox['y'] + 20)
+          .attr('stroke-width', '2px')
+          .style("stroke", "black")
+          .on('click', onCloseClick)
+      }
+
+      lastRelationY = Math.max.apply(null, data.nodes.map(function(d) { return d.y })) + 30;
+    });
   }
 });
