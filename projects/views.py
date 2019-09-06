@@ -61,7 +61,7 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
         }
 
         tmpl = get_template(os.path.join(proj.task_type, 'display.html'))
-        data['task_type_template'] = tmpl.render(ctx)
+        data['task_type_template'] = tmpl.render(ctx, self.request)
 
         # with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
         #     tmpl = Template(f.read().replace('\n', ''))
@@ -73,7 +73,10 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
 def record_datapoint(request):
     data = request.POST
     chunks = json.loads(data['chunks'])
+    relations = json.loads(data['relations'])
     ctx_cache, inp_cache = caches['context'], caches['input']
+
+    print(relations)
 
     is_review = data.get('is_review', 'f') == 'true'
     is_resolution = data.get('is_resolution', 'f') == 'true'
@@ -100,7 +103,7 @@ def record_datapoint(request):
 
             try:
                 if (not 'label' in chunk) or (type(chunk['label']) != str): continue
-                marker = Marker.objects.get(label_name=chunk['label'].strip())
+                marker = Marker.objects.get(name=chunk['label'].strip())
             except Marker.DoesNotExist:
                 continue
 
@@ -151,6 +154,9 @@ def record_datapoint(request):
                             context=ctx, start=new_start, end=new_end, marker=marker, user=user
                         )
                     saved_labels += 1
+
+    # TODO: after dealing with chunks, deal with relations by finding the necessary Labels
+    #       and put those specified in the relations to LabelRelations.
     
     if saved_labels > 0:
         # means the user has provided at least one new input

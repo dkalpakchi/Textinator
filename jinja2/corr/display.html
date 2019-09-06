@@ -72,8 +72,8 @@
     </article>
 
     <form id="inputForm" action="{{ url('projects:record_datapoint') }}">
-      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-      <input type="hidden" name="pid" value="{{project.pk}}">
+      {{ csrf_input }}
+      <input type="hidden" name="pid" value="{{ project.pk }}">
       <div class="field is-grouped">
         <div class="control">
           <button class='submit button'>Submit</button>

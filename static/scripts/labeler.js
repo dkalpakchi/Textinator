@@ -1,7 +1,9 @@
 $(document).ready(function() {
   var chunks = [],
-      lastRelationY = 0,
-      lastRelationId = 0,
+      relations = [],
+      lastRelationY = null,         // TODO: maybe remove
+      beforeLastRelationY = null,   // TODO: maybe remove
+      lastRelationId = 0,           // TODO: maybe remove
       selectorArea = document.querySelector('.selector'),
       resetTextHTML = selectorArea.innerHTML,
       resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n'),
@@ -148,6 +150,22 @@ $(document).ready(function() {
         })
       })
 
+      links.forEach(function(l) {
+        var source = document.querySelector('#' + l.source),
+            target = document.querySelector('#' + l.target);
+        relations.push({
+          's': {
+            'name': source.innerText,
+            'short': source.getAttribute('data-s')
+          },
+          't': {
+            'name': target.innerText,
+            'short': target.getAttribute('data-s')
+          }
+        })
+      });
+
+
       drawNetwork({
         'id': "n" + startId + "__" + (lastRelationId - 1),
         'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
@@ -243,6 +261,7 @@ $(document).ready(function() {
     var inputFormData = $inputForm.serializeObject(),
         underReview = $questionBlock.prop('review') || false;
     inputFormData['chunks'] = JSON.stringify(chunks);
+    inputFormData['relations'] = JSON.stringify(relations);
     inputFormData['is_review'] = underReview;
     inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
 
@@ -262,6 +281,8 @@ $(document).ready(function() {
             $questionBlock.addClass('is-primary');
             $questionBlock.prop('review', false);
 
+            // TODO: get title for a review task from the server
+            //       make it a configurable project setting
             $title.html("Your question");
 
             $qInput.prop("disabled", false);
@@ -367,15 +388,19 @@ $(document).ready(function() {
     .style("fill", "black");
 
   var initialMarginX = 50,
-      initialMarginY = 50,
+      initialMarginY = null,
       graphId = 0,
       radius = 10;
 
   function drawNetwork(data, arrows) {
     if (arrows === undefined) arrows = false;
 
+    if (initialMarginY == null) {
+      initialMarginY = data.nodes.length * 15;
+    }
+
     // Initialize the links
-    var deltaY = initialMarginY;
+    var deltaY = initialMarginY + lastRelationY;
         deltaX = initialMarginX;
 
     var svg = d3.select("#relations svg")
@@ -468,6 +493,10 @@ $(document).ready(function() {
        .attr("cy", function(d) { return d.y; });
     }
 
+    // TODO: work better on deletion of <g>, i.e. every g that is below the deleted g
+    // must be translated upper, whereas every g that is above the deleted should be the same
+    // if the deleted g is the first one, the next added g should appear at the top, not
+    // after the non-existing deleted one.
     function onCloseClick(d) {
       $(this.parentNode).find('circle[data-id]').each(function(i, d) { 
         var $el = $('#' + d.getAttribute('data-id'));
@@ -476,6 +505,7 @@ $(document).ready(function() {
           $el.attr('id', '');
         }
       });
+      lastRelationY = beforeLastRelationY;
       d3.select(this.parentNode).remove();
     }
 
@@ -513,6 +543,11 @@ $(document).ready(function() {
           .on('click', onCloseClick)
       }
 
+      if (lastRelationY != null) {
+        beforeLastRelationY = lastRelationY;
+      } else {
+        beforeLastRelationY = initialMarginY;
+      }
       lastRelationY = Math.max.apply(null, data.nodes.map(function(d) { return d.y })) + 30;
     });
   }
