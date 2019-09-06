@@ -421,18 +421,10 @@ $(document).ready(function() {
               .id(function(d) { return d.id; })                     // This provide  the id of a node
               .links(data.links)                                    // and this the list of links
         )
-        .force("charge", d3.forceManyBody().strength(-300))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+        .force("charge", d3.forceManyBody().strength(-400))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
         .force("center", d3.forceCenter(radius, 10));                   // This force attracts nodes to the center of the svg area
 
     simulation.on("tick", ticked);
-
-    function linkArc(d) {
-      var targetX = d.target.x - d.target.started,
-          targetY = d.target.y - d.target.started;
-      d.target.x = targetX;
-      d.target.y = targetY;
-      return d;
-    }
 
     // This function is run at each iteration of the force algorithm, updating the nodes position.
     function ticked() {
@@ -443,14 +435,31 @@ $(document).ready(function() {
       link
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { 
+        .attr("x2", function(d) { 
+          var dx = 0.7 * Math.abs(d.target.x - d.source.x); 
+          if (d.target.x > d.source.x) {
+            return d.source.x + dx;
+          } else {
+            return d.source.x - dx;
+          }
+        })
+        .attr("y2", function(d) {
+          var dx = 0.7 * Math.abs(d.target.x - d.source.x);
+          var x = null;
+          if (d.target.x > d.source.x) {
+            x = d.source.x + dx;
+          } else {
+            x = d.source.x - dx;
+          }
+
+          var dy = Math.abs(x - d.source.x) * Math.abs(d.target.y - d.source.y) / Math.abs(d.target.x - d.source.x)
+
           if (d.target.y > d.source.y) {
             // means arrow down
-            return d.target.y - 12;
+            return d.source.y + dy;
           } else {
             // means arrow up
-            return d.target.y + 12;
+            return d.source.y - dy;
           }
         });
 
