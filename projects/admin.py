@@ -5,7 +5,8 @@ from django_admin_json_editor import JSONEditorWidget
 
 from .models import *
 
-
+# TODO: fix name 'ModelValidationError' is not defined
+#       happens when trying to assign marker to be both task and project specific
 class MarkerInline(admin.StackedInline):
     model = Marker
     extra = 0
@@ -94,6 +95,7 @@ class LabelRelationAdmin(admin.ModelAdmin):
     readonly_fields = ('graph',)
 
 
+# TODO: add autocomplete for data source specs
 class DataSourceForm(forms.ModelForm):
     class Meta:
         model = DataSource
