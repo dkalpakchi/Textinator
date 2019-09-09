@@ -171,6 +171,7 @@ class Label(CommonModel):
         else:
             return self.context.content[self.start:self.end]
 
+
 class LabelReview(CommonModel):
     original = models.ForeignKey(Label, on_delete=models.CASCADE)
     is_match = models.BooleanField(null=True) # whether the reviewed and original labels match (valid only if is_review=True)
@@ -193,6 +194,19 @@ class LabelRelation(CommonModel):
     rule = models.ForeignKey(Relation, on_delete=models.CASCADE)
     first_label = models.ForeignKey(Label, related_name='first_label', on_delete=models.CASCADE)
     second_label = models.ForeignKey(Label, related_name='second_label', on_delete=models.CASCADE)
+
+    @property
+    def graph(self):
+        return str(self)
+
+    def __str__(self):
+        if self.rule.direction == '0':
+            return "{} --> {}".format(self.first_label.text, self.second_label.text)
+        elif self.rule.direction == '1':
+            return "{} <-- {}".format(self.first_label.text, self.second_label.text)
+        else:
+            return "{} --- {}".format(self.first_label.text, self.second_label.text)
+
 
 
 class UserProfile(CommonModel):

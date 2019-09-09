@@ -89,6 +89,11 @@ class LabelReviewAdmin(admin.ModelAdmin):
     readonly_fields = ('text',)
 
 
+@admin.register(LabelRelation)
+class LabelRelationAdmin(admin.ModelAdmin):
+    readonly_fields = ('graph',)
+
+
 class DataSourceForm(forms.ModelForm):
     class Meta:
         model = DataSource

@@ -76,8 +76,6 @@ def record_datapoint(request):
     relations = json.loads(data['relations'])
     ctx_cache, inp_cache = caches['context'], caches['input']
 
-    print(relations)
-
     is_review = data.get('is_review', 'f') == 'true'
     is_resolution = data.get('is_resolution', 'f') == 'true'
 
@@ -91,6 +89,7 @@ def record_datapoint(request):
         return JsonResponse({'error': True})
 
     saved_labels = 0
+    label_cache = {}
     for chunk in chunks:
         if chunk.get('marked', False):
             if 'context' in chunk and type(chunk['context']) == str:
@@ -146,18 +145,38 @@ def record_datapoint(request):
                         )
                 else:
                     if inp:
-                        Label.objects.create(
+                        new_label = Label.objects.create(
                             input=inp, start=new_start, end=new_end, marker=marker, user=user
                         )
                     else:
-                        Label.objects.create(
+                        new_label = Label.objects.create(
                             context=ctx, start=new_start, end=new_end, marker=marker, user=user
                         )
+                    label_cache[chunk['id']] = new_label.id
                     saved_labels += 1
 
     # TODO: after dealing with chunks, deal with relations by finding the necessary Labels
     #       and put those specified in the relations to LabelRelations.
-    
+    for rel in relations:
+        source_id, target_id = int(rel['s']), int(rel['t'])
+
+        try:
+            source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
+            target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
+        except Label.DoesNotExist:
+            continue
+
+        try:
+            rule = Relation.objects.filter(pk=rel['rule']).get()
+        except Relation.DoesNotExist:
+            continue
+
+        LabelRelation.objects.create(rule=rule, first_label=source_label, second_label=target_label)
+
+    # TODO: have to count asking points based on task units,
+    #       e.g. in QA a task unit is a Q&A pair
+    #            in CorefRes a task unit is a reference-antecedent relation
+    #       need some kind of project setting controlling what is a task unit
     if saved_labels > 0:
         # means the user has provided at least one new input
         u_profile.points += 0.5 # asking points

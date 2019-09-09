@@ -23,7 +23,7 @@ def display_marker(marker):
 
 def display_relation(rel):
     template = Template("""
-    <div class="relation tags has-addons" data-b="{{rel.between}}" data-d="{{rel.direction}}">
+    <div class="relation tags has-addons" data-b="{{rel.between}}" data-d="{{rel.direction}}" data-r="{{rel.id}}">
         <span class="tag arrow is-grey">&#8594;</span>
         <span class="tag is-dark">{{rel.name}}</span>
     </div>

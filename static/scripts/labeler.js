@@ -8,7 +8,8 @@ $(document).ready(function() {
       resetTextHTML = selectorArea.innerHTML,
       resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n'),
       contextSize = $('#taskArea').data('context'),
-      qStart = new Date();
+      qStart = new Date(),
+      labelId = 0;
 
   function previousTextLength(node) {
     var len = 0;
@@ -74,6 +75,7 @@ $(document).ready(function() {
       markedSpan.className = "tag is-" + color + " is-medium";
       markedSpan.textContent = chunk['text'].slice(chunk['start'], chunk['end']);
       markedSpan.setAttribute('data-s', this.getAttribute('data-s'));
+      markedSpan.setAttribute('data-i', labelId);
       $(markedSpan).prop('in_relation', false);
       deleteMarkedBtn.className = 'delete is-small';
       deleteMarkedBtn.addEventListener('click', function(e) {
@@ -96,6 +98,8 @@ $(document).ready(function() {
       parent.insertBefore(markedSpan, leftTextNode.nextSibling);
       parent.insertBefore(rightTextNode, markedSpan.nextSibling);
       chunk['marked'] = true;
+      chunk['id'] = labelId;
+      labelId++;
       chunk['label'] = this.querySelector('span.tag:first-child').textContent;
       delete chunk['node']
       window.chunks = chunks;
@@ -105,7 +109,8 @@ $(document).ready(function() {
   $('.relation.tags').on('click', function() {
     var $parts = $('.selector span.tag.active'),
         between = this.getAttribute('data-b').split('-:-'),
-        direction = this.getAttribute('data-d');
+        direction = this.getAttribute('data-d'),
+        rule = this.getAttribute('data-r');
     if ($parts.length >= 2) {
       var nodes = {},
           links = [];
@@ -154,14 +159,9 @@ $(document).ready(function() {
         var source = document.querySelector('#' + l.source),
             target = document.querySelector('#' + l.target);
         relations.push({
-          's': {
-            'name': source.innerText,
-            'short': source.getAttribute('data-s')
-          },
-          't': {
-            'name': target.innerText,
-            'short': target.getAttribute('data-s')
-          }
+          'rule': rule,
+          's': source.getAttribute('data-i'),
+          't': target.getAttribute('data-i')
         })
       });
 
@@ -316,9 +316,13 @@ $(document).ready(function() {
         $peerPts.text(data['peer_points']);
         $peerPts.append($peerSmaller);
         
+        // TODO; trigger iff .countdown is present
         chunks = [];
         qStart = new Date();
         $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
+
+        // clear svg
+        d3.selectAll("svg > *").remove()
       },
       error: function() {
         console.log("ERROR!")
@@ -357,7 +361,7 @@ $(document).ready(function() {
           chunks = [];
           resetTextHTML = selectorArea.innerHTML;
           resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n');
-          el.removeClass('is-loading');hon
+          el.removeClass('is-loading');
         },
         error: function() {
           console.log("ERROR!")
