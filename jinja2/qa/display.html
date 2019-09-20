@@ -1,5 +1,3 @@
-{% load common_extras %}
-
 <div class="columns">
   <div class="column is-three-quarters">
     <article class="article message is-dark">
@@ -14,22 +12,28 @@
         <p>Markers</p>
       </div>
       <div class="message-body">
-        {% for marker in task_markers %}
-          <div class="marker tags has-addons" data-color="{{marker.color}}" data-shortcut="{{marker.shortcut|upper}}">
-            <span class="tag is-{{marker.color}}">{{marker.label_name}}</span>
-            {% if marker.shortcut %}
-              <span class="tag is-dark">{{marker.shortcut|upper}}</span>
-            {% endif %}
-          </div>
-        {% endfor %}
-        {% for marker in project.marker_set.all %}
-          <div class="marker tags has-addons" data-color="{{marker.color}}" data-shortcut="{{marker.shortcut|upper}}">
-            <span class="tag is-{{marker.color}}">{{marker.label_name}}</span>
-            {% if marker.shortcut %}
-              <span class="tag is-dark">{{marker.shortcut|upper}}</span>
-            {% endif %}
-          </div>
-        {% endfor %}
+        <div class="field is-grouped is-grouped-multiline">
+          {% for marker in task_markers %}
+            <div class="control">
+              {{marker|display_marker}}
+            </div>
+          {% endfor %}
+          {% for marker in project.marker_set.all() %}
+            <div class="control">
+              {{marker|display_marker}}
+            </div>
+          {% endfor %}
+          {% for relation in task_relations %}
+            <div class="control">
+              {{relation|display_relation}}
+            </div>
+          {% endfor %}
+          {% for relation in project.relation_set.all() %}
+            <div class="control">
+              {{relation|display_relation}}
+            </div>
+          {% endfor %}
+        </div>
       </div>
     </article>
     <article class="question message is-primary">
@@ -37,8 +41,8 @@
         <p>Your question</p>
       </div>
       <div class="message-body">
-        <form id="inputForm" action="{% url 'projects:record_datapoint' %}">
-          {% csrf_token %}
+        <form id="inputForm" action="{{ url('projects:record_datapoint') }}">
+          {{ csrf_input }}
           <input type="hidden" name="pid" value="{{project.pk}}">
           <div class="field">
             <div class="control">
@@ -50,7 +54,7 @@
               <button class='submit button'>Submit</button>
             </div>
             <div class='control'>
-              <a href="{% url 'projects:new_article' proj=project.pk %}" class="button" id="getNewArticle">Get new article</a>
+              <a href="{{ url('projects:new_article', kwargs={'proj':project.pk}) }}" class="button" id="getNewArticle">Get new article</a>
             </div>
           </div>
         </form>
@@ -71,9 +75,9 @@
                 <div class="tt-set-size tt-charts-container">
                   <div class="tt-pie-wrapper no-margin">
                     {% if profile.points > 1000 %}
-                      <span id="inputPoints" class="tt-label">{{profile.points|divide:1000|floatformat}}<span class="smaller">kp</span></span>
+                      <span id="inputPoints" class="tt-label">{{round(profile.points / 1000, 1)}}<span class="smaller">kp</span></span>
                     {% else %}
-                      <span id="inputPoints" class="tt-label">{{profile.points|floatformat}}<span class="smaller">p</span></span>
+                      <span id="inputPoints" class="tt-label">{{profile.points}}<span class="smaller">p</span></span>
                     {% endif %}
                     <div class="tt-pie">
                       <div class="left-side half-circle"></div>
@@ -91,9 +95,9 @@
                 <div class="tt-set-size tt-charts-container">
                   <div class="tt-pie-wrapper no-margin">
                     {% if profile.peer_points > 1000 %}
-                      <span id="peerPoints" class="tt-label">{{profile.peer_points|divide:1000|floatformat}}<span class="smaller">kp</span></span>
+                      <span id="peerPoints" class="tt-label">{{round(profile.peer_points / 1000, 1)}}<span class="smaller">kp</span></span>
                     {% else %}
-                      <span id="peerPoints" class="tt-label">{{profile.peer_points|floatformat}}<span class="smaller">p</span></span>
+                      <span id="peerPoints" class="tt-label">{{profile.peer_points}}<span class="smaller">p</span></span>
                     {% endif %}
                     <div class="tt-pie">
                       <div class="left-side half-circle"></div>
@@ -178,12 +182,12 @@
               </tr>
               <tr>
                 <td>Published at</td>
-                <td>{{project.dt_publish|date:"M d, Y H:i"}}</td>
+                <td>{{project.dt_publish}}</td>
               </tr>
               <tr>
                 <td>To be finished at</td>
                 <td>
-                  {{project.dt_finish|date:"M d, Y H:i"}}
+                  {{project.dt_finish}}
                 </td>
               </tr>
             </tbody>

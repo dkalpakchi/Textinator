@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db.models.fields.related import ManyToOneRel
+from django.db.models.fields import AutoField
 from django import forms
 from django.contrib.auth.models import User, Permission
 from django_admin_json_editor import JSONEditorWidget
@@ -41,9 +43,15 @@ class LabelReviewInline(admin.StackedInline):
     classes = ['collapse']
 
 
+class RelationInline(admin.StackedInline):
+    model = Relation
+    extra = 0
+    classes = ['collapse']
+
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    inlines = [MarkerInline, LevelInline, UserProfileInline]
+    inlines = [MarkerInline, RelationInline, LevelInline, UserProfileInline]
 
     def save_model(self, request, obj, form, change):
         obj.author = request.user
@@ -84,6 +92,16 @@ class LabelAdmin(admin.ModelAdmin):
     readonly_fields = ('text',)
     inlines = [LabelReviewInline]
 
+    def get_fields(self, request, obj=None):
+        fields = [f.name for f in Label._meta.get_fields() if type(f) not in [ManyToOneRel, AutoField]]
+        print(fields)
+        taboo = []
+        if obj.input:
+            taboo.append('context')
+        else:
+            taboo.append('input')
+        return [f for f in fields if f not in taboo]
+
 
 @admin.register(LabelReview)
 class LabelReviewAdmin(admin.ModelAdmin):
@@ -104,12 +122,7 @@ class DataSourceForm(forms.ModelForm):
         DATA_SCHEMA = {
             'type': 'object',
             'title': 'DataSource',
-            'properties': {
-                'rand_dp_query': {
-                    'format': 'textarea',
-                    'propertyOrder': 1001
-                }
-            },
+            'properties': {}
         }
         widgets = {
             'spec': JSONEditorWidget(DATA_SCHEMA, collapsed=False),
@@ -118,12 +131,15 @@ class DataSourceForm(forms.ModelForm):
 
 @admin.register(DataSource)
 class DataSourceAdmin(admin.ModelAdmin):
+    class Media:
+        js = ('scripts/datasource.js',)
+    
     form = DataSourceForm
-
 
 admin.site.register(Marker)
 admin.site.register(Relation)
 admin.site.register(Level)
+admin.site.register(PostProcessingMethod)
 
 admin.site.site_header = 'Textinator admin'
 admin.site.site_title = 'Textinator admin'

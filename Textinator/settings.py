@@ -185,7 +185,6 @@ TASK_TYPES = list(yaml.load(open(os.path.join(BASE_DIR, 'task_types.yaml')), Loa
 
 DATASOURCE_TYPES = [
     ('TextFile', 'Plain text file(s)'),
-    ('Elastic', 'ElasticSearch index'),
     ('Db', 'Database'),
     ('Json', 'JSON file(s)')
 ]

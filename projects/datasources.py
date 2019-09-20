@@ -56,10 +56,6 @@ class TextFileSource(DataSource):
         return self[random.randint(0, self.__length - 1)]
 
 
-class ElasticSource(DataSource):
-    pass
-
-
 class DbSource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
@@ -116,5 +112,18 @@ class DbSource(DataSource):
 
 
 class JsonSource(DataSource):
-    pass
+    def __init__(self, spec_data):
+        super().__init__(spec_data)
+
+        self._required_keys = ['files', 'key']
+        self.check_constraints()
+
+        for fname in self.get_spec('files'):
+            d = json.load(open(fname))
+            self._add_datapoint(d[self.get_spec('key')])
+
+        self.__length = len(self.data())
+
+    def get_random_datapoint(self):
+        return self[random.randint(0, self.__length - 1)]
 

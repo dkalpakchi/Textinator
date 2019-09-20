@@ -7,7 +7,7 @@ from django.core.cache import caches
 from django.utils import timezone
 
 from .datasources import *
-from .helpers import hash_text, truncate
+from .helpers import *
 
 from dewiki.parser import Parser
 
@@ -19,15 +19,35 @@ class CommonModel(models.Model):
         abstract = True
 
 
+class PostProcessingMethod(CommonModel):
+    class Meta:
+        verbose_name = 'Post-processing method'
+        verbose_name_plural = 'Post-processing methods'
+
+    name = models.CharField(max_length=50)
+    helper = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+
 # Create your models here.
 class DataSource(CommonModel):
     name = models.CharField(max_length=50)
     source_type = models.CharField(max_length=10, choices=settings.DATASOURCE_TYPES)
     spec = models.TextField(null=False) # json spec of the data source
+    post_processing_methods = models.ManyToManyField(PostProcessingMethod, blank=True)
 
     @classmethod
     def type2class(cls, source_type):
         return globals().get(source_type + 'Source')
+
+    def postprocess(self, text):
+        pp = self.post_processing_methods.all()
+        if pp:
+            for method in pp:
+                text = globals().get(method.helper, lambda x: x)(text)
+        return text
 
     def __str__(self):
         return self.name
@@ -65,12 +85,12 @@ class Project(CommonModel):
             source_cls = DataSource.type2class(source.source_type)
             if source_cls:
                 ds_instance = source_cls(source.spec.replace('\r\n', ' ').replace('\n', ' '))
-                datasources.append(ds_instance)
+                datasources.append((ds_instance, source.postprocess))
 
         # take a random data point from data
         nds = len(datasources)
-        ds = datasources[random.randint(0, nds - 1)]
-        return ds.get_random_datapoint()
+        ds, postprocess = datasources[random.randint(0, nds - 1)]
+        return postprocess(ds.get_random_datapoint())
 
     def get_profile_for(self, user):
         try:

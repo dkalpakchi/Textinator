@@ -1,3 +1,7 @@
+#
+# This is a file for helpers that could potentially be used as post-processing methods for data sources
+#
+
 import re
 import json
 import hashlib
@@ -54,11 +58,9 @@ def truncate(value, limit=80):
     return ' '.join(words) + '...'
 
 
-def get_new_article(project):
-    ds = project.data()
-    
+def filter_wiki_markup(markup):
     # parse Wikimedia markup
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    r = requests.post('http://localhost:3000', data=json.dumps({'wikitext': ds}), headers=headers)
+    r = requests.post('http://localhost:3000', data=json.dumps({'wikitext': markup}), headers=headers)
     wiki_text = re.sub('(""|\'\'|\*(?=\n+))', '', re.sub('\n{3,}', '\n', r.text))
     return linebreaksbr(wiki_text)

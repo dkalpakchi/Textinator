@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required
 import markdown
 
 from .models import *
-from .helpers import hash_text, retrieve_by_hash, get_new_article
+from .helpers import hash_text, retrieve_by_hash
 
 
 # Create your views here.
@@ -243,7 +243,7 @@ def profile(request, username):
 def new_article(request, proj):
     project = Project.objects.get(pk=proj)
     return JsonResponse({
-        'text': get_new_article(project)
+        'text': project.data()
     })
 
 
