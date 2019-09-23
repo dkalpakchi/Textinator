@@ -21,6 +21,12 @@ class LevelInline(admin.StackedInline):
     classes = ['collapse']
 
 
+class PreMarkerInline(admin.StackedInline):
+    model = PreMarker
+    extra = 0
+    classes = ['collapse']
+
+
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     verbose_name = "Participant"
@@ -51,7 +57,7 @@ class RelationInline(admin.StackedInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    inlines = [MarkerInline, RelationInline, LevelInline, UserProfileInline]
+    inlines = [MarkerInline, PreMarkerInline, RelationInline, LevelInline, UserProfileInline]
 
     def save_model(self, request, obj, form, change):
         obj.author = request.user
@@ -94,7 +100,7 @@ class LabelAdmin(admin.ModelAdmin):
 
     def get_fields(self, request, obj=None):
         fields = [f.name for f in Label._meta.get_fields() if type(f) not in [ManyToOneRel, AutoField]]
-        print(fields)
+        fields.extend(LabelAdmin.readonly_fields)
         taboo = []
         if obj.input:
             taboo.append('context')
@@ -140,7 +146,10 @@ admin.site.register(Marker)
 admin.site.register(Relation)
 admin.site.register(Level)
 admin.site.register(PostProcessingMethod)
+admin.site.register(PreMarker)
 
 admin.site.site_header = 'Textinator admin'
 admin.site.site_title = 'Textinator admin'
+
+admin.site.site_url = '/textinator'
 

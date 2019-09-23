@@ -3,10 +3,10 @@
 #
 
 import re
+import string
 import json
 import hashlib
 import requests
-from django.template.defaultfilters import linebreaksbr
 
 
 def hash_text(text):
@@ -63,4 +63,21 @@ def filter_wiki_markup(markup):
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     r = requests.post('http://localhost:3000', data=json.dumps({'wikitext': markup}), headers=headers)
     wiki_text = re.sub('(""|\'\'|\*(?=\n+))', '', re.sub('\n{3,}', '\n', r.text))
-    return linebreaksbr(wiki_text)
+    return wiki_text
+
+
+def apply_premarkers(proj, text):
+    punct = string.punctuation
+    for c in list("\\$[]()*+/?-.\"\'|^"):
+        punct = punct.replace(c, "\{}".format(c))
+
+    for pm in proj.premarker_set.all():
+        m, tokens = pm.marker, pm.tokens.split(',')
+        for tok in tokens:
+            for t in (tok.lower(), tok.capitalize()):
+                text = re.sub("(?<=[{0} ]){1}(?=[{0} ])".format(punct, t),
+                    """<span class='tag is-{} is-medium' data-s='{}' data-i='NA'>
+                    {}<button class='delete is-small'></button>
+                    </span>""".format(m.color, m.short, t),
+                    text)
+    return text

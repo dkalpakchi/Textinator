@@ -169,7 +169,7 @@ textarea {
   resize: none;
 }
 
-.article .message-body {
+.text .message-body {
   height: 475px;
   overflow-y: scroll;
   text-align: justify;
@@ -219,4 +219,16 @@ textarea {
 .tag.arrow {
   display: table-cell;
   font-weight: bold;
+}
+
+.selector p {
+  padding-bottom: 1em;
+}
+
+.tt-charts-container {
+  margin-top: -0.07em !important;
+}
+
+.tag.is-disabled {
+  opacity: 0.6;
 }

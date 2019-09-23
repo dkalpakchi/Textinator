@@ -3,7 +3,7 @@
     resize: none;
   }
 
-  .article .message-body {
+  .text .message-body {
     height: 520px;
     overflow-y: scroll;
     text-align: justify;
@@ -22,12 +22,12 @@
   <div class="column is-three-quarters">
     <div class="columns">
       <div class="column is-three-quarters">
-        <article class="article message is-dark">
+        <article class="text message is-dark">
           <div class="message-header">
             <p>Article</p>
             <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
           </div>
-          <div class="selector element message-body">{{text}}</div>
+          <div class="selector element message-body">{{text|linebreaks}}</div>
         </article>
       </div>
       <div class="column">
@@ -41,7 +41,7 @@
       </div>
     </div>
     
-    <article class="markers message is-dark">
+    <article class="markers message is-dark" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
       <div class="message-header">
         <p>Markers</p>
       </div>
@@ -90,7 +90,40 @@
         <p>Achievements</p>
       </div>
       <div class="message-body">
-        You scored 23 points!
+        <nav class="level">
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Scored in total</p>
+              <p class="title">
+                <div class="tt-set-size tt-charts-container">
+                  <div class="tt-pie-wrapper no-margin">
+                    <span id="inputPoints" class="tt-label">30<span class="smaller">p</span></span>
+                    <div class="tt-pie">
+                      <div class="left-side half-circle"></div>
+                      <div class="right-side half-circle"></div>
+                    </div>
+                  </div>
+                </div>
+              </p>
+            </div>
+          </div>
+          <div class="level-item has-text-centered">
+            <div>
+              <p class="heading">Scored today</p>
+              <p class="title">
+                <div class="tt-set-size tt-charts-container">
+                  <div class="tt-pie-wrapper no-margin">
+                    <span id="peerPoints" class="tt-label">20<span class="smaller">p</span></span>
+                    <div class="tt-pie">
+                      <div class="left-side half-circle"></div>
+                      <div class="right-side half-circle"></div>
+                    </div>
+                  </div>
+                </div>
+              </p>
+            </div>
+          </div>
+        </nav>
       </div>
     </article>
   </div>
@@ -108,7 +141,7 @@
       <div class="card-content">
         <div class="content">
           <p class='has-text-weight-bold'>Guidelines</p>
-          <p class='has-text-justified'>{{project.guideline}}</p>
+          <p class='has-text-justified'>{{project.guidelines}}</p>
         </div>
         <div class="content">
           <div id="followIntroTour" class='ui button'>Follow the intro tour</div>

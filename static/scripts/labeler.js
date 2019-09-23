@@ -6,27 +6,67 @@ $(document).ready(function() {
       lastRelationId = 0,           // TODO: maybe remove
       selectorArea = document.querySelector('.selector'),
       resetTextHTML = selectorArea.innerHTML,
-      resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n'),
+      resetText = selectorArea.textContent,
       contextSize = $('#taskArea').data('context'),
       qStart = new Date(),
       labelId = 0;
 
-  function previousTextLength(node) {
+  // initialize pre-markers
+  $('article.text span.tag').each(function(i, node) {
+    node.setAttribute('data-i', labelId);
+    updateChunkFromNode(node);
+
+    node.querySelector('button.delete').addEventListener('click', function(e) {
+      e.stopPropagation();
+      var el = e.target,
+          parent = el.parentNode; // actual span
+
+      chunks.splice(labelId, 1);
+      mergeWithNeighbors(parent);
+      $(el).prop('in_relation', false);
+      resetTextHTML = selectorArea.innerHTML
+      activeLabels--;
+    })
+    labelId++;
+  })
+
+  var activeLabels = labelId;
+
+  function previousTextLength(node, inParagraph) {
+    if (inParagraph === undefined) inParagraph = true;
+
     var len = 0;
     var prev = node.previousSibling;
+
+    // paragraph scope
     while (prev != null) {
       if (prev.nodeType == 1) {
         if (prev.tagName == "BR") {
           // if newline
           len += 1
-        } else if (prev.tagName == "SPAN" && prev.classList.contains("tag")) {
+        } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag"))) {
           // if there is a label
-          len += prev.innerText.length
+          len += prev.textContent.length
         }
       } else if (prev.nodeType == 3) {
         len += prev.length
       }
       prev = prev.previousSibling
+    }
+
+    if (inParagraph) return len;
+
+    // all text scope
+    // Find previous <p>
+    var parent = node.parentNode;
+    if (parent != null) {
+      var parentSibling = parent.previousElementSibling;
+      while (parentSibling != null) {
+        if (parentSibling.tagName == "P") {
+          len += parentSibling.textContent.length + 2; // +2 because P
+        }
+        parentSibling = parentSibling.previousElementSibling;
+      }
     }
     return len;
   }
@@ -62,8 +102,14 @@ $(document).ready(function() {
     node.innerHTML = resetTextHTML;
   }
 
+  $('article.text span.tag').on('click', function(e) {
+    e.preventDefault();
+    if (!$(e.target).prop('in_relation'))
+      e.target.classList.add('active');
+  })
+
   $('.marker.tags').on('click', function() {
-    if (chunks.length > 0) {
+    if (chunks.length > 0 && activeLabels < $('article.markers').attr('data-mmpi')) {
       var chunk = chunks[chunks.length - 1],
           idc = chunks.length - 1
           color = this.getAttribute('data-color'),
@@ -86,6 +132,7 @@ $(document).ready(function() {
         chunks.splice(idc, 1);
         mergeWithNeighbors(parent);
         $(el).prop('in_relation', false);
+        activeLabels--;
       }, true);
       markedSpan.appendChild(deleteMarkedBtn)
 
@@ -100,6 +147,7 @@ $(document).ready(function() {
       chunk['marked'] = true;
       chunk['id'] = labelId;
       labelId++;
+      activeLabels++;
       chunk['label'] = this.querySelector('span.tag:first-child').textContent;
       delete chunk['node']
       window.chunks = chunks;
@@ -122,14 +170,13 @@ $(document).ready(function() {
         $($parts[i]).prop('in_relation', true);
 
         var s = $parts[i].getAttribute('data-s');
-        console.log(s)
 
         if (!nodes.hasOwnProperty(s)) {
           nodes[s] = [];
         }
         nodes[s].push({
           'id': $parts[i].id,
-          'name': $parts[i].innerText,
+          'name': $parts[i].textContent,
           'dom': $parts[i].id
         });
       });
@@ -175,13 +222,46 @@ $(document).ready(function() {
     $parts.removeClass('active');
   })
 
-  function updateChunk() {
+  function updateChunkFromNode(node) {
+    var chunk = {};
+    chunk['node'] = null;
+    chunk['text'] = node.parentNode != null ? node.parentNode.textContent : node.textContent; // if no parent, assume the whole paragraph was taken?
+    chunk['lengthBefore'] = 0;
+    chunk['marked'] = true;
+    chunk['id'] = labelId;
+    chunk['label'] = document.querySelector('div.marker.tags[data-s="' + node.getAttribute('data-s') + '"] span.tag:first-child').textContent;
+    
+    if (contextSize == 'p') {
+      // paragraph
+      chunk['context'] = chunk['text'];
+      chunk['start'] = previousTextLength(node, true);
+    } else if (contextSize == 't') {
+      // text
+      chunk['context'] = resetText;
+      chunk['start'] = previousTextLength(node, false);
+    } else if (contextSize == 's') {
+      // TODO sentence
+
+    } else if (contextSize == 'no') {
+      chunk['context'] = null;
+      chunk['lengthBefore'] = null;
+    } else {
+      // not implemented
+      console.error("Context size " + contextSize + " is not implemented");
+      return;
+    }
+    chunk['end'] = chunk['start'] + node.textContent.length;
+    
+    chunks.push(chunk);
+  }
+
+  function updateChunkFromSelection() {
     var selection = window.getSelection(),
         chunk = {};
 
-    if (selection) {
+    if (selection && !selection.isCollapsed) {
       chunk['node'] = selection.anchorNode;
-      chunk['text'] = selection.anchorNode.data;
+      chunk['text'] = selection.anchorNode.data; // the whole text of the anchor node
       if (selection.anchorOffset > selection.focusOffset) {
         chunk['start'] = selection.focusOffset;
         chunk['end'] = selection.anchorOffset;
@@ -191,12 +271,12 @@ $(document).ready(function() {
       }
       if (contextSize == 'p') {
         // paragraph
-        chunk['context'] = chunk['text']
-        chunk['lengthBefore'] = 0;
+        chunk['context'] = selection.anchorNode.parentNode.textContent.length; // the parent of anchor is <p> - just take it's length
+        chunk['lengthBefore'] = previousTextLength(selection.anchorNode, true);
       } else if (contextSize == 't') {
         // text
         chunk['context'] = resetText;
-        chunk['lengthBefore'] = previousTextLength(selection.anchorNode);
+        chunk['lengthBefore'] = previousTextLength(selection.anchorNode, false);
       } else if (contextSize == 's') {
         // TODO sentence
 
@@ -220,6 +300,12 @@ $(document).ready(function() {
     }
   }
 
+  function disableChunks(chunks) {
+    for (var c in chunks) {
+      $('span.tag[data-i="' + chunks[c].id + "]").addClass('is-disabled');
+    }
+  }
+
   $('.selector').on('mouseup', function(e) {
     var isRightMB;
     e = e || window.event;
@@ -230,7 +316,7 @@ $(document).ready(function() {
         isRightMB = e.button == 2;
 
     if (!$(e.target).hasClass('delete') && !isRightMB) {
-      updateChunk();
+      updateChunkFromSelection();
     }
   })
 
@@ -239,7 +325,7 @@ $(document).ready(function() {
     if (selection && (selection.anchorNode != null)) {
       var isArticleParent = selection.anchorNode.parentNode == document.querySelector('.selector');
       if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
-        updateChunk();
+        updateChunkFromSelection();
       } else {
         var $shortcut = $('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
         if ($shortcut.length > 0) {
@@ -248,6 +334,14 @@ $(document).ready(function() {
       }
     }
   });
+
+  // function that checks if a chunk is in any of the relations
+  function isInRelations(c) {
+    for (var i = 0, len = relations.length; i < len; i++) {
+      if (relations[i].s == c.id || relations[i].t == c.id) return true;
+    }
+    return false;
+  }
 
   $('#inputForm .submit.button').on('click', function(e) {
     e.preventDefault();
@@ -260,8 +354,11 @@ $(document).ready(function() {
 
     var inputFormData = $inputForm.serializeObject(),
         underReview = $questionBlock.prop('review') || false;
-    inputFormData['chunks'] = JSON.stringify(chunks);
+
     inputFormData['relations'] = JSON.stringify(relations);
+
+    // if there are any relations, submit only those chunks that have to do with the relations
+    inputFormData['chunks'] = JSON.stringify(relations ? chunks.filter(isInRelations) : chunks);
     inputFormData['is_review'] = underReview;
     inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
 
@@ -274,9 +371,13 @@ $(document).ready(function() {
         if (data['error'] == false) {
           var articleNode = document.querySelector('.selector'),
               $title = $questionBlock.find('.message-header p');
+
+          // TODO: this has nothing to do with a review task, I mean it used to when it was only QA, but not for all tasks
           if (data['input'] == null) {
             // no review task
-            resetArticle();
+            // resetArticle();
+            console.log(inputFormData['chunks'])
+            disableChunks(inputFormData['chunks']);
             $questionBlock.removeClass('is-warning');
             $questionBlock.addClass('is-primary');
             $questionBlock.prop('review', false);
@@ -323,9 +424,11 @@ $(document).ready(function() {
 
         // clear svg
         d3.selectAll("svg > *").remove()
+
+        activeLabels = 0;
       },
       error: function() {
-        console.log("ERROR!")
+        console.log("ERROR!");
         if (underReview)
           $qInput.prop("disabled", true)
         else {
@@ -337,13 +440,19 @@ $(document).ready(function() {
       }
     })
 
-    resetArticle();
+    // resetArticle();
   })
 
+  // TODO: format article using the written Jinja2 linebreaks filter
   $('#getNewArticle').on('click', function(e) {
     e.preventDefault();
 
+    var $button = $(this);
+
+    if ($button.attr('disabled')) return;
+
     var confirmation = chunks.length > 0 ? confirm("All your unsubmitted labels will be removed. Are you sure?") : true;
+    $button.attr('disabled', true);
 
     if (confirmation) {
       var el = $('.selector.element');
@@ -359,13 +468,23 @@ $(document).ready(function() {
         success: function(d) {
           $('.selector').html(d.text);
           chunks = [];
+          labelId = $('article.text').find('span.tag').length; // count the number of pre-markers
+          activeLabels = labelId;
           resetTextHTML = selectorArea.innerHTML;
-          resetText = selectorArea.innerHTML.replace(/<br>/gi, '\n');
+          resetText = selectorArea.textContent;
+
+          $('article.text span.tag').on('click', function(e) {
+            if (!$(e.target).prop('in_relation'))
+              e.target.classList.add('active');
+          })
+
           el.removeClass('is-loading');
+          $button.attr('disabled', false);
         },
         error: function() {
           console.log("ERROR!")
           el.removeClass('is-loading');
+          $button.attr('disabled', false);
         }
       })
     }
@@ -391,7 +510,7 @@ $(document).ready(function() {
     .attr("d", "M 0 0 12 6 0 12 3 6")
     .style("fill", "black");
 
-  var initialMarginX = 50,
+  var initialMarginX = 30,
       initialMarginY = null,
       graphId = 0,
       radius = 10;
@@ -451,7 +570,7 @@ $(document).ready(function() {
               .links(data.links)                                    // and this the list of links
         )
         .force("charge", d3.forceManyBody().strength(-400))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-        .force("center", d3.forceCenter(radius, 10));                   // This force attracts nodes to the center of the svg area
+        .force("center", d3.forceCenter(radius, 10));               // This force attracts nodes to the center of the svg area
 
     simulation.on("tick", ticked);
 
@@ -555,4 +674,8 @@ $(document).ready(function() {
       lastRelationY = Math.max.apply(null, data.nodes.map(function(d) { return d.y })) + 30;
     });
   }
+
+  window.ptl = previousTextLength;
+  window.chunks = chunks;
+  window.relations = relations;
 });

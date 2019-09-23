@@ -16,7 +16,9 @@ from django.contrib.auth.decorators import login_required
 import markdown
 
 from .models import *
-from .helpers import hash_text, retrieve_by_hash
+from .helpers import hash_text, retrieve_by_hash, apply_premarkers
+
+from Textinator.jinja2 import linebreaks
 
 
 # Create your views here.
@@ -53,7 +55,7 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
         u_profile = UserProfile.objects.filter(user=self.request.user, project=proj).get()
 
         ctx = {
-            'text': proj.data(), #get_new_article(proj),
+            'text': apply_premarkers(proj, proj.data()),
             'project': proj,
             'task_markers': task_markers,
             'task_relations': task_relations,
@@ -195,6 +197,7 @@ def record_datapoint(request):
     else:
         inp = None
 
+    # FIXME: input = None does not mean that it's a review task - e.g. can be CorefRes task and then input is always null
     return JsonResponse({
         'error': False,
         'input': {
@@ -238,12 +241,13 @@ def profile(request, username):
     })
 
 
+# TODO: fix error that sometimes happens -- PayloadTooLargeError: request entity too large
 @login_required
 @require_http_methods("POST")
 def new_article(request, proj):
     project = Project.objects.get(pk=proj)
     return JsonResponse({
-        'text': project.data()
+        'text': linebreaks(apply_premarkers(project, project.data()))
     })
 
 

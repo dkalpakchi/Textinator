@@ -1,13 +1,13 @@
 <div class="columns">
   <div class="column is-three-quarters">
-    <article class="article message is-dark">
+    <article class="text message is-dark">
       <div class="message-header">
         <p>Article</p>
         <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
       </div>
-      <div class="selector element message-body">{{text|safe}}</div>
+      <div class="selector element message-body">{{text|linebreaks}}</div>
     </article>
-    <article class="markers message is-dark">
+    <article class="markers message is-dark" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
       <div class="message-header">
         <p>Markers</p>
       </div>
@@ -162,7 +162,7 @@
       <div class="card-content">
         <div class="content">
           <p class='has-text-weight-bold'>Guidelines</p>
-          <p class='has-text-justified'>{{project.guideline}}</p>
+          <p class='has-text-justified'>{{project.guidelines}}</p>
         </div>
         <div class="content">
           <div id="followIntroTour" class='ui button'>Follow the intro tour</div>
@@ -234,7 +234,7 @@
   tour.addStep('article', {
     text: "Every time you're entering the project, you're presented with a Wikipedia article in this Article area of the screen.",
     attachTo: { 
-      element: '.article.message', 
+      element: '.text.message', 
       on: 'bottom'
     },
     buttons: [

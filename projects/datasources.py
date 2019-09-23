@@ -84,7 +84,7 @@ class DbSource(DataSource):
         return pymysql.connect(user=self.__user, database=self.__database, password=self.__password)
 
     #
-    # SELECT CONCAT(REPLACE(page_title, '_', ' '), '\n\n', old_text) 
+    # SELECT old_text AS ARTICLE
     # FROM (
     #   SELECT page_title, page_latest, page_id
     #   FROM page WHERE page_is_redirect = 0 AND page_len > 3000

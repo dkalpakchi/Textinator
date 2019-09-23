@@ -4,7 +4,7 @@
     resize: none;
   }
 
-  .article .message-body {
+  .text .message-body {
     height: 520px;
     overflow-y: scroll;
     text-align: justify;
@@ -21,14 +21,14 @@
 
 <div class="columns">
   <div class="column is-three-quarters">
-    <article class="article message is-dark">
+    <article class="text message is-dark">
       <div class="message-header">
         <p>Article</p>
         <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
       </div>
-      <div class="selector element message-body">{{text|linebreaksbr}}</div>
+      <div class="selector element message-body">{{text}}</div>
     </article>
-    <article class="markers message is-dark">
+    <article class="markers message is-dark" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
       <div class="message-header">
         <p>Markers</p>
       </div>
@@ -95,7 +95,7 @@
       <div class="card-content">
         <div class="content">
           <p class='has-text-weight-bold'>Guidelines</p>
-          <p class='has-text-justified'>{{project.guideline}}</p>
+          <p class='has-text-justified'>{{project.guidelines}}</p>
         </div>
         <div class="content">
           <div id="followIntroTour" class='ui button'>Follow the intro tour</div>

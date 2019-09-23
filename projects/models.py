@@ -1,4 +1,6 @@
 import random
+import re
+import string
 
 from django.db import models
 from django.conf import settings
@@ -9,11 +11,9 @@ from django.utils import timezone
 from .datasources import *
 from .helpers import *
 
-from dewiki.parser import Parser
-
 
 class CommonModel(models.Model):
-    dt_created = models.DateTimeField(null=True, default=timezone.now)
+    dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name="Created at")
 
     class Meta:
         abstract = True
@@ -61,13 +61,13 @@ class Project(CommonModel):
 
 
     title = models.CharField(max_length=50)
-    guideline = models.TextField(null=True)
+    guidelines = models.TextField(null=True)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
     context_size = models.CharField(max_length=2, choices=[('no', 'No context'), ('t', 'Text'), ('p', 'Paragraph')])
     task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES)
-    dt_publish = models.DateTimeField()
-    dt_finish = models.DateTimeField()
+    dt_publish = models.DateTimeField(verbose_name="To be published at")
+    dt_finish = models.DateTimeField(verbose_name="To be finished at")
     dt_updated = models.DateTimeField(auto_now=True)
     collaborators = models.ManyToManyField(User, related_name='shared_projects', blank=True)
     participants = models.ManyToManyField(User, related_name='participations', through='UserProfile', blank=True)
@@ -75,6 +75,7 @@ class Project(CommonModel):
     datasources = models.ManyToManyField(DataSource)
     is_open = models.BooleanField(default=False)
     is_peer_reviewed = models.BooleanField(default=False)
+    max_markers_per_input = models.PositiveIntegerField(null=True, blank=True, default=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -90,7 +91,7 @@ class Project(CommonModel):
         # take a random data point from data
         nds = len(datasources)
         ds, postprocess = datasources[random.randint(0, nds - 1)]
-        return postprocess(ds.get_random_datapoint())
+        return postprocess(ds.get_random_datapoint()).strip()
 
     def get_profile_for(self, user):
         try:
@@ -125,6 +126,18 @@ class Marker(CommonModel):
 
     def __str__(self):
         return str(self.name)
+
+
+# TODO: put constraints on the markers - only markers belonging to project or task_type can be put!
+# TODO: for one might want to mark pronouns 'det', 'den' iff they are really pronouns and not articles
+#       maybe add a name of the boolean helper that lets you mark the word iff the helper returns true?
+class PreMarker(CommonModel):
+    class Meta:
+        verbose_name = 'Pre-marker'
+        verbose_name_plural = 'Pre-markers'
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    tokens = models.TextField(help_text="Comma-separated tokens that should be highlighted with a marker")
 
 
 class Relation(CommonModel):
@@ -183,6 +196,7 @@ class Label(CommonModel):
     context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True) # if there is no input, there must be context
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     impossible = models.BooleanField(default=False)
+    undone = models.BooleanField(default=False)
 
     @property
     def text(self):

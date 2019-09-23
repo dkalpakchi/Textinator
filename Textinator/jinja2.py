@@ -1,3 +1,4 @@
+import re
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
 from urllib.parse import urlparse
@@ -31,6 +32,15 @@ def display_relation(rel):
     return Markup(template.render(rel=rel))
 
 
+def linebreaks(value):
+    """Converts newlines into <p> and <br />s."""
+    value = re.sub(r'\r\n|\r|\n', '\n', value) # normalize newlines
+    paras = re.split('\n{2,}', value)
+    paras = [u'<p>{}</p>'.format(p.replace('\n', '<br />')) for p in paras]
+    paras = u'\n\n'.join(paras)
+    return Markup(paras)
+
+
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('sass_processor.jinja2.ext.SassSrc')
@@ -43,4 +53,5 @@ def environment(**options):
     env.filters['url_path'] = get_path
     env.filters['display_marker'] = display_marker
     env.filters['display_relation'] = display_relation
+    env.filters['linebreaks'] = linebreaks
     return env
