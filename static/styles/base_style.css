@@ -230,5 +230,10 @@ textarea {
 }
 
 .tag.is-disabled {
-  opacity: 0.6;
+  opacity: 0.4;
+}
+
+.tag.is-disabled:hover {
+  border: 0px !important;
+  cursor: default !important;
 }

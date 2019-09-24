@@ -7,12 +7,19 @@ from django_admin_json_editor import JSONEditorWidget
 
 from .models import *
 
+
+class CommonModelAdmin(admin.ModelAdmin):
+    readonly_fields = ['dt_created']
+
+
 # TODO: fix name 'ModelValidationError' is not defined
 #       happens when trying to assign marker to be both task and project specific
 class MarkerInline(admin.StackedInline):
     model = Marker
     extra = 0
     classes = ['collapse']
+    verbose_name = "Project-specific marker"
+    verbose_name_plural = "Project-specific markers"
 
 
 class LevelInline(admin.StackedInline):
@@ -53,11 +60,13 @@ class RelationInline(admin.StackedInline):
     model = Relation
     extra = 0
     classes = ['collapse']
+    verbose_name = "Project-specific relation"
+    verbose_name_plural = "Project-specific relations"
 
 
 @admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
-    inlines = [MarkerInline, PreMarkerInline, RelationInline, LevelInline, UserProfileInline]
+class ProjectAdmin(CommonModelAdmin):
+    inlines = [MarkerInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
 
     def save_model(self, request, obj, form, change):
         obj.author = request.user
@@ -83,19 +92,19 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 @admin.register(Context)
-class ContextAdmin(admin.ModelAdmin):
-    readonly_fields = ('content_hash',)
+class ContextAdmin(CommonModelAdmin):
+    readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
 
 
 @admin.register(Input)
-class InputAdmin(admin.ModelAdmin):
-    readonly_fields = ('content_hash',)
+class InputAdmin(CommonModelAdmin):
+    readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
     inlines = [LabelInline]
 
 
 @admin.register(Label)
-class LabelAdmin(admin.ModelAdmin):
-    readonly_fields = ('text',)
+class LabelAdmin(CommonModelAdmin):
+    readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
     inlines = [LabelReviewInline]
 
     def get_fields(self, request, obj=None):
@@ -110,13 +119,13 @@ class LabelAdmin(admin.ModelAdmin):
 
 
 @admin.register(LabelReview)
-class LabelReviewAdmin(admin.ModelAdmin):
-    readonly_fields = ('text',)
+class LabelReviewAdmin(CommonModelAdmin):
+    readonly_fields = CommonModelAdmin.readonly_fields + ['text']
 
 
 @admin.register(LabelRelation)
-class LabelRelationAdmin(admin.ModelAdmin):
-    readonly_fields = ('graph',)
+class LabelRelationAdmin(CommonModelAdmin):
+    readonly_fields = CommonModelAdmin.readonly_fields + ['graph', 'batch']
 
 
 # TODO: add autocomplete for data source specs
@@ -136,17 +145,27 @@ class DataSourceForm(forms.ModelForm):
 
 
 @admin.register(DataSource)
-class DataSourceAdmin(admin.ModelAdmin):
+class DataSourceAdmin(CommonModelAdmin):
     class Media:
         js = ('scripts/datasource.js',)
     
     form = DataSourceForm
 
-admin.site.register(Marker)
-admin.site.register(Relation)
-admin.site.register(Level)
-admin.site.register(PostProcessingMethod)
-admin.site.register(PreMarker)
+
+@admin.register(Marker)
+class MarkerAdmin(CommonModelAdmin): pass
+
+@admin.register(Relation)
+class RelationAdmin(CommonModelAdmin): pass
+
+@admin.register(Level)
+class LevelAdmin(CommonModelAdmin): pass
+
+@admin.register(PostProcessingMethod)
+class PostProcessingMethodAdmin(CommonModelAdmin): pass
+
+@admin.register(PreMarker)
+class PreMarkerAdmin(CommonModelAdmin): pass
 
 admin.site.site_header = 'Textinator admin'
 admin.site.site_title = 'Textinator admin'

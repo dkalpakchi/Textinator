@@ -122,7 +122,12 @@ class Marker(CommonModel):
         else:
             if not self.short:
                 self.short = self.name[:3].upper()
-            super(Marker, self).save(*args, **kwargs) 
+            super(Marker, self).save(*args, **kwargs)
+
+
+    def is_part_of_relation(self):
+        return bool(Relation.objects.filter(models.Q(first_node=self) | models.Q(second_node=self)).all())
+
 
     def __str__(self):
         return str(self.name)
@@ -177,8 +182,6 @@ class Context(CommonModel):
 class Input(CommonModel):
     content = models.TextField()
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     @property
     def content_hash(self):
@@ -195,8 +198,10 @@ class Label(CommonModel):
     input = models.ForeignKey(Input, on_delete=models.CASCADE, null=True)     # if input is there, input should be not NULL
     context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True) # if there is no input, there must be context
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     impossible = models.BooleanField(default=False)
     undone = models.BooleanField(default=False)
+    batch = models.UUIDField(null=True)
 
     @property
     def text(self):
@@ -228,6 +233,10 @@ class LabelRelation(CommonModel):
     rule = models.ForeignKey(Relation, on_delete=models.CASCADE)
     first_label = models.ForeignKey(Label, related_name='first_label', on_delete=models.CASCADE)
     second_label = models.ForeignKey(Label, related_name='second_label', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    undone = models.BooleanField(default=False)
+    batch = models.UUIDField(null=True)
 
     @property
     def graph(self):

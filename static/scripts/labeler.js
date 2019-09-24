@@ -1,37 +1,49 @@
 $(document).ready(function() {
-  var chunks = [],
-      relations = [],
-      lastRelationY = null,         // TODO: maybe remove
-      beforeLastRelationY = null,   // TODO: maybe remove
-      lastRelationId = 0,           // TODO: maybe remove
-      selectorArea = document.querySelector('.selector'),
-      resetTextHTML = selectorArea.innerHTML,
-      resetText = selectorArea.textContent,
-      contextSize = $('#taskArea').data('context'),
-      qStart = new Date(),
-      labelId = 0;
+  var chunks = [],                                          // the array of all chunk of text marked with a label, but not submitted yet
+      chunksCache = [],                                     // the array of just submitted chunks (if any)
+      relations = [],                                       // the array of all relations for this article, not submitted yet
+      lastRelationY = null,                                 // TODO: maybe remove
+      beforeLastRelationY = null,                           // TODO: maybe remove
+      lastRelationId = 0,                                   // TODO: maybe remove
+      selectorArea = document.querySelector('.selector'),   // the area where the article is
+      resetTextHTML = selectorArea.innerHTML,               // the HTML of the loaded article
+      resetText = selectorArea.textContent,                 // the text of the loaded article
+      contextSize = $('#taskArea').data('context'),         // the size of the context to be saved 'p', 't' or 'no'
+      qStart = new Date(),                                  // the time the page was loaded or the last submission was made
+      labelId = 0,                                          // internal JS label id for the labels of the current article
+      activeLabels = labelId;                               // a number of labels currently present in the article
 
-  // initialize pre-markers
-  $('article.text span.tag').each(function(i, node) {
-    node.setAttribute('data-i', labelId);
-    updateChunkFromNode(node);
+  // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
+  function initPreMarkers() {
+    labelId = 0;
+    $('article.text span.tag').each(function(i, node) {
+      node.setAttribute('data-i', labelId);
+      updateChunkFromNode(node);
 
-    node.querySelector('button.delete').addEventListener('click', function(e) {
-      e.stopPropagation();
-      var el = e.target,
-          parent = el.parentNode; // actual span
+      node.querySelector('button.delete').addEventListener('click', function(e) {
+        e.stopPropagation();
+        var el = e.target,
+            parent = el.parentNode; // actual span
 
-      chunks.splice(labelId, 1);
-      mergeWithNeighbors(parent);
-      $(el).prop('in_relation', false);
-      resetTextHTML = selectorArea.innerHTML
-      activeLabels--;
+        chunks.splice(labelId, 1);
+        mergeWithNeighbors(parent);
+        $(el).prop('in_relation', false);
+        resetTextHTML = selectorArea.innerHTML
+        activeLabels--;
+      })
+      labelId++;
     })
-    labelId++;
-  })
+    activeLabels = labelId;
+  }
 
-  var activeLabels = labelId;
+  // do initialize pre-markers for the current article
+  initPreMarkers();
 
+  // disable the undo button, since we haven't submitted anything
+  $('#undoLast').attr('disabled', true);
+
+  // calculate the length of the text preceding the node
+  // inParagraph is a boolean variable indicating whether preceding text is taken only from the current paragraph or from the whole article
   function previousTextLength(node, inParagraph) {
     if (inParagraph === undefined) inParagraph = true;
 
@@ -71,6 +83,7 @@ $(document).ready(function() {
     return len;
   }
 
+  // merge the given node with two siblings - used when deleting a label
   function mergeWithNeighbors(node) {
     // check if text node
     var next = node.nextSibling,
@@ -102,12 +115,14 @@ $(document).ready(function() {
     node.innerHTML = resetTextHTML;
   }
 
+  // activate labels on click
   $('article.text span.tag').on('click', function(e) {
     e.preventDefault();
     if (!$(e.target).prop('in_relation'))
       e.target.classList.add('active');
   })
 
+  // labeling piece of text with a given marker if the marker is clicked
   $('.marker.tags').on('click', function() {
     if (chunks.length > 0 && activeLabels < $('article.markers').attr('data-mmpi')) {
       var chunk = chunks[chunks.length - 1],
@@ -145,6 +160,7 @@ $(document).ready(function() {
       parent.insertBefore(markedSpan, leftTextNode.nextSibling);
       parent.insertBefore(rightTextNode, markedSpan.nextSibling);
       chunk['marked'] = true;
+      chunk['submittable'] = this.getAttribute('data-submittable');
       chunk['id'] = labelId;
       labelId++;
       activeLabels++;
@@ -154,6 +170,7 @@ $(document).ready(function() {
     }
   });
 
+  // putting the activated labels in a relationship
   $('.relation.tags').on('click', function() {
     var $parts = $('.selector span.tag.active'),
         between = this.getAttribute('data-b').split('-:-'),
@@ -222,14 +239,18 @@ $(document).ready(function() {
     $parts.removeClass('active');
   })
 
+  // adding the information about the node, representing a label, to the chunks array
   function updateChunkFromNode(node) {
-    var chunk = {};
+    var chunk = {},
+        marker = document.querySelector('div.marker.tags[data-s="' + node.getAttribute('data-s') + '"]'),
+        markerText = marker.querySelector('span.tag:first-child');
     chunk['node'] = null;
     chunk['text'] = node.parentNode != null ? node.parentNode.textContent : node.textContent; // if no parent, assume the whole paragraph was taken?
     chunk['lengthBefore'] = 0;
     chunk['marked'] = true;
     chunk['id'] = labelId;
-    chunk['label'] = document.querySelector('div.marker.tags[data-s="' + node.getAttribute('data-s') + '"] span.tag:first-child').textContent;
+    chunk['label'] = markerText.textContent;
+    chunk['submittable'] = marker.getAttribute('data-submittable');
     
     if (contextSize == 'p') {
       // paragraph
@@ -255,6 +276,8 @@ $(document).ready(function() {
     chunks.push(chunk);
   }
 
+  // getting a chunk from the selection; the chunk then either is being added to the chunks array, if the last chunk was submitted
+  //                                                    or replaces the last chunk if the last chunk was not submitted
   function updateChunkFromSelection() {
     var selection = window.getSelection(),
         chunk = {};
@@ -300,12 +323,14 @@ $(document).ready(function() {
     }
   }
 
+  // disable given chunks visually
   function disableChunks(chunks) {
     for (var c in chunks) {
-      $('span.tag[data-i="' + chunks[c].id + "]").addClass('is-disabled');
+      $('span.tag[data-i="' + chunks[c]['id'] + '"]').addClass('is-disabled');
     }
   }
 
+  // adding chunk if a piece of text was selected with a mouse
   $('.selector').on('mouseup', function(e) {
     var isRightMB;
     e = e || window.event;
@@ -320,6 +345,7 @@ $(document).ready(function() {
     }
   })
 
+  // adding chunk if a piece of text was selected with a keyboard
   $(document).on("keyup", function(e) {
     var selection = window.getSelection();
     if (selection && (selection.anchorNode != null)) {
@@ -335,6 +361,35 @@ $(document).ready(function() {
     }
   });
 
+  // undo last relation/label if the button is clicked
+  $('#undoLast').on('click', function(e) {
+    e.preventDefault();
+    var $target = $(e.target);
+
+    $.ajax({
+      method: "POST",
+      url: $target.attr('data-url'),
+      dataType: "json",
+      data: {
+        'csrfmiddlewaretoken': $target.closest('form').find('input[name="csrfmiddlewaretoken"]').val()
+      },
+      success: function(data) {
+        chunksCache.forEach(function(c) {
+          if (data['labels'].includes(c.context.slice(c.lengthBefore + c.start, c.lengthBefore + c.end))) {
+            var $el = $('span.tag[data-i="' + c.id + '"]');
+            $el.removeClass('is-disabled');
+            $el.prop('in_relation', false);
+          }
+        });
+
+        chunksCache = [];
+      },
+      error: function() {
+        console.log("ERROR!");
+      }
+    })
+  })
+
   // function that checks if a chunk is in any of the relations
   function isInRelations(c) {
     for (var i = 0, len = relations.length; i < len; i++) {
@@ -343,6 +398,7 @@ $(document).ready(function() {
     return false;
   }
 
+  // submitting the marked labels and/or relations with(out) inputs
   $('#inputForm .submit.button').on('click', function(e) {
     e.preventDefault();
 
@@ -358,92 +414,100 @@ $(document).ready(function() {
     inputFormData['relations'] = JSON.stringify(relations);
 
     // if there are any relations, submit only those chunks that have to do with the relations
-    inputFormData['chunks'] = JSON.stringify(relations ? chunks.filter(isInRelations) : chunks);
+    // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relation
+    inputFormData['chunks'] = relations ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
     inputFormData['is_review'] = underReview;
     inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
 
-    $.ajax({
-      method: "POST",
-      url: inputForm.action,
-      dataType: "json",
-      data: inputFormData,
-      success: function(data) {
-        if (data['error'] == false) {
-          var articleNode = document.querySelector('.selector'),
-              $title = $questionBlock.find('.message-header p');
+    if (inputFormData['chunks'].length > 0 || relations.length > 0) {
+      inputFormData['chunks'] = JSON.stringify(inputFormData['chunks']);
+      $.ajax({
+        method: "POST",
+        url: inputForm.action,
+        dataType: "json",
+        data: inputFormData,
+        success: function(data) {
+          if (data['error'] == false) {
+            var articleNode = document.querySelector('.selector'),
+                $title = $questionBlock.find('.message-header p');
 
-          // TODO: this has nothing to do with a review task, I mean it used to when it was only QA, but not for all tasks
-          if (data['input'] == null) {
-            // no review task
-            // resetArticle();
-            console.log(inputFormData['chunks'])
-            disableChunks(inputFormData['chunks']);
-            $questionBlock.removeClass('is-warning');
-            $questionBlock.addClass('is-primary');
-            $questionBlock.prop('review', false);
+            // TODO: this has nothing to do with a review task, I mean it used to when it was only QA, but not for all tasks
+            if (data['input'] == null) {
+              // no review task
+              // resetArticle();
+              var submittedChunks = JSON.parse(inputFormData['chunks']);
+              disableChunks(submittedChunks);
+              chunksCache = submittedChunks;
 
-            // TODO: get title for a review task from the server
-            //       make it a configurable project setting
-            $title.html("Your question");
+              $questionBlock.removeClass('is-warning');
+              $questionBlock.addClass('is-primary');
+              $questionBlock.prop('review', false);
 
-            $qInput.prop("disabled", false);
-            $qInput.val('');
-            $qInput.focus();
-          } else {
-            // review task
-            removeAllChildren(articleNode);
-            articleNode.innerHTML = data['input']['context'];
+              // TODO: get title for a review task from the server
+              //       make it a configurable project setting
+              $title.html("Your question");
 
-            $questionBlock.removeClass('is-primary');
-            $questionBlock.addClass('is-warning');
-            $questionBlock.prop('review', true);
+              $qInput.prop("disabled", false);
+              $qInput.val('');
+              $qInput.focus();
+            } else {
+              // review task
+              removeAllChildren(articleNode);
+              articleNode.innerHTML = data['input']['context'];
 
-            $title.html("Review question");
+              $questionBlock.removeClass('is-primary');
+              $questionBlock.addClass('is-warning');
+              $questionBlock.prop('review', true);
 
-            $qInput.val(data['input']['content']);
-            $qInput.prop("disabled", true);
+              $title.html("Review question");
+
+              $qInput.val(data['input']['content']);
+              $qInput.prop("disabled", true);
+            }
+            if ('aat' in data)
+              $('#aat').html(data['aat'] + "s");
           }
-          if ('aat' in data)
-            $('#aat').html(data['aat'] + "s");
+          var $inpSmaller = (data['inp_points'] >= 1000) ? $('<span class="smaller">kp</span>') : $('<span class="smaller">p</span>'),
+              $inpPts = $('#inputPoints'),
+              $peerSmaller = (data['peer_points'] >= 1000) ? $('<span class="smaller">kp</span>') : $('<span class="smaller">p</span>'),
+              $peerPts = $('#peerPoints');
+          
+          $inpPts.text(data['inp_points']);
+          $inpPts.append($inpSmaller);
+          
+          $peerPts.text(data['peer_points']);
+          $peerPts.append($peerSmaller);
+          
+          relations = [];
+          qStart = new Date();
+
+          // TODO; trigger iff .countdown is present
+          $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
+
+          // clear svg
+          d3.selectAll("svg > *").remove()
+
+          activeLabels = 0;
+
+          $('#undoLast').attr('disabled', false);
+        },
+        error: function() {
+          console.log("ERROR!");
+          if (underReview)
+            $qInput.prop("disabled", true)
+          else {
+            $qInput.val('');
+            $qInput.prop('disabled', false);
+          }
+          $('#undoLast').attr('disabled', true);
+          qStart = new Date();
+          $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');
         }
-        var $inpSmaller = (data['inp_points'] >= 1000) ? $('<span class="smaller">kp</span>') : $('<span class="smaller">p</span>'),
-            $inpPts = $('#inputPoints'),
-            $peerSmaller = (data['peer_points'] >= 1000) ? $('<span class="smaller">kp</span>') : $('<span class="smaller">p</span>'),
-            $peerPts = $('#peerPoints');
-        
-        $inpPts.text(data['inp_points']);
-        $inpPts.append($inpSmaller);
-        
-        $peerPts.text(data['peer_points']);
-        $peerPts.append($peerSmaller);
-        
-        // TODO; trigger iff .countdown is present
-        chunks = [];
-        qStart = new Date();
-        $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
-
-        // clear svg
-        d3.selectAll("svg > *").remove()
-
-        activeLabels = 0;
-      },
-      error: function() {
-        console.log("ERROR!");
-        if (underReview)
-          $qInput.prop("disabled", true)
-        else {
-          $qInput.val('');
-          $qInput.prop('disabled', false);
-        }
-        qStart = new Date();
-        $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');
-      }
-    })
-
-    // resetArticle();
+      })
+    }
   })
 
-  // TODO: format article using the written Jinja2 linebreaks filter
+  // get a new article from the data source(s)
   $('#getNewArticle').on('click', function(e) {
     e.preventDefault();
 
@@ -468,15 +532,20 @@ $(document).ready(function() {
         success: function(d) {
           $('.selector').html(d.text);
           chunks = [];
+          chunksCache = []
           labelId = $('article.text').find('span.tag').length; // count the number of pre-markers
           activeLabels = labelId;
           resetTextHTML = selectorArea.innerHTML;
           resetText = selectorArea.textContent;
 
+          $('#undoLast').attr('disabled', true);
+
           $('article.text span.tag').on('click', function(e) {
             if (!$(e.target).prop('in_relation'))
               e.target.classList.add('active');
           })
+
+          initPreMarkers();
 
           el.removeClass('is-loading');
           $button.attr('disabled', false);
@@ -490,12 +559,15 @@ $(document).ready(function() {
     }
   });
 
+  /******************/
+  /* + Handling SVG */
+  /******************/
+  
   /* Relations */
   var svg = d3.select("#relations")
     .append("svg")
       .attr("width", "100%")
       .attr("height", "100%");
-
 
   // TODO: this marker should be visible w.r.t. the target node
   svg.append("svg:defs").append("svg:marker")
@@ -510,7 +582,7 @@ $(document).ready(function() {
     .attr("d", "M 0 0 12 6 0 12 3 6")
     .style("fill", "black");
 
-  var initialMarginX = 30,
+  var initialMarginX = 50,
       initialMarginY = null,
       graphId = 0,
       radius = 10;
@@ -675,7 +747,7 @@ $(document).ready(function() {
     });
   }
 
-  window.ptl = previousTextLength;
-  window.chunks = chunks;
-  window.relations = relations;
+  /******************/
+  /* - Handling SVG */
+  /******************/
 });

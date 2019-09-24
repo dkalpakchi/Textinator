@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import uuid
 
 from django.http import JsonResponse, Http404
 from django.shortcuts import render, get_object_or_404
@@ -72,7 +73,7 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
 
 @login_required
 @require_http_methods(["POST"])
-def record_datapoint(request):
+def record_datapoint(request, proj):
     data = request.POST
     chunks = json.loads(data['chunks'])
     relations = json.loads(data['relations'])
@@ -81,9 +82,11 @@ def record_datapoint(request):
     is_review = data.get('is_review', 'f') == 'true'
     is_resolution = data.get('is_resolution', 'f') == 'true'
 
+    batch = uuid.uuid4()
+
     user = request.user
     try:
-        project = Project.objects.get(pk=data['pid'])
+        project = Project.objects.get(pk=proj)
         u_profile = UserProfile.objects.get(user=user, project=project)
     except Project.DoesNotExist:
         raise Http404
@@ -148,11 +151,11 @@ def record_datapoint(request):
                 else:
                     if inp:
                         new_label = Label.objects.create(
-                            input=inp, start=new_start, end=new_end, marker=marker, user=user
+                            input=inp, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
                         )
                     else:
                         new_label = Label.objects.create(
-                            context=ctx, start=new_start, end=new_end, marker=marker, user=user
+                            context=ctx, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
                         )
                     label_cache[chunk['id']] = new_label.id
                     saved_labels += 1
@@ -173,7 +176,7 @@ def record_datapoint(request):
         except Relation.DoesNotExist:
             continue
 
-        LabelRelation.objects.create(rule=rule, first_label=source_label, second_label=target_label)
+        LabelRelation.objects.create(rule=rule, first_label=source_label, second_label=target_label, user=user, project=project, batch=batch)
 
     # TODO: have to count asking points based on task units,
     #       e.g. in QA a task unit is a Q&A pair
@@ -269,4 +272,53 @@ def update_participations(request):
         
     return JsonResponse({
         'template': template
+    })
+
+
+@login_required
+@require_http_methods("POST")
+def undo_last(request, proj):
+    user = request.user
+    project = Project.objects.get(pk=proj)
+
+    # find a last relation submitted if any
+    rel_batch = LabelRelation.objects.filter(user=user, project=project).order_by('-dt_created').all()[:1].values('batch')
+    last_rels = LabelRelation.objects.filter(batch__in=rel_batch).all()
+    
+    label_batch = Label.objects.filter(user=user, project=project).order_by('-dt_created').all()[:1].values('batch')
+    last_labels = Label.objects.filter(batch__in=label_batch).all()
+    
+    labels = []
+
+    if last_rels and last_labels:
+        max_rel_dt_created = max(map(lambda x: x.dt_created, last_rels))
+        max_lab_dt_created = max(map(lambda x: x.dt_created, last_labels))
+        if max_rel_dt_created > max_lab_dt_created:
+            # means relation was the latest
+            for last_rel in last_rels:
+                last_rel.first_label.undone = True
+                last_rel.first_label.save()
+                labels.append(last_rel.first_label.text)
+
+                last_rel.second_label.undone = True
+                last_rel.second_label.save()
+                labels.append(last_rel.second_label.text)
+
+                last_rel.undone = True
+                last_rel.save()
+        else:
+            # means the label was the latest
+            for last_label in last_labels:
+                last_label.undone = True
+                last_label.save()
+                labels.append(last_label.text)
+    elif last_label:
+        for last_label in last_labels:
+            last_label.undone = True
+            last_label.save()
+            labels.append(last_label.text)
+
+    return JsonResponse({
+        'error': False,
+        'labels': labels
     })
