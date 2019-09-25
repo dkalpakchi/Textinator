@@ -2,8 +2,8 @@ $(document).ready(function() {
   var chunks = [],                                          // the array of all chunk of text marked with a label, but not submitted yet
       chunksCache = [],                                     // the array of just submitted chunks (if any)
       relations = [],                                       // the array of all relations for this article, not submitted yet
-      lastRelationY = null,                                 // TODO: maybe remove
-      beforeLastRelationY = null,                           // TODO: maybe remove
+      lastRelationTopY = null,                                 // TODO: maybe remove
+      lastRelationBottomY = null,
       lastRelationId = 0,                                   // TODO: maybe remove
       selectorArea = document.querySelector('.selector'),   // the area where the article is
       resetTextHTML = selectorArea.innerHTML,               // the HTML of the loaded article
@@ -250,7 +250,7 @@ $(document).ready(function() {
     chunk['marked'] = true;
     chunk['id'] = labelId;
     chunk['label'] = markerText.textContent;
-    chunk['submittable'] = marker.getAttribute('data-submittable');
+    chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
     
     if (contextSize == 'p') {
       // paragraph
@@ -515,7 +515,7 @@ $(document).ready(function() {
 
     if ($button.attr('disabled')) return;
 
-    var confirmation = chunks.length > 0 ? confirm("All your unsubmitted labels will be removed. Are you sure?") : true;
+    var confirmation = chunks.filter(function(c) { return c.submittable }).length > 0 ? confirm("All your unsubmitted labels will be removed. Are you sure?") : true;
     $button.attr('disabled', true);
 
     if (confirmation) {
@@ -582,27 +582,28 @@ $(document).ready(function() {
     .attr("d", "M 0 0 12 6 0 12 3 6")
     .style("fill", "black");
 
-  var initialMarginX = 50,
-      initialMarginY = null,
+  var marginX = 50,
+      marginY = null,
       graphId = 0,
       radius = 10;
 
   function drawNetwork(data, arrows) {
     if (arrows === undefined) arrows = false;
 
-    if (initialMarginY == null) {
-      initialMarginY = data.nodes.length * 15;
+    if (marginY == null) {
+      marginY = 20;
+    } else {
+      marginY += 50;
     }
-
     // Initialize the links
-    var deltaY = initialMarginY + lastRelationY;
-        deltaX = initialMarginX;
+    marginY += lastRelationTopY;
+    if (lastRelationBottomY < 0) marginY -= lastRelationBottomY
 
     var svg = d3.select("#relations svg")
 
     svg = svg.append("g")
       .attr('id', data.id)
-      .attr("transform", "translate(" + deltaX + ", " + deltaY + ")")
+      .attr("transform", "translate(" + marginX + ", " + marginY + ")")
 
     var link = svg
       .selectAll("line")
@@ -642,12 +643,13 @@ $(document).ready(function() {
               .links(data.links)                                    // and this the list of links
         )
         .force("charge", d3.forceManyBody().strength(-400))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-        .force("center", d3.forceCenter(radius, 10));               // This force attracts nodes to the center of the svg area
-
-    simulation.on("tick", ticked);
+        .force("center", d3.forceCenter(radius, 10))                // This force attracts nodes to the center of the svg area
+        .stop()
 
     // This function is run at each iteration of the force algorithm, updating the nodes position.
     function ticked() {
+      console.log("TICK!")
+      /* update the simulation */
       text
         .attr("x", function(d) { return d.x + radius * 1.2; })
         .attr("y", function(d) { return d.y; })
@@ -692,6 +694,8 @@ $(document).ready(function() {
     // must be translated upper, whereas every g that is above the deleted should be the same
     // if the deleted g is the first one, the next added g should appear at the top, not
     // after the non-existing deleted one.
+    // 
+    // apparently, create an array of all <g> and apply necessary translates to all <g> after the deleted one
     function onCloseClick(d) {
       $(this.parentNode).find('circle[data-id]').each(function(i, d) { 
         var $el = $('#' + d.getAttribute('data-id'));
@@ -700,14 +704,14 @@ $(document).ready(function() {
           $el.attr('id', '');
         }
       });
-      lastRelationY = beforeLastRelationY;
       d3.select(this.parentNode).remove();
     }
 
-    simulation.on('end', function() {
+    function finalizeSimulation() {
       var group = d3.select('g#' + data.id);
 
       if (!group.empty()) {
+        // Adds close button
         var bbox = group.node().getBBox();
 
         svg.append("circle")
@@ -738,13 +742,19 @@ $(document).ready(function() {
           .on('click', onCloseClick)
       }
 
-      if (lastRelationY != null) {
-        beforeLastRelationY = lastRelationY;
-      } else {
-        beforeLastRelationY = initialMarginY;
+      lastRelationTopY = Math.max.apply(null, data.nodes.map(function(d) { return d.y }));
+      lastRelationBottomY = Math.min.apply(null, data.nodes.map(function(d) { return d.y }));
+
+      if (lastRelationBottomY < 0) {
+        group.attr("transform", "translate(" + marginX + ", " + (marginY - lastRelationBottomY) + ")")
       }
-      lastRelationY = Math.max.apply(null, data.nodes.map(function(d) { return d.y })) + 30;
-    });
+    }
+
+    for (var i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
+      simulation.tick();
+      ticked();
+    }
+    finalizeSimulation();
   }
 
   /******************/

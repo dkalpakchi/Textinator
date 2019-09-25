@@ -13,7 +13,7 @@ def get_path(url):
 def display_marker(marker):
     template = Template("""
     <div class="marker tags has-addons" data-s="{{marker.short}}" data-color="{{marker.color}}"
-        data-shortcut="{{marker.shortcut|upper}}" data-submittable="{{not marker.is_part_of_relation()}}">
+        data-shortcut="{{marker.shortcut|upper}}" data-submittable="{% if not marker.is_part_of_relation() %}true{% else %}false{% endif %}">
       <span class="tag is-{{marker.color}}">{{marker.name}}</span>
       {% if marker.shortcut %}
         <span class="tag is-dark">{{marker.shortcut|upper}}</span>

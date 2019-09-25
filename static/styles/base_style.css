@@ -237,3 +237,7 @@ textarea {
   border: 0px !important;
   cursor: default !important;
 }
+
+.relations.message, #relations {
+  height: 100%;
+}
