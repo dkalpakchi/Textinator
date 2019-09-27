@@ -54,11 +54,6 @@ class DataSource(CommonModel):
 
 
 class Project(CommonModel):
-    class Meta:
-        permissions = [
-            ("view_published_project", "View published project"),
-        ]
-
     title = models.CharField(max_length=50)
     guidelines = models.TextField(null=True)
     # TODO: implement a context of a sentence
