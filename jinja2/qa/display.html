@@ -41,7 +41,7 @@
         <p>Your question</p>
       </div>
       <div class="message-body">
-        <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk})) }}">
+        <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
           {{ csrf_input }}
           <input type="hidden" name="pid" value="{{project.pk}}">
           <div class="field">
