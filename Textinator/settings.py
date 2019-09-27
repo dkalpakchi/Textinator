@@ -95,6 +95,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Textinator.wsgi.application'
 
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -203,3 +206,5 @@ MARKER_COLORS = [
     ('primary', 'Teal'),
     ('black', 'Black')
 ]
+
+LOGIN_URL = '/textinator/accounts/login/'

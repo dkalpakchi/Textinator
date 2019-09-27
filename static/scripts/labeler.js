@@ -507,15 +507,8 @@ $(document).ready(function() {
     }
   })
 
-  // get a new article from the data source(s)
-  $('#getNewArticle').on('click', function(e) {
-    e.preventDefault();
-
-    var $button = $(this);
-
-    if ($button.attr('disabled')) return;
-
-    var confirmation = chunks.filter(function(c) { return c.submittable }).length > 0 ? confirm("All your unsubmitted labels will be removed. Are you sure?") : true;
+  function getNewText(confirmationCallback, $button) {
+    var confirmation = confirmationCallback();
     $button.attr('disabled', true);
 
     if (confirmation) {
@@ -524,7 +517,7 @@ $(document).ready(function() {
 
       $.ajax({
         type: "POST",
-        url: $(this).attr('href'),
+        url: $button.attr('href'),
         dataType: "json",
         data: {
           "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val()
@@ -556,7 +549,37 @@ $(document).ready(function() {
           $button.attr('disabled', false);
         }
       })
+    } else {
+      $button.attr('disabled', false);
     }
+  }
+
+  // get a new article from the data source(s)
+  $('#getNewArticle').on('click', function(e) {
+    e.preventDefault();
+
+    var $button = $(this);
+
+    if ($button.attr('disabled')) return;
+
+    getNewText(function() {
+      var confirmationText = "All your unsubmitted labels will be removed. Are you sure?";
+      return chunks.filter(function(c) { return c.submittable }).length > 0 ? confirm(confirmationText) : true;
+    }, $button);
+  });
+
+  // get a new article from the data source(s)
+  $('#finishRound').on('click', function(e) {
+    e.preventDefault();
+
+    var $button = $(this);
+
+    if ($button.attr('disabled')) return;
+
+    getNewText(function() {
+      var confirmationText = "Are you sure that you have completed the task to the best of your ability?";
+      return confirm(confirmationText);
+    }, $button);
   });
 
   /******************/

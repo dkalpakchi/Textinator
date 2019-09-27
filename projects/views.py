@@ -42,7 +42,8 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
     permission_denied_message = 'you did not confirmed yet. please check your email.'
 
     def has_permission(self):
-        return self.request.user.has_perm('projects.view_published_project')
+        # return self.request.user.has_perm('projects.view_published_project')
+        return True
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
@@ -50,10 +51,13 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
         con = DetailView.context_object_name
         proj = data[con]
 
+        u = self.request.user
+        if not proj.has_participant(u): raise Http404
+
         task_markers = Marker.objects.filter(for_task_type=proj.task_type)
         task_relations = Relation.objects.filter(for_task_type=proj.task_type)
 
-        u_profile = UserProfile.objects.filter(user=self.request.user, project=proj).get()
+        u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 
         ctx = {
             'text': apply_premarkers(proj, proj.data()),

@@ -59,15 +59,14 @@ class Project(CommonModel):
             ("view_published_project", "View published project"),
         ]
 
-
     title = models.CharField(max_length=50)
     guidelines = models.TextField(null=True)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
     context_size = models.CharField(max_length=2, choices=[('no', 'No context'), ('t', 'Text'), ('p', 'Paragraph')])
     task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES)
-    dt_publish = models.DateTimeField(verbose_name="To be published at")
-    dt_finish = models.DateTimeField(verbose_name="To be finished at")
+    dt_publish = models.DateTimeField(verbose_name="To be published at") # TODO: implement this functionality
+    dt_finish = models.DateTimeField(verbose_name="To be finished at")   # TODO: implement this functionality
     dt_updated = models.DateTimeField(auto_now=True)
     collaborators = models.ManyToManyField(User, related_name='shared_projects', blank=True)
     participants = models.ManyToManyField(User, related_name='participations', through='UserProfile', blank=True)
@@ -75,7 +74,8 @@ class Project(CommonModel):
     datasources = models.ManyToManyField(DataSource)
     is_open = models.BooleanField(default=False)
     is_peer_reviewed = models.BooleanField(default=False)
-    max_markers_per_input = models.PositiveIntegerField(null=True, blank=True, default=None)
+    max_markers_per_input = models.PositiveIntegerField(null=True, blank=True)
+    round_length = models.PositiveIntegerField(null=True, blank=True, help_text="The number of text snippets consituting one round of the game")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -98,6 +98,9 @@ class Project(CommonModel):
             return UserProfile.objects.get(project=self, user=user)
         except UserProfile.DoesNotExist:
             return None
+
+    def has_participant(self, user):
+        return user in self.participants.all()
 
     def save(self, *args, **kwargs):
         super(Project, self).save(*args, **kwargs)
