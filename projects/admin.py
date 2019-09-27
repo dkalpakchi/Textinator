@@ -167,6 +167,10 @@ class PostProcessingMethodAdmin(CommonModelAdmin): pass
 @admin.register(PreMarker)
 class PreMarkerAdmin(CommonModelAdmin): pass
 
+from django.contrib.auth.models import Permission
+from django.contrib import admin
+admin.site.register(Permission)
+
 admin.site.site_header = 'Textinator admin'
 admin.site.site_title = 'Textinator admin'
 
