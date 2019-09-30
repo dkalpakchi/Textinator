@@ -1,6 +1,7 @@
 import json
 import random
 import pymysql
+import pymongo
 
 
 class AbsentSpecError(Exception):
@@ -13,12 +14,18 @@ class DataSource:
         self.__data = []
 
         self._required_keys = []
+        self._aux_keys = []
 
     def check_constraints(self):
         absent = []
         for k in self._required_keys:
             if k not in self.__spec:
                 absent.append(k)
+
+        present_aux = any([set(key_set) & set(self.__spec.keys()) for key_set in self._aux_keys])
+
+        if not present_aux:
+            raise Warning("None of the auxiliary keys are present")
 
         if absent:
             raise AbsentSpecError("Required keys are missing: {}".format(", ".join(self._required_keys)))
@@ -59,12 +66,15 @@ class TextFileSource(DataSource):
 class DbSource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
-        self._required_keys = ['db_type', 'user', 'database', 'password', 'rand_dp_query']
+        self._required_keys = ['db_type', 'user', 'password', 'database']
+        self._aux_keys = [('collection', 'field'), ('rand_dp_query',)]
         self.check_constraints()
 
         self.__db_type = self.get_spec('db_type')
         self.__user = self.get_spec('user')
         self.__database = self.get_spec('database')
+        self.__collection = self.get_spec('collection')
+        self.__field = self.get_spec('field')
         self.__rand_dp_query = self.get_spec('rand_dp_query')
         # TODO: make safer
         self.__password = self.get_spec('password')
@@ -75,13 +85,18 @@ class DbSource(DataSource):
     def __connect(self):
         try:
             return {
-                'mysql': self.__connect_mysql
+                'mysql': self.__connect_mysql,
+                'mongodb': self.__connect_mongo
             }[self.__db_type]()
         except AttributeError:
             raise NotImplementedError('{} is not supported'.format(self.__db_type)) from None
 
     def __connect_mysql(self):
         return pymysql.connect(user=self.__user, database=self.__database, password=self.__password)
+
+    def __connect_mongo(self):
+        # TODO: add authentication
+        return pymongo.MongoClient("mongodb://localhost:27017/")
 
     #
     # SELECT old_text AS ARTICLE
@@ -98,6 +113,11 @@ class DbSource(DataSource):
             text = cur.fetchone()[0]
             cur.close()
             return text.decode('utf8')
+        elif self.__db_type == 'mongodb':
+            db = self.__conn[self.__database]
+            collection = db[self.__collection]
+            cursor = collection.aggregate([{ "$sample": { "size": 1 } }])
+            return list(cursor)[0][self.__field]
         else:
             raise NotImplementedError('Please set `rand_dp_query` in your settings')
 

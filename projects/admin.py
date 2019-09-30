@@ -74,21 +74,6 @@ class ProjectAdmin(CommonModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super(ProjectAdmin, self).save_related(request, form, formsets, change)
-        proj_perm = 'view_published_project'
-        perm = Permission.objects.get(codename=proj_perm)
-        perm_users = User.objects.filter(user_permissions=perm).distinct()
-        participants = form.instance.participants.all()
-        collaborators = form.instance.collaborators.all()
-
-        for u in perm_users:
-            if u not in collaborators and u not in participants:
-                u.user_permissions.remove(perm)
-
-        for c in collaborators:
-            c.user_permissions.add(perm)
-
-        for p in participants:
-            p.user_permissions.add(perm)
 
 
 @admin.register(Context)
@@ -167,8 +152,6 @@ class PostProcessingMethodAdmin(CommonModelAdmin): pass
 @admin.register(PreMarker)
 class PreMarkerAdmin(CommonModelAdmin): pass
 
-from django.contrib.auth.models import Permission
-from django.contrib import admin
 admin.site.register(Permission)
 
 admin.site.site_header = 'Textinator admin'

@@ -1,0 +1,124 @@
+{{robotskapad|Lsjbot|Spanien|datum=2016-05}}
+{{geobox
+| 1                  = Building
+<!-- *** Mallhuvud *** -->
+| name               = Castillo de la Villa de Martos
+| native_name        = 
+| category           = Slott
+| official_name      = 
+| etymology          = 
+| nickname           =
+<!-- *** Bild *** -->
+| image              = 
+| image_caption      =
+<!-- *** Land, region m.m. *** -->
+| country            = Spanien
+| country_flag       = true
+| state              = [[Andalusien]]
+| region             = [[Provincia de Jaén (provins i Spanien)|Provincia de Jaén]]
+| district           = 
+| municipality       =
+<!-- *** Läge *** -->
+| location           = 
+| elevation          = 738
+| lat_d              = 37.72353
+| lat_m              = 
+| lat_s              = 
+| lat_NS             = 
+| long_d             = -3.96728
+| long_m             = 
+| long_s             = 
+| long_EW            =
+<!-- *** Dimensioner *** -->
+| length             = 
+| length_orientation = 
+| width              = 
+| width_orientation  = 
+| height             = 
+| depth              = 
+| volume             = 
+| area               =
+<!-- *** Egenskaper *** -->
+| author             = 
+| style              = 
+| material           =
+<!-- *** Historia och administration *** -->
+| established        = 
+| date               = 
+| owner              = 
+| management         =
+<!-- *** Tillgänglighet *** -->
+| public             = 
+| visitation         = 
+| visitation_date    = 
+| access             =
+<!-- *** Världsarv m.m. *** -->
+| whs_name           = 
+| whs_year           = 
+| whs_number         = 
+| whs_region         = 
+| whs_criteria       = 
+| iucn_category      =
+<!-- *** Fria fält *** -->
+| free               = 
+| free_type          =
+<!-- *** Kartor *** -->
+| map                = {{Kartposition Spanien|reliefkarta_om_den_finns}}
+| map_caption        = Läge i Spanien
+| map_locator        = Spanien
+| map_locator_x      = 
+| map_locator_y      =
+<!-- *** Webbplatser *** -->
+| website            =
+<!-- *** Fotnoter *** -->
+| footnotes          = 
+| state_type         = Region
+| region_type        = Provins
+| timezone_label     = Europe/Madrid
+| utc_offset         = +1
+| utc_offset_DST     = +2
+| timezone           = [[Central European Time|CET]]
+| timezone_DST       = [[Central European Summer Time|CEST]]
+| geonames           = 10296348        
+}}
+
+'''Castillo de la Villa de Martos''' är <!--S.CSTL-->ett [[slott]] i [[Spanien]].<ref name = "gn10296348"/>   Det ligger i provinsen <!--ADM2-->[[Provincia de Jaén (provins i Spanien)|Provincia de Jaén]] och regionen <!--ADM1-->[[Andalusien]], i den södra delen av landet, {{formatnum:300}} km söder om huvudstaden [[Madrid]]. Castillo de la Villa de Martos ligger {{formatnum:738}} meter över havet.<ref name = "gn10296348"/>
+
+Terrängen runt Castillo de la Villa de Martos är huvudsakligen kuperad, men åt nordväst är den platt.{{anmärkning|Framräknat ur variansen i alla höjduppgifter (DEM 3") från Viewfinder Panoramas, inom 10 km radie.<ref name = "vp"/> {{Lsjbot-algoritmnot}}}} Den högsta punkten i närheten är {{formatnum:898}} meter över havet, {{formatnum:1.0}} km sydost om Castillo de la Villa de Martos.{{anmärkning|Framräknat ur höjduppgifter (DEM 3") från Viewfinder Panoramas.<ref name = "vp"/> {{Lsjbot-algoritmnot}}}} Runt Castillo de la Villa de Martos är det ganska tätbefolkat, med {{formatnum:60}} invånare per kvadratkilometer.<ref name = "nasapop"/> Närmaste större samhälle är [[Jaén (provinshuvudstad)|Jaén]], {{formatnum:16.3}} km öster om Castillo de la Villa de Martos. Trakten runt Castillo de la Villa de Martos består till största delen av [[jordbruksmark]].<ref name = "nasalandcover"/>
+
+Ett kallt [[Halvöken|stäppklimat]] råder i trakten.<ref name = "koppen"/> [[Årsmedeltemperatur]]en i trakten är {{formatnum:17.2|2|t}}&nbsp;[[Grad Celsius|°C]]. Den varmaste månaden är juli, då medeltemperaturen är {{formatnum:31}}&nbsp;°C, och den kallaste är januari, med {{formatnum:6}}&nbsp;°C.<ref name = "nasa"/> Genomsnittlig [[årsnederbörd]] är {{formatnum:744}} millimeter. Den regnigaste månaden är november, med i genomsnitt {{formatnum:121}} mm [[nederbörd]], och den torraste är juli, med {{formatnum:3}} mm nederbörd.<ref name = "nasarain"/>
+
+{{klimatöversikt
+|  Castillo de la Villa de Martos
+| 2| 10| 81
+| 4| 14| 91
+| 5| 17| 93
+| 9| 22| 91
+| 14| 30| 41
+| 17| 36| 14
+| 21| 41| 3
+| 21| 38| 16
+| 16| 31| 59
+| 11| 22| 78
+| 4| 15| 121
+| 3| 9| 55
+|source = <ref name = "nasa"/>
+}}
+
+== Kommentarer ==
+
+{{anmärkningslista}}
+
+== Källor ==
+
+<references>
+<ref name = "gn10296348">[{{Geonameslänk|gnid=10296348|name=castillo%20de%20la%20villa%20de%20martos}} Castillo de la Villa de Martos] hos [{{Geonamesabout}} Geonames.org (cc-by)]; post uppdaterad 2015-05-31; databasdump nerladdad 2016-04-24</ref>
+<ref name = "vp">{{Webbref |url= {{Viewfinderlänk}}|titel= Viewfinder Panoramas Digital elevation Model|hämtdatum= 2015-06-21|format= |verk= }}</ref>
+<ref name = "nasapop">{{webbref |url= http://neo.sci.gsfc.nasa.gov/view.php?datasetId=SEDAC_POP|titel= NASA Earth Observations: Population Density|hämtdatum=30 januari 2016 |efternamn= |förnamn= |datum= |verk= |utgivare= NASA/SEDAC}}</ref>
+<ref name = "nasalandcover">{{webbref |url= http://neo.sci.gsfc.nasa.gov/view.php?datasetId=MCD12C1_T1|titel= NASA Earth Observations: Land Cover Classification|hämtdatum=30 januari 2016 |efternamn= |förnamn= |datum= |verk= |utgivare= NASA/MODIS}}</ref>
+<ref name = "koppen">{{Tidskriftsref | författare = | redaktör = | rubrik = Updated world map of the Köppen-Geiger climate classification| url = http://www.hydrol-earth-syst-sci.net/11/1633/2007/hess-11-1633-2007.html| år = 2007| tidskrift = Hydrology and Earth System Sciences| volym = 11| utgivningsort = | utgivare = | nummer = | sid = 1633-1644| hämtdatum = 2016-01-30| id = | doi = 10.5194/hess-11-1633-2007| issn = | citat = | språk = | förnamn =M C| förnamn2 = B L| förnamn3 = T A| efternamn = Peel| efternamn2 = Finlayson| efternamn3 =McMahon| ref = }}</ref>
+<ref name = "nasa">{{webbref |url= http://neo.sci.gsfc.nasa.gov/dataset_index.php|titel= NASA Earth Observations Data Set Index|hämtdatum=30 januari 2016 |efternamn= |förnamn= |datum= |verk= |utgivare= NASA}}</ref>
+<ref name = "nasarain">{{webbref |url= http://neo.sci.gsfc.nasa.gov/view.php?datasetId=TRMM_3B43M&year=2014|titel= NASA Earth Observations: Rainfall (1 month - TRMM)|hämtdatum=30 januari 2016 |efternamn= |förnamn= |datum= |verk= |utgivare= NASA/Tropical Rainfall Monitoring Mission}}</ref>
+</references>
+
+[[Kategori:Byggnadsverk i Andalusien]]

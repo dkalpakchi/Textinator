@@ -81,3 +81,7 @@ def apply_premarkers(proj, text):
                     </span>""".format(m.color, m.short, t),
                     text)
     return text
+
+
+def dub_new_lines(text):
+    return text.replace('\n', '\n\n')
