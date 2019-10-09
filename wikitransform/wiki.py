@@ -52,7 +52,7 @@ mysql_cur = mysqlc.cursor()
 mysql_cur.execute("""
     SELECT page_id, page_title, old_text AS article FROM (
         SELECT page_title, page_latest, page_id FROM page 
-        WHERE page_content_model = 'wikitext' AND page_namespace=0 AND page_is_redirect = 0 AND page_len > 4000
+        WHERE page_content_model = 'wikitext' AND page_namespace=0 AND page_is_redirect = 0 AND page_len > 10000
     ) pg INNER JOIN text ON page_latest = old_id;
     """)
 
