@@ -140,7 +140,8 @@ class JsonSource(DataSource):
 
         for fname in self.get_spec('files'):
             d = json.load(open(fname))
-            self._add_datapoint(d[self.get_spec('key')])
+            for el in d:
+                self._add_datapoint(el[self.get_spec('key')])
 
         self.__length = len(self.data())
 
