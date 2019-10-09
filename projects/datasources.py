@@ -24,7 +24,7 @@ class DataSource:
 
         present_aux = any([set(key_set) & set(self.__spec.keys()) for key_set in self._aux_keys])
 
-        if not present_aux:
+        if self._aux_keys and not present_aux:
             raise Warning("None of the auxiliary keys are present")
 
         if absent:
