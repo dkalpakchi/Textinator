@@ -18,6 +18,7 @@ import markdown
 
 from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
+from .view_helpers import process_chunk
 
 from Textinator.jinja2 import linebreaks
 
@@ -100,69 +101,10 @@ def record_datapoint(request, proj):
     saved_labels = 0
     label_cache = {}
     for chunk in chunks:
-        if chunk.get('marked', False):
-            if 'context' in chunk and type(chunk['context']) == str:
-                ctx = retrieve_by_hash(chunk['context'], Context, ctx_cache)
-                if not ctx:
-                    ctx = Context.objects.create(content=chunk['context'])
-                    ctx_cache.set(ctx.content_hash, ctx.pk, 600)
-            else:
-                ctx = None
-
-            try:
-                if (not 'label' in chunk) or (type(chunk['label']) != str): continue
-                marker = Marker.objects.get(name=chunk['label'].strip())
-            except Marker.DoesNotExist:
-                continue
-
-            if 'input' in data:
-                inp = retrieve_by_hash(data['input'], Input, inp_cache)
-                if not inp:
-                    inp = Input.objects.create(context=ctx, project=project, content=data['input'], user=user)
-                    inp_cache.set(inp.content_hash, inp.pk, 600)
-            else:
-                inp = None
-
-            if 'lengthBefore' in chunk and 'start' in chunk and 'end' in chunk:
-                new_start = chunk['lengthBefore'] + chunk['start']
-                new_end = chunk['lengthBefore'] + chunk['end']
-
-                if is_resolution:
-                    # resolution case
-                    pass
-                elif is_review:
-                    # check if matches original answer
-                    if inp:
-                        original = Label.objects.filter(input=inp).get()
-                    else:
-                        original = Label.objects.filter(context=ctx).get()
-
-                    if original:
-                        ambiguity_status, is_match = 'no', False
-                        no_overlap = (original.start > new_end) or (original.end < new_start)
-                        
-                        if not no_overlap:
-                            is_match = (original.start == new_start) and (original.end == new_end)
-                            if not is_match:
-                                requires_resolution = (original.start == new_start) or (original.end == new_end)
-                                if requires_resolution:
-                                    ambiguity_status = 'rr'
-                        
-                        LabelReview.objects.create(
-                            original=original, start=new_start, end=new_end, user=user, marker=marker,
-                            ambiguity_status=ambiguity_status, is_match=is_match
-                        )
-                else:
-                    if inp:
-                        new_label = Label.objects.create(
-                            input=inp, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
-                        )
-                    else:
-                        new_label = Label.objects.create(
-                            context=ctx, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
-                        )
-                    label_cache[chunk['id']] = new_label.id
-                    saved_labels += 1
+        # inp is typically the same for all chunks
+        ret_caches, inp, just_saved = process_chunk(chunk, batch, data.get('input'), project, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
+        ctx_cache, inp_cache, label_cache = ret_caches
+        saved_labels += just_saved
 
     # TODO: after dealing with chunks, deal with relations by finding the necessary Labels
     #       and put those specified in the relations to LabelRelations.
@@ -182,38 +124,26 @@ def record_datapoint(request, proj):
 
         LabelRelation.objects.create(rule=rule, first_label=source_label, second_label=target_label, user=user, project=project, batch=batch)
 
-    # TODO: have to count asking points based on task units,
-    #       e.g. in QA a task unit is a Q&A pair
-    #            in CorefRes a task unit is a reference-antecedent relation
-    #       need some kind of project setting controlling what is a task unit
-    if saved_labels > 0:
-        # means the user has provided at least one new input
-        u_profile.points += 0.5 # asking points
-        if 'time' in data:
-            u_profile.asking_time += float(data['time'])
-            u_profile.timed_questions += 1
-    u_profile.save()
+    # Peer review task
+    # if project.is_peer_reviewed:
+    #     if u_profile.submitted() > 5 and random.random() > 0.5:
+    #         inp_query = Input.objects.exclude(user=user).values('pk')
+    #         rand_inp_id = random.choice(inp_query)['pk']
+    #         inp = Input.objects.get(pk=rand_inp_id)
+    #     else:
+    #         inp = None
+    # else:
+    #     inp = None
 
-    if project.is_peer_reviewed:
-        if u_profile.submitted() > 5 and random.random() > 0.5:
-            inp_query = Input.objects.exclude(user=user).values('pk')
-            rand_inp_id = random.choice(inp_query)['pk']
-            inp = Input.objects.get(pk=rand_inp_id)
-        else:
-            inp = None
-    else:
-        inp = None
-
-    # FIXME: input = None does not mean that it's a review task - e.g. can be CorefRes task and then input is always null
     return JsonResponse({
         'error': False,
         'input': {
             'content': inp.content,
             'context': inp.context.content
         } if inp else None,
-        'aat': u_profile.aat,
-        'inp_points': u_profile.points,
-        'peer_points': u_profile.peer_points
+        'submitted': u_profile.submitted(),
+        'submitted_today': u_profile.submitted_today(),
+        'next_task': 'regular'
     })
 
 

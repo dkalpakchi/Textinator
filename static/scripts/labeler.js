@@ -2,16 +2,17 @@ $(document).ready(function() {
   var chunks = [],                                          // the array of all chunk of text marked with a label, but not submitted yet
       chunksCache = [],                                     // the array of just submitted chunks (if any)
       relations = [],                                       // the array of all relations for this article, not submitted yet
-      lastRelationTopY = null,                                 // TODO: maybe remove
-      lastRelationBottomY = null,
-      lastRelationId = 0,                                   // TODO: maybe remove
+      lastNodeInRelationId = 0,                             // TODO: maybe remove
       selectorArea = document.querySelector('.selector'),   // the area where the article is
       resetTextHTML = selectorArea.innerHTML,               // the HTML of the loaded article
       resetText = selectorArea.textContent,                 // the text of the loaded article
       contextSize = $('#taskArea').data('context'),         // the size of the context to be saved 'p', 't' or 'no'
       qStart = new Date(),                                  // the time the page was loaded or the last submission was made
       labelId = 0,                                          // internal JS label id for the labels of the current article
-      activeLabels = labelId;                               // a number of labels currently present in the article
+      activeLabels = labelId,                               // a number of labels currently present in the article
+      radius = 10,
+      graphIds = [],
+      currentRelationId = null;
 
   // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
   function initPreMarkers() {
@@ -124,6 +125,7 @@ $(document).ready(function() {
 
   // labeling piece of text with a given marker if the marker is clicked
   $('.marker.tags').on('click', function() {
+    console.log(chunks, activeLabels)
     if (chunks.length > 0 && activeLabels < $('article.markers').attr('data-mmpi')) {
       var chunk = chunks[chunks.length - 1],
           idc = chunks.length - 1
@@ -179,10 +181,10 @@ $(document).ready(function() {
     if ($parts.length >= 2) {
       var nodes = {},
           links = [];
-      var startId = lastRelationId;
+      var startId = lastNodeInRelationId;
       $parts.each(function(i) {
-        $parts[i].id = 'rl_' + lastRelationId;
-        lastRelationId++;
+        $parts[i].id = 'rl_' + lastNodeInRelationId;
+        lastNodeInRelationId++;
 
         $($parts[i]).prop('in_relation', true);
 
@@ -223,15 +225,22 @@ $(document).ready(function() {
         var source = document.querySelector('#' + l.source),
             target = document.querySelector('#' + l.target);
         relations.push({
+          "id": "n" + startId + "__" + (lastNodeInRelationId - 1),
           'rule': rule,
           's': source.getAttribute('data-i'),
           't': target.getAttribute('data-i')
         })
       });
 
+      if (currentRelationId == null)
+        currentRelationId = 0;
+      else
+        currentRelationId++;
+
+      graphIds.push("n" + startId + "__" + (lastNodeInRelationId - 1));
 
       drawNetwork({
-        'id': "n" + startId + "__" + (lastRelationId - 1),
+        'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
         'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
         'links': links
       }, (from != null && to != null))
@@ -415,7 +424,7 @@ $(document).ready(function() {
 
     // if there are any relations, submit only those chunks that have to do with the relations
     // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relation
-    inputFormData['chunks'] = relations ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
+    inputFormData['chunks'] = relations.length > 0 ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
     inputFormData['is_review'] = underReview;
     inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
 
@@ -431,8 +440,7 @@ $(document).ready(function() {
             var articleNode = document.querySelector('.selector'),
                 $title = $questionBlock.find('.message-header p');
 
-            // TODO: this has nothing to do with a review task, I mean it used to when it was only QA, but not for all tasks
-            if (data['input'] == null) {
+            if (data['next_task'] == 'regular') {
               // no review task
               // resetArticle();
               var submittedChunks = JSON.parse(inputFormData['chunks']);
@@ -464,19 +472,16 @@ $(document).ready(function() {
               $qInput.val(data['input']['content']);
               $qInput.prop("disabled", true);
             }
-            if ('aat' in data)
-              $('#aat').html(data['aat'] + "s");
           }
-          var $inpSmaller = (data['inp_points'] >= 1000) ? $('<span class="smaller">kp</span>') : $('<span class="smaller">p</span>'),
-              $inpPts = $('#inputPoints'),
-              $peerSmaller = (data['peer_points'] >= 1000) ? $('<span class="smaller">kp</span>') : $('<span class="smaller">p</span>'),
-              $peerPts = $('#peerPoints');
+
+          var $submitted = $('#submittedTotal'),
+              $submittedToday = $('#submittedToday');
           
-          $inpPts.text(data['inp_points']);
-          $inpPts.append($inpSmaller);
+          $submitted.text(data['submitted']);
+          $submitted.append($('<span class="smaller">q</span>'));
           
-          $peerPts.text(data['peer_points']);
-          $peerPts.append($peerSmaller);
+          $submittedToday.text(data['submitted_today']);
+          $submittedToday.append($('<span class="smaller">q</span>'));
           
           relations = [];
           qStart = new Date();
@@ -582,6 +587,67 @@ $(document).ready(function() {
     }, $button);
   });
 
+  function showRelationGraph(id) {
+    var svg = d3.select("#relations svg")
+
+    svg.selectAll('g')
+      .attr('class', 'hidden');
+
+    d3.select('g#' + graphIds[id])
+      .attr('class', '');
+
+    $('#relationId').text(id + 1);
+  }
+
+  $('#prevRelation').on('click', function(e) {
+    e.preventDefault();
+
+    if (currentRelationId == null) return;
+
+    currentRelationId--;
+    if (currentRelationId < 0) {
+      currentRelationId = 0;
+      return;
+    }
+
+    showRelationGraph(currentRelationId);
+  })
+
+  $('#nextRelation').on('click', function(e) {
+    e.preventDefault();
+
+    if (currentRelationId == null) return;
+
+    currentRelationId++;
+    if (currentRelationId >= graphIds.length) {
+      currentRelationId = graphIds.length - 1;
+      return;
+    }
+
+    showRelationGraph(currentRelationId);
+  })
+
+
+  $('#removeRelation').on('click', function(e) {
+    e.preventDefault();
+
+    $('g#' + graphIds[currentRelationId]).find('circle[data-id]').each(function(i, d) { 
+      var $el = $('#' + d.getAttribute('data-id'));
+      if ($el.length > 0) {
+        $el.prop('in_relation', false);
+        $el.attr('id', '');
+      }
+    });
+    d3.select('g#' + graphIds[currentRelationId]).remove();
+    relations = relations.filter(function(x) {
+      return x.id != graphIds[currentRelationId]
+    })
+
+    graphIds.splice(currentRelationId, 1);
+    currentRelationId = graphIds.length - 1;
+    showRelationGraph(currentRelationId);
+  })
+
   /******************/
   /* + Handling SVG */
   /******************/
@@ -605,28 +671,16 @@ $(document).ready(function() {
     .attr("d", "M 0 0 12 6 0 12 3 6")
     .style("fill", "black");
 
-  var marginX = 50,
-      marginY = null,
-      graphId = 0,
-      radius = 10;
-
   function drawNetwork(data, arrows) {
     if (arrows === undefined) arrows = false;
 
-    if (marginY == null) {
-      marginY = 20;
-    } else {
-      marginY += 50;
-    }
-    // Initialize the links
-    marginY += lastRelationTopY;
-    if (lastRelationBottomY < 0) marginY -= lastRelationBottomY
-
     var svg = d3.select("#relations svg")
+
+    svg.selectAll('g')
+      .attr('class', 'hidden');
 
     svg = svg.append("g")
       .attr('id', data.id)
-      .attr("transform", "translate(" + marginX + ", " + marginY + ")")
 
     var link = svg
       .selectAll("line")
@@ -671,7 +725,6 @@ $(document).ready(function() {
 
     // This function is run at each iteration of the force algorithm, updating the nodes position.
     function ticked() {
-      console.log("TICK!")
       /* update the simulation */
       text
         .attr("x", function(d) { return d.x + radius * 1.2; })
@@ -713,63 +766,18 @@ $(document).ready(function() {
        .attr("cy", function(d) { return d.y; });
     }
 
-    // TODO: work better on deletion of <g>, i.e. every g that is below the deleted g
-    // must be translated upper, whereas every g that is above the deleted should be the same
-    // if the deleted g is the first one, the next added g should appear at the top, not
-    // after the non-existing deleted one.
-    // 
-    // apparently, create an array of all <g> and apply necessary translates to all <g> after the deleted one
-    function onCloseClick(d) {
-      $(this.parentNode).find('circle[data-id]').each(function(i, d) { 
-        var $el = $('#' + d.getAttribute('data-id'));
-        if ($el.length > 0) {
-          $el.prop('in_relation', false);
-          $el.attr('id', '');
-        }
-      });
-      d3.select(this.parentNode).remove();
-    }
-
     function finalizeSimulation() {
       var group = d3.select('g#' + data.id);
 
       if (!group.empty()) {
-        // Adds close button
         var bbox = group.node().getBBox();
 
-        svg.append("circle")
-          .attr('cx', bbox['x'] + bbox['width'] + 25)
-          .attr('cy', bbox['y'] + 15)
-          .attr("r", 10)
-          .attr("stroke", "black")
-          .attr('stroke-width', '2px')
-          .attr('fill-opacity', 0)
-          .on('click', onCloseClick)
+        var svgBbox = document.querySelector('svg').getBoundingClientRect();
 
-        svg.append('line')
-          .attr('x1', bbox['x'] + bbox['width'] + 20)
-          .attr('y1', bbox['y'] + 10)
-          .attr('x2', bbox['x'] + bbox['width'] + 30)
-          .attr('y2', bbox['y'] + 20)
-          .attr('stroke-width', '2px')
-          .style("stroke", "black")
-          .on('click', onCloseClick)
+        var mx = svgBbox.width / 2 - bbox.width / 4;
+        var my = svgBbox.height / 2 - bbox.height / 2;
 
-        svg.append('line')
-          .attr('x1', bbox['x'] + bbox['width'] + 30)
-          .attr('y1', bbox['y'] + 10)
-          .attr('x2', bbox['x'] + bbox['width'] + 20)
-          .attr('y2', bbox['y'] + 20)
-          .attr('stroke-width', '2px')
-          .style("stroke", "black")
-          .on('click', onCloseClick)
-      }
-
-      lastRelationTopY = Math.max.apply(null, data.nodes.map(function(d) { return d.y }));
-      lastRelationBottomY = Math.min.apply(null, data.nodes.map(function(d) { return d.y }));
-
-      if (lastRelationBottomY < 0) {
-        group.attr("transform", "translate(" + marginX + ", " + (marginY - lastRelationBottomY) + ")")
+        group.attr("transform", "translate(" + mx + ", " + my + ")");
       }
     }
 
@@ -778,6 +786,8 @@ $(document).ready(function() {
       ticked();
     }
     finalizeSimulation();
+
+    $("#relationId").text(currentRelationId + 1);
   }
 
   /******************/

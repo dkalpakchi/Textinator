@@ -1,6 +1,7 @@
 import random
 import re
 import string
+from datetime import datetime
 
 from django.db import models
 from django.conf import settings
@@ -276,7 +277,11 @@ class UserProfile(CommonModel):
         return self.accepted / 2
 
     def submitted(self):
-        return Input.objects.filter(user=self.user).count()
+        return Label.objects.filter(user=self.user).count()
+
+    def submitted_today(self):
+        now = datetime.now()
+        return Label.objects.filter(user=self.user, dt_created__day=now.day, dt_created__month=now.month, dt_created__year=now.year).count()
 
     def reviewed(self):
         return LabelReview.objects.filter(user=self.user).count()

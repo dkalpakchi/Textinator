@@ -185,10 +185,6 @@ textarea {
   overflow-y: scroll;
 }
 
-.markers {
-  height: 100px;
-}
-
 .marker.tags:hover, .relation.tags:hover {
   cursor: pointer;
 }
@@ -238,11 +234,27 @@ textarea {
   cursor: default !important;
 }
 
+.relations {
+  max-height: 600px;
+}
+
+.relations .message-body {
+  height: 84%;
+}
+
 .relations.message, #relations {
   height: 100%;
+}
+
+#relations {
+  max-height: 400px;
 }
 
 .small.container {
   max-width: 700px;
   text-align: justify;
+}
+
+.hidden {
+  display: none !important;
 }
