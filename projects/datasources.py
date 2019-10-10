@@ -1,3 +1,6 @@
+import os
+import requests
+import glob
 import json
 import random
 import pymysql
@@ -135,12 +138,30 @@ class JsonSource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
 
-        self._required_keys = ['files', 'key']
+        self._required_keys = ['key']
+        self._aux_keys = [('files',), ('folders',), ('remote',)]
         self.check_constraints()
 
-        for fname in self.get_spec('files'):
+        self.__files = []
+        if self.get_spec('files'):
+            self.__files.extend(self.get_spec('files'))
+
+        if self.get_spec('folders'):
+            for folder in self.get_spec('folders'):
+                self.__files.extend(glob.glob(os.path.join(folder, '*.json')))
+
+        if self.get_spec('remote'):
+            # TODO: fix
+            for url in self.get_spec('remote'):
+                res = requests.get(url, allow_redirects=True)
+                content_type = res.headers.get('content-type')
+                print(content_type)
+
+        for fname in self.__files:
             d = json.load(open(fname))
             for el in d:
+                # this is all in-memory, of course
+                # TODO: think of fixing
                 self._add_datapoint(el[self.get_spec('key')])
 
         self.__length = len(self.data())

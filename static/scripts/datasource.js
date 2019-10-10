@@ -11,6 +11,8 @@ $(document).ready(function() {
     },
     'Json': {
       'files': [],
+      'folders': [],
+      'remote': [],
       'key': ''
     }
   }
