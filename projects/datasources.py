@@ -159,10 +159,13 @@ class JsonSource(DataSource):
 
         for fname in self.__files:
             d = json.load(open(fname))
-            for el in d:
-                # this is all in-memory, of course
-                # TODO: think of fixing
-                self._add_datapoint(el[self.get_spec('key')])
+            if type(d) == list:
+                for el in d:
+                    # this is all in-memory, of course
+                    # TODO: think of fixing
+                    self._add_datapoint(el[self.get_spec('key')])
+            elif type(d) == dict:
+                self._add_datapoint(d[self.get_spec('key')])
 
         self.__length = len(self.data())
 
