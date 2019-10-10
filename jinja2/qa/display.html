@@ -53,7 +53,7 @@
             <div class="control">
               <button class='submit button'>Submit</button>
             </div>
-            {% if project.round_length > 1 %}
+            {% if not project.round_length or project.round_length > 1 %}
               <div class='control'>
                 <a href="{{ url('projects:new_article', kwargs={'proj':project.pk}) }}" class="button" id="getNewArticle">Get new article</a>
               </div>
