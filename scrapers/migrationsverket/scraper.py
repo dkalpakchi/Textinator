@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-addresses = json.load(open('migrationsverket_urls.json'))['urls']
+addresses = json.load(open('migrationsverket_urls'))['urls']
 
 
 def get_text_from_printable(html_text):
