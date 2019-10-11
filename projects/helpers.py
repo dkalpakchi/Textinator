@@ -76,9 +76,8 @@ def apply_premarkers(proj, text):
         for tok in tokens:
             for t in (tok.lower(), tok.capitalize()):
                 text = re.sub("(?<=[{0} ]){1}(?=[{0} ])".format(punct, t),
-                    """<span class='tag is-{} is-medium' data-s='{}' data-i='NA'>
-                    {}<button class='delete is-small'></button>
-                    </span>""".format(m.color, m.short, t),
+                    """<span class='tag is-{} is-medium' data-s='{}' data-i='NA'>{}
+                    <button class='delete is-small'></button></span>""".format(m.color, m.short, t),
                     text)
     return text
 
