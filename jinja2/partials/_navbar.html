@@ -51,12 +51,6 @@
         </a>
       </li>
     {% endif %}
-    <li class='profile'>
-      <a href="{{ url('projects:profile', kwargs={'username': user.username}) }}">
-        <span class="icon is-small"><i class="fas fa-id-badge" aria-hidden="true"></i></span>
-        <span>Profile</span>
-      </a>
-    </li>
     <li class='is-pulled-right'>
       {% if user.is_staff %}
         <a href="{{ url('admin:index') }}" class='admin'>
