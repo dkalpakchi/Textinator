@@ -1,12 +1,15 @@
 from .models import *
 
 
-def process_chunk(chunk, batch, data_input, project, user, caches, booleans):
+def process_chunk(chunk, batch, inp, project, user, caches, booleans):
     saved_labels = 0
     if chunk.get('marked', False):
         ctx_cache, inp_cache, label_cache = caches
         is_resolution, is_review = booleans
 
+        # First check for the "context", there may be 2 cases:
+        # a) the context is the whole text, in which case it's already created as input_context previously and will be just retrieved from cache
+        # b) the context is something other than the whole text, in which case it will be created here
         if 'context' in chunk and type(chunk['context']) == str:
             ctx = retrieve_by_hash(chunk['context'], Context, ctx_cache)
             if not ctx:
@@ -22,14 +25,6 @@ def process_chunk(chunk, batch, data_input, project, user, caches, booleans):
         except Marker.DoesNotExist:
             return (ctx_cache, inp_cache, label_cache), saved_labels
 
-        if data_input:
-            inp = retrieve_by_hash(data_input, Input, inp_cache)
-            if not inp:
-                inp = Input.objects.create(context=ctx, content=data_input)
-                inp_cache.set(inp.content_hash, inp.pk, 600)
-        else:
-            inp = None
-
         if 'lengthBefore' in chunk and 'start' in chunk and 'end' in chunk:
             new_start = chunk['lengthBefore'] + chunk['start']
             new_end = chunk['lengthBefore'] + chunk['end']
@@ -40,7 +35,7 @@ def process_chunk(chunk, batch, data_input, project, user, caches, booleans):
             elif is_review:
                 # check if matches original answer
                 if inp:
-                    original = Label.objects.filter(input=inp).get()
+                    original = Label.objects.filter(input=inp, context=ctx).get()
                 else:
                     original = Label.objects.filter(context=ctx).get()
 
@@ -62,7 +57,7 @@ def process_chunk(chunk, batch, data_input, project, user, caches, booleans):
             else:
                 if inp:
                     new_label = Label.objects.create(
-                        input=inp, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
+                        input=inp, context=ctx, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
                     )
                 else:
                     new_label = Label.objects.create(

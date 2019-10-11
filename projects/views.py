@@ -98,11 +98,30 @@ def record_datapoint(request, proj):
     except UserProfile.DoesNotExist:
         return JsonResponse({'error': True})
 
+    # First create a chunk for a input context (if available), which is always all text
+    if 'input_context' in data and type(data['input_context']) == str:
+        ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
+        if not ctx:
+            ctx = Context.objects.create(content=data['input_context'])
+            ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
+    else:
+        ctx = None
+
+    # Next create an input for that context if available
+    # We will have one input, no matter what, but can have many labels for it
+    if data.get('input'):
+        inp = retrieve_by_hash(data['input'], Input, inp_cache)
+        if not inp:
+            inp = Input.objects.create(context=ctx, content=data_input)
+            inp_cache.set(inp.content_hash, inp.pk, 600)
+    else:
+        inp = None
+
     saved_labels = 0
     label_cache = {}
     for chunk in chunks:
         # inp is typically the same for all chunks
-        ret_caches, inp, just_saved = process_chunk(chunk, batch, data.get('input'), project, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
+        ret_caches, inp, just_saved = process_chunk(chunk, batch, inp, project, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
         ctx_cache, inp_cache, label_cache = ret_caches
         saved_labels += just_saved
 

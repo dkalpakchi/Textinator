@@ -421,6 +421,10 @@ $(document).ready(function() {
     var inputFormData = $inputForm.serializeObject(),
         underReview = $questionBlock.prop('review') || false;
 
+    // if there's an input form field, then create input_context
+    if (inputFormData.hasOwnProperty('input'))
+      inputFormData['input_context'] = selectorArea.textContent;
+
     inputFormData['relations'] = JSON.stringify(relations);
 
     // if there are any relations, submit only those chunks that have to do with the relations
