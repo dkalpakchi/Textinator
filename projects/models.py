@@ -194,8 +194,8 @@ class Label(CommonModel):
     start = models.PositiveIntegerField(null=True)
     end = models.PositiveIntegerField(null=True)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    input = models.ForeignKey(Input, on_delete=models.CASCADE, null=True)     # if input is there, input should be not NULL
-    context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True) # if there is no input, there must be context
+    input = models.ForeignKey(Input, on_delete=models.CASCADE, null=True, blank=True)     # if input is there, input should be not NULL
+    context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True, blank=True) # if there is no input, there must be context
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     impossible = models.BooleanField(default=False)
