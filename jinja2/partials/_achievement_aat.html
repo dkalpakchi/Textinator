@@ -1,0 +1,18 @@
+<nav class="level">
+  <div class="level-item has-text-centered">
+    <div>
+      <p class="heading">Average asking time (AAT)</p>
+      {% if profile.aat %}
+        <p id="aat" class="title">{{profile.aat}}s</p>
+      {% else %}
+        <p id="aat" class="title">N/A</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="level-item has-text-centered">
+    <div>
+      <p class="heading">AAT among all users</p>
+      <p class="title">60s</p>
+    </div>
+  </div>
+</nav>
