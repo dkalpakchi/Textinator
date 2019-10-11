@@ -4,6 +4,7 @@ from django.db.models.fields import AutoField
 from django import forms
 from django.contrib.auth.models import User, Permission
 from django_admin_json_editor import JSONEditorWidget
+from django.contrib.admin import SimpleListFilter
 
 from .models import *
 
@@ -86,6 +87,8 @@ class InputAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
     inlines = [LabelInline]
 
+# TODO: translation?
+# from django.utils.translation import ugettext_lazy as _
 
 @admin.register(Label)
 class LabelAdmin(CommonModelAdmin):
@@ -102,15 +105,33 @@ class LabelAdmin(CommonModelAdmin):
             taboo.append('input')
         return [f for f in fields if f not in taboo]
 
+    def get_queryset(self, request):
+        qs = super(LabelAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(user=request.user)
+
 
 @admin.register(LabelReview)
 class LabelReviewAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['text']
 
+    def get_queryset(self, request):
+        qs = super(LabelReviewAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(user=request.user)
+
 
 @admin.register(LabelRelation)
 class LabelRelationAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['graph', 'batch']
+
+    def get_queryset(self, request):
+        qs = super(LabelRelationAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(user=request.user)
 
 
 # TODO: add autocomplete for data source specs
