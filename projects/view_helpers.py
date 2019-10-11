@@ -1,5 +1,6 @@
 from .models import *
 
+
 def process_chunk(chunk, batch, data_input, project, user, caches, booleans):
     saved_labels = 0
     if chunk.get('marked', False):
