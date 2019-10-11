@@ -125,7 +125,6 @@ $(document).ready(function() {
 
   // labeling piece of text with a given marker if the marker is clicked
   $('.marker.tags').on('click', function() {
-    console.log(chunks, activeLabels)
     if (chunks.length > 0 && activeLabels < $('article.markers').attr('data-mmpi')) {
       var chunk = chunks[chunks.length - 1],
           idc = chunks.length - 1
@@ -336,7 +335,9 @@ $(document).ready(function() {
   function disableChunks(chunks) {
     for (var c in chunks) {
       $('span.tag[data-i="' + chunks[c]['id'] + '"]').addClass('is-disabled');
+      chunks[c]['submittable'] = false;
     }
+    return chunks;
   }
 
   // adding chunk if a piece of text was selected with a mouse
@@ -444,7 +445,7 @@ $(document).ready(function() {
               // no review task
               // resetArticle();
               var submittedChunks = JSON.parse(inputFormData['chunks']);
-              disableChunks(submittedChunks);
+              chunks = disableChunks(submittedChunks); // chunks here is a module variable
               chunksCache = submittedChunks;
 
               $questionBlock.removeClass('is-warning');
