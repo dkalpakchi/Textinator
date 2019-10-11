@@ -303,7 +303,7 @@ $(document).ready(function() {
       }
       if (contextSize == 'p') {
         // paragraph
-        chunk['context'] = selection.anchorNode.parentNode.textContent.length; // the parent of anchor is <p> - just take it's length
+        chunk['context'] = selection.anchorNode.parentNode.textContent; // the parent of anchor is <p> - just take it's length
         chunk['lengthBefore'] = previousTextLength(selection.anchorNode, true);
       } else if (contextSize == 't') {
         // text
