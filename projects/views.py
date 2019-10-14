@@ -112,7 +112,7 @@ def record_datapoint(request, proj):
     if data.get('input'):
         inp = retrieve_by_hash(data['input'], Input, inp_cache)
         if not inp:
-            inp = Input.objects.create(context=ctx, content=data_input)
+            inp = Input.objects.create(context=ctx, content=data['input'])
             inp_cache.set(inp.content_hash, inp.pk, 600)
     else:
         inp = None
