@@ -195,7 +195,8 @@ $(document).ready(function() {
         nodes[s].push({
           'id': $parts[i].id,
           'name': $parts[i].textContent,
-          'dom': $parts[i].id
+          'dom': $parts[i].id,
+          'color': getComputedStyle($parts[i])["background-color"]
         });
       });
 
@@ -705,7 +706,7 @@ $(document).ready(function() {
       .append("circle")
         .attr("r", radius)
         .attr('data-id', function(d) { return d.id })
-        .style("fill", "#69b3a2")
+        .style("fill", function(d) { return d.color })
         .on("mouseover", function(d, i) {
           $('#' + d.dom).addClass('active');
         })

@@ -186,6 +186,10 @@ class Input(CommonModel):
     def content_hash(self):
         return hash_text(self.content)
 
+    @property
+    def labels(self):
+        return Label.objects.filter(input=self).all()
+
     def __str__(self):
         return truncate(self.content, 50)
 
