@@ -66,6 +66,11 @@ def filter_wiki_markup(markup):
     return wiki_text
 
 
+def remove_empty_lines(text):
+    text = text.replace(u'\u00a0', '')
+    return re.sub('\n{3,}', '\n\n', text)
+
+
 def apply_premarkers(proj, text):
     punct = string.punctuation
     for c in list("\\$[]()*+/?-.\"\'|^"):
