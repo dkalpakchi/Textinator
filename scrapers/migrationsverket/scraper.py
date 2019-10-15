@@ -21,9 +21,11 @@ def get_text_from_printable(html_text):
                         text += '\n\n'
                         break
             elif child.name in ['ul']:
+                text = text[:-2] # remove \n\n
                 for tag in child:
                     text += u"\u2022"
                     text += f" {tag.text}\n"
+                text += "\n\n"
 
     return text.strip()
 
