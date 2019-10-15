@@ -16,9 +16,14 @@ def get_text_from_printable(html_text):
         for child in div:
             if child.name in ['h1', 'p']:
                 for tag in child:
-                    if not tag.name:
-                        text += tag.strip()
+                    if tag.name != 'a':
+                        text += child.text
                         text += '\n\n'
+            elif child.name in ['ul']:
+                for tag in child:
+                    text += u"\u2022"
+                    text += f" {tag.text}\n"
+
     return text.strip()
 
 def crawl(url):
