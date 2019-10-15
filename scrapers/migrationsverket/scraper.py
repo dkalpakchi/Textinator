@@ -19,6 +19,7 @@ def get_text_from_printable(html_text):
                     if tag.name != 'a':
                         text += child.text
                         text += '\n\n'
+                        break
             elif child.name in ['ul']:
                 for tag in child:
                     text += u"\u2022"
