@@ -1,13 +1,13 @@
 <div class="columns">
   <div class="column is-three-quarters">
-    <article class="text message is-dark">
+    <article class="text message">
       <div class="message-header">
         <p>Article</p>
         <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
       </div>
       <div class="selector element message-body">{{text|linebreaks}}</div>
     </article>
-    <article class="markers message is-dark" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
+    <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
       <div class="message-header">
         <p>Markers</p>
       </div>
@@ -54,7 +54,7 @@
               <button class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></button>
             </div>
             <div class="control">
-              <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last</span></button>
+              <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last submission</span></button>
             </div>
             {% if not project.round_length or project.round_length > 1 %}
               <div class='control'>
@@ -77,40 +77,42 @@
         <p>Achievements</p>
       </div>
       <div class="message-body">
-        <nav class="level">
-          <div class="level-item has-text-centered">
-            <div>
-              <p class="heading">Submitted in total</p>
-              <p class="title">
-                <div class="tt-set-size tt-charts-container">
-                  <div class="tt-pie-wrapper no-margin">
-                    <span id="submittedTotal" class="tt-label">{{profile.submitted()}}<span class="smaller">q</span></span>                  
-                    <div class="tt-pie">
-                      <div class="left-side half-circle"></div>
-                      <div class="right-side half-circle"></div>
+        {% if project.points_scope != 'n' %}
+          <nav class="level">
+            <div class="level-item has-text-centered">
+              <div>
+                <p class="heading">Submitted in total</p>
+                <p class="title">
+                  <div class="tt-set-size tt-charts-container">
+                    <div class="tt-pie-wrapper no-margin">
+                      <span id="submittedTotal" class="tt-label">{{profile.submitted()}}<span class="smaller">q</span></span>                  
+                      <div class="tt-pie">
+                        <div class="left-side half-circle"></div>
+                        <div class="right-side half-circle"></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </p>
+                </p>
+              </div>
             </div>
-          </div>
-          <div class="level-item has-text-centered">
-            <div>
-              <p class="heading">Submitted today</p>
-              <p class="title">
-                <div class="tt-set-size tt-charts-container">
-                  <div class="tt-pie-wrapper no-margin">
-                    <span id="submittedToday" class="tt-label">{{profile.submitted_today()}}<span class="smaller">q</span></span>
-                    <div class="tt-pie">
-                      <div class="left-side half-circle"></div>
-                      <div class="right-side half-circle"></div>
+            <div class="level-item has-text-centered">
+              <div>
+                <p class="heading">Submitted today</p>
+                <p class="title">
+                  <div class="tt-set-size tt-charts-container">
+                    <div class="tt-pie-wrapper no-margin">
+                      <span id="submittedToday" class="tt-label">{{profile.submitted_today()}}<span class="smaller">q</span></span>
+                      <div class="tt-pie">
+                        <div class="left-side half-circle"></div>
+                        <div class="right-side half-circle"></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </p>
+                </p>
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        {% endif %}
       </div>
     </article>
   </div>

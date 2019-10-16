@@ -95,16 +95,6 @@ class LabelAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
     inlines = [LabelReviewInline]
 
-    def get_fields(self, request, obj=None):
-        fields = [f.name for f in Label._meta.get_fields() if type(f) not in [ManyToOneRel, AutoField]]
-        fields.extend(LabelAdmin.readonly_fields)
-        taboo = []
-        if obj.input:
-            taboo.append('context')
-        else:
-            taboo.append('input')
-        return [f for f in fields if f not in taboo]
-
     def get_queryset(self, request):
         qs = super(LabelAdmin, self).get_queryset(request)
         if request.user.is_superuser:

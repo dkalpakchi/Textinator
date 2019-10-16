@@ -375,7 +375,7 @@ $(document).ready(function() {
   // undo last relation/label if the button is clicked
   $('#undoLast').on('click', function(e) {
     e.preventDefault();
-    var $target = $(e.target);
+    var $target = $('#undoLast');
 
     $.ajax({
       method: "POST",

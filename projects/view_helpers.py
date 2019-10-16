@@ -55,14 +55,10 @@ def process_chunk(chunk, batch, inp, project, user, caches, booleans):
                         ambiguity_status=ambiguity_status, is_match=is_match
                     )
             else:
-                if inp:
-                    new_label = Label.objects.create(
-                        input=inp, context=ctx, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
-                    )
-                else:
-                    new_label = Label.objects.create(
-                        context=ctx, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
-                    )
+                # it's fins if input is blank
+                new_label = Label.objects.create(
+                    input=inp, context=ctx, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
+                )
                 label_cache[chunk['id']] = new_label.id
                 saved_labels += 1
     return (ctx_cache, inp_cache, label_cache), inp, saved_labels

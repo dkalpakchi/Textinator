@@ -125,8 +125,6 @@ def record_datapoint(request, proj):
         ctx_cache, inp_cache, label_cache = ret_caches
         saved_labels += just_saved
 
-    # TODO: after dealing with chunks, deal with relations by finding the necessary Labels
-    #       and put those specified in the relations to LabelRelations.
     for rel in relations:
         source_id, target_id = int(rel['s']), int(rel['t'])
 
@@ -265,7 +263,7 @@ def undo_last(request, proj):
                 last_label.undone = True
                 last_label.save()
                 labels.append(last_label.text)
-    elif last_label:
+    elif last_labels:
         for last_label in last_labels:
             last_label.undone = True
             last_label.save()

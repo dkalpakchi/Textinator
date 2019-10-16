@@ -72,6 +72,9 @@ class Project(CommonModel):
     is_peer_reviewed = models.BooleanField(default=False)
     max_markers_per_input = models.PositiveIntegerField(null=True, blank=True)
     round_length = models.PositiveIntegerField(null=True, blank=True, help_text="The number of text snippets consituting one round of the game")
+    points_scope = models.CharField(max_length=2, choices=[('n', 'No points'), ('i', 'Per input'), ('l', 'Per label')],
+        help_text="The scope of the submitted task")
+    points_unit = models.PositiveIntegerField(default=1, help_text="Number of points per submitted task")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -186,10 +189,6 @@ class Input(CommonModel):
     def content_hash(self):
         return hash_text(self.content)
 
-    @property
-    def labels(self):
-        return Label.objects.filter(input=self).all()
-
     def __str__(self):
         return truncate(self.content, 50)
 
@@ -208,10 +207,7 @@ class Label(CommonModel):
 
     @property
     def text(self):
-        if self.input:
-            return self.input.context.content[self.start:self.end]
-        else:
-            return self.context.content[self.start:self.end]
+        return self.context.content[self.start:self.end]
 
 
 class LabelReview(CommonModel):
@@ -281,11 +277,35 @@ class UserProfile(CommonModel):
         return self.accepted / 2
 
     def submitted(self):
-        return Label.objects.filter(user=self.user).count()
+        k = self.project.points_unit
+        if self.project.points_scope == 'i':
+            return k * Label.objects.filter(user=self.user, project=self.project).values_list('input_id').distinct().count()
+        elif self.project.points_scope == 'l':
+            return k * Label.objects.filter(user=self.user, project=self.project).count()
+        else:
+            return -1
 
     def submitted_today(self):
-        now = datetime.now()
-        return Label.objects.filter(user=self.user, dt_created__day=now.day, dt_created__month=now.month, dt_created__year=now.year).count()
+        k, now = self.project.points_unit, datetime.now()
+        if self.project.points_scope == 'i':
+            return k * Label.objects.filter(
+                user=self.user,
+                project=self.project,
+                dt_created__day=now.day,
+                dt_created__month=now.month,
+                dt_created__year=now.year
+            ).values_list('input_id').distinct().count()
+        elif self.project.points_scope == 'l':
+            return k * Label.objects.filter(
+                user=self.user,
+                project=self.project,
+                dt_created__day=now.day,
+                dt_created__month=now.month,
+                dt_created__year=now.year
+            ).count()
+        else:
+            return -1
+        
 
     def reviewed(self):
         return LabelReview.objects.filter(user=self.user).count()
