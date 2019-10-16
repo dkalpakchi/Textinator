@@ -13,10 +13,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin, auth
 from django.urls import path, include, reverse
 from django_registration.backends.one_step.views import RegistrationView
 from django.views.generic import RedirectView
+
+from filebrowser.sites import site
 
 from . import views
 
@@ -24,13 +28,16 @@ from . import views
 urlpatterns = [
     path('textinator/', include([
         path('', views.index),
+        path('admin/filebrowser/', site.urls),
+        path('grappelli/', include('grappelli.urls')),
         path('admin/', admin.site.urls),
         path('accounts/register/',
             RegistrationView.as_view(success_url='/textinator/'),
             name='django_registration_register'),
         path('accounts/', include('django_registration.backends.one_step.urls')),
         path('accounts/', include('django.contrib.auth.urls')),
-        path('projects/', include('projects.urls'))
+        path('projects/', include('projects.urls')),
+        path('tinymce/', include('tinymce.urls'))
     ]))
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

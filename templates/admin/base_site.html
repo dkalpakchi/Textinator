@@ -6,10 +6,14 @@
 <link rel="stylesheet" href="{% static 'styles/base_style.css' %}">
 {% endblock %}
 
+{% block extrahead %}
+<script type="text/javascript" src="{% static 'scripts/admin.js' %}"></script>
+{% endblock %}
+
 {% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
-{% block branding %}
-<div id="site-name" class='small logo'><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
+{% block admin_title %}
+<div id="site-name" class='small admin logo'><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}

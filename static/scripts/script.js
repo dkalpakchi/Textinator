@@ -139,5 +139,5 @@ $(document).ready(function() {
     if (interval != null) {
       resetTimer();
     }
-  });
+  });  
 });

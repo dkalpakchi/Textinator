@@ -11,11 +11,7 @@ npm install
 gulp build
 ```
 
-
-## Running
-
-
-## TODO
-- Leave project button
-- AJAX POST request when joining + changing button to leave
-- My Challenges should be updated with all my projects on AJAX success
+If you want TinyMCE uploads to work, don't forget to run
+```
+python manage.py collectstatic
+```

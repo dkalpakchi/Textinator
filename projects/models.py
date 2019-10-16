@@ -9,6 +9,8 @@ from django.contrib.auth.models import User, Permission
 from django.core.cache import caches
 from django.utils import timezone
 
+from tinymce.models import HTMLField
+
 from .datasources import *
 from .helpers import *
 
@@ -56,7 +58,7 @@ class DataSource(CommonModel):
 
 class Project(CommonModel):
     title = models.CharField(max_length=50)
-    guidelines = models.TextField(null=True)
+    guidelines = HTMLField(null=True)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
     context_size = models.CharField(max_length=2, choices=[('no', 'No context'), ('t', 'Text'), ('p', 'Paragraph')])

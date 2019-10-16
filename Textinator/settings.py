@@ -35,6 +35,8 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'grappelli',    # needed for filebrowser to work properly
+    'filebrowser',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,6 +47,7 @@ INSTALLED_APPS = [
     # 'prettyjson',
     'django_admin_json_editor',
     'django_registration',
+    'tinymce',
     'projects',
 ]
 
@@ -171,6 +174,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 STATIC_URL = '/textinator/static/'
+MEDIA_URL = '/textinator/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Django Sass
 SASS_PROCESSOR_ROOT = os.path.join(BASE_DIR, 'static')
@@ -208,3 +214,29 @@ MARKER_COLORS = [
 ]
 
 LOGIN_URL = '/textinator/accounts/login/'
+
+TINYMCE_DEFAULT_CONFIG = {
+    'height': 400,
+    'width': '100%',
+    'cleanup_on_startup': True,
+    'custom_undo_redo_levels': 20,
+    'selector': 'textarea',
+    'theme': 'modern',
+    'plugins':'''
+            textcolor save link image media preview table lists fullscreen insertdatetime
+            contextmenu directionality searchreplace wordcount code fullscreen autolink lists charmap print
+            ''',
+    'toolbar1': '''
+            fullscreen preview bold italic underline | fontselect,
+            fontsizeselect  | forecolor backcolor | alignleft alignright |
+            aligncenter alignjustify | indent outdent | bullist numlist table |
+            | link image media | charmap |
+            ''',
+    'menubar': True,
+    'statusbar': True,
+    'relative_urls': False    
+}
+
+# TINYMCE_CALLBACKS = {
+#     'file_browser_callback': 'customFileBrowser'
+# }

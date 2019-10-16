@@ -70,6 +70,11 @@ pre {
   font-size: 1.5em;
 }
 
+.admin.logo {
+  padding-top: 10px;
+  display: inline-block;
+}
+
 .tabs .logo {
   font-size: 1em;
   padding-left: 50px;
@@ -267,4 +272,28 @@ textarea {
   margin-bottom: -1px;
   padding: .5em 1em;
   vertical-align: top;
+}
+
+/* Redefine Graphelli styles */
+.button-state-grey, button:hover, a.fb_show:hover,
+a.related-lookup:hover, body.tinyMCE input[name="src"] + div a:hover,
+body.tinyMCE input[name="href"] + div a:hover, input[type="button"]:hover,
+a.related-lookup.m2m:hover, .grp-autocomplete-wrapper-m2m a.related-lookup:hover,
+.grp-autocomplete-wrapper-fk a.related-lookup:hover, button.ui-datepicker-trigger:hover,
+button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
+.grp-pulldown-container .grp-pulldown-handler, .grp-pulldown-container .grp-pulldown-content,
+.grp-pulldown-container .grp-pulldown-content:hover {
+  border: none;
+}
+
+.mce-btn.mce-open button {
+  padding-bottom: 3px;
+}
+
+.mce-checkbox .mce-label {
+  vertical-align: top !important;
+}
+
+.mce-window-head .mce-close {
+  z-index: 100;
 }
