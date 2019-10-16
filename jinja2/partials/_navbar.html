@@ -52,6 +52,7 @@
       </li>
     {% endif %}
     <li class='is-pulled-right'>
+      <span class='text'>Welcome, {{user.get_full_name() or user.username}}!</span>
       {% if user.is_staff %}
         <a href="{{ url('admin:index') }}" class='admin'>
           <span class="icon is-small"><i class="fas fa-user-shield"></i></span>

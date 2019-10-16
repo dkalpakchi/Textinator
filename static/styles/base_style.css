@@ -258,3 +258,13 @@ textarea {
 .hidden {
   display: none !important;
 }
+
+.tabs span.text {
+  align-items: center;
+  color: #4a4a4a;
+  display: inline-block;
+  justify-content: center;
+  margin-bottom: -1px;
+  padding: .5em 1em;
+  vertical-align: top;
+}
