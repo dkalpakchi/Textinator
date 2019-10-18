@@ -58,6 +58,7 @@ class DataSource(CommonModel):
 
 class Project(CommonModel):
     title = models.CharField(max_length=50)
+    short_description = models.TextField(max_length=1000, default="")
     guidelines = HTMLField(null=True)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)

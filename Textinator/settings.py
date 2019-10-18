@@ -35,7 +35,6 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
-    'grappelli',    # needed for filebrowser to work properly
     'filebrowser',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -217,7 +216,7 @@ LOGIN_URL = '/textinator/accounts/login/'
 
 TINYMCE_DEFAULT_CONFIG = {
     'height': 400,
-    'width': '100%',
+    'width': '90%',
     'cleanup_on_startup': True,
     'custom_undo_redo_levels': 20,
     'selector': 'textarea',

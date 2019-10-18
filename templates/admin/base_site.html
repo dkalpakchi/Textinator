@@ -4,6 +4,7 @@
 
 {% block extrastyle %}
 <link rel="stylesheet" href="{% static 'styles/base_style.css' %}">
+<link rel="stylesheet" href="{% static 'styles/admin.css' %}">
 {% endblock %}
 
 {% block extrahead %}
@@ -12,7 +13,7 @@
 
 {% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 
-{% block admin_title %}
+{% block branding %}
 <div id="site-name" class='small admin logo'><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
 {% endblock %}
 

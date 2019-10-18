@@ -93,4 +93,4 @@ def dub_new_lines(text):
 
 
 def markdown2html(md):
-    return markdown.markdown(md)
+    return markdown.markdown(md).strip()

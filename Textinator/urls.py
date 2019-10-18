@@ -29,7 +29,6 @@ urlpatterns = [
     path('textinator/', include([
         path('', views.index),
         path('admin/filebrowser/', site.urls),
-        path('grappelli/', include('grappelli.urls')),
         path('admin/', admin.site.urls),
         path('accounts/register/',
             RegistrationView.as_view(success_url='/textinator/'),

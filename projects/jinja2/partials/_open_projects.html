@@ -5,7 +5,7 @@
         <div class="tile is-child notification has-even-padding is-link">
           <div class="content">
             <p class="title">{{project.title}}</p>
-            <div class="content has-text-justified">{{project.guidelines|truncate}}</div>
+            <div class="content has-text-justified">{{project.short_description}}</div>
             <form class='join form' method="POST" action="{{ url('projects:join_or_leave', kwargs={'proj': project.id}) }}">
               <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
               <input type="hidden" name="n" value="o">
