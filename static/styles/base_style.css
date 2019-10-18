@@ -207,6 +207,10 @@ textarea {
   cursor: pointer;
 }
 
+.selector.element :last-child {
+  padding-bottom: 1em;
+}
+
 .tag.is-grey {
   background-color: #696969;
   color: white;
@@ -215,10 +219,6 @@ textarea {
 .tag.arrow {
   display: table-cell;
   font-weight: bold;
-}
-
-.selector p {
-  padding-bottom: 1em;
 }
 
 .tt-charts-container {
@@ -291,4 +291,12 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 
 .mce-window-head .mce-close {
   z-index: 100;
+}
+
+.selector .title {
+  margin-top: 1em;
+}
+
+.selector > .title {
+  margin-top: 0;
 }

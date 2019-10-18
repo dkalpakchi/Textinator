@@ -1,4 +1,5 @@
 import re
+import markdown
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
 from urllib.parse import urlparse
@@ -33,13 +34,14 @@ def display_relation(rel):
     return Markup(template.render(rel=rel))
 
 
-def linebreaks(value):
+def prettify(value):
     """Converts newlines into <p> and <br />s."""
-    value = re.sub(r'\r\n|\r|\n', '\n', value) # normalize newlines
-    paras = re.split('\n{2,}', value)
-    paras = [u'<p>{}</p>'.format(p.replace('\n', '<br />')) for p in paras]
-    paras = u'\n\n'.join(paras)
-    return Markup(paras)
+    md = markdown.markdown(value)
+    # Bulmify things
+    md = md.replace('<h1>', '<h1 class="title is-4">')
+    md = md.replace('<h2>', '<h2 class="title is-5">')
+    md = md.replace('<h3>', '<h2 class="title is-6">')
+    return Markup(md)
 
 
 def environment(**options):
@@ -54,5 +56,5 @@ def environment(**options):
     env.filters['url_path'] = get_path
     env.filters['display_marker'] = display_marker
     env.filters['display_relation'] = display_relation
-    env.filters['linebreaks'] = linebreaks
+    env.filters['prettify'] = prettify
     return env

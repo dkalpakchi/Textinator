@@ -20,7 +20,7 @@ from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
 from .view_helpers import process_chunk
 
-from Textinator.jinja2 import linebreaks
+from Textinator.jinja2 import prettify
 
 
 # Create your views here.
@@ -201,7 +201,7 @@ def profile(request, username):
 def new_article(request, proj):
     project = Project.objects.get(pk=proj)
     return JsonResponse({
-        'text': linebreaks(apply_premarkers(project, project.data()))
+        'text': prettify(apply_premarkers(project, project.data()))
     })
 
 

@@ -7,7 +7,6 @@ import string
 import json
 import hashlib
 import requests
-import markdown
 
 
 def hash_text(text):
@@ -86,11 +85,3 @@ def apply_premarkers(proj, text):
                     <button class='delete is-small'></button></span>""".format(m.color, m.short, t),
                     text)
     return text
-
-
-def dub_new_lines(text):
-    return text.replace('\n', '\n\n')
-
-
-def markdown2html(md):
-    return markdown.markdown(md).strip()
