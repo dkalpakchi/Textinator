@@ -7,6 +7,7 @@ import string
 import json
 import hashlib
 import requests
+import markdown
 
 
 def hash_text(text):
@@ -89,3 +90,7 @@ def apply_premarkers(proj, text):
 
 def dub_new_lines(text):
     return text.replace('\n', '\n\n')
+
+
+def markdown2html(md):
+    return markdown.markdown(md)
