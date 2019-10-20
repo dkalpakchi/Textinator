@@ -39,10 +39,6 @@
             <input class='button is-link' type="submit" value="Login">
           </div>
           <div class="control">
-            {# Assumes you setup the password_reset view in your URLconf #}
-            <a href="{% url 'password_reset' %}" class='button is-text'>Forgot password?</a>
-          </div>
-          <div class="control">
             <a href="{% url 'django_registration_register' %}" class='button is-text'>No account?</a>
           </div>
         </div>

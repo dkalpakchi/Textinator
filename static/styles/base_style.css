@@ -207,7 +207,7 @@ textarea {
   cursor: pointer;
 }
 
-.selector.element :last-child {
+.selector.element p:last-child {
   padding-bottom: 1em;
 }
 
