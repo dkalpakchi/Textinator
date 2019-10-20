@@ -9,6 +9,7 @@
 }
 
 .participations .tile.is-child:hover,
+.open-projects .tile.is-child:hover,
 .my-projects .tile.is-child:hover,
 .shared-projects .tile.is-child:hover {
   cursor: pointer;

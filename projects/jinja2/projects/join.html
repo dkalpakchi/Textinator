@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="section hero is-large">
+  <div class="container box is-vcentered is-centered">
+    <h1 class="title">
+      Sorry, you can't view the project
+      <h3 class="subtitle">In order to view the project, you need to join it first.<br>You can do so by clicking the button below</h3>
+    </h1>
+    <form class='form' method="POST" action="{{ url('projects:join_or_leave', kwargs={'proj': project.id}) }}">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+      <input type="hidden" name="n" value="j">
+      <input class="submit button is-fullwidth is-link" type="submit" value="Join"/>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -4,7 +4,7 @@ import random
 import uuid
 
 from django.http import JsonResponse, Http404
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
 from django.template import Context, RequestContext
@@ -35,16 +35,11 @@ class IndexView(LoginRequiredMixin, generic.ListView):
         return data
 
 
-
-class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
+class DetailView(LoginRequiredMixin, generic.DetailView):
     model = Project
     template_name = 'projects/detail.html'
     context_object_name = 'project'
     permission_denied_message = 'you did not confirmed yet. please check your email.'
-
-    def has_permission(self):
-        # return self.request.user.has_perm('projects.view_published_project')
-        return True
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
@@ -74,6 +69,14 @@ class DetailView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView
         # with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
         #     tmpl = Template(f.read().replace('\n', ''))
         return data
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            context = self.get_context_data(object=self.object)
+            return self.render_to_response(context)
+        except Http404:
+            return redirect('projects:join_or_leave', proj=self.object.pk)
 
 
 @login_required
@@ -165,22 +168,36 @@ def record_datapoint(request, proj):
 
 
 @login_required
-@require_http_methods("POST")
+@require_http_methods(["GET", "POST"])
 def join_or_leave_project(request, proj):
     project = get_object_or_404(Project, pk=proj)
     current_user = request.user
-    res = {
-        'error': False,
-        'result': ''
-    }
-    if project.participants.filter(pk=current_user.pk).exists():
-        project.participants.remove(current_user)
-        res['result'] = 'left'
+    if request.method == "POST":
+        print(request.POST)
+        res = {
+            'error': False,
+            'result': ''
+        }
+        if project.participants.filter(pk=current_user.pk).exists():
+            project.participants.remove(current_user)
+            res['result'] = 'left'
+        else:
+            project.participants.add(current_user)
+            res['result'] = 'joined'
+        project.save()
+
+        if request.POST.get('n', 'p') == 'j':
+            # if from a join page
+            return redirect('projects:detail', pk=project.pk)
+        else:
+            return JsonResponse(res)
     else:
-        project.participants.add(current_user)
-        res['result'] = 'joined'
-    project.save()
-    return JsonResponse(res)
+        if project.participants.filter(pk=current_user.pk).exists():
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+        else:
+            return render(request, 'projects/join.html', {
+                'project': project
+            })
 
 
 @login_required
