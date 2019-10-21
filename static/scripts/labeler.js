@@ -145,10 +145,11 @@ $(document).ready(function() {
         var el = e.target,
             parent = el.parentNode; // actual span
 
-        chunks.splice(idc, 1);
+        chunks = chunks.filter(function(x) { x != chunk })
         mergeWithNeighbors(parent);
         $(el).prop('in_relation', false);
         activeLabels--;
+        window.chunks = chunks
       }, true);
       markedSpan.appendChild(deleteMarkedBtn)
 
