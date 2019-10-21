@@ -1,7 +1,7 @@
 from .models import *
 
 
-def process_chunk(chunk, batch, inp, project, user, caches, booleans):
+def process_chunk(chunk, batch, inp, project, data_source, user, caches, booleans):
     saved_labels = 0
     if chunk.get('marked', False):
         ctx_cache, inp_cache, label_cache = caches
@@ -13,7 +13,7 @@ def process_chunk(chunk, batch, inp, project, user, caches, booleans):
         if 'context' in chunk and type(chunk['context']) == str:
             ctx = retrieve_by_hash(chunk['context'], Context, ctx_cache)
             if not ctx:
-                ctx = Context.objects.create(content=chunk['context'])
+                ctx = Context.objects.create(datasource=data_source, content=chunk['context'])
                 ctx_cache.set(ctx.content_hash, ctx.pk, 600)
         else:
             ctx = None

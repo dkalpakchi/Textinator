@@ -15,6 +15,7 @@ class DataSource:
     def __init__(self, spec_data):
         self.__spec = json.loads(spec_data)
         self.__data = []
+        self.__size = 0
 
         self._required_keys = []
         self._aux_keys = []
@@ -38,12 +39,16 @@ class DataSource:
 
     def _add_datapoint(self, txt):
         self.__data.append(txt)
+        self.__size += 1
 
     def data(self):
         return self.__data
 
     def get_random_datapoint(self):
         pass
+
+    def size(self):
+        return self.__size
 
     def __getitem__(self, key):
         return self.__data[key]
@@ -60,17 +65,18 @@ class TextFileSource(DataSource):
             with open(fname) as f:
                 self._add_datapoint(f.read())
 
-        self.__length = len(self.data())
-
     def get_random_datapoint(self):
-        return self[random.randint(0, self.__length - 1)]
+        return self[random.randint(0, self.size() - 1)]
+
+    def size(self):
+        return len(self.__data)
 
 
 class DbSource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
         self._required_keys = ['db_type', 'user', 'password', 'database']
-        self._aux_keys = [('collection', 'field'), ('rand_dp_query',)]
+        self._aux_keys = [('collection', 'field'), ('rand_dp_query', 'size_query')]
         self.check_constraints()
 
         self.__db_type = self.get_spec('db_type')
@@ -79,6 +85,7 @@ class DbSource(DataSource):
         self.__collection = self.get_spec('collection')
         self.__field = self.get_spec('field')
         self.__rand_dp_query = self.get_spec('rand_dp_query')
+        self.__size_query = self.get_spec('size_query')
         # TODO: make safer
         self.__password = self.get_spec('password')
         self.__conn = self.__connect()
@@ -124,6 +131,17 @@ class DbSource(DataSource):
         else:
             raise NotImplementedError('Please set `rand_dp_query` in your settings')
 
+    def size(self):
+        if self.__size_query:
+            cur = self.__conn.cursor()
+            cur.execute(self.__size_query)
+            count = cur.fetchone()[0]
+            cur.close()
+            return count
+        elif self.__db_type == 'mongodb':
+            db = self.__conn[self.__database]
+            collection = db[self.__collection]
+            return collection.count()
 
     def get_datapoints(self, query):
         texts = []
@@ -167,8 +185,6 @@ class JsonSource(DataSource):
             elif type(d) == dict:
                 self._add_datapoint(d[self.get_spec('key')])
 
-        self.__length = len(self.data())
-
     def get_random_datapoint(self):
-        return self[random.randint(0, self.__length - 1)]
+        return self[random.randint(0, self.size() - 1)]
 

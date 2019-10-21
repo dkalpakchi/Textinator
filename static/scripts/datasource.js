@@ -36,7 +36,7 @@ $(document).ready(function() {
         var options = { ...templates[option] };
         options['db_type'] = e.target.value;
         options['rand_dp_query'] = '';
-        console.log(options);
+        options['size_query'] = '';
         spec_editor.setValue(options)
       }
     })

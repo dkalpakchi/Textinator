@@ -88,12 +88,23 @@ class Project(CommonModel):
             source_cls = DataSource.type2class(source.source_type)
             if source_cls:
                 ds_instance = source_cls(source.spec.replace('\r\n', ' ').replace('\n', ' '))
-                datasources.append((ds_instance, source.postprocess))
+                datasources.append((ds_instance, source.postprocess, source.pk))
 
         # take a random data point from data
         nds = len(datasources)
-        ds, postprocess = datasources[random.randint(0, nds - 1)]
-        return postprocess(ds.get_random_datapoint()).strip()
+
+        # choose a dataset with a prior inversely proportional to the number of datapoints in them
+        sizes = [datasources[i][0].size() for i in range(nds)]
+        priors = [sizes[i] / sum(sizes) for i in range(nds)]
+        priors_cumsum = [sum(priors[:i+1]) for i in range(len(priors))]
+
+        rnd = random.random()
+        ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))]) - 1
+
+        ds, postprocess, ids = datasources[ds_ind]
+
+        # now choose a random datapoint from the chosen dataset and return a datasource id as well
+        return postprocess(ds.get_random_datapoint()).strip(), ids
 
     def get_profile_for(self, user):
         try:
@@ -171,6 +182,7 @@ class Relation(CommonModel):
 
 
 class Context(CommonModel):
+    datasource = models.ForeignKey(DataSource, on_delete=models.SET_NULL, null=True, blank=True)
     content = models.TextField()
 
     @property

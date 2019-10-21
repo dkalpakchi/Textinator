@@ -55,8 +55,10 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
         u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 
+        dp, ids = proj.data()
         ctx = {
-            'text': apply_premarkers(proj, proj.data()),
+            'text': apply_premarkers(proj, dp),
+            'idsource': ids,
             'project': proj,
             'task_markers': task_markers,
             'task_relations': task_relations,
@@ -96,16 +98,19 @@ def record_datapoint(request, proj):
     try:
         project = Project.objects.get(pk=proj)
         u_profile = UserProfile.objects.get(user=user, project=project)
+        data_source = DataSource.objects.get(pk=data['datasource'])
     except Project.DoesNotExist:
         raise Http404
     except UserProfile.DoesNotExist:
         return JsonResponse({'error': True})
+    except DataSource.DoesNotExist:
+        data_source = None
 
     # First create a chunk for a input context (if available), which is always all text
     if 'input_context' in data and type(data['input_context']) == str:
         ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
         if not ctx:
-            ctx = Context.objects.create(content=data['input_context'])
+            ctx = Context.objects.create(datasource=data_source, content=data['input_context'])
             ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
     else:
         ctx = None
@@ -124,7 +129,7 @@ def record_datapoint(request, proj):
     label_cache = {}
     for chunk in chunks:
         # inp is typically the same for all chunks
-        ret_caches, inp, just_saved = process_chunk(chunk, batch, inp, project, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
+        ret_caches, inp, just_saved = process_chunk(chunk, batch, inp, project, data_source, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
         ctx_cache, inp_cache, label_cache = ret_caches
         saved_labels += just_saved
 
@@ -173,7 +178,6 @@ def join_or_leave_project(request, proj):
     project = get_object_or_404(Project, pk=proj)
     current_user = request.user
     if request.method == "POST":
-        print(request.POST)
         res = {
             'error': False,
             'result': ''
@@ -217,8 +221,10 @@ def profile(request, username):
 @require_http_methods("POST")
 def new_article(request, proj):
     project = Project.objects.get(pk=proj)
+    dp, ids = project.data()
     return JsonResponse({
-        'text': prettify(apply_premarkers(project, project.data()))
+        'text': prettify(apply_premarkers(project, dp)),
+        'idsource': ids
     })
 
 

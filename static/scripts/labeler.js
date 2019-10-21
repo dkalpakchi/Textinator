@@ -434,6 +434,7 @@ $(document).ready(function() {
     inputFormData['chunks'] = relations.length > 0 ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
     inputFormData['is_review'] = underReview;
     inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
+    inputFormData['datasource'] = parseInt($('.selector.element').attr('data-s'));
 
     if (inputFormData['chunks'].length > 0 || relations.length > 0) {
       inputFormData['chunks'] = JSON.stringify(inputFormData['chunks']);
@@ -553,6 +554,7 @@ $(document).ready(function() {
           initPreMarkers();
 
           el.removeClass('is-loading');
+          el.attr('data-s', d.idsource);
           $button.attr('disabled', false);
         },
         error: function() {
