@@ -23,6 +23,7 @@ addresses = json.load(open('urls'))['urls']
 def get_text(prof):
     return {
         'id': prof['amsOccupationId'],
+        'profession': prof['namn'],
         'work': html2markdown.convert(prof['beskrivning']['arbete']),
         'education': html2markdown.convert(prof['beskrivning']['utbildning'])
     }
@@ -37,6 +38,7 @@ if __name__ == '__main__':
     for url in addresses:
         res = get_text(crawl(url))
         for tp in ['work', 'education']:
-            json.dump({
-                'text': res[tp]
-            }, open(f'af_{res["id"]}_{tp}.json', 'w'))
+            if len(res[tp].split()) > 200:
+                json.dump({
+                    'text': f'## {res["profession"]}\n\n{res[tp]}'
+                }, open(f'af_{res["id"]}_{tp}.json', 'w'))
