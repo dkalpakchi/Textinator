@@ -2,7 +2,7 @@
   <div class="column is-three-quarters">
     <article class="text message">
       <div class="message-header">
-        <p>Article</p>
+        <p>Text</p>
         <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
       </div>
       <div class="selector element content message-body" data-s="{{idsource}}">{{text|prettify}}</div>
@@ -133,7 +133,7 @@
           <p class='has-text-justified'>{{project.guidelines|safe}}</p>
         </div>
         <div class="content">
-          <div id="followIntroTour" class='ui button'>Follow the intro tour</div>
+          <div id="followIntroTour" class='ui button'>Follow the UI intro tour</div>
         </div>
         <div class='content'>
           <p class='has-text-weight-bold'>Contact information</p>
@@ -200,7 +200,7 @@
   });
 
   tour.addStep('article', {
-    text: "Every time you're entering the project, you're presented with a Wikipedia article in this Article area of the screen.",
+    text: "Här finns texten som du kommer att ställa frågor till. Du ska markera svar i texten och sedan trycka på en motsvarande markör (tryck på 'Next' för att få mer information om markörer)",
     attachTo: { 
       element: '.text.message', 
       on: 'bottom'
@@ -213,10 +213,10 @@
     ]
   });
 
-  tour.addStep('questions', {
-    text: "Your task is to ask questions based on this Wikipedia article. The questions are to be entered in this Question area of the screen",
+  tour.addStep('answer', {
+    text: 'Här finns markörer. Du ska trycka på en motsvarande markör EFTER att du har markerat ett svar i texten.',
     attachTo: { 
-      element: '.question.message', 
+      element: '.markers.message', 
       on: 'bottom'
     },
     buttons: [
@@ -227,10 +227,24 @@
     ]
   });
 
-  tour.addStep('answer', {
-    text: 'Finally, to mark the correct answer to the question, please highlight the answer in the Article area and then click on one of the markers below (or use the shortcuts that might be present in the right corner for each marker). Happy question answering!',
+  tour.addStep('questions', {
+    text: "Här skriver du din fråga.",
     attachTo: { 
-      element: '.markers.message', 
+      element: '.question.message input[type="text"]', 
+      on: 'bottom'
+    },
+    buttons: [
+      {
+        text: 'Next',
+        action: tour.next
+      }
+    ]
+  });
+
+  tour.addStep('submit', {
+    text: "Tryck här efter du har ställt en fråga samt markerad det rätta svarat och åtminstone 2 felaktiga svar. Lycka till!",
+    attachTo: { 
+      element: '.question.message button.submit', 
       on: 'bottom'
     },
     buttons: [
