@@ -16,21 +16,27 @@ $(document).ready(function() {
 
   $('.button-scrolling').each(function(i, x) {
     var $button = $("<button class='scrolling is-link button'>Show more</button>");
+    var $el = $(x);
+    var top = $el.scrollTop();
+
+    $el.scroll(function(e) {
+      var pos = $button.css('top') ? parseInt($button.css('top')) : $button.position().top;
+      $button.css('top', pos + $el.scrollTop() - top);
+      top = $el.scrollTop();
+      if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight - 200) {
+        $button.hide();
+      }
+    });
 
     $button.on('click', function(e) {
       e.preventDefault();
-      var $el = $(x);
       $el.animate({ scrollTop: $el.scrollTop() + 200 }, 500);
-      if ($el.scrollTop() + $el.innerHeight() < $el[0].scrollHeight - 200) {
-        var pos = $button.css('top') ? parseInt($button.css('top')) : $button.position().top;
-        $button.css('top', pos + 200);
-      } else {
+      if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight - 200) {
         $button.hide();
       }
-      window.b = $button;
     });
 
-    $(x).append($button);
+    $el.append($button);
   });
 
   // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
