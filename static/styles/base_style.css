@@ -101,6 +101,7 @@ pre {
 .guidelines.card .card-content .content:first-child {
   max-height: 510px;
   overflow-y: auto;
+  text-align: justify;
 }
 
 .participations, .open-projects, .my-projects, .shared-projects {
@@ -300,4 +301,18 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 
 .selector > .title {
   margin-top: 0;
+}
+
+.button-scrolling {
+  position: relative;
+}
+
+.scrolling.button {
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  bottom: 0;
+  position: absolute;
+  opacity: 0.7;
+  top: auto;
+  width: 100%;
 }

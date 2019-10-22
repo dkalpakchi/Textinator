@@ -14,6 +14,25 @@ $(document).ready(function() {
       graphIds = [],
       currentRelationId = null;
 
+  $('.button-scrolling').each(function(i, x) {
+    var $button = $("<button class='scrolling is-link button'>Show more</button>");
+
+    $button.on('click', function(e) {
+      e.preventDefault();
+      var $el = $(x);
+      $el.animate({ scrollTop: $el.scrollTop() + 200 }, 500);
+      if ($el.scrollTop() + $el.innerHeight() < $el[0].scrollHeight - 200) {
+        var pos = $button.css('top') ? parseInt($button.css('top')) : $button.position().top;
+        $button.css('top', pos + 200);
+      } else {
+        $button.hide();
+      }
+      window.b = $button;
+    });
+
+    $(x).append($button);
+  });
+
   // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
   function initPreMarkers() {
     labelId = 0;
@@ -132,8 +151,7 @@ $(document).ready(function() {
           leftTextNode = document.createTextNode(chunk['text'].slice(0, chunk['start'])),
           markedSpan = document.createElement('span'),
           deleteMarkedBtn = document.createElement('button'),
-          rightTextNode = document.createTextNode(chunk['text'].slice(chunk['end'])),
-          parent = chunk['node'].parentNode;
+          rightTextNode = document.createTextNode(chunk['text'].slice(chunk['end']));
       markedSpan.className = "tag is-" + color + " is-medium";
       markedSpan.textContent = chunk['text'].slice(chunk['start'], chunk['end']);
       markedSpan.setAttribute('data-s', this.getAttribute('data-s'));
@@ -158,16 +176,21 @@ $(document).ready(function() {
           e.target.classList.add('active');
       })
 
-      parent.replaceChild(leftTextNode, chunk['node']);
-      parent.insertBefore(markedSpan, leftTextNode.nextSibling);
-      parent.insertBefore(rightTextNode, markedSpan.nextSibling);
-      chunk['marked'] = true;
-      chunk['submittable'] = this.getAttribute('data-submittable');
-      chunk['id'] = labelId;
-      labelId++;
-      activeLabels++;
-      chunk['label'] = this.querySelector('span.tag:first-child').textContent;
-      delete chunk['node']
+      if (chunk['node'] !== undefined && chunk['node'] != null) {
+        // TODO: figure out when it would happen
+        var parent = chunk['node'].parentNode;
+        parent.replaceChild(leftTextNode, chunk['node']);
+        parent.insertBefore(markedSpan, leftTextNode.nextSibling);
+        parent.insertBefore(rightTextNode, markedSpan.nextSibling);
+        chunk['marked'] = true;
+        chunk['submittable'] = this.getAttribute('data-submittable');
+        chunk['id'] = labelId;
+        labelId++;
+        activeLabels++;
+        chunk['label'] = this.querySelector('span.tag:first-child').textContent;
+        delete chunk['node']
+      }
+
       window.chunks = chunks;
     }
   });
