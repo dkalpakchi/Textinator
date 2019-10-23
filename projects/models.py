@@ -294,9 +294,9 @@ class UserProfile(CommonModel):
     def submitted(self):
         k = self.project.points_unit
         if self.project.points_scope == 'i':
-            return k * Label.objects.filter(user=self.user, project=self.project).values_list('input_id').distinct().count()
+            return k * Label.objects.filter(user=self.user, project=self.project, undone=False).values_list('input_id').distinct().count()
         elif self.project.points_scope == 'l':
-            return k * Label.objects.filter(user=self.user, project=self.project).count()
+            return k * Label.objects.filter(user=self.user, project=self.project, undone=False).count()
         else:
             return -1
 
@@ -308,7 +308,8 @@ class UserProfile(CommonModel):
                 project=self.project,
                 dt_created__day=now.day,
                 dt_created__month=now.month,
-                dt_created__year=now.year
+                dt_created__year=now.year,
+                undone=False
             ).values_list('input_id').distinct().count()
         elif self.project.points_scope == 'l':
             return k * Label.objects.filter(
@@ -316,7 +317,8 @@ class UserProfile(CommonModel):
                 project=self.project,
                 dt_created__day=now.day,
                 dt_created__month=now.month,
-                dt_created__year=now.year
+                dt_created__year=now.year,
+                undone=False
             ).count()
         else:
             return -1

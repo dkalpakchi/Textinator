@@ -255,6 +255,11 @@ def undo_last(request, proj):
     user = request.user
     project = Project.objects.get(pk=proj)
 
+    try:
+        u_profile = UserProfile.objects.get(user=user, project=project)
+    except UserProfile.DoesNotExist:
+        u_profile = None
+
     # find a last relation submitted if any
     rel_batch = LabelRelation.objects.filter(user=user, project=project).order_by('-dt_created').all()[:1].values('batch')
     last_rels = LabelRelation.objects.filter(batch__in=rel_batch).all()
@@ -263,6 +268,7 @@ def undo_last(request, proj):
     last_labels = Label.objects.filter(batch__in=label_batch).all()
     
     labels = []
+    last_input = ''
 
     if last_rels and last_labels:
         max_rel_dt_created = max(map(lambda x: x.dt_created, last_rels))
@@ -280,19 +286,29 @@ def undo_last(request, proj):
 
                 last_rel.undone = True
                 last_rel.save()
+
+            if last_rel.second_label.input:
+                last_input = last_rel.second_label.input.content
         else:
             # means the label was the latest
             for last_label in last_labels:
                 last_label.undone = True
                 last_label.save()
                 labels.append(last_label.text)
+            if last_label.input:
+                last_input = last_label.input.content
     elif last_labels:
         for last_label in last_labels:
             last_label.undone = True
             last_label.save()
             labels.append(last_label.text)
+        if last_label.input:
+            last_input = last_label.input.content
 
     return JsonResponse({
         'error': False,
-        'labels': labels
+        'labels': labels,
+        'input': last_input,
+        'submitted': u_profile.submitted() if u_profile else 'NA',
+        'submitted_today': u_profile.submitted_today() if u_profile else 'NA'
     })

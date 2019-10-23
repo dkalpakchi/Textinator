@@ -1,6 +1,5 @@
 $(document).ready(function() {
   var chunks = [],                                          // the array of all chunk of text marked with a label, but not submitted yet
-      chunksCache = [],                                     // the array of just submitted chunks (if any)
       relations = [],                                       // the array of all relations for this article, not submitted yet
       lastNodeInRelationId = 0,                             // TODO: maybe remove
       selectorArea = document.querySelector('.selector'),   // the area where the article is
@@ -169,7 +168,7 @@ $(document).ready(function() {
         var el = e.target,
             parent = el.parentNode; // actual span
 
-        chunks = chunks.filter(function(x) { x != chunk })
+        chunks = chunks.filter(function(x) { return x.id != chunk.id })
         mergeWithNeighbors(parent);
         $(el).prop('in_relation', false);
         activeLabels--;
@@ -362,11 +361,20 @@ $(document).ready(function() {
     }
   }
 
+  function disableChunk(c) {
+    $('span.tag[data-i="' + c['id'] + '"]').addClass('is-disabled');
+    c['submittable'] = false;
+  }
+
+  function enableChunk(c) {
+    $('span.tag[data-i="' + c['id'] + '"]').removeClass('is-disabled');
+    c['submittable'] = true;
+  }
+
   // disable given chunks visually
   function disableChunks(chunks) {
     for (var c in chunks) {
-      $('span.tag[data-i="' + chunks[c]['id'] + '"]').addClass('is-disabled');
-      chunks[c]['submittable'] = false;
+      disableChunk(chunks[c])
     }
     return chunks;
   }
@@ -415,15 +423,26 @@ $(document).ready(function() {
         'csrfmiddlewaretoken': $target.closest('form').find('input[name="csrfmiddlewaretoken"]').val()
       },
       success: function(data) {
-        chunksCache.forEach(function(c) {
+        chunks.forEach(function(c) {
           if (data['labels'].includes(c.context.slice(c.lengthBefore + c.start, c.lengthBefore + c.end))) {
             var $el = $('span.tag[data-i="' + c.id + '"]');
             $el.removeClass('is-disabled');
             $el.prop('in_relation', false);
+
+            enableChunk(c);
           }
         });
 
-        chunksCache = [];
+        var $submitted = $('#submittedTotal'),
+            $submittedToday = $('#submittedToday');
+        
+        $submitted.text(data['submitted']);
+        $submitted.append($('<span class="smaller">q</span>'));
+        
+        $submittedToday.text(data['submitted_today']);
+        $submittedToday.append($('<span class="smaller">q</span>'));
+
+        $('#inputForm input[type="text"]').val(data['input']);
       },
       error: function() {
         console.log("ERROR!");
@@ -480,9 +499,8 @@ $(document).ready(function() {
             if (data['next_task'] == 'regular') {
               // no review task
               // resetArticle();
-              var submittedChunks = JSON.parse(inputFormData['chunks']);
-              chunks = disableChunks(submittedChunks); // chunks here is a module variable
-              chunksCache = submittedChunks;
+              
+              disableChunks(chunks.filter(function(x) { return x.submittable }))
 
               $questionBlock.removeClass('is-warning');
               $questionBlock.addClass('is-primary');
@@ -532,6 +550,12 @@ $(document).ready(function() {
           activeLabels = 0;
 
           $('#undoLast').attr('disabled', false);
+
+          chunks.forEach(function(c) {
+            c.submittable = false;
+          })
+
+          window.chunks = chunks;
         },
         error: function() {
           console.log("ERROR!");
@@ -567,7 +591,6 @@ $(document).ready(function() {
         success: function(d) {
           $('.selector').html(d.text);
           chunks = [];
-          chunksCache = []
           labelId = $('article.text').find('span.tag').length; // count the number of pre-markers
           activeLabels = labelId;
           resetTextHTML = selectorArea.innerHTML;
