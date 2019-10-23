@@ -192,6 +192,7 @@ STATICFILES_FINDERS = [
 TASK_TYPES = list(yaml.load(open(os.path.join(BASE_DIR, 'task_types.yaml')), Loader=yaml.FullLoader).items())
 
 DATASOURCE_TYPES = [
+    ('PlainText', 'Plain text'),
     ('TextFile', 'Plain text file(s)'),
     ('Db', 'Database'),
     ('Json', 'JSON file(s)')

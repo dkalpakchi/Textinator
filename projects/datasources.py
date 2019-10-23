@@ -54,6 +54,19 @@ class DataSource:
         return self.__data[key]
 
 
+class PlainTextSource(DataSource):
+    def __init__(self, spec_data):
+        super().__init__(spec_data)
+        self._required_keys = ['texts']
+        self.check_constraints()
+
+        for text in self.get_spec('texts'):
+            self._add_datapoint(text)
+
+    def get_random_datapoint(self):
+        return self[random.randint(0, self.size() - 1)]
+
+
 class TextFileSource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)

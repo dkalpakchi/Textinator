@@ -1,5 +1,7 @@
 import re
+import pytz
 import markdown
+from datetime import datetime
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
 from urllib.parse import urlparse
@@ -52,6 +54,7 @@ def environment(**options):
     env.globals.update({
         'static': staticfiles_storage.url,
         'url': reverse,
+        'now': pytz.UTC.localize(datetime.now())
     })
     env.filters['url_path'] = get_path
     env.filters['display_marker'] = display_marker

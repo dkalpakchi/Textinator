@@ -1,262 +1,270 @@
-<div class="columns">
-  <div class="column is-three-quarters">
-    <article class="text message">
-      <div class="message-header">
-        <p>Text</p>
-        <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
-      </div>
-      <div class="selector element content message-body" data-s="{{idsource}}">{{text|prettify}}</div>
-    </article>
-    <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
-      <div class="message-header">
-        <p>Markers</p>
-      </div>
-      <div class="message-body">
-        <div class="field is-grouped is-grouped-multiline">
-          {% for marker in task_markers %}
-            <div class="control">
-              {{marker|display_marker}}
-            </div>
-          {% endfor %}
-          {% for marker in project.marker_set.all() %}
-            <div class="control">
-              {{marker|display_marker}}
-            </div>
-          {% endfor %}
-          {% for relation in task_relations %}
-            <div class="control">
-              {{relation|display_relation}}
-            </div>
-          {% endfor %}
-          {% for relation in project.relation_set.all() %}
-            <div class="control">
-              {{relation|display_relation}}
-            </div>
-          {% endfor %}
+{% if project.dt_finish <= now %}
+  <div class="columns">
+    <div class="column is-three-quarters">
+      <article class="text message">
+        <div class="message-header">
+          <p>Text</p>
+          <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
         </div>
-      </div>
-    </article>
-    <article class="question message is-primary">
-      <div class="message-header">
-        <p>Your question</p>
-      </div>
-      <div class="message-body">
-        <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
-          {{ csrf_input }}
-          <input type="hidden" name="pid" value="{{project.pk}}">
-          <div class="field">
-            <div class="control">
-              <input class='question input' type="text" name="input" placeholder="Type in your question here">
-            </div>
-          </div>
-          <div class="field is-grouped">
-            <div class="control">
-              <button class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></button>
-            </div>
-            <div class="control">
-              <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last submission</span></button>
-            </div>
-            {% if not project.round_length or project.round_length > 1 %}
-              <div class='control'>
-                <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle"><span class="icon"><i class="fas fa-newspaper"></i></span><span>Get new text</span></a>
+        <div class="selector element content message-body" data-s="{{idsource}}">{{text|prettify}}</div>
+      </article>
+      <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
+        <div class="message-header">
+          <p>Markers</p>
+        </div>
+        <div class="message-body">
+          <div class="field is-grouped is-grouped-multiline">
+            {% for marker in task_markers %}
+              <div class="control">
+                {{marker|display_marker}}
               </div>
-            {% endif %}
-            {% if project.round_length %}
-              <div class='control'>
-                <a href="{{ url('projects:new_article', kwargs={'proj':project.pk}) }}" class="button" id="finishRound" data-active="{{'t' if project.round_length == 1 else 'f'}}">Finish round</a>
+            {% endfor %}
+            {% for marker in project.marker_set.all() %}
+              <div class="control">
+                {{marker|display_marker}}
               </div>
-            {% endif %}
+            {% endfor %}
+            {% for relation in task_relations %}
+              <div class="control">
+                {{relation|display_relation}}
+              </div>
+            {% endfor %}
+            {% for relation in project.relation_set.all() %}
+              <div class="control">
+                {{relation|display_relation}}
+              </div>
+            {% endfor %}
           </div>
-        </form>
-      </div>
-    </article>
-  </div>
-  <div class="column">
-    <article class="achievements message is-info">
-      <div class="message-header">
-        <p>Achievements</p>
-      </div>
-      <div class="message-body">
-        {% if project.points_scope != 'n' %}
-          <nav class="level">
-            <div class="level-item has-text-centered">
-              <div>
-                <p class="heading">Submitted in total</p>
-                <p class="title">
-                  <div class="tt-set-size tt-charts-container">
-                    <div class="tt-pie-wrapper no-margin">
-                      <span id="submittedTotal" class="tt-label">{{profile.submitted()}}<span class="smaller">q</span></span>                  
-                      <div class="tt-pie">
-                        <div class="left-side half-circle"></div>
-                        <div class="right-side half-circle"></div>
+        </div>
+      </article>
+      <article class="question message is-primary">
+        <div class="message-header">
+          <p>Your question</p>
+        </div>
+        <div class="message-body">
+          <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
+            {{ csrf_input }}
+            <input type="hidden" name="pid" value="{{project.pk}}">
+            <div class="field">
+              <div class="control">
+                <input class='question input' type="text" name="input" placeholder="Type in your question here">
+              </div>
+            </div>
+            <div class="field is-grouped">
+              <div class="control">
+                <button class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></button>
+              </div>
+              <div class="control">
+                <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last submission</span></button>
+              </div>
+              {% if not project.round_length or project.round_length > 1 %}
+                <div class='control'>
+                  <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle"><span class="icon"><i class="fas fa-newspaper"></i></span><span>Get new text</span></a>
+                </div>
+              {% endif %}
+              {% if project.round_length %}
+                <div class='control'>
+                  <a href="{{ url('projects:new_article', kwargs={'proj':project.pk}) }}" class="button" id="finishRound" data-active="{{'t' if project.round_length == 1 else 'f'}}">Finish round</a>
+                </div>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </article>
+    </div>
+    <div class="column">
+      <article class="achievements message is-info">
+        <div class="message-header">
+          <p>Achievements</p>
+        </div>
+        <div class="message-body">
+          {% if project.points_scope != 'n' %}
+            <nav class="level">
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Submitted in total</p>
+                  <p class="title">
+                    <div class="tt-set-size tt-charts-container">
+                      <div class="tt-pie-wrapper no-margin">
+                        <span id="submittedTotal" class="tt-label">{{profile.submitted()}}<span class="smaller">q</span></span>                  
+                        <div class="tt-pie">
+                          <div class="left-side half-circle"></div>
+                          <div class="right-side half-circle"></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </p>
+                  </p>
+                </div>
               </div>
-            </div>
-            <div class="level-item has-text-centered">
-              <div>
-                <p class="heading">Submitted today</p>
-                <p class="title">
-                  <div class="tt-set-size tt-charts-container">
-                    <div class="tt-pie-wrapper no-margin">
-                      <span id="submittedToday" class="tt-label">{{profile.submitted_today()}}<span class="smaller">q</span></span>
-                      <div class="tt-pie">
-                        <div class="left-side half-circle"></div>
-                        <div class="right-side half-circle"></div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Submitted today</p>
+                  <p class="title">
+                    <div class="tt-set-size tt-charts-container">
+                      <div class="tt-pie-wrapper no-margin">
+                        <span id="submittedToday" class="tt-label">{{profile.submitted_today()}}<span class="smaller">q</span></span>
+                        <div class="tt-pie">
+                          <div class="left-side half-circle"></div>
+                          <div class="right-side half-circle"></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </p>
+                  </p>
+                </div>
               </div>
-            </div>
-          </nav>
-        {% endif %}
-      </div>
-    </article>
+            </nav>
+          {% endif %}
+        </div>
+      </article>
+    </div>
   </div>
-</div>
 
-<div class="modal">
-  <div class="modal-background"></div>
-  <div class="modal-content">
-    <div class="guidelines card">
-      <header class="card-header">
-        <p class="card-header-title">
-          {{project.title}}
-        </p>
-      </header>
-      <div class="card-content">
-        <div class="button-scrolling content">
-          <p class='has-text-weight-bold'>Guidelines</p>
-          <p class='has-text-justified'>{{project.guidelines|safe}}</p>
-        </div>
-        <div class="content">
-          <div id="followIntroTour" class='ui button'>Follow the UI intro tour</div>
-        </div>
-        <div class='content'>
-          <p class='has-text-weight-bold'>Contact information</p>
-          <!-- TODO: make this table responsive -->
-          <table class='table'>
-            <tbody>
-              <tr>
-                <td>Responsible</td>
-                <td>{{project.author.first_name}} {{project.author.last_name}}</td>
-              </tr>
-              <tr>
-                <td>Contact email</td>
-                <td>{{project.author.email}}</td>
-              </tr>
-              <tr>
-                <td>Published at</td>
-                <td>{{project.dt_publish}}</td>
-              </tr>
-              <tr>
-                <td>To be finished at</td>
-                <td>
-                  {{project.dt_finish}}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+  <div class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="guidelines card">
+        <header class="card-header">
+          <p class="card-header-title">
+            {{project.title}}
+          </p>
+        </header>
+        <div class="card-content">
+          <div class="button-scrolling content">
+            <p class='has-text-weight-bold'>Guidelines</p>
+            <p class='has-text-justified'>{{project.guidelines|safe}}</p>
+          </div>
+          <div class="content">
+            <div id="followIntroTour" class='ui button'>Follow the UI intro tour</div>
+          </div>
+          <div class='content'>
+            <p class='has-text-weight-bold'>Contact information</p>
+            <!-- TODO: make this table responsive -->
+            <table class='table'>
+              <tbody>
+                <tr>
+                  <td>Responsible</td>
+                  <td>{{project.author.first_name}} {{project.author.last_name}}</td>
+                </tr>
+                <tr>
+                  <td>Contact email</td>
+                  <td>{{project.author.email}}</td>
+                </tr>
+                {% if project.dt_publish %}
+                  <tr>
+                    <td>Published at</td>
+                    <td>{{project.dt_publish}}</td>
+                  </tr>
+                {% endif %}
+                {% if project.dt_finish %}
+                  <tr>
+                    <td>To be finished at</td>
+                    <td>
+                      {{project.dt_finish}}
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
+    <button class="modal-close is-large" aria-label="close"></button>
   </div>
-  <button class="modal-close is-large" aria-label="close"></button>
-</div>
 
-<script>
-  $('#guidelinesButton').on('click', function() {
-    $('.modal').addClass('is-active');
-  });
+  <script>
+    $('#guidelinesButton').on('click', function() {
+      $('.modal').addClass('is-active');
+    });
 
-  $('.modal-close').on('click', function() {
-    $('.modal').removeClass('is-active');
-    $('.countdown svg circle:last-child').trigger('cdAnimate');
-  });
+    $('.modal-close').on('click', function() {
+      $('.modal').removeClass('is-active');
+      $('.countdown svg circle:last-child').trigger('cdAnimate');
+    });
 
-  $('.modal-background').on('click', function() {
-    $('.modal').removeClass('is-active');
-    $('.countdown svg circle:last-child').trigger('cdAnimate');
-  });
+    $('.modal-background').on('click', function() {
+      $('.modal').removeClass('is-active');
+      $('.countdown svg circle:last-child').trigger('cdAnimate');
+    });
 
-  $('#guidelinesButton').click();
+    $('#guidelinesButton').click();
 
-  const tour = new Shepherd.Tour({
-    defaultStepOptions: {
-      scrollTo: {
-        behavior: 'smooth',
-        block: 'center'
+    const tour = new Shepherd.Tour({
+      defaultStepOptions: {
+        scrollTo: {
+          behavior: 'smooth',
+          block: 'center'
+        },
+        showCancelLink: true,
+        tippyOptions: {
+          maxWidth: 500
+        }
       },
-      showCancelLink: true,
-      tippyOptions: {
-        maxWidth: 500
-      }
-    },
-    theme: 'default',
-    useModalOverlay: true
-  });
+      theme: 'default',
+      useModalOverlay: true
+    });
 
-  tour.addStep('article', {
-    text: "Här finns texten som du kommer att ställa frågor till. Du ska markera svar i texten och sedan trycka på en motsvarande markör (tryck på 'Next' för att få mer information om markörer)",
-    attachTo: { 
-      element: '.text.message', 
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Next',
-        action: tour.next
-      }
-    ]
-  });
+    tour.addStep('article', {
+      text: "Här finns texten som du kommer att ställa frågor till. Du ska markera svar i texten och sedan trycka på en motsvarande markör (tryck på 'Next' för att få mer information om markörer)",
+      attachTo: { 
+        element: '.text.message', 
+        on: 'bottom'
+      },
+      buttons: [
+        {
+          text: 'Next',
+          action: tour.next
+        }
+      ]
+    });
 
-  tour.addStep('answer', {
-    text: 'Här finns markörer. Du ska trycka på en motsvarande markör EFTER att du har markerat ett svar i texten.',
-    attachTo: { 
-      element: '.markers.message', 
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Next',
-        action: tour.next
-      }
-    ]
-  });
+    tour.addStep('answer', {
+      text: 'Här finns markörer. Du ska trycka på en motsvarande markör EFTER att du har markerat ett svar i texten.',
+      attachTo: { 
+        element: '.markers.message', 
+        on: 'bottom'
+      },
+      buttons: [
+        {
+          text: 'Next',
+          action: tour.next
+        }
+      ]
+    });
 
-  tour.addStep('questions', {
-    text: "Här skriver du din fråga.",
-    attachTo: { 
-      element: '.question.message input[type="text"]', 
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Next',
-        action: tour.next
-      }
-    ]
-  });
+    tour.addStep('questions', {
+      text: "Här skriver du din fråga.",
+      attachTo: { 
+        element: '.question.message input[type="text"]', 
+        on: 'bottom'
+      },
+      buttons: [
+        {
+          text: 'Next',
+          action: tour.next
+        }
+      ]
+    });
 
-  tour.addStep('submit', {
-    text: "Tryck här efter du har ställt en fråga samt markerad det rätta svaret och åtminstone 2 felaktiga svar. Lycka till!",
-    attachTo: { 
-      element: '.question.message button.submit', 
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Finish',
-        action: tour.hide
-      }
-    ]
-  });
+    tour.addStep('submit', {
+      text: "Tryck här efter du har ställt en fråga samt markerad det rätta svaret och åtminstone 2 felaktiga svar. Lycka till!",
+      attachTo: { 
+        element: '.question.message button.submit', 
+        on: 'bottom'
+      },
+      buttons: [
+        {
+          text: 'Finish',
+          action: tour.hide
+        }
+      ]
+    });
 
-  $('#followIntroTour').on('click', function() {
-    $('.modal').removeClass('is-active');
-    tour.start();
-  });
-</script>
+    $('#followIntroTour').on('click', function() {
+      $('.modal').removeClass('is-active');
+      tour.start();
+    });
+  </script>
+{% else %}
+  <!-- Project expired -->
+{% endif %}
