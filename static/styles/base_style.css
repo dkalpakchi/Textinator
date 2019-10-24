@@ -316,3 +316,7 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
   top: auto;
   width: 100%;
 }
+
+.is-grey {
+  background: rgba(0, 0, 0, 0.1)
+}

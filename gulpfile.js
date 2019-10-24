@@ -1,10 +1,24 @@
 var gulp = require('gulp'),
     FOLDER = 'node_modules';
 
-gulp.task('bulma', function() {
+gulp.task('bulma:css', function() {
   return gulp.src(FOLDER + '/bulma/css/bulma.min.css')
     .pipe(gulp.dest('static/styles'))
 });
+
+gulp.task('bulma-carousel:css', function() {
+  return gulp.src(FOLDER + '/bulma-carousel/dist/css/bulma-carousel.min.css')
+    .pipe(gulp.dest('static/styles'))
+});
+
+gulp.task('bulma-carousel:js', function() {
+  return gulp.src(FOLDER + '/bulma-carousel/dist/js/bulma-carousel.min.js')
+    .pipe(gulp.dest('static/scripts'))
+});
+
+gulp.task('bulma', gulp.series(['bulma:css', 'bulma-carousel:css', 'bulma-carousel:js'], function(done) {
+  done();
+}));
 
 gulp.task('jquery', function() {
   return gulp.src([FOLDER + '/jquery/dist/jquery.min.js',

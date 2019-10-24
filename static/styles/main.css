@@ -1,0 +1,18 @@
+.slider {
+    max-width: 650px;
+    overflow: hidden;
+}
+
+.slider-item {
+    position: relative;
+}
+
+.item-title {
+    padding: 1em;
+    background: rgba(50, 152, 220, 0.7);
+    text-align: center;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    color: white;
+}

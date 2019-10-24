@@ -35,10 +35,7 @@ $(document).ready(function() {
     }
   }
 
-  $('#id_source_type').on('change', function(e) {
-    var $target = $(e.target),
-        option = $target.find("option:selected").val();
-
+  function updateSchema(option) {
     // NOTE: `spec` everywhere is just the name of the field in the model
     //       if the name changes djang-admin-json-editor, changes the name of JS variable as well
     if (schemas.hasOwnProperty(option)) {
@@ -63,6 +60,15 @@ $(document).ready(function() {
         }
       });
     }
+    return spec_editor
+  }
+
+
+  $('#id_source_type').on('change', function(e) {
+    var $target = $(e.target),
+        option = $target.find("option:selected").val();
+
+    spec_editor = updateSchema(option);    
 
     // defined in django-admin-json-editor
     spec_editor.setValue(templates[option]);

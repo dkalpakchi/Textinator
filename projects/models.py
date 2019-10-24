@@ -10,6 +10,7 @@ from django.core.cache import caches
 from django.utils import timezone
 
 from tinymce.models import HTMLField
+from filebrowser.fields import FileBrowseField
 
 from .datasources import *
 from .helpers import *
@@ -59,7 +60,10 @@ class DataSource(CommonModel):
 class Project(CommonModel):
     title = models.CharField(max_length=50)
     short_description = models.TextField(max_length=1000, default="")
+    institution = models.CharField(max_length=500, null=True, blank=True)
+    supported_by = models.CharField(max_length=1000, null=True, blank=True)
     guidelines = HTMLField(null=True)
+    video_summary = FileBrowseField(max_length=1000, null=True, blank=True)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
     context_size = models.CharField(max_length=2, choices=[('no', 'No context'), ('t', 'Text'), ('p', 'Paragraph')])

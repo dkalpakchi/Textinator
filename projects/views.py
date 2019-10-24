@@ -14,8 +14,6 @@ from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 
-import markdown
-
 from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
 from .view_helpers import process_chunk

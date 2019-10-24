@@ -69,36 +69,7 @@ $(document).ready(function() {
   }
 
   $('.join.form .submit.button').on('click', joinFormSubmit);
-
-  const tour = new Shepherd.Tour({
-    defaultStepOptions: {
-      scrollTo: {
-        behavior: 'smooth',
-        block: 'center'
-      },
-      showCancelLink: true,
-      tippyOptions: {
-        maxWidth: 500
-      }
-    },
-    theme: 'default',
-    useModalOverlay: true
-  });
-
-  tour.addStep('challenges', {
-    text: 'This step is attached to the bottom of the <code>.example-css-selector</code> element.',
-    attachTo: { 
-      element: '.challenges', 
-      on: 'bottom'
-    },
-    buttons: [
-      {
-        text: 'Next',
-        action: tour.next
-      }
-    ]
-  });
-
+  
   $('.intro-button').on('click', function() {
     tour.start();
   })

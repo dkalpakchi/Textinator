@@ -18,7 +18,14 @@
           </div>
         {% endfor %}
         </dl>
-        <input type="submit" value="Register" class="button is-link">
+        <div class="field is-grouped">
+          <div class="control">
+            <input type="submit" value="Register" class="button is-link">
+          </div>
+          <div class="control">
+            <a href="{% url 'login' %}" class='button is-text'>Already have an account?</a>
+          </div>
+        </div>
       </form>
     </div>
   </div>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Textinator</title>
+    <link rel="stylesheet" href="{{ static('styles/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ static('styles/bulma.min.css') }}">
+    <link rel="stylesheet" href="{{ static('styles/bulma-carousel.min.css') }}">
+    <link rel="stylesheet" href="{{ static('styles/base_style.css') }}">
+    <link rel="stylesheet" href="{{ static('styles/main.css') }}">
+    <link rel="stylesheet" href="{% sass_src 'styles/style.scss' %}">
+    <script type="text/javascript" src="{{ static('scripts/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('scripts/jquery_ext.js') }}"></script>
+    <script type="text/javascript" src="{{ static('scripts/bulma-carousel.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('scripts/script.js') }}"></script>
+  </head>
+  <body>
+    <section class="hero is-grey">
+      <div class="hero-body">
+        <div class="container">
+          <div class="columns is-vcentered">
+            <div class="column">
+              <h1 class="logo title">
+                Textinator
+              </h1>
+              <h2 class="subtitle">
+                Help researchers in conquering NLP problems!
+              </h2>
+              <a href="{{url('django_registration_register')}}" class='button is-rounded is-success'>Join us!</a>
+              <a href="{{url('login')}}" class='button is-rounded is-info'>Login</a>
+            </div>
+            <div class="column">
+              <div id="carousel-demo" class="carousel">
+                {% for title, image in carousel %}
+                  <div class="item-{{loop.index}}">
+                    <img src="{{image}}" alt="" width="100%">
+                    <div class="item-title is-info">{{title}}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>  
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section">
+      <div class="container">
+        <h1 class="title">Challenge yourself</h1>
+        {% for triplet in open_projects %}
+          <div class="row"></div>
+            <div class="columns">
+            {% for project in triplet %}
+              <div class="column">
+                <div class="card">
+                  <div class="card-image">
+                    {% if project.video_summary.url %}
+                      <video src="{{project.video_summary.url}}" controls></video>
+                    {% endif %}
+                  </div>
+                  <div class="card-content">
+                    <div class="media">
+                      <div class="media-content">
+                        <p class="title is-4">{{project.title}}</p>
+                        {% if project.institution %}
+                          <p class="subtitle is-6">{{project.institution}}</p>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="content">
+                      {{project.short_description}}
+                    </div>
+                  </div>
+                  {% if project.supported_by %}
+                    <footer class="card-footer">
+                      Supported by: {{project.supported_by}}
+                    </footer>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="content has-text-centered">
+        <p>
+          &#169; <strong>Textinator</strong> by Dmytro Kalpakchi
+        </p>
+        <p>
+          Division of Speech, Music and Hearing, KTH Royal Institute of Technology.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+    bulmaCarousel.attach('#carousel-demo', {
+      slidesToScroll: 1,
+      slidesToShow: 1,
+      loop: true
+    });
+    </script>
+  </body>
+</html>

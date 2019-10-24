@@ -26,7 +26,7 @@
         <p>Article</p>
         <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
       </div>
-      <div class="selector element message-body">{{text}}</div>
+      <div class="selector element content message-body">{{text|prettify}}</div>
     </article>
     <article class="markers message is-dark" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
       <div class="message-header">
@@ -36,37 +36,37 @@
         <div class="field is-grouped is-grouped-multiline">
           {% for marker in task_markers %}
             <div class="control">
-              <div class="marker tags has-addons" data-color="{{marker.color}}" data-shortcut="{{marker.shortcut|upper}}">
-                <span class="tag is-{{marker.color}}">{{marker.label_name}}</span>
-                {% if marker.shortcut %}
-                  <span class="tag is-dark">{{marker.shortcut|upper}}</span>
-                {% endif %}
-              </div>
+              {{marker|display_marker}}
             </div>
           {% endfor %}
-          {% for marker in project.marker_set.all %}
+          {% for marker in project.marker_set.all() %}
             <div class="control">
-              <div class="marker tags has-addons" data-color="{{marker.color}}" data-shortcut="{{marker.shortcut|upper}}">
-                <span class="tag is-{{marker.color}}">{{marker.label_name}}</span>
-                {% if marker.shortcut %}
-                  <span class="tag is-dark">{{marker.shortcut|upper}}</span>
-                {% endif %}
-              </div>
+              {{marker|display_marker}}
+            </div>
+          {% endfor %}
+          {% for relation in task_relations %}
+            <div class="control">
+              {{relation|display_relation}}
+            </div>
+          {% endfor %}
+          {% for relation in project.relation_set.all() %}
+            <div class="control">
+              {{relation|display_relation}}
             </div>
           {% endfor %}
         </div>
       </div>
     </article>
 
-    <form id="inputForm" action="{% url 'projects:record_datapoint' %}">
-      {% csrf_token %}
+    <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
+      {{ csrf_input }}
       <input type="hidden" name="pid" value="{{project.pk}}">
       <div class="field is-grouped">
         <div class="control">
           <button class='submit button'>Submit</button>
         </div>
         <div class='control'>
-          <a href="{% url 'projects:new_article' proj=project.pk %}" class="button" id="getNewArticle">Get new article</a>
+          <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle">Get new article</a>
         </div>
       </div>
     </form>
@@ -115,12 +115,12 @@
               </tr>
               <tr>
                 <td>Published at</td>
-                <td>{{project.dt_publish|date:"M d, Y H:i"}}</td>
+                <td>{{project.dt_publish}}</td>
               </tr>
               <tr>
                 <td>To be finished at</td>
                 <td>
-                  {{project.dt_finish|date:"M d, Y H:i"}}
+                  {{project.dt_finish}}
                 </td>
               </tr>
             </tbody>
