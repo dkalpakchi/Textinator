@@ -7,7 +7,10 @@
 <div class="container is-fluid explorer">
   {% for input, labels in labeled_inputs %}
     <div class="datapoint">
-      <h4 class='title is-4'>{{input.content}}</h4>
+      <h4 class='title is-4'>
+        {{input.content}}
+        <div class="subtitle is-6">Created by <i>{{labels[0].user}}</i> on {{input.dt_created}}</div>
+      </h4>
       <ul>
         {% for label in labels %}
           <li>

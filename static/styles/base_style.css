@@ -331,6 +331,10 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
   padding-bottom: 3em;
 }
 
+.explorer .datapoint .title {
+  margin-bottom: 0.75rem;
+}
+
 .explorer .datapoint ul {
   counter-reset: list;
   padding-bottom: 0.5em;
