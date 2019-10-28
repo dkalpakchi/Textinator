@@ -63,6 +63,7 @@ class Project(CommonModel):
     institution = models.CharField(max_length=500, null=True, blank=True)
     supported_by = models.CharField(max_length=1000, null=True, blank=True)
     guidelines = HTMLField(null=True, blank=True)
+    reminders = HTMLField(null=True, blank=True)
     video_summary = FileBrowseField(max_length=1000, null=True, blank=True)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)

@@ -61,6 +61,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'Textinator.backends.EmailAuthenticationBackend',
+]
+
 ROOT_URLCONF = 'Textinator.urls'
 
 TEMPLATES = [

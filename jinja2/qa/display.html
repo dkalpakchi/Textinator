@@ -73,6 +73,16 @@
       </article>
     </div>
     <div class="column">
+      {% if project.reminders %}
+        <article class="reminders message">
+          <div class="message-header">
+            <p>Reminders</p>
+          </div>
+          <div class="message-body">
+            {{project.reminders|safe}}
+          </div>
+        </article>
+      {% endif %}
       <article class="achievements message is-info">
         <div class="message-header">
           <p>Achievements</p>

@@ -186,7 +186,6 @@ class JsonSource(DataSource):
             for url in self.get_spec('remote'):
                 res = requests.get(url, allow_redirects=True)
                 content_type = res.headers.get('content-type')
-                print(content_type)
 
         for fname in self.__files:
             d = json.load(open(fname))

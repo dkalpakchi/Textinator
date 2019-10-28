@@ -349,3 +349,7 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
   content: counter(list, lower-alpha) ") ";
   counter-increment: list;
 }
+
+.reminders ul, .reminders ol {
+  margin-left: 1em;
+}
