@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'django_registration',
     'tinymce',
     'projects',
-    'django_extensions',
+    # 'django_extensions',
 ]
 
 MIDDLEWARE = [
