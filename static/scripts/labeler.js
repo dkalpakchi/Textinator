@@ -481,7 +481,7 @@ $(document).ready(function() {
           if (have > needed) {
             return true;
           } else {
-            var diff = (needed - have)
+            var diff = (needed - have + 1)
             messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
             return false;
           }
@@ -490,15 +490,15 @@ $(document).ready(function() {
             return true;
           } else {
             var diff = (needed - have)
-            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            messages.push('You need ' + diff + ' less "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
             return false;
           }
         } else if (res.slice(0, 2) == 'ls') {
           if (have < needed) {
             return true;
           } else {
-            var diff = (needed - have)
-            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            var diff = (needed - have + 1)
+            messages.push('You need ' + diff + ' less "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
             return false;
           }
         } else
@@ -509,8 +509,6 @@ $(document).ready(function() {
     }, markers);
 
     var numSatisfied = satisfied.reduce(function(acc, val) { return acc + val; }, 0);
-
-    console.log(numSatisfied, markers.length)
 
     if (numSatisfied != markers.length) {
       alert(messages.join('\n'));

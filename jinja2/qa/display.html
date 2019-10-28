@@ -14,12 +14,15 @@
         </div>
         <div class="message-body">
           <div class="field is-grouped is-grouped-multiline">
+            {% set project_markers=project.markers.all() %}
             {% for marker in task_markers %}
-              <div class="control">
-                {{marker|display_marker}}
-              </div>
+              {% if marker not in project_markers %}
+                <div class="control">
+                  {{marker|display_marker}}
+                </div>
+              {% endif %}
             {% endfor %}
-            {% for marker in project.markers.all() %}
+            {% for marker in project_markers %}
               <div class="control">
                 {{marker|display_marker}}
               </div>
