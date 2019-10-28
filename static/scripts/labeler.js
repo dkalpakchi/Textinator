@@ -458,9 +458,72 @@ $(document).ready(function() {
     return false;
   }
 
+  function checkRestrictions() {
+    var markers = document.querySelectorAll('.marker.tags[data-res]');
+    var messages = [];
+
+    var satisfied = Array.from(markers).map(function(x, i) {
+      var res = x.getAttribute('data-res');
+
+      if (res) {
+        var have = document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]').length,
+            needed = parseInt(res.slice(2)),
+            label = x.querySelector('span.tag').textContent;
+        if (res.slice(0, 2) == 'ge') {
+          if (have >= needed) {
+            return true;
+          } else {
+            var diff = (needed - have)
+            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            return false;
+          }
+        } else if (res.slice(0, 2) == 'gs') {
+          if (have > needed) {
+            return true;
+          } else {
+            var diff = (needed - have)
+            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            return false;
+          }
+        } else if (res.slice(0, 2) == 'le') {
+          if (have <= needed) {
+            return true;
+          } else {
+            var diff = (needed - have)
+            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            return false;
+          }
+        } else if (res.slice(0, 2) == 'ls') {
+          if (have < needed) {
+            return true;
+          } else {
+            var diff = (needed - have)
+            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            return false;
+          }
+        } else
+          return true;
+      } else {
+        return true;
+      }
+    }, markers);
+
+    var numSatisfied = satisfied.reduce(function(acc, val) { return acc + val; }, 0);
+
+    console.log(numSatisfied, markers.length)
+
+    if (numSatisfied != markers.length) {
+      alert(messages.join('\n'));
+    }
+    return numSatisfied == markers.length
+  }
+
   // submitting the marked labels and/or relations with(out) inputs
   $('#inputForm .submit.button').on('click', function(e) {
     e.preventDefault();
+
+    // check if restrictions are violated
+    if (!checkRestrictions()) return;
 
     var $inputForm = $('#inputForm'),
         $qInput = $inputForm.find('input.question'),

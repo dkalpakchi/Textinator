@@ -15,8 +15,8 @@ class CommonModelAdmin(admin.ModelAdmin):
 
 # TODO: fix name 'ModelValidationError' is not defined
 #       happens when trying to assign marker to be both task and project specific
-class MarkerInline(admin.StackedInline):
-    model = Marker
+class MarkerCountRestrictionInline(admin.StackedInline):
+    model = MarkerCountRestriction
     extra = 0
     classes = ['collapse']
     verbose_name = "Project-specific marker"
@@ -67,7 +67,7 @@ class RelationInline(admin.StackedInline):
 
 @admin.register(Project)
 class ProjectAdmin(CommonModelAdmin):
-    inlines = [MarkerInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
+    inlines = [MarkerCountRestrictionInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
 
     def save_model(self, request, obj, form, change):
         if not obj.author:

@@ -56,6 +56,36 @@ class DataSource(CommonModel):
     def __str__(self):
         return self.name
 
+class Marker(CommonModel):
+    name = models.CharField(max_length=50, unique=True)
+    short = models.CharField(max_length=10, help_text='By default the capitalized first three character of the label', unique=True)
+    color = models.CharField(max_length=10, choices=settings.MARKER_COLORS)
+    for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
+    shortcut = models.CharField(max_length=10, help_text="Keyboard shortcut for marking a piece of text with this label", null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if (self.project and self.for_task_type):
+            raise ModelValidationError("The marker can be either project-specific or task-specific, not both")
+        elif (not self.project and not self.for_task_type):
+            raise ModelValidationError("The marker should be either project-specific or task-specific")
+        else:
+            if not self.short:
+                self.short = self.name[:3].upper()
+            super(Marker, self).save(*args, **kwargs)
+
+    def get_count_restriction(self, stringify=False):
+        obj = Marker.project_set.through.objects.filter(marker=self).get()
+        if obj.restriction_type != 'no':
+            return str(obj) if stringify else obj 
+        else:
+            return ''
+
+    def is_part_of_relation(self):
+        return bool(Relation.objects.filter(models.Q(first_node=self) | models.Q(second_node=self)).all())
+
+
+    def __str__(self):
+        return str(self.name)
 
 class Project(CommonModel):
     title = models.CharField(max_length=50)
@@ -74,6 +104,7 @@ class Project(CommonModel):
     dt_updated = models.DateTimeField(auto_now=True)
     collaborators = models.ManyToManyField(User, related_name='shared_projects', blank=True)
     participants = models.ManyToManyField(User, related_name='participations', through='UserProfile', blank=True)
+    markers = models.ManyToManyField(Marker, through='MarkerCountRestriction', blank=True)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     datasources = models.ManyToManyField(DataSource)
     is_open = models.BooleanField(default=False)
@@ -126,32 +157,14 @@ class Project(CommonModel):
     def __str__(self):
         return self.title
 
-
-class Marker(CommonModel):
-    name = models.CharField(max_length=50, unique=True)
-    short = models.CharField(max_length=10, help_text='By default the capitalized first three character of the label', unique=True)
-    color = models.CharField(max_length=10, choices=settings.MARKER_COLORS)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
-    for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
-    shortcut = models.CharField(max_length=10, help_text="Keyboard shortcut for marking a piece of text with this label", null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        if (self.project and self.for_task_type):
-            raise ModelValidationError("The marker can be either project-specific or task-specific, not both")
-        elif (not self.project and not self.for_task_type):
-            raise ModelValidationError("The marker should be either project-specific or task-specific")
-        else:
-            if not self.short:
-                self.short = self.name[:3].upper()
-            super(Marker, self).save(*args, **kwargs)
-
-
-    def is_part_of_relation(self):
-        return bool(Relation.objects.filter(models.Q(first_node=self) | models.Q(second_node=self)).all())
-
+class MarkerCountRestriction(CommonModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    restriction_type = models.CharField(max_length=2, choices=[('no', '-'), ('ls', '<'), ('le', '<='), ('gs', '>'), ('ge', '>=')], default='no')
+    restriction_value = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return str(self.name)
+        return self.restriction_type + str(self.restriction_value)
 
 
 # TODO: put constraints on the markers - only markers belonging to project or task_type can be put!
