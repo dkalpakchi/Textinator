@@ -64,14 +64,9 @@ class Marker(CommonModel):
     shortcut = models.CharField(max_length=10, help_text="Keyboard shortcut for marking a piece of text with this label", null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if (self.project and self.for_task_type):
-            raise ModelValidationError("The marker can be either project-specific or task-specific, not both")
-        elif (not self.project and not self.for_task_type):
-            raise ModelValidationError("The marker should be either project-specific or task-specific")
-        else:
-            if not self.short:
-                self.short = self.name[:3].upper()
-            super(Marker, self).save(*args, **kwargs)
+        if not self.short:
+            self.short = self.name[:3].upper()
+        super(Marker, self).save(*args, **kwargs)
 
     def get_count_restriction(self, stringify=False):
         try:
