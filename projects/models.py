@@ -74,7 +74,10 @@ class Marker(CommonModel):
             super(Marker, self).save(*args, **kwargs)
 
     def get_count_restriction(self, stringify=False):
-        obj = Marker.project_set.through.objects.filter(marker=self).get()
+        try:
+            obj = Marker.project_set.through.objects.filter(marker=self).get()
+        except MarkerCountRestriction.DoesNotExist:
+            return ''
         if obj.restriction_type != 'no':
             return str(obj) if stringify else obj 
         else:

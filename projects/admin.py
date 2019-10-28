@@ -19,8 +19,8 @@ class MarkerCountRestrictionInline(admin.StackedInline):
     model = MarkerCountRestriction
     extra = 0
     classes = ['collapse']
-    verbose_name = "Project-specific marker"
-    verbose_name_plural = "Project-specific markers"
+    verbose_name = "Project marker"
+    verbose_name_plural = "Project markers"
 
 
 class LevelInline(admin.StackedInline):
