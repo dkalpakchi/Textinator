@@ -13,7 +13,7 @@
       </h4>
       <ul>
         {% for label in labels %}
-          <li>
+          <li {% if label.undone %}class="red"{% endif %}>
             {% if label.marker.short == 'COR' %}
               <b>{{label.text}}</b>
             {% else %}
