@@ -310,3 +310,27 @@ def undo_last(request, proj):
         'submitted': u_profile.submitted() if u_profile else 'NA',
         'submitted_today': u_profile.submitted_today() if u_profile else 'NA'
     })
+
+
+@login_required
+def data_explorer(request, proj):
+    project = Project.objects.filter(pk=proj).get()
+    inputs = Label.objects.filter(project=project).values('input').distinct().all()
+    labeled_inputs = [
+        (Input.objects.filter(pk=x['input']).get(), Label.objects.filter(input=x['input']).all())
+        for x in inputs
+    ]
+    return render(request, 'projects/data_explorer.html', {
+        'project': project,
+        'labeled_inputs': labeled_inputs
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def async_delete_input(request, proj, inp):
+    try:
+        Input.objects.filter(pk=inp).delete()
+    except:
+        pass
+    return redirect(request.META.get('HTTP_REFERER', '/'))

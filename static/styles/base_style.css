@@ -320,3 +320,28 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 .is-grey {
   background: rgba(0, 0, 0, 0.1)
 }
+
+.explorer {
+  padding-top: 1em;
+  max-height: 600px;
+  overflow-y: scroll;
+}
+
+.explorer .datapoint {
+  padding-bottom: 3em;
+}
+
+.explorer .datapoint ul {
+  counter-reset: list;
+  padding-bottom: 0.5em;
+}
+
+.explorer .datapoint ul > li {
+  list-style-position: inside;
+  list-style-type: none;
+}
+
+.explorer .datapoint ul > li:before {
+  content: counter(list, lower-alpha) ") ";
+  counter-increment: list;
+}

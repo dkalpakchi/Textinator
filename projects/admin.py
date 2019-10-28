@@ -132,7 +132,16 @@ class DataSourceForm(forms.ModelForm):
         fields = '__all__'
         # TODO: fork django-admin-json-editor and make SQL syntax highlighting with AceEditor
         DATA_SCHEMA = {
-            'type': 'object'
+            'type': 'object',
+            "properties": {
+                "texts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "textarea"
+                    }
+                }
+            }
         }
         widgets = {
             'spec': JSONEditorWidget(DATA_SCHEMA, collapsed=False),

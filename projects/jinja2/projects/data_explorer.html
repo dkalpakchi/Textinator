@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container is-fluid">
+  <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
+</div>
+<div class="container is-fluid explorer">
+  {% for input, labels in labeled_inputs %}
+    <div class="datapoint">
+      <h4 class='title is-4'>{{input.content}}</h4>
+      <ul>
+        {% for label in labels %}
+          <li>
+            {% if label.marker.short == 'COR' %}
+              <b>{{label.text}}</b>
+            {% else %}
+              {{label.text}}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <form method="POST" action="{{ url('projects:async_delete_input', kwargs={'inp': input.pk, 'proj': project.pk}) }}" id="deleteForm">
+        {{csrf_input}}
+        <div class="control">
+          <button class="ui button is-danger">
+            <span class="icon"><i class="fas fa-trash-alt"></i></span>
+            <span>Delete</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -22,7 +22,7 @@ $(document).ready(function() {
       var pos = $button.css('top') ? parseInt($button.css('top')) : $button.position().top;
       $button.css('top', pos + $el.scrollTop() - top);
       top = $el.scrollTop();
-      if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight - 200) {
+      if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight) {
         $button.hide();
       }
     });
@@ -30,7 +30,7 @@ $(document).ready(function() {
     $button.on('click', function(e) {
       e.preventDefault();
       $el.animate({ scrollTop: $el.scrollTop() + 200 }, 500);
-      if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight - 200) {
+      if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight) {
         $button.hide();
       }
     });
