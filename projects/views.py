@@ -315,9 +315,9 @@ def undo_last(request, proj):
 @login_required
 def data_explorer(request, proj):
     project = Project.objects.filter(pk=proj).get()
-    inputs = Label.objects.filter(project=project).values('input').distinct().all()
+    inputs = Label.objects.filter(project=project, undone=False).values('input').distinct().all()
     labeled_inputs = [
-        (Input.objects.filter(pk=x['input']).get(), Label.objects.filter(input=x['input']).all())
+        (Input.objects.filter(pk=x['input']).get(), Label.objects.filter(input=x['input'], undone=False).all())
         for x in inputs
     ]
     return render(request, 'projects/data_explorer.html', {
