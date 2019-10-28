@@ -19,6 +19,7 @@
             {% else %}
               {{label.text}}
             {% endif %}
+            <span>({{label.user}}, {{label.pk}})</span>
           </li>
         {% endfor %}
       </ul>
