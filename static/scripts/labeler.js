@@ -480,7 +480,7 @@ $(document).ready(function() {
             return true;
           } else {
             var diff = (needed - have)
-            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
+            messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
             return false;
           }
         } else if (res.slice(0, 2) == 'gs') {
@@ -488,7 +488,7 @@ $(document).ready(function() {
             return true;
           } else {
             var diff = (needed - have + 1)
-            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
+            messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
             return false;
           }
         } else if (res.slice(0, 2) == 'le') {

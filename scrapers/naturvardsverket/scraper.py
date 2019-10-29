@@ -1,6 +1,5 @@
 import re
 import json
-import time
 import uuid
 import requests
 from urllib.parse import urljoin

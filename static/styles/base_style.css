@@ -108,6 +108,14 @@ pre {
   flex-wrap: wrap;
 }
 
+.participations [data-link] {
+  border: 2px solid #3273dc;
+}
+
+.participations [data-link]:hover {
+  border: 2px solid black;
+}
+
 .join.form {
   margin-top: auto;
 }
