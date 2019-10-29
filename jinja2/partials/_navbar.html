@@ -53,13 +53,13 @@
     {% endif %}
     <li class='is-pulled-right'>
       <span class='text'>Welcome, {{user.get_full_name() or user.username}}!</span>
-      {% if project %}
-        <a href="{{ url('projects:data_explorer', kwargs={'proj': project.pk}) }}" class='admin'>
-          <span class="icon is-small"><i class="fas fa-chart-bar"></i></span>
-          <span>Data explorer</span>
-        </a>
-      {% endif %}
       {% if user.is_staff %}
+        {% if project%}
+          <a href="{{ url('projects:data_explorer', kwargs={'proj': project.pk}) }}" class='admin'>
+            <span class="icon is-small"><i class="fas fa-chart-bar"></i></span>
+            <span>Data explorer</span>
+          </a>
+        {% endif %}
         <a href="{{ url('admin:index') }}" class='admin'>
           <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
           <span>Admin</span>

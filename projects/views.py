@@ -314,17 +314,20 @@ def undo_last(request, proj):
 
 @login_required
 def data_explorer(request, proj):
-    project = Project.objects.filter(pk=proj).get()
-    inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()
-    inputs = Input.objects.filter(pk__in=inputs_pks).order_by('-dt_created').all()
-    labeled_inputs = [
-        (inp, Label.objects.filter(input=inp, undone=False).all())
-        for inp in inputs
-    ]
-    return render(request, 'projects/data_explorer.html', {
-        'project': project,
-        'labeled_inputs': labeled_inputs
-    })
+    if request.user.is_staff:
+        project = Project.objects.filter(pk=proj).get()
+        inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()
+        inputs = Input.objects.filter(pk__in=inputs_pks).order_by('-dt_created').all()
+        labeled_inputs = [
+            (inp, Label.objects.filter(input=inp, undone=False).all())
+            for inp in inputs
+        ]
+        return render(request, 'projects/data_explorer.html', {
+            'project': project,
+            'labeled_inputs': labeled_inputs
+        })
+    else:
+        raise Http404
 
 
 @login_required
