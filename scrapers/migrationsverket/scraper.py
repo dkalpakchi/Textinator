@@ -10,11 +10,22 @@ addresses = json.load(open('migrationsverket_urls'))['urls']
 
 
 def get_text_from_printable(html_text):
+    def get_text(text):
+        if len(parts) > 0:
+            return f'#{title}\n\n{text}'
+        else:
+            return text
+
     soup = BeautifulSoup(html_text, 'html.parser')
 
     parts = []
     text, num_elements, link_content = "", 0, ""
     header_start = 0 # where a new header have started
+
+    title_tag, title = soup.find('title'), ''
+    if title_tag:
+        title += title_tag.text.strip().split('-')[0].strip()
+
     for div in soup.find_all('div', {'class': 'sv-text-portlet-content'}):
         parent = div.parent
         if parent.has_attr('class') and 'c41' in parent['class']:
@@ -75,17 +86,15 @@ def get_text_from_printable(html_text):
             if len(text.split()) > 400:
                 if header_start > 0:
                     if len(text[:header_start].split()) > 200:
-                        parts.append(text[:header_start].strip())
+                        parts.append(get_text(text[:header_start].strip()))
                         text = text[header_start:]
                     else:
-                        parts.append(text.strip())
+                        parts.append(get_text(text.strip()))
                         text = ""
                 header_start = 0
 
-    if len(text.split()) < 100 and len(parts) > 0:
-        parts[-1] += text
-    else:
-        parts.append(text)
+    if len(text.split()) > 200:
+        parts.append(get_text(text))
 
     return parts
 

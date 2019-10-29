@@ -29,7 +29,13 @@ $(document).ready(function() {
 
     $button.on('click', function(e) {
       e.preventDefault();
-      $el.animate({ scrollTop: $el.scrollTop() + 200 }, 500);
+      $button.prop('disabled', true);
+      $el.animate({ scrollTop: $el.scrollTop() + 200 }, {
+        duration: 500,
+        complete: function() {
+          $button.prop('disabled', false);
+        }
+      });
       if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight) {
         $button.hide();
       }
@@ -474,7 +480,7 @@ $(document).ready(function() {
             return true;
           } else {
             var diff = (needed - have)
-            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
             return false;
           }
         } else if (res.slice(0, 2) == 'gs') {
@@ -482,23 +488,21 @@ $(document).ready(function() {
             return true;
           } else {
             var diff = (needed - have + 1)
-            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            messages.push('You need ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
             return false;
           }
         } else if (res.slice(0, 2) == 'le') {
           if (have <= needed) {
             return true;
           } else {
-            var diff = (needed - have)
-            messages.push('You need ' + diff + ' less "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            messages.push('You can have max ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''));
             return false;
           }
         } else if (res.slice(0, 2) == 'ls') {
           if (have < needed) {
             return true;
           } else {
-            var diff = (needed - have + 1)
-            messages.push('You need ' + diff + ' less "' + label + '" ' + 'label' + (diff > 1 ? 's "' : ''));
+            messages.push('You can have max ' + (needed - 1) + ' "' + label + '" ' + 'label' + ((needed - 1) > 1 ? 's' : ''));
             return false;
           }
         } else
