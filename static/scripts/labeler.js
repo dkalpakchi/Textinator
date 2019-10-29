@@ -150,7 +150,7 @@ $(document).ready(function() {
   $('article.text span.tag').on('click', function(e) {
     e.preventDefault();
     if (!$(e.target).prop('in_relation'))
-      e.target.classList.add('active');
+      e.target.classList.toggle('active');
   })
 
   // labeling piece of text with a given marker if the marker is clicked
@@ -184,7 +184,7 @@ $(document).ready(function() {
 
       markedSpan.addEventListener('click', function(e) {
         if (!$(e.target).prop('in_relation'))
-          e.target.classList.add('active');
+          e.target.classList.toggle('active');
       })
 
       if (chunk['node'] !== undefined && chunk['node'] != null) {
@@ -206,8 +206,81 @@ $(document).ready(function() {
     }
   });
 
+
+  function checkRestrictions(inRelation) {
+    if (inRelation === undefined) inRelation = false;
+
+    var markers = document.querySelectorAll('.marker.tags[data-res]');
+    var messages = [];
+
+    var satisfied = Array.from(markers).map(function(x, i) {
+      var res = x.getAttribute('data-res');
+
+      if (res) {
+        var have = inRelation ? 
+          document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"].active').length :
+          document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]').length
+        var needed = parseInt(res.slice(2)),
+            restriction = res.slice(0, 2),
+            label = x.querySelector('span.tag').textContent;
+        if (restriction == 'ge') {
+          if (have >= needed) {
+            return true;
+          } else {
+            var diff = (needed - have)
+            messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
+            return false;
+          }
+        } else if (restriction == 'gs') {
+          if (have > needed) {
+            return true;
+          } else {
+            var diff = (needed - have + 1)
+            messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
+            return false;
+          }
+        } else if (restriction == 'le') {
+          if (have <= needed) {
+            return true;
+          } else {
+            messages.push('You can have max ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''));
+            return false;
+          }
+        } else if (restriction == 'ls') {
+          if (have < needed) {
+            return true;
+          } else {
+            messages.push('You can have max ' + (needed - 1) + ' "' + label + '" ' + 'label' + ((needed - 1) > 1 ? 's' : ''));
+            return false;
+          }
+        } else if (restriction == 'eq') {
+          if (have == needed) {
+            return true;
+          } else {
+            messages.push('You need to have exactly ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''))
+            return false;
+          }
+        } else {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }, markers);
+
+    var numSatisfied = satisfied.reduce(function(acc, val) { return acc + val; }, 0);
+
+    if (numSatisfied != markers.length) {
+      alert(messages.join('\n'));
+    }
+    return numSatisfied == markers.length
+  }
+
+
   // putting the activated labels in a relationship
   $('.relation.tags').on('click', function() {
+    if (!checkRestrictions(true)) return;
+
     var $parts = $('.selector span.tag.active'),
         between = this.getAttribute('data-b').split('-:-'),
         direction = this.getAttribute('data-d'),
@@ -464,62 +537,6 @@ $(document).ready(function() {
     return false;
   }
 
-  function checkRestrictions() {
-    var markers = document.querySelectorAll('.marker.tags[data-res]');
-    var messages = [];
-
-    var satisfied = Array.from(markers).map(function(x, i) {
-      var res = x.getAttribute('data-res');
-
-      if (res) {
-        var have = document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]').length,
-            needed = parseInt(res.slice(2)),
-            label = x.querySelector('span.tag').textContent;
-        if (res.slice(0, 2) == 'ge') {
-          if (have >= needed) {
-            return true;
-          } else {
-            var diff = (needed - have)
-            messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
-            return false;
-          }
-        } else if (res.slice(0, 2) == 'gs') {
-          if (have > needed) {
-            return true;
-          } else {
-            var diff = (needed - have + 1)
-            messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
-            return false;
-          }
-        } else if (res.slice(0, 2) == 'le') {
-          if (have <= needed) {
-            return true;
-          } else {
-            messages.push('You can have max ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''));
-            return false;
-          }
-        } else if (res.slice(0, 2) == 'ls') {
-          if (have < needed) {
-            return true;
-          } else {
-            messages.push('You can have max ' + (needed - 1) + ' "' + label + '" ' + 'label' + ((needed - 1) > 1 ? 's' : ''));
-            return false;
-          }
-        } else
-          return true;
-      } else {
-        return true;
-      }
-    }, markers);
-
-    var numSatisfied = satisfied.reduce(function(acc, val) { return acc + val; }, 0);
-
-    if (numSatisfied != markers.length) {
-      alert(messages.join('\n'));
-    }
-    return numSatisfied == markers.length
-  }
-
   // submitting the marked labels and/or relations with(out) inputs
   $('#inputForm .submit.button').on('click', function(e) {
     e.preventDefault();
@@ -665,7 +682,7 @@ $(document).ready(function() {
 
           $('article.text span.tag').on('click', function(e) {
             if (!$(e.target).prop('in_relation'))
-              e.target.classList.add('active');
+              e.target.classList.toggle('active');
           })
 
           initPreMarkers();

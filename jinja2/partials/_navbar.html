@@ -1,7 +1,7 @@
 <div class="tabs">
   <ul>
     <li class='logo'>
-      Textinator
+      <a href="/textinator">Textinator</a>
     </li>
     {% if request.path == url('projects:index') %}
     <li class="challenges{% if request.GET.n == 'p' or 'n' not in request.GET %} is-active{% endif %}" data-tab="participations">

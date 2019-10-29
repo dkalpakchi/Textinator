@@ -158,7 +158,7 @@ class Project(CommonModel):
 class MarkerCountRestriction(CommonModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    restriction_type = models.CharField(max_length=2, choices=[('no', '-'), ('ls', '<'), ('le', '<='), ('gs', '>'), ('ge', '>=')], default='no')
+    restriction_type = models.CharField(max_length=2, choices=[('no', '-'), ('ls', '<'), ('le', '<='), ('gs', '>'), ('ge', '>='), ('eq', '=')], default='no')
     restriction_value = models.PositiveIntegerField(default=0)
 
     def __str__(self):
