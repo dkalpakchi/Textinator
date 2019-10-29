@@ -7,3 +7,4 @@ media/*
 scrapers/example*
 *.sh
 .env
+log/*
