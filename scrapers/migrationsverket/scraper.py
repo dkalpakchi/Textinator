@@ -26,6 +26,10 @@ def get_text_from_printable(html_text):
     if title_tag:
         title += title_tag.text.strip().split('-')[0].strip()
 
+    if title == 'Om du vill överklaga':
+        # skip these pages
+        return parts
+
     for div in soup.find_all('div', {'class': 'sv-text-portlet-content'}):
         parent = div.parent
         if parent.has_attr('class') and 'c41' in parent['class']:
