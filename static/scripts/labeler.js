@@ -218,8 +218,8 @@ $(document).ready(function() {
 
       if (res) {
         var have = inRelation ? 
-          document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"].active').length :
-          document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]').length
+          document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"].active:not(.is-disabled)').length :
+          document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]:not(.is-disabled)').length
         var needed = parseInt(res.slice(2)),
             restriction = res.slice(0, 2),
             label = x.querySelector('span.tag').textContent;
@@ -547,6 +547,11 @@ $(document).ready(function() {
     var $inputForm = $('#inputForm'),
         $qInput = $inputForm.find('input.question'),
         $questionBlock = $('article.question');
+
+    if ($qInput.val().trim() == 0) {
+      alert("Please write a question first.");
+      return;
+    }
 
     $qInput.prop("disabled", false);
 
