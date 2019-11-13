@@ -45,6 +45,7 @@ class DataSource:
         return self.__data
 
     def get_random_datapoint(self):
+        # return a tuple of (id, datapoint with this id)
         pass
 
     def size(self):
@@ -64,7 +65,8 @@ class PlainTextSource(DataSource):
             self._add_datapoint(text)
 
     def get_random_datapoint(self):
-        return self[random.randint(0, self.size() - 1)]
+        idx = random.randint(0, self.size() - 1)
+        return idx, self[idx]
 
 
 class TextFileSource(DataSource):
@@ -79,7 +81,8 @@ class TextFileSource(DataSource):
                 self._add_datapoint(f.read())
 
     def get_random_datapoint(self):
-        return self[random.randint(0, self.size() - 1)]
+        idx = random.randint(0, self.size() - 1)
+        return idx, self[idx]
 
     def size(self):
         return len(self.__data)
@@ -133,10 +136,11 @@ class DbSource(DataSource):
         if self.__rand_dp_query:
             cur = self.__conn.cursor()
             cur.execute(self.__rand_dp_query)
-            text = cur.fetchone()[0]
+            idx, text = cur.fetchone()
             cur.close()
-            return text.decode('utf8')
+            return idx, text.decode('utf8')
         elif self.__db_type == 'mongodb':
+            # TODO add id
             db = self.__conn[self.__database]
             collection = db[self.__collection]
             cursor = collection.aggregate([{ "$sample": { "size": 1 } }])
@@ -198,5 +202,6 @@ class JsonSource(DataSource):
                 self._add_datapoint(d[self.get_spec('key')])
 
     def get_random_datapoint(self):
-        return self[random.randint(0, self.size() - 1)]
+        idx = random.randint(0, self.size() - 1)
+        return idx, self[idx]
 

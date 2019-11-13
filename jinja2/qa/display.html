@@ -1,79 +1,87 @@
 {% if project.dt_finish <= now %}
   <div class="columns">
     <div class="column is-three-quarters">
-      <article class="text message">
+      <article class="{% if source_id != -1 %}text {% endif %}message">
         <div class="message-header">
           <p>Text</p>
           <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
         </div>
-        <div class="selector element content message-body" data-s="{{idsource}}">{{text|prettify}}</div>
-      </article>
-      <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
-        <div class="message-header">
-          <p>Markers</p>
+        <div class="selector element content message-body" data-s="{{source_id}}" data-dp="{{dp_id}}" data-f="{{source_finished}}">
+          {% if source_id != -1 %}
+            {{text|prettify}}
+          {% else %}
+            {% include 'partials/_great_job.html' %}
+          {% endif %}
         </div>
-        <div class="message-body">
-          <div class="field is-grouped is-grouped-multiline">
-            {% set project_markers=project.markers.all() %}
-            {% for marker in task_markers %}
-              {% if marker not in project_markers %}
+      </article>
+      {% if source_id != -1 %}
+        <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
+          <div class="message-header">
+            <p>Markers</p>
+          </div>
+          <div class="message-body">
+            <div class="field is-grouped is-grouped-multiline">
+              {% set project_markers=project.markers.distinct() %}
+              {% for marker in task_markers %}
+                {% if marker not in project_markers %}
+                  <div class="control">
+                    {{marker|display_marker}}
+                  </div>
+                {% endif %}
+              {% endfor %}
+              {% for marker in project_markers %}
                 <div class="control">
                   {{marker|display_marker}}
                 </div>
-              {% endif %}
-            {% endfor %}
-            {% for marker in project_markers %}
-              <div class="control">
-                {{marker|display_marker}}
-              </div>
-            {% endfor %}
-            {% for relation in task_relations %}
-              <div class="control">
-                {{relation|display_relation}}
-              </div>
-            {% endfor %}
-            {% for relation in project.relation_set.all() %}
-              <div class="control">
-                {{relation|display_relation}}
-              </div>
-            {% endfor %}
+              {% endfor %}
+              {% for relation in task_relations %}
+                <div class="control">
+                  {{relation|display_relation}}
+                </div>
+              {% endfor %}
+              {% for relation in project.relation_set.all() %}
+                <div class="control">
+                  {{relation|display_relation}}
+                </div>
+              {% endfor %}
+            </div>
           </div>
-        </div>
-      </article>
-      <article class="question message is-primary">
-        <div class="message-header">
-          <p>Your question</p>
-        </div>
-        <div class="message-body">
-          <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
-            {{ csrf_input }}
-            <input type="hidden" name="pid" value="{{project.pk}}">
-            <div class="field">
-              <div class="control">
-                <input class='question input' type="text" name="input" placeholder="Type in your question here">
-              </div>
-            </div>
-            <div class="field is-grouped">
-              <div class="control">
-                <button class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></button>
-              </div>
-              <div class="control">
-                <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last submission</span></button>
-              </div>
-              {% if not project.round_length or project.round_length > 1 %}
-                <div class='control'>
-                  <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle"><span class="icon"><i class="fas fa-newspaper"></i></span><span>Get new text</span></a>
+        </article>
+        <article class="question message is-primary">
+          <div class="message-header">
+            <p>Your question</p>
+          </div>
+          <div class="message-body">
+            <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
+              {{ csrf_input }}
+              <input type="hidden" name="pid" value="{{project.pk}}">
+              <div class="field">
+                <div class="control">
+                  <input class='question input' type="text" name="input" placeholder="Type in your question here">
                 </div>
-              {% endif %}
-              {% if project.round_length %}
-                <div class='control'>
-                  <a href="{{ url('projects:new_article', kwargs={'proj':project.pk}) }}" class="button" id="finishRound" data-active="{{'t' if project.round_length == 1 else 'f'}}">Finish round</a>
+              </div>
+              <div class="field is-grouped">
+                <div class="control">
+                  <button class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></button>
                 </div>
-              {% endif %}
-            </div>
-          </form>
-        </div>
-      </article>
+                <div class="control">
+                  <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last submission</span></button>
+                </div>
+                {% if not project.round_length or project.round_length > 1 %}
+                  <div class='control'>
+                    <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle"><span class="icon"><i class="fas fa-newspaper"></i></span><span>Get new text</span></a>
+                  </div>
+                {% endif %}
+                {% if project.round_length %}
+                  <div class='control'>
+                    <a href="{{ url('projects:new_article', kwargs={'proj':project.pk}) }}" class="button" id="finishRound" data-active="{{'t' if project.round_length == 1 else 'f'}}">Finish round</a>
+                  </div>
+                {% endif %}
+              </div>
+            </form>
+          </div>
+        </article>
+      {% endif %}
     </div>
     <div class="column">
       {% if project.reminders %}

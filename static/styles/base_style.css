@@ -1,3 +1,7 @@
+body[is-inside] {
+  overflow: hidden;
+}
+
 @font-face {
   font-family: 'Terminator Real NFI';
   font-style: normal;

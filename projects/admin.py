@@ -65,8 +65,47 @@ class RelationInline(admin.StackedInline):
     verbose_name_plural = "Project-specific relations"
 
 
+class ProjectForm(forms.ModelForm):
+    datasources = forms.ModelMultipleChoiceField(queryset=DataSource.objects.all())
+
+    class Meta:
+        model = Project
+        fields = [
+            'title', 'short_description', 'institution', 'supported_by', 'guidelines', 'reminders',
+            'video_summary', 'sampling_with_replacement', 'context_size', 'task_type', 'dt_publish',
+            'dt_finish', 'collaborators', 'author', 'datasources', 'is_open', 'is_peer_reviewed',
+            'max_markers_per_input', 'round_length', 'points_scope', 'points_unit'
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        obj = kwargs.get('instance')
+        if obj:
+            source_ids = ProjectData.objects.filter(project=obj).values_list('datasource', flat=True)
+            self.initial['datasources'] = source_ids
+
+    def save(self, commit=True):
+        print(self.cleaned_data)
+        sent_ds = set(self.cleaned_data.pop('datasources'))
+        instance = forms.ModelForm.save(self, commit=False)
+        
+        project = Project.objects.get(pk=instance.pk)
+        existing_ds = set(DataSource.objects.filter(pk__in=ProjectData.objects.filter(
+            project=project).values_list('datasource', flat=True)).all())
+        print(sent_ds | existing_ds)
+        for ds in (existing_ds | sent_ds):
+            if ds in existing_ds:
+                if ds not in sent_ds:
+                    # remove DS
+                    ProjectData.objects.get(project=project, datasource=ds).delete()
+            else:
+                ProjectData.objects.create(project=project, datasource=ds)
+        return instance
+
+
 @admin.register(Project)
 class ProjectAdmin(CommonModelAdmin):
+    form = ProjectForm
     inlines = [MarkerCountRestrictionInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
 
     def save_model(self, request, obj, form, change):

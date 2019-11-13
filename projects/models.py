@@ -2,6 +2,7 @@ import random
 import re
 import string
 from datetime import datetime
+from collections import defaultdict
 
 from django.db import models
 from django.conf import settings
@@ -68,15 +69,12 @@ class Marker(CommonModel):
             self.short = self.name[:3].upper()
         super(Marker, self).save(*args, **kwargs)
 
-    def get_count_restriction(self, stringify=False):
+    def get_count_restrictions(self, stringify=True):
         try:
-            obj = Marker.project_set.through.objects.filter(marker=self).get()
+            restrictions = list(Marker.project_set.through.objects.filter(marker=self).all())
         except MarkerCountRestriction.DoesNotExist:
             return ''
-        if obj.restriction_type != 'no':
-            return str(obj) if stringify else obj 
-        else:
-            return ''
+        return '&'.join([str(r) for r in restrictions]) if stringify else restrictions
 
     def is_part_of_relation(self):
         return bool(Relation.objects.filter(models.Q(first_node=self) | models.Q(second_node=self)).all())
@@ -93,6 +91,7 @@ class Project(CommonModel):
     guidelines = HTMLField(null=True, blank=True)
     reminders = HTMLField(null=True, blank=True)
     video_summary = FileBrowseField(max_length=1000, null=True, blank=True)
+    sampling_with_replacement = models.BooleanField(default=True)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
     context_size = models.CharField(max_length=2, choices=[('no', 'No context'), ('t', 'Text'), ('p', 'Paragraph')])
@@ -104,7 +103,7 @@ class Project(CommonModel):
     participants = models.ManyToManyField(User, related_name='participations', through='UserProfile', blank=True)
     markers = models.ManyToManyField(Marker, through='MarkerCountRestriction', blank=True)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    datasources = models.ManyToManyField(DataSource)
+    datasources = models.ManyToManyField(DataSource, through='ProjectData')
     is_open = models.BooleanField(default=False)
     is_peer_reviewed = models.BooleanField(default=False)
     max_markers_per_input = models.PositiveIntegerField(null=True, blank=True)
@@ -116,7 +115,14 @@ class Project(CommonModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def data(self):
+    def data(self, user):
+        dp_taboo = defaultdict(set)
+        if not self.sampling_with_replacement:
+            pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
+            logs = DataAccessLog.objects.filter(project_data__pk__in=pdata, user=user).all()
+            for log in logs:
+                dp_taboo[log.project_data.datasource.pk].add(log.datapoint)
+
         datasources = []
         for source in self.datasources.all():
             source_cls = DataSource.type2class(source.source_type)
@@ -133,13 +139,46 @@ class Project(CommonModel):
         priors_cumsum = [sum(priors[:i+1]) for i in range(len(priors))]
 
         rnd = random.random()
-        ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))]) - 1
+        ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
 
-        ds, postprocess, ids = datasources[ds_ind]
+        ds, postprocess, idx = datasources[ds_ind]
 
-        # now choose a random datapoint from the chosen dataset and return a datasource id as well
-        return postprocess(ds.get_random_datapoint()).strip(), ids
+        ds_ind_taboo, finished_all = set(), False
+        if len(dp_taboo[idx]) >= sizes[ds_ind]:
+            # try to select a new datasource that is not finished yet
+            while len(dp_taboo[idx]) >= sizes[ds_ind]:
+                # means this datasource is done, add it to the taboo list
+                ds_ind_taboo.add(ds_ind)
 
+                if len(ds_ind_taboo) >= nds:
+                    # means we're done
+                    finished_all = True
+                    break
+
+                while ds_ind in ds_ind_taboo:
+                    rnd = random.random()
+                    ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
+
+                ds, postprocess, idx = datasources[ds_ind]
+
+        if not finished_all:
+            # get the id of the random datapoint and the datapoint itself
+            dp_id, dp = ds.get_random_datapoint()
+
+            if idx in dp_taboo:
+                # get a random DP that is not in taboo list
+                # NOTE: we stringify all datapoint ids for taboo for the sake of generality
+                while str(dp_id) in dp_taboo[idx]:
+                    dp_id, dp = ds.get_random_datapoint()
+
+            # return:
+            # -> a post-processed random datapoint from the chosen dataset
+            # -> the point's id in the datasource 
+            # -> datasource id
+            return postprocess(dp).strip(), dp_id, ds.size(), idx
+        else:
+            return "NAN", -1, -1, -1
+        
     def get_profile_for(self, user):
         try:
             return UserProfile.objects.get(project=self, user=user)
@@ -155,7 +194,11 @@ class Project(CommonModel):
     def __str__(self):
         return self.title
 
+
 class MarkerCountRestriction(CommonModel):
+    class Meta:
+        unique_together = (('project', 'marker', 'restriction_type'),)
+
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     restriction_type = models.CharField(max_length=2, choices=[('no', '-'), ('ls', '<'), ('le', '<='), ('gs', '>'), ('ge', '>='), ('eq', '=')], default='no')
@@ -163,6 +206,20 @@ class MarkerCountRestriction(CommonModel):
 
     def __str__(self):
         return self.restriction_type + str(self.restriction_value)
+
+
+class ProjectData(CommonModel):
+    class Meta:
+        unique_together = (('project', 'datasource'),)
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+
+
+class DataAccessLog(CommonModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    project_data = models.ForeignKey(ProjectData, on_delete=models.CASCADE)
+    datapoint = models.CharField(max_length=64)
 
 
 # TODO: put constraints on the markers - only markers belonging to project or task_type can be put!

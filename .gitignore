@@ -8,3 +8,4 @@ scrapers/example*
 *.sh
 .env
 log/*
+static_cdn/*

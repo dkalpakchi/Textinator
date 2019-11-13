@@ -214,57 +214,59 @@ $(document).ready(function() {
     var messages = [];
 
     var satisfied = Array.from(markers).map(function(x, i) {
-      var res = x.getAttribute('data-res');
+      var res = x.getAttribute('data-res').split('&');
 
-      if (res) {
-        var have = inRelation ? 
-          document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"].active:not(.is-disabled)').length :
-          document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]:not(.is-disabled)').length
-        var needed = parseInt(res.slice(2)),
-            restriction = res.slice(0, 2),
-            label = x.querySelector('span.tag').textContent;
-        if (restriction == 'ge') {
-          if (have >= needed) {
-            return true;
+      for (var i = 0, len = res.length; i < len; i++) {
+        if (res[i]) {
+          var have = inRelation ? 
+            document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"].active:not(.is-disabled)').length :
+            document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]:not(.is-disabled)').length
+          var needed = parseInt(res[i].slice(2)),
+              restriction = res[i].slice(0, 2),
+              label = x.querySelector('span.tag').textContent;
+          if (restriction == 'ge') {
+            if (have >= needed) {
+              return true;
+            } else {
+              var diff = (needed - have)
+              messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
+              return false;
+            }
+          } else if (restriction == 'gs') {
+            if (have > needed) {
+              return true;
+            } else {
+              var diff = (needed - have + 1)
+              messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
+              return false;
+            }
+          } else if (restriction == 'le') {
+            if (have <= needed) {
+              return true;
+            } else {
+              messages.push('You can have max ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''));
+              return false;
+            }
+          } else if (restriction == 'ls') {
+            if (have < needed) {
+              return true;
+            } else {
+              messages.push('You can have max ' + (needed - 1) + ' "' + label + '" ' + 'label' + ((needed - 1) > 1 ? 's' : ''));
+              return false;
+            }
+          } else if (restriction == 'eq') {
+            if (have == needed) {
+              return true;
+            } else {
+              messages.push('You need to have exactly ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''))
+              return false;
+            }
           } else {
-            var diff = (needed - have)
-            messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
-            return false;
-          }
-        } else if (restriction == 'gs') {
-          if (have > needed) {
             return true;
-          } else {
-            var diff = (needed - have + 1)
-            messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
-            return false;
-          }
-        } else if (restriction == 'le') {
-          if (have <= needed) {
-            return true;
-          } else {
-            messages.push('You can have max ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''));
-            return false;
-          }
-        } else if (restriction == 'ls') {
-          if (have < needed) {
-            return true;
-          } else {
-            messages.push('You can have max ' + (needed - 1) + ' "' + label + '" ' + 'label' + ((needed - 1) > 1 ? 's' : ''));
-            return false;
-          }
-        } else if (restriction == 'eq') {
-          if (have == needed) {
-            return true;
-          } else {
-            messages.push('You need to have exactly ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''))
-            return false;
           }
         } else {
           return true;
         }
-      } else {
-        return true;
       }
     }, markers);
 
@@ -564,12 +566,15 @@ $(document).ready(function() {
 
     inputFormData['relations'] = JSON.stringify(relations);
 
+    var $selector = $('.selector.element');
+
     // if there are any relations, submit only those chunks that have to do with the relations
     // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relation
     inputFormData['chunks'] = relations.length > 0 ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
     inputFormData['is_review'] = underReview;
     inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
-    inputFormData['datasource'] = parseInt($('.selector.element').attr('data-s'));
+    inputFormData['datasource'] = parseInt($selector.attr('data-s'));
+    inputFormData['datapoint'] = parseInt($selector.attr('data-dp'));
 
     if (inputFormData['chunks'].length > 0 || relations.length > 0) {
       inputFormData['chunks'] = JSON.stringify(inputFormData['chunks']);
@@ -676,25 +681,61 @@ $(document).ready(function() {
           "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val()
         },
         success: function(d) {
-          $('.selector').html(d.text);
-          chunks = [];
-          labelId = $('article.text').find('span.tag').length; // count the number of pre-markers
-          activeLabels = labelId;
-          resetTextHTML = selectorArea.innerHTML;
-          resetText = selectorArea.textContent;
+          var $selector = $('.selector');
+          // update text, source id and datapoint id
+          $selector.attr('data-s', d.source_id);
+          $selector.attr('data-dp', d.dp_id);
 
-          $('#undoLast').attr('disabled', true);
+          if (d.source_id == -1) {
+            var $text = $selector.closest('article.text');
+            if ($text) {
+              $text.removeClass('text');
+            }
 
-          $('article.text span.tag').on('click', function(e) {
-            if (!$(e.target).prop('in_relation'))
-              e.target.classList.toggle('active');
-          })
+            // TODO: great_job image path should be dynamic
+            $selector.html('\
+              <div class="hero is-large">\
+                <div class="hero-body">\
+                  <div class="container">\
+                    <div class="columns is-vcentered">\
+                      <div class="column is-2">\
+                        <figure class="image is-128x128">\
+                          <img src="/textinator/static/images/great_job.png" alt="">\
+                        </figure>\
+                      </div>\
+                      <div class="column">\
+                        <h1 class="title">\
+                          You have finished this challenge!\
+                          <p class="subtitle">Thank you for the participation! Your contribution to the research is invaluable!</p>\
+                        </h1>\
+                      </div>\
+                    </div>\
+                  </div>\
+                </div>\
+              </div>')
+            $text.siblings('article').remove()
+          } else {
+            $selector.html(d.text);
 
-          initPreMarkers();
+            chunks = [];
+            labelId = $('article.text').find('span.tag').length; // count the number of pre-markers
+            activeLabels = labelId;
+            resetTextHTML = selectorArea.innerHTML;
+            resetText = selectorArea.textContent;
 
+            $('#undoLast').attr('disabled', true);
+
+            $('article.text span.tag').on('click', function(e) {
+              if (!$(e.target).prop('in_relation'))
+                e.target.classList.toggle('active');
+            })
+
+            initPreMarkers();
+
+            el.attr('data-s', d.idsource);
+            $button.attr('disabled', false);
+          }
           el.removeClass('is-loading');
-          el.attr('data-s', d.idsource);
-          $button.attr('disabled', false);
         },
         error: function() {
           console.log("ERROR!")

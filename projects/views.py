@@ -53,10 +53,29 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
         u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 
-        dp, ids = proj.data()
+        dp, dp_id, source_size, source_id = proj.data(u)
+
+        logs = None
+        if source_id != -1:
+            try:
+                p_data = ProjectData.objects.get(project=proj, datasource=DataSource.objects.get(pk=source_id))
+                logs = DataAccessLog.objects.filter(user=u, project_data=p_data).count()
+            except DataSource.DoesNotExist:
+                print("DataSource does not exist")
+                pass
+            except DataAccessLog.DoesNotExist:
+                print("DataAccessLog does not exist")
+                pass
+            except ProjectData.DoesNotExist:
+                print("ProjectData does not exist")
+                pass
+
         ctx = {
             'text': apply_premarkers(proj, dp),
-            'idsource': ids,
+            'source_id': source_id,
+            'source_size':  source_size,
+            'dp_id': dp_id,
+            'source_finished': logs + 1 >= source_size if logs else False,
             'project': proj,
             'task_markers': task_markers,
             'task_relations': task_relations,
@@ -97,6 +116,9 @@ def record_datapoint(request, proj):
         project = Project.objects.get(pk=proj)
         u_profile = UserProfile.objects.get(user=user, project=project)
         data_source = DataSource.objects.get(pk=data['datasource'])
+
+        project_data = ProjectData.objects.get(project=project, datasource=data_source)
+        DataAccessLog.objects.create(user=user, project_data=project_data, datapoint=str(data['datapoint']))
     except Project.DoesNotExist:
         raise Http404
     except UserProfile.DoesNotExist:
@@ -219,10 +241,12 @@ def profile(request, username):
 @require_http_methods("POST")
 def new_article(request, proj):
     project = Project.objects.get(pk=proj)
-    dp, ids = project.data()
+    dp, dp_id, source_size, source_id = project.data(request.user)
     return JsonResponse({
         'text': prettify(apply_premarkers(project, dp)),
-        'idsource': ids
+        'source_id': source_id,
+        'source_size':  source_size,
+        'dp_id': dp_id
     })
 
 
