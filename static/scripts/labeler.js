@@ -106,7 +106,7 @@ $(document).ready(function() {
       var parentSibling = parent.previousElementSibling;
       while (parentSibling != null) {
         if (parentSibling.tagName == "P") {
-          len += parentSibling.textContent.length + 2; // +2 because P
+          len += parentSibling.textContent.length + 1; // +2 because P
         }
         parentSibling = parentSibling.previousElementSibling;
       }
@@ -550,7 +550,7 @@ $(document).ready(function() {
         $qInput = $inputForm.find('input.question'),
         $questionBlock = $('article.question');
 
-    if ($qInput.val().trim() == 0) {
+    if ($qInput.length > 0 && $qInput.val().trim() == 0) {
       alert("Please write a question first.");
       return;
     }
@@ -602,9 +602,11 @@ $(document).ready(function() {
               //       make it a configurable project setting
               $title.html("Your question");
 
-              $qInput.prop("disabled", false);
-              $qInput.val('');
-              $qInput.focus();
+              if ($qInput.length > 0) {
+                $qInput.prop("disabled", false);
+                $qInput.val('');
+                $qInput.focus();  
+              }
             } else {
               // review task
               removeAllChildren(articleNode);
@@ -616,8 +618,10 @@ $(document).ready(function() {
 
               $title.html("Review question");
 
-              $qInput.val(data['input']['content']);
-              $qInput.prop("disabled", true);
+              if ($qInput.length > 0) {
+                $qInput.val(data['input']['content']);
+                $qInput.prop("disabled", true);
+              }
             }
           }
 
