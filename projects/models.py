@@ -106,6 +106,8 @@ class Project(CommonModel):
     datasources = models.ManyToManyField(DataSource, through='ProjectData')
     is_open = models.BooleanField(default=False)
     is_peer_reviewed = models.BooleanField(default=False)
+    allow_selecting_labels = models.BooleanField(default=False)
+    allow_commenting_on_labels = models.BooleanField(default=False)
     max_markers_per_input = models.PositiveIntegerField(null=True, blank=True)
     round_length = models.PositiveIntegerField(null=True, blank=True, help_text="The number of text snippets consituting one round of the game")
     points_scope = models.CharField(max_length=2, choices=[('n', 'No points'), ('i', 'Per input'), ('l', 'Per label')],
@@ -285,6 +287,7 @@ class Label(CommonModel):
     start = models.PositiveIntegerField(null=True)
     end = models.PositiveIntegerField(null=True)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    comment = models.TextField(null=True, blank=True)
     input = models.ForeignKey(Input, on_delete=models.CASCADE, null=True, blank=True)     # if input is there, input should be not NULL
     context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True, blank=True) # if there is no input, there must be context
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

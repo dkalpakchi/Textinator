@@ -60,4 +60,5 @@ def environment(**options):
     env.filters['display_marker'] = display_marker
     env.filters['display_relation'] = display_relation
     env.filters['prettify'] = prettify
+    env.filters['bool2str'] = lambda x: str(x).lower()
     return env

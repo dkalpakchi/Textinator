@@ -118,7 +118,6 @@ def record_datapoint(request, proj):
         data_source = DataSource.objects.get(pk=data['datasource'])
 
         if not project.sampling_with_replacement:
-            print("HERE")
             project_data = ProjectData.objects.get(project=project, datasource=data_source)
             DataAccessLog.objects.create(user=user, project_data=project_data, datapoint=str(data['datapoint']))
     except Project.DoesNotExist:

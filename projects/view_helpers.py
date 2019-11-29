@@ -57,7 +57,8 @@ def process_chunk(chunk, batch, inp, project, data_source, user, caches, boolean
             else:
                 # it's fins if input is blank
                 new_label = Label.objects.create(
-                    input=inp, context=ctx, start=new_start, end=new_end, marker=marker, user=user, project=project, batch=batch
+                    input=inp, context=ctx, start=new_start, end=new_end, marker=marker,
+                    user=user, project=project, batch=batch, comment=chunk['comment']
                 )
                 label_cache[chunk['id']] = new_label.id
                 saved_labels += 1

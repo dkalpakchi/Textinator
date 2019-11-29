@@ -15,7 +15,7 @@
         </div>
       </article>
       {% if source_id != -1 %}
-        <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}">
+        <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-comment="{{project.allow_commenting_on_labels|bool2str}}">
           <div class="message-header">
             <p>Markers</p>
           </div>

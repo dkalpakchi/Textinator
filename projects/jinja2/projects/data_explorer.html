@@ -16,9 +16,16 @@
           <li {% if label.undone %}class="red"{% endif %}>
             {% if label.marker.short == 'COR' %}
               <b>{{label.text}}</b>
+              {% if label.comment %}
+                <span><b>--> {{label.comment}}</b></span>
+              {% endif %}
             {% else %}
               {{label.text}}
+              {% if label.comment %}
+                <span>--> {{label.comment}}</span>
+              {% endif %}
             {% endif %}
+
             <span>({{label.user}}, {{label.pk}})</span>
           </li>
         {% endfor %}

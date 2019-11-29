@@ -26,6 +26,16 @@ gulp.task('jquery', function() {
     .pipe(gulp.dest('static/scripts'))
 });
 
+gulp.task('powertip:css', function() {
+  return gulp.src([FOLDER + '/jquery-powertip/dist/css/jquery.powertip.min.css'])
+    .pipe(gulp.dest('static/styles'))
+});
+
+gulp.task('tooltip:js', function() {
+  return gulp.src([FOLDER + '/tooltip.js/dist/tooltip.min.js', FOLDER + '/tooltip.js/dist/tooltip.min.js.map'])
+    .pipe(gulp.dest('static/scripts'))
+});
+
 gulp.task('fontawesome:css', function() {
   return gulp.src(FOLDER + '/@fortawesome/fontawesome-free/css/all.min.css')
     .pipe(gulp.dest('static/styles/fontawesome'));
@@ -59,6 +69,6 @@ gulp.task('d3', function() {
     .pipe(gulp.dest('static/scripts'))
 })
 
-gulp.task('default', gulp.series(['bulma', 'jquery', 'fontawesome', 'shepherd', 'd3'], function(done) {
+gulp.task('default', gulp.series(['bulma', 'jquery', 'fontawesome', 'shepherd', 'd3', 'tooltip:js'], function(done) {
   done();
 }));

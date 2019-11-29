@@ -11,7 +11,11 @@ $(document).ready(function() {
       activeLabels = labelId,                               // a number of labels currently present in the article
       radius = 10,
       graphIds = [],
-      currentRelationId = null;
+      currentRelationId = null,
+      comments = {},
+      markersArea = document.querySelector('.markers'),
+      allowSelectingLabels = markersArea.getAttribute('data-select') == 'true',
+      allowCommentingLabels = markersArea.getAttribute('data-comment') == 'true';
 
   $('.button-scrolling').each(function(i, x) {
     var $button = $("<button class='scrolling is-link button'>Show more</button>");
@@ -147,11 +151,16 @@ $(document).ready(function() {
   }
 
   // activate labels on click
-  $('article.text span.tag').on('click', function(e) {
-    e.preventDefault();
-    if (!$(e.target).prop('in_relation'))
-      e.target.classList.toggle('active');
-  })
+  if (allowSelectingLabels) {
+    $('article.text span.tag').on('click', function(e) {
+      e.preventDefault();
+      if (!$(e.target).prop('in_relation'))
+        if (e.target.classList.contains('active'))
+          e.target.classList.remove('active');
+        else
+          e.target.classList.add('active');
+    })
+  }
 
   // labeling piece of text with a given marker if the marker is clicked
   $('.marker.tags').on('click', function() {
@@ -178,14 +187,32 @@ $(document).ready(function() {
         mergeWithNeighbors(parent);
         $(el).prop('in_relation', false);
         activeLabels--;
-        window.chunks = chunks
       }, true);
       markedSpan.appendChild(deleteMarkedBtn)
 
-      markedSpan.addEventListener('click', function(e) {
-        if (!$(e.target).prop('in_relation'))
-          e.target.classList.toggle('active');
-      })
+      if (allowCommentingLabels) {
+        var $commentInput = $('<input data-i=' + labelId + ' value = ' + (comments[labelId] || '') + '>');
+        $commentInput.on('change', function(e) {
+          comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
+        });
+
+        tippy(markedSpan, {
+          content: $commentInput[0],
+          trigger: 'click',
+          interactive: true,
+          distance: 0
+        });
+      }
+
+      if (allowSelectingLabels) {
+        markedSpan.addEventListener('click', function(e) {
+          if (!$(e.target).prop('in_relation'))
+            if (e.target.classList.contains('active'))
+              e.target.classList.remove('active');
+            else
+              e.target.classList.add('active');
+        })
+      }
 
       if (chunk['node'] !== undefined && chunk['node'] != null) {
         // TODO: figure out when it would happen
@@ -201,8 +228,6 @@ $(document).ready(function() {
         chunk['label'] = this.querySelector('span.tag:first-child').textContent;
         delete chunk['node']
       }
-
-      window.chunks = chunks;
     }
   });
 
@@ -571,6 +596,11 @@ $(document).ready(function() {
     // if there are any relations, submit only those chunks that have to do with the relations
     // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relation
     inputFormData['chunks'] = relations.length > 0 ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
+
+    for (var i=0, len=inputFormData['chunks'].length; i < len; i++) {
+      inputFormData['chunks'][i]['comment'] = comments[inputFormData['chunks'][i]['id']] || '';
+    }
+
     inputFormData['is_review'] = underReview;
     inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
     inputFormData['datasource'] = parseInt($selector.attr('data-s'));
@@ -729,10 +759,29 @@ $(document).ready(function() {
 
             $('#undoLast').attr('disabled', true);
 
-            $('article.text span.tag').on('click', function(e) {
-              if (!$(e.target).prop('in_relation'))
-                e.target.classList.toggle('active');
-            })
+            if (allowCommentingLabels) {
+              var $commentInput = $('<input data-i=' + labelId + ' value = ' + (comments[labelId] || '') + '>');
+              $commentInput.on('change', function(e) {
+                comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
+              });
+
+              tippy(markedSpan, {
+                content: $commentInput[0],
+                trigger: 'click',
+                interactive: true,
+                distance: 0
+              });
+            }
+
+            if (allowSelectingLabels) {
+              $('article.text span.tag').on('click', function(e) {
+                if (!$(e.target).prop('in_relation'))
+                  if (e.target.classList.contains('active'))
+                    e.target.classList.remove('active');
+                  else
+                    e.target.classList.add('active');
+              })
+            }
 
             initPreMarkers();
 
