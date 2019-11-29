@@ -1,4 +1,4 @@
-{% if project.dt_finish <= now %}
+{% if project.dt_finish >= now %}
   <div class="columns">
     <div class="column is-three-quarters">
       <article class="{% if source_id != -1 %}text {% endif %}message">
@@ -288,5 +288,5 @@
   </script>
 {% else %}
   <!-- Project expired -->
-  div.
+  <div>Project expired</div>
 {% endif %}
