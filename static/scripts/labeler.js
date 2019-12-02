@@ -765,12 +765,14 @@ $(document).ready(function() {
                 comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
               });
 
-              tippy($('span.tag'), {
+              tippy('span.tag', {
                 content: $commentInput[0],
                 trigger: 'click',
                 interactive: true,
                 distance: 0
               });
+
+              comments = {};
             }
 
             if (allowSelectingLabels) {
