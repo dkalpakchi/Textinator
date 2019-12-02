@@ -765,7 +765,7 @@ $(document).ready(function() {
                 comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
               });
 
-              tippy(markedSpan, {
+              tippy($('span.tag'), {
                 content: $commentInput[0],
                 trigger: 'click',
                 interactive: true,

@@ -124,13 +124,6 @@ class DbSource(DataSource):
         # TODO: add authentication
         return pymongo.MongoClient("mongodb://localhost:27017/")
 
-    #
-    # SELECT old_text AS ARTICLE
-    # FROM (
-    #   SELECT page_title, page_latest, page_id
-    #   FROM page WHERE page_is_redirect = 0 AND page_len > 3000
-    # ) pg INNER JOIN text ON page_latest = old_id WHERE page_id >= ROUND(RAND() * (SELECT MAX(page_id) FROM page)) LIMIT 1;
-    #
     def get_random_datapoint(self):
         # self.cache_datapoint_ids()
         if self.__rand_dp_query:
