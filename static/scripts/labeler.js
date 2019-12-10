@@ -397,7 +397,7 @@ $(document).ready(function() {
     chunk['lengthBefore'] = 0;
     chunk['marked'] = true;
     chunk['id'] = labelId;
-    chunk['label'] = markerText.getAttribute('data-s');
+    chunk['label'] = node.getAttribute('data-s');
     chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
     
     if (contextSize == 'p') {
