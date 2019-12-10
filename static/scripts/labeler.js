@@ -595,7 +595,8 @@ $(document).ready(function() {
 
     // if there are any relations, submit only those chunks that have to do with the relations
     // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relation
-    inputFormData['chunks'] = relations.length > 0 ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
+    // inputFormData['chunks'] = relations.length > 0 ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
+    inputFormData['chunks'] = chunks;
 
     for (var i=0, len=inputFormData['chunks'].length; i < len; i++) {
       inputFormData['chunks'][i]['comment'] = comments[inputFormData['chunks'][i]['id']] || '';
