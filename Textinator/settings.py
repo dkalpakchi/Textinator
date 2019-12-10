@@ -220,7 +220,8 @@ MARKER_COLORS = [
     ('link', 'Dark Blue'),
     ('info', 'Light Blue'),
     ('primary', 'Teal'),
-    ('black', 'Black')
+    ('black', 'Black'),
+    ('grey', 'Grey')
 ]
 
 LOGIN_URL = '/textinator/accounts/login/'
