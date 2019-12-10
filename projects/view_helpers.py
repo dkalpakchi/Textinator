@@ -21,7 +21,7 @@ def process_chunk(chunk, batch, inp, project, data_source, user, caches, boolean
         try:
             if (not 'label' in chunk) or (type(chunk['label']) != str):
                 return (ctx_cache, inp_cache, label_cache), saved_labels
-            marker = Marker.objects.get(name=chunk['label'].strip())
+            marker = Marker.objects.get(short=chunk['label'].strip())
         except Marker.DoesNotExist:
             return (ctx_cache, inp_cache, label_cache), saved_labels
 

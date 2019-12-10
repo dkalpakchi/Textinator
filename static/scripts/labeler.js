@@ -15,7 +15,11 @@ $(document).ready(function() {
       comments = {},
       markersArea = document.querySelector('.markers'),
       allowSelectingLabels = markersArea.getAttribute('data-select') == 'true',
-      allowCommentingLabels = markersArea.getAttribute('data-comment') == 'true';
+      allowCommentingLabels = markersArea.getAttribute('data-comment') == 'true',
+      markersInRelations = [].concat.apply([], Array.from(markersArea.querySelectorAll('div.relation.tags')).map(
+        x => x.getAttribute('data-b').split('-:-'))),
+      nonRelationMarkers = Array.from(markersArea.querySelectorAll('div.marker.tags')).map(
+        x => x.getAttribute('data-s')).filter(x => !markersInRelations.includes(x));
 
   $('.button-scrolling').each(function(i, x) {
     var $button = $("<button class='scrolling is-link button'>Show more</button>");
@@ -221,11 +225,11 @@ $(document).ready(function() {
         parent.insertBefore(markedSpan, leftTextNode.nextSibling);
         parent.insertBefore(rightTextNode, markedSpan.nextSibling);
         chunk['marked'] = true;
-        chunk['submittable'] = this.getAttribute('data-submittable');
+        chunk['submittable'] = this.getAttribute('data-submittable') === 'true';
         chunk['id'] = labelId;
         labelId++;
         activeLabels++;
-        chunk['label'] = this.querySelector('span.tag:first-child').textContent;
+        chunk['label'] = this.getAttribute('data-s');
         delete chunk['node']
       }
     }
@@ -393,7 +397,7 @@ $(document).ready(function() {
     chunk['lengthBefore'] = 0;
     chunk['marked'] = true;
     chunk['id'] = labelId;
-    chunk['label'] = markerText.textContent;
+    chunk['label'] = markerText.getAttribute('data-s');
     chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
     
     if (contextSize == 'p') {
@@ -595,8 +599,18 @@ $(document).ready(function() {
 
     // if there are any relations, submit only those chunks that have to do with the relations
     // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relation
-    // inputFormData['chunks'] = relations.length > 0 ? chunks.filter(isInRelations) : chunks.filter(function(c) { return c.submittable });
-    inputFormData['chunks'] = chunks;
+    if (relations.length > 0) {
+      inputFormData['chunks'] = chunks.filter(isInRelations)
+      
+      var nonRelationChunks = chunks.filter(x => !inputFormData['chunks'].includes(x));
+      for (var i = 0, len = nonRelationChunks.length; i < len; i++) {
+        if (nonRelationMarkers.includes(nonRelationChunks[i]['label'])) {
+          inputFormData['chunks'].push(nonRelationChunks[i]);
+        }
+      }
+    } else {
+      inputFormData['chunks'] = chunks.filter(function(c) { return c.submittable })
+    }
 
     for (var i=0, len=inputFormData['chunks'].length; i < len; i++) {
       inputFormData['chunks'][i]['comment'] = comments[inputFormData['chunks'][i]['id']] || '';
@@ -623,7 +637,7 @@ $(document).ready(function() {
               // no review task
               // resetArticle();
               
-              disableChunks(chunks.filter(function(x) { return x.submittable }))
+              disableChunks(JSON.parse(inputFormData['chunks']));
 
               $questionBlock.removeClass('is-warning');
               $questionBlock.addClass('is-primary');
@@ -681,8 +695,6 @@ $(document).ready(function() {
           chunks.forEach(function(c) {
             c.submittable = false;
           })
-
-          window.chunks = chunks;
         },
         error: function() {
           console.log("ERROR!");
