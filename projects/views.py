@@ -2,6 +2,7 @@ import json
 import os
 import random
 import uuid
+from collections import defaultdict, OrderedDict
 
 from django.http import JsonResponse, Http404
 from django.shortcuts import render, get_object_or_404, redirect
@@ -17,6 +18,7 @@ from django.contrib.auth.decorators import login_required
 from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
 from .view_helpers import process_chunk
+from .exporters import *
 
 from Textinator.jinja2 import prettify
 
@@ -341,16 +343,36 @@ def undo_last(request, proj):
 def data_explorer(request, proj):
     if request.user.is_staff:
         project = Project.objects.filter(pk=proj).get()
-        inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()
-        inputs = Input.objects.filter(pk__in=inputs_pks).order_by('-dt_created').all()
-        labeled_inputs = [
-            (inp, Label.objects.filter(input=inp, undone=False).all())
-            for inp in inputs
-        ]
-        return render(request, 'projects/data_explorer.html', {
-            'project': project,
-            'labeled_inputs': labeled_inputs
-        })
+
+        if project.task_type == 'qa':
+            inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()
+            inputs = Input.objects.filter(pk__in=inputs_pks).order_by('-dt_created').all()
+            labeled_inputs = [
+                (inp, Label.objects.filter(input=inp, undone=False).all())
+                for inp in inputs
+            ]
+            return render(request, 'projects/data_explorer.html', {
+                'project': project,
+                'labeled_inputs': labeled_inputs
+            })
+        elif project.task_type == 'corr':
+            label_relations = LabelRelation.objects.filter(project=project, undone=False).order_by('-dt_created')
+
+            relations = OrderedDict()
+            for lr in label_relations:
+                fst, snd = lr.first_label, lr.second_label
+                if fst.context.pk in relations:
+                    relations[fst.context.pk].append((fst, snd))
+                else:
+                    relations[fst.context.pk] = [(fst, snd)]
+
+            return render(request, 'projects/data_explorer.html', {
+                'project': project,
+                'relations': [
+                    (Context.objects.get(pk=cpk), rels)
+                    for cpk, rels in relations.items()
+                ]
+            })
     else:
         raise Http404
 
@@ -363,3 +385,15 @@ def async_delete_input(request, proj, inp):
     except:
         pass
     return redirect(request.META.get('HTTP_REFERER', '/'))
+
+
+@login_required
+@require_http_methods(["GET"])
+def export(request, proj):
+    project = Project.objects.filter(pk=proj).get()
+    task_type = project.task_type
+    exporter = globals().get(f'export_{task_type}')
+    if exporter:
+        return JsonResponse({"data": exporter(project)})
+    else:
+        raise Http404

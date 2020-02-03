@@ -339,9 +339,14 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 }
 
 .explorer {
-  padding-top: 1em;
-  max-height: 600px;
+  max-height: 800px;
+  max-width: 1366px;
   overflow-y: scroll;
+  margin: 0 auto;
+}
+
+.explorer .container:first-child {
+  margin-bottom: 1em;
 }
 
 .explorer .datapoint {
@@ -365,6 +370,11 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 .explorer .datapoint ul > li:before {
   content: counter(list, lower-alpha) ") ";
   counter-increment: list;
+}
+
+.explorer .datapoint.relation ul > li:before {
+  content: counter(list, digits) ") ";
+  counter-increment: list; 
 }
 
 .reminders ul, .reminders ol {

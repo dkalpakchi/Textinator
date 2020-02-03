@@ -55,7 +55,7 @@ def process_chunk(chunk, batch, inp, project, data_source, user, caches, boolean
                         ambiguity_status=ambiguity_status, is_match=is_match
                     )
             else:
-                # it's fins if input is blank
+                # it's fine if input is blank
                 new_label = Label.objects.create(
                     input=inp, context=ctx, start=new_start, end=new_end, marker=marker,
                     user=user, project=project, batch=batch, comment=chunk['comment']
