@@ -392,7 +392,7 @@ def async_delete_input(request, proj, inp):
 def export(request, proj):
     project = Project.objects.filter(pk=proj).get()
     task_type = project.task_type
-    exporter = globals().get(f'export_{task_type}')
+    exporter = globals().get('export_{}'.format(task_type))
     if exporter:
         return JsonResponse({"data": exporter(project)})
     else:
