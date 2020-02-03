@@ -4,6 +4,7 @@
 <div class="explorer">
   <div class="container is-fluid">
     <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
+    <a href="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
     <div class="is-pulled-right">In total: {% if labeled_inputs %}{{ labeled_inputs|length }}{% else %}{{ relations|length }}{% endif %} datapoints</div>
   </div>
 
