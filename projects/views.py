@@ -51,10 +51,12 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
         data = [[0] * len(self.x_axis) for _ in range(len(self.project.markers.all()))]
         self.l2i = {v: k for k, v in enumerate(self.x_axis)}
         self.p2i = {v.name: k for k, v in enumerate(self.project.markers.all())}
-        print(self.project.markers.all())
 
         for l in self.labels:
-            data[self.p2i[l.marker.name]][self.l2i[len(l.text.split())]] += 1
+            try:
+                data[self.p2i[l.marker.name]][self.l2i[len(l.text.split())]] += 1
+            except:
+                pass
         return data
 
     def get_context_data(self, **kwargs):
@@ -80,9 +82,10 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         for u in self.labels_by_user:
             ll = self.labels_by_user[u]
             for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-                timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
-                if timing < 60:
-                    timings.append(timing)
+                if l1 and l2:
+                    timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
+                    if timing < 60:
+                        timings.append(timing)
         min_time, max_time = int(min(timings)), int(round(max(timings)))
         self.x_axis = list(range(min_time, max_time, 5))
         self.x_axis.append(self.x_axis[-1] + 5)
@@ -103,10 +106,11 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         for u in self.labels_by_user:
             ll = self.labels_by_user[u]
             for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-                timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
-                if timing < 60:
-                    pos = bisect.bisect(self.x_axis, timing)
-                    data[self.p2i[u]][pos - 1] += 1
+                if l1 and l2:
+                    timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
+                    if timing < 60:
+                        pos = bisect.bisect(self.x_axis, timing)
+                        data[self.p2i[u]][pos - 1] += 1
         return data
 
     def get_context_data(self, **kwargs):
