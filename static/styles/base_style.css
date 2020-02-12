@@ -339,7 +339,6 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 }
 
 .explorer {
-  max-height: 800px;
   max-width: 1366px;
   overflow-y: scroll;
   margin: 0 auto;
