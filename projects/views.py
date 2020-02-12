@@ -36,7 +36,7 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        self.labels = Label.objects.filter(project__id=self.pk).all()
+        self.labels = Label.objects.filter(project__id=self.pk, undone=False).all()
         self.x_axis = sorted(set([len(l.text.split()) for l in self.labels]))
         self.project = Project.objects.get(pk=self.pk)
         self.participants = self.project.participants.all()
@@ -51,6 +51,7 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
         data = [[0] * len(self.x_axis) for _ in range(len(self.project.markers.all()))]
         self.l2i = {v: k for k, v in enumerate(self.x_axis)}
         self.p2i = {v.name: k for k, v in enumerate(self.project.markers.all())}
+        print(self.project.markers.all())
 
         for l in self.labels:
             data[self.p2i[l.marker.name]][self.l2i[len(l.text.split())]] += 1
@@ -70,7 +71,7 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        labels = Label.objects.filter(project__id=self.pk).order_by('dt_created').all()
+        labels = Label.objects.filter(project__id=self.pk, undone=False).order_by('dt_created').all()
         self.labels_by_user = defaultdict(list)
         for l in labels:
             self.labels_by_user[l.user.username].append(l)

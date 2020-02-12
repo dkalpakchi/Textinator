@@ -298,7 +298,7 @@ class Label(CommonModel):
 
     @property
     def text(self):
-        return self.context.content[self.start:self.end]
+        return self.context.content[self.start:self.end] if self.context else self.input.content[self.start:self.end]
 
 
 class LabelReview(CommonModel):
