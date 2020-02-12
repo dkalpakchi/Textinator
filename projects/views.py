@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import bisect
 import uuid
 from collections import defaultdict, OrderedDict
 
@@ -15,6 +16,9 @@ from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 
+from chartjs.views.columns import BaseColumnsHighChartsView
+from chartjs.views.lines import BaseLineChartView
+
 from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
 from .view_helpers import process_chunk
@@ -22,6 +26,99 @@ from .exporters import *
 
 from Textinator.jinja2 import prettify
 
+##
+## Chart views
+##
+
+class LabelLengthJSONView(BaseColumnsHighChartsView):
+    title = "Label lengths"
+    yUnit = "labels"
+
+    def get_labels(self):
+        """Return 7 labels for the x-axis."""
+        self.labels = Label.objects.filter(project__id=self.pk).all()
+        self.x_axis = sorted(set([len(l.text.split()) for l in self.labels]))
+        self.project = Project.objects.get(pk=self.pk)
+        self.participants = self.project.participants.all()
+        return self.x_axis
+
+    def get_providers(self):
+        """Return names of datasets."""
+        return [m.name for m in self.project.markers.all()]
+
+    def get_data(self):
+        """Return 3 datasets to plot."""
+        data = [[0] * len(self.x_axis) for _ in range(len(self.project.markers.all()))]
+        self.l2i = {v: k for k, v in enumerate(self.x_axis)}
+        self.p2i = {v.name: k for k, v in enumerate(self.project.markers.all())}
+
+        for l in self.labels:
+            data[self.p2i[l.marker.name]][self.l2i[len(l.text.split())]] += 1
+        return data
+
+    def get_context_data(self, **kwargs):
+        self.pk = kwargs.get('pk')
+        data = super(LabelLengthJSONView, self).get_context_data(**kwargs)
+        return data
+
+label_lengths_chart_json = LabelLengthJSONView.as_view()
+
+
+class UserTimingJSONView(BaseColumnsHighChartsView):
+    title = "User timing, in minutes"
+    yUnit = "items"
+
+    def get_labels(self):
+        """Return 7 labels for the x-axis."""
+        labels = Label.objects.filter(project__id=self.pk).order_by('dt_created').all()
+        self.labels_by_user = defaultdict(list)
+        for l in labels:
+            self.labels_by_user[l.user.username].append(l)
+
+        timings = []
+        for u in self.labels_by_user:
+            ll = self.labels_by_user[u]
+            for l1, l2 in zip(ll[:len(ll)], ll[1:]):
+                timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
+                if timing < 60:
+                    timings.append(timing)
+        min_time, max_time = int(min(timings)), int(round(max(timings)))
+        self.x_axis = list(range(min_time, max_time, 5))
+        self.x_axis.append(self.x_axis[-1] + 5)
+
+        self.project = Project.objects.get(pk=self.pk)
+        self.participants = self.project.participants.all()
+        return ["{} - {}".format(t1, t2) for t1, t2 in zip(self.x_axis[:-1], self.x_axis[1:])]
+
+    def get_providers(self):
+        """Return names of datasets."""
+        return [p.username for p in self.participants]
+
+    def get_data(self):
+        """Return 3 datasets to plot."""
+        data = [[0] * len(self.x_axis) for _ in range(len(self.participants))]
+        self.p2i = {v.username: k for k, v in enumerate(self.participants)}
+
+        for u in self.labels_by_user:
+            ll = self.labels_by_user[u]
+            for l1, l2 in zip(ll[:len(ll)], ll[1:]):
+                timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
+                if timing < 60:
+                    pos = bisect.bisect(self.x_axis, timing)
+                    data[self.p2i[u]][pos - 1] += 1
+        return data
+
+    def get_context_data(self, **kwargs):
+        self.pk = kwargs.get('pk')
+        data = super(UserTimingJSONView, self).get_context_data(**kwargs)
+        return data
+
+user_timing_chart_json = UserTimingJSONView.as_view()
+
+
+##
+## Page views
+##
 
 # Create your views here.
 class IndexView(LoginRequiredMixin, generic.ListView):

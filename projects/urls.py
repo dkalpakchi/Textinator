@@ -13,5 +13,7 @@ urlpatterns = [
     path('<proj>/explorer/inputs/<inp>/delete', views.async_delete_input, name='async_delete_input'),
     path('profile/<username>/', views.profile, name='profile'),
     path('<pk>/', views.DetailView.as_view(), name='detail'),
+    path("<pk>/charts/labels/lengths", views.label_lengths_chart_json, name="label_lengths_chart"),
+    path("<pk>/charts/users/timing", views.user_timing_chart_json, name="user_timing_chart"),
     path('', views.IndexView.as_view(), name='index')
 ]

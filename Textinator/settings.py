@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django_admin_json_editor',
     'django_registration',
     'tinymce',
+    'chartjs',
     'projects',
     # 'django_extensions',
 ]
