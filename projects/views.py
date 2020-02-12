@@ -82,7 +82,7 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         for u in self.labels_by_user:
             ll = self.labels_by_user[u]
             for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-                if l1 and l2:
+                if l1 and l2 and l1.dt_created and l2.dt_created:
                     timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
                     if timing < 60:
                         timings.append(timing)
@@ -106,7 +106,7 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         for u in self.labels_by_user:
             ll = self.labels_by_user[u]
             for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-                if l1 and l2:
+                if l1 and l2 and l1.dt_created and l2.dt_created:
                     timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
                     if timing < 60:
                         pos = bisect.bisect(self.x_axis, timing)
