@@ -23,7 +23,7 @@ class DataSource:
     def check_constraints(self):
         absent = []
         for k in self._required_keys:
-            if k not in self.__spec:
+            if k not in self.__spec or not self.__spec[k]:
                 absent.append(k)
 
         present_aux = any([set(key_set) & set(self.__spec.keys()) for key_set in self._aux_keys])

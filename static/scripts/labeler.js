@@ -95,7 +95,7 @@ $(document).ready(function() {
         if (prev.tagName == "BR") {
           // if newline
           len += 1
-        } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag"))) {
+        } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A") {
           // if there is a label
           len += prev.textContent.length
         }

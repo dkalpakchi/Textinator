@@ -46,7 +46,7 @@
               {% else %}
                 {{label.text}}
                 {% if label.comment %}
-                  <span>==> {{label.comment}}</span>
+                  <span>--> {{label.comment}}</span>
                 {% endif %}
               {% endif %}
 
@@ -77,7 +77,7 @@
         <ul>
           {% for fst, snd in rels %}
             <li>
-              {{fst.text}} --> {{snd.text}}
+              {{fst.text}} ==> {{snd.text}}
             </li>
           {% endfor %}
         </ul>

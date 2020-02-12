@@ -86,35 +86,44 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
                     timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
                     if timing < 60:
                         timings.append(timing)
-        min_time, max_time = int(min(timings)), int(round(max(timings)))
-        self.x_axis = list(range(min_time, max_time, 5))
-        self.x_axis.append(self.x_axis[-1] + 5)
+        if timings:
+            min_time, max_time = int(min(timings)), int(round(max(timings)))
+            self.x_axis = list(range(min_time, max_time, 5))
+            self.x_axis.append(self.x_axis[-1] + 5)
 
-        self.project = Project.objects.get(pk=self.pk)
-        self.participants = self.project.participants.all()
-        return ["{} - {}".format(t1, t2) for t1, t2 in zip(self.x_axis[:-1], self.x_axis[1:])]
+            self.project = Project.objects.get(pk=self.pk)
+            self.participants = self.project.participants.all()
+            return ["{} - {}".format(t1, t2) for t1, t2 in zip(self.x_axis[:-1], self.x_axis[1:])]
+        else:
+            return []
 
     def get_providers(self):
         """Return names of datasets."""
-        return [p.username for p in self.participants]
+        if hasattr(self, 'participants'):
+            return [p.username for p in self.participants]
+        else:
+            return []
 
     def get_data(self):
         """Return 3 datasets to plot."""
-        data = [[0] * len(self.x_axis) for _ in range(len(self.participants))]
-        self.p2i = {v.username: k for k, v in enumerate(self.participants)}
+        if hasattr(self, 'participants'):
+            data = [[0] * len(self.x_axis) for _ in range(len(self.participants))]
+            self.p2i = {v.username: k for k, v in enumerate(self.participants)}
 
-        for u in self.labels_by_user:
-            ll = self.labels_by_user[u]
-            for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-                try:
-                    if l1 and l2 and l1.dt_created and l2.dt_created:
-                        timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
-                        if timing < 60:
-                            pos = bisect.bisect(self.x_axis, timing)
-                            data[self.p2i[u]][pos - 1] += 1
-                except:
-                    pass
-        return data
+            for u in self.labels_by_user:
+                ll = self.labels_by_user[u]
+                for l1, l2 in zip(ll[:len(ll)], ll[1:]):
+                    try:
+                        if l1 and l2 and l1.dt_created and l2.dt_created:
+                            timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
+                            if timing < 60:
+                                pos = bisect.bisect(self.x_axis, timing)
+                                data[self.p2i[u]][pos - 1] += 1
+                    except:
+                        pass
+            return data
+        else:
+            return []
 
     def get_context_data(self, **kwargs):
         self.pk = kwargs.get('pk')
