@@ -21,8 +21,6 @@ def export_corr(project):
     for l in other_labels:
         if l.context:
             non_relation_labels[l.context.pk].append(l)
-        else:
-            print(l)
 
     resp = []
     for cpk, rels in relations.items():

@@ -110,6 +110,11 @@ class ProjectForm(forms.ModelForm):
 
 @admin.register(Project)
 class ProjectAdmin(CommonModelAdmin):
+    list_filter = [
+        'institution',
+        'task_type',
+        'is_open'
+    ]
     form = ProjectForm
     inlines = [MarkerCountRestrictionInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
 
@@ -124,6 +129,9 @@ class ProjectAdmin(CommonModelAdmin):
 
 @admin.register(Context)
 class ContextAdmin(CommonModelAdmin):
+    list_filter = [
+        'datasource'
+    ]
     readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
 
 
@@ -165,6 +173,10 @@ class LabelReviewAdmin(CommonModelAdmin):
 
 @admin.register(LabelRelation)
 class LabelRelationAdmin(CommonModelAdmin):
+    list_filter = [
+        'project',
+        'user'
+    ]
     readonly_fields = CommonModelAdmin.readonly_fields + ['graph', 'batch']
 
     def get_queryset(self, request):
