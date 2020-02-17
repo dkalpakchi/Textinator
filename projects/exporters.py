@@ -39,7 +39,7 @@ def export_corr(project):
             if k not in obj:
                 obj[k] = []
             obj[k].append({
-                "text": l.text, "start": l.start, "end": l.end
+                "text": lb.text, "start": lb.start, "end": lb.end
             })
 
         resp.append(obj)
