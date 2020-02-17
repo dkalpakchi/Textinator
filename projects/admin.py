@@ -137,6 +137,11 @@ class InputAdmin(CommonModelAdmin):
 
 @admin.register(Label)
 class LabelAdmin(CommonModelAdmin):
+    list_filter = (
+       'marker',
+       'user',
+       'project'
+    )
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
     inlines = [LabelReviewInline]
 
