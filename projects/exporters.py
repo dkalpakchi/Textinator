@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from .models import *
 
@@ -6,13 +6,20 @@ from .models import *
 def export_corr(project):
     label_relations = LabelRelation.objects.filter(project=project, undone=False).order_by('-dt_created')
 
-    relations = OrderedDict()
+    relations, label_ids = OrderedDict(), set()
     for lr in label_relations:
         fst, snd = lr.first_label, lr.second_label
         if fst.context.pk in relations:
             relations[fst.context.pk].append((fst, snd))
         else:
             relations[fst.context.pk] = [(fst, snd)]
+        label_ids.add(fst.pk)
+        label_ids.add(snd.pk)
+
+    other_labels = Label.objects.filter(project=project, undone=False).exclude(pk__in=label_ids).order_by('-dt_created')
+    non_relation_labels = defaultdict(list)
+    for l in other_labels:
+        non_relation_labels[l.context.pk].append(l)
 
     resp = []
     for cpk, rels in relations.items():
@@ -25,7 +32,17 @@ def export_corr(project):
                 "pronoun": { "text": fst.text, "start": fst.start, "end": fst.end },
                 "antecedent": { "text": snd.text, "start": snd.start, "end": snd.end }
             })
+        
+        for lb in non_relation_labels[cpk]:
+            k = lb.marker.name.lower().replace(' ', '_')
+            if k not in obj:
+                obj[k] = []
+            obj[k].append({
+                "text": l.text, "start": l.start, "end": l.end
+            })
+
         resp.append(obj)
+    
     return resp
 
 
