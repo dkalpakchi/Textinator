@@ -19,7 +19,10 @@ def export_corr(project):
     other_labels = Label.objects.filter(project=project, undone=False).exclude(pk__in=label_ids).order_by('-dt_created')
     non_relation_labels = defaultdict(list)
     for l in other_labels:
-        non_relation_labels[l.context.pk].append(l)
+        if l.context:
+            non_relation_labels[l.context.pk].append(l)
+        else:
+            print(l)
 
     resp = []
     for cpk, rels in relations.items():
