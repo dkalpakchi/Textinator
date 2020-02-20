@@ -175,7 +175,8 @@ class Project(CommonModel):
 
             # return:
             # -> a post-processed random datapoint from the chosen dataset
-            # -> the point's id in the datasource 
+            # -> the point's id in the datasource
+            # -> datasource size 
             # -> datasource id
             return postprocess(dp).strip(), dp_id, ds.size(), idx
         else:

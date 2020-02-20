@@ -1,7 +1,9 @@
 $(document).ready(function() {
   var templates = {
     'TextFile': {
-      'files': []
+      'files': [],
+      'folders': [],
+      'remote': []
     },
     'Db': {
       'db_type': '', 

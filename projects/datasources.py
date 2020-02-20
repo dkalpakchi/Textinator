@@ -73,19 +73,26 @@ class TextFileSource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
 
-        self._required_keys = ['files']
+        self._aux_keys = [('files',), ('folders',), ('remote',)]
         self.check_constraints()
 
-        for fname in self.get_spec('files'):
+        self.__files = []
+        if self.get_spec('files'):
+            self.__files.extend(self.get_spec('files'))
+
+        if self.get_spec('folders'):
+            for folder in self.get_spec('folders'):
+                for d, subdirs, files in os.walk(folder):
+                    for f in files:
+                        self.__files.append(os.path.join(d, f))
+
+        for fname in self.__files:
             with open(fname) as f:
-                self._add_datapoint(f.read())
+                self._add_datapoint(f.read().replace('\n', '\n\n'))
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)
         return idx, self[idx]
-
-    def size(self):
-        return len(self.__data)
 
 
 class DbSource(DataSource):
