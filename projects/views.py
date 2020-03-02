@@ -88,8 +88,8 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
                         timings.append(timing)
         if timings:
             min_time, max_time = int(min(timings)), int(round(max(timings)))
-            self.x_axis = list(range(min_time, max_time, 5))
-            self.x_axis.append(self.x_axis[-1] + 5)
+            self.x_axis = list(range(min_time, max_time, 1))
+            self.x_axis.append(self.x_axis[-1] + 1)
 
             self.project = Project.objects.get(pk=self.pk)
             self.participants = self.project.participants.all()
