@@ -69,7 +69,7 @@ label_lengths_chart_json = LabelLengthJSONView.as_view()
 
 class UserTimingJSONView(BaseColumnsHighChartsView):
     title = "User timing, in minutes"
-    yUnit = "items"
+    yUnit = "labels"
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
@@ -93,7 +93,7 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
 
             self.project = Project.objects.get(pk=self.pk)
             self.participants = self.project.participants.all()
-            return ["{} - {}".format(t1, t2) for t1, t2 in zip(self.x_axis[:-1], self.x_axis[1:])]
+            return self.x_axis
         else:
             return []
 
