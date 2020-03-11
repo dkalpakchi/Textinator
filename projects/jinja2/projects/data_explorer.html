@@ -9,24 +9,26 @@
   </div>
 
   <script type="text/javascript" src="{{ static('js/highcharts/highcharts.js') }}"></script>
-  <div class="container columns">
-    <div class="column">
-      <div id="labelLengthsChart" width="300" height="150"></div>
-      <script type="text/javascript">
-        $.get('{{ url("projects:label_lengths_chart", kwargs={"pk": project.pk}) }}', function(data) {
-          $("#labelLengthsChart").highcharts(data);
-        });
-      </script>    
+  {% if user.is_superuser %}
+    <div class="container columns">
+      <div class="column">
+        <div id="labelLengthsChart" width="300" height="150"></div>
+        <script type="text/javascript">
+          $.get('{{ url("projects:label_lengths_chart", kwargs={"pk": project.pk}) }}', function(data) {
+            $("#labelLengthsChart").highcharts(data);
+          });
+        </script>    
+      </div>
+      <div class="column">
+        <div id="userTimingChart" width="300" height="150"></div>
+        <script type="text/javascript">
+          $.get('{{ url("projects:user_timing_chart", kwargs={"pk": project.pk}) }}', function(data) {
+            $("#userTimingChart").highcharts(data);
+          });
+        </script>
+      </div>
     </div>
-    <div class="column">
-      <div id="userTimingChart" width="300" height="150"></div>
-      <script type="text/javascript">
-        $.get('{{ url("projects:user_timing_chart", kwargs={"pk": project.pk}) }}', function(data) {
-          $("#userTimingChart").highcharts(data);
-        });
-      </script>
-    </div>
-  </div>
+  {% endif %}
 
   <div class="container is-fluid">
     {% for input, labels in labeled_inputs %}
