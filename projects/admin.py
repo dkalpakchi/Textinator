@@ -141,6 +141,8 @@ class ContextAdmin(CommonModelAdmin):
 class InputAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
     inlines = [LabelInline]
+    list_display = ['content', 'context']
+    search_fields = ['context__content', 'content']
 
 # TODO: translation?
 # from django.utils.translation import ugettext_lazy as _
