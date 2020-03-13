@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="{{ static('styles/shepherd-theme-default.css') }}">
     <link rel="stylesheet" href="{% sass_src 'styles/style.scss' %}">
     <link href="{% sass_src 'styles/radial-progress-bar.scss' %}" rel="stylesheet" type="text/css" />
+    {% block custom_styles %}{% endblock %}
+
     <script type="text/javascript" src="{{ static('scripts/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ static('scripts/jquery_ext.js') }}"></script>
     <script type="text/javascript" src="{{ static('scripts/d3.min.js') }}"></script>
@@ -19,6 +21,7 @@
     <script type="text/javascript" src="{{ static('scripts/shepherd.min.js') }}"></script>
     <script type="text/javascript" src="{{ static('scripts/labeler.js') }}"></script>
     <script type="text/javascript" src="{{ static('scripts/script.js') }}"></script>
+    {% block custom_scripts %}{% endblock %}
   </head>
   <body is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
     {% set user_projects=user.project_set.all() %} 

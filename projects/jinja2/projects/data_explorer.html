@@ -1,5 +1,14 @@
 {% extends "layout.html" %}
 
+{% block custom_styles %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+{% endblock %}
+
+{% block custom_scripts %}
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script type="text/javascript" src="{{ static('scripts/data_explorer.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="explorer">
   <div class="container is-fluid">
@@ -34,9 +43,15 @@
     {% for input, labels in labeled_inputs %}
       <div class="datapoint">
         <h4 class='title is-4'>
-          {{input.content}}
+          {{input.content}} ({{input.id}})
           <div class="subtitle is-6">Created by <i>{{labels[0].user}}</i> on {{input.dt_created}}</div>
         </h4>
+        <section id="item-context-{{loop.index}}">
+          <h3>Context ({{input.context.id}})</h3>
+          <div>
+            {{input.context.content}}
+          </div>
+        </section>
         <ul>
           {% for label in labels %}
             <li {% if label.undone %}class="red"{% endif %}>
@@ -73,7 +88,7 @@
     {% for context, rels in relations %}
       <div class="datapoint relation">
         <h4 class='title is-5'>
-          {{context.content}}
+          {{context.content}} ({{context.id}})
           <div class="subtitle is-6">Created by <i>{{rels[0][0].user}}</i> on {{context.dt_created}}</div>
         </h4>
         <ul>
@@ -85,6 +100,22 @@
         </ul>
       </div>
     {% endfor %}
+
+    {% if paginator.num_pages > 1 %}
+      <nav class="pagination" role="navigation" aria-label="pagination">
+        <ul class="pagination-list">
+          {% for p in paginator.page_range %}
+            <li>
+              {% if p == current_page %}
+              <a class="pagination-link is-current" aria-label="Page {{p}}">{{p}}</a>
+              {% else %}
+              <a class="pagination-link" href="{{ url('projects:data_explorer', kwargs={'proj': project.id}) }}?page={{p}}" aria-label="Goto page {{p}}">{{p}}</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

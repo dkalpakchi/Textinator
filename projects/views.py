@@ -15,6 +15,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 
 from chartjs.views.columns import BaseColumnsHighChartsView
 from chartjs.views.lines import BaseLineChartView
@@ -454,9 +455,15 @@ def undo_last(request, proj):
 
 
 @login_required
+@require_http_methods(["GET"])
 def data_explorer(request, proj):
     if request.user.is_staff:
         project = Project.objects.filter(pk=proj).get()
+
+        try:
+            page_number = int(request.GET.get('page', 1))
+        except:
+            page_number = 1
 
         if project.task_type == 'qa':
             inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()
@@ -465,9 +472,13 @@ def data_explorer(request, proj):
                 (inp, Label.objects.filter(input=inp, undone=False).all())
                 for inp in inputs
             ]
+
+            p = Paginator(labeled_inputs, 20)
             return render(request, 'projects/data_explorer.html', {
                 'project': project,
-                'labeled_inputs': labeled_inputs
+                'labeled_inputs': p.get_page(page_number),
+                'paginator': p,
+                'current_page': page_number
             })
         elif project.task_type == 'corr':
             label_relations = LabelRelation.objects.filter(project=project, undone=False).order_by('-dt_created')
@@ -480,12 +491,17 @@ def data_explorer(request, proj):
                 else:
                     relations[fst.context.pk] = [(fst, snd)]
 
+            rels_with_context = [
+                (Context.objects.get(pk=cpk), rels)
+                for cpk, rels in relations.items()
+            ]
+
+            p = Paginator(rels_with_context, 20)
             return render(request, 'projects/data_explorer.html', {
                 'project': project,
-                'relations': [
-                    (Context.objects.get(pk=cpk), rels)
-                    for cpk, rels in relations.items()
-                ]
+                'relations': p.get_page(page_number),
+                'paginator': p,
+                'current_page': page_number
             })
     else:
         raise Http404
