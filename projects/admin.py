@@ -132,8 +132,9 @@ class ContextAdmin(CommonModelAdmin):
     list_filter = [
         'datasource'
     ]
+    list_display = ['id', 'content']
     search_fields = ['content']
-    readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
+    readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash', 'id']
 
 
 @admin.register(Input)
@@ -217,6 +218,7 @@ class DataSourceAdmin(CommonModelAdmin):
         js = ('scripts/datasource.js',)
     
     form = DataSourceForm
+    list_display = ['name', 'source_type']
 
 
 @admin.register(DataAccessLog)
@@ -227,7 +229,8 @@ class DataAccessLogAdmin(admin.ModelAdmin):
 
 
 @admin.register(Marker)
-class MarkerAdmin(CommonModelAdmin): pass
+class MarkerAdmin(CommonModelAdmin):
+    list_display = ['name', 'short', 'color']
 
 @admin.register(Relation)
 class RelationAdmin(CommonModelAdmin): pass
