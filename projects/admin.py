@@ -132,6 +132,7 @@ class ContextAdmin(CommonModelAdmin):
     list_filter = [
         'datasource'
     ]
+    search_fields = ['content']
     readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
 
 
@@ -152,6 +153,7 @@ class LabelAdmin(CommonModelAdmin):
     )
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
     inlines = [LabelReviewInline]
+    search_fields = ['text']
 
     def get_queryset(self, request):
         qs = super(LabelAdmin, self).get_queryset(request)
