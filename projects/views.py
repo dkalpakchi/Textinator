@@ -478,7 +478,8 @@ def data_explorer(request, proj):
                 'project': project,
                 'labeled_inputs': p.get_page(page_number),
                 'paginator': p,
-                'current_page': page_number
+                'current_page': page_number,
+                'total_datapoints': len(labeled_inputs)
             })
         elif project.task_type == 'corr':
             label_relations = LabelRelation.objects.filter(project=project, undone=False).order_by('-dt_created')
@@ -501,7 +502,8 @@ def data_explorer(request, proj):
                 'project': project,
                 'relations': p.get_page(page_number),
                 'paginator': p,
-                'current_page': page_number
+                'current_page': page_number,
+                'total_datapoints': len(rels_with_context)
             })
     else:
         raise Http404
