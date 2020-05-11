@@ -54,6 +54,11 @@ class DataSource(CommonModel):
                 text = globals().get(method.helper, lambda x: x)(text)
         return text
 
+    def size(self):
+        source_cls = DataSource.type2class(self.source_type)
+        ds_instance = source_cls(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+        return ds_instance.size()
+
     def __str__(self):
         return self.name
 

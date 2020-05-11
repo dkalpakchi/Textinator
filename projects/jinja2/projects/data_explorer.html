@@ -26,13 +26,23 @@
           $.get('{{ url("projects:label_lengths_chart", kwargs={"pk": project.pk}) }}', function(data) {
             $("#labelLengthsChart").highcharts(data);
           });
-        </script>    
+        </script>
       </div>
       <div class="column">
         <div id="userTimingChart" width="300" height="150"></div>
         <script type="text/javascript">
           $.get('{{ url("projects:user_timing_chart", kwargs={"pk": project.pk}) }}', function(data) {
             $("#userTimingChart").highcharts(data);
+          });
+        </script>
+      </div>
+    </div>
+    <div class="container columns">
+      <div class="column">
+        <div id="userProgressChart" width="300" height="150"></div>
+        <script type="text/javascript">
+          $.get('{{ url("projects:user_progress_chart", kwargs={"pk": project.pk}) }}', function(data) {
+            $("#userProgressChart").highcharts(data);
           });
         </script>
       </div>

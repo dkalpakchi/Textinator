@@ -134,6 +134,64 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
 user_timing_chart_json = UserTimingJSONView.as_view()
 
 
+class UserProgressJSONView(BaseColumnsHighChartsView):
+    title = "Progress"
+    yUnit = "%"
+
+    def get_labels(self):
+        """Return 7 labels for the x-axis."""
+        project_data = ProjectData.objects.filter(project__id=self.pk).values('pk')
+        logs = DataAccessLog.objects.filter(project_data__id__in=project_data)
+        
+        self.logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        self.dataset_info = {}
+        self.l2i, i = {}, 0
+        for l in logs:
+            ds = l.project_data.datasource
+            self.logs_by_ds_and_user[ds.pk][l.user.pk][l.datapoint].append(l)
+            self.dataset_info[ds.pk] = {
+                'size': ds.size(),
+                'name': ds.name
+            }
+            if ds.pk not in self.l2i:
+                self.l2i[ds.pk] = i
+                i += 1
+        self.x_axis = sorted([self.dataset_info[k]['name'] for k in self.logs_by_ds_and_user.keys()])
+
+        self.project = Project.objects.get(pk=self.pk)
+        self.participants = self.project.participants.all()
+        
+        return self.x_axis
+
+    def get_providers(self):
+        """Return names of datasets."""
+        if hasattr(self, 'participants'):
+            return [p.username for p in self.participants]
+        else:
+            return []
+
+    def get_data(self):
+        """Return 3 datasets to plot."""
+        if hasattr(self, 'participants'):
+            data = [[0] * len(self.x_axis) for _ in range(len(self.participants))]
+            self.p2i = {v.pk: k for k, v in enumerate(self.participants)}
+
+            for ds in self.logs_by_ds_and_user:
+                ds_logs = self.logs_by_ds_and_user[ds]
+                for u in ds_logs:
+                    data[self.p2i[u]][self.l2i[ds]] = round(len(ds_logs[u].keys()) * 100 / self.dataset_info[ds]['size'], 2)
+            return data
+        else:
+            return []
+
+    def get_context_data(self, **kwargs):
+        self.pk = kwargs.get('pk')
+        data = super(UserProgressJSONView, self).get_context_data(**kwargs)
+        return data
+
+user_progress_chart_json = UserProgressJSONView.as_view()
+
+
 ##
 ## Page views
 ##
