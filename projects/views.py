@@ -192,6 +192,32 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
 user_progress_chart_json = UserProgressJSONView.as_view()
 
 
+class DataSourceSizeJSONView(BaseColumnsHighChartsView):
+    title = "Data source sizes"
+    yUnit = "texts"
+
+    def get_labels(self):
+        """Return 7 labels for the x-axis."""
+        self.project = Project.objects.get(pk=self.pk)
+        self.x_axis = list(self.project.datasources.values_list('name', flat=True))
+        print(self.x_axis)
+        return self.x_axis
+
+    def get_providers(self):
+        # set visible: false in JS
+        return [0]
+
+    def get_data(self):
+        """Return 3 datasets to plot."""
+        return [[p.size() for p in self.project.datasources.all()]]
+
+    def get_context_data(self, **kwargs):
+        self.pk = kwargs.get('pk')
+        data = super(DataSourceSizeJSONView, self).get_context_data(**kwargs)
+        return data
+
+datasource_size_chart_json = DataSourceSizeJSONView.as_view()
+
 ##
 ## Page views
 ##

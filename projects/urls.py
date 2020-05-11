@@ -16,5 +16,6 @@ urlpatterns = [
     path("<pk>/charts/labels/lengths", views.label_lengths_chart_json, name="label_lengths_chart"),
     path("<pk>/charts/users/timing", views.user_timing_chart_json, name="user_timing_chart"),
     path("<pk>/charts/users/progress", views.user_progress_chart_json, name="user_progress_chart"),
+    path("<pk>/charts/datasources/sizes", views.datasource_size_chart_json, name="datasource_size_chart"),
     path('', views.IndexView.as_view(), name='index')
 ]
