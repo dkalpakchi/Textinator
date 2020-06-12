@@ -14,7 +14,7 @@
   <div class="container is-fluid">
     <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
     <a href="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
-    <div class="is-pulled-right">In total: {{ total_datapoints }} {% if labeled_inputs %}inputs{% else %}relations{% endif %} </div>
+    <div class="is-pulled-right">In total: {{ total_datapoints }} {% if labeled_inputs %}input(s){% else %}relation(s){% endif %}, {{flagged_datapoints}} flagged datapoint(s) </div>
   </div>
 
   <script type="text/javascript" src="{{ static('js/highcharts/highcharts.js') }}"></script>

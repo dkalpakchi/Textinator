@@ -228,6 +228,7 @@ class DataAccessLog(CommonModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     project_data = models.ForeignKey(ProjectData, on_delete=models.CASCADE)
     datapoint = models.CharField(max_length=64)
+    flags = models.TextField(default="")
 
 
 # TODO: put constraints on the markers - only markers belonging to project or task_type can be put!

@@ -549,6 +549,9 @@ def data_explorer(request, proj):
         except:
             page_number = 1
 
+        project_data = ProjectData.objects.filter(project=project).all()
+        flagged_datapoints = DataAccessLog.objects.filter(project_data__in=project_data).exclude(flags="").count()
+
         if project.task_type == 'qa':
             inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()
             inputs = Input.objects.filter(pk__in=inputs_pks).order_by('-dt_created').all()
@@ -563,7 +566,8 @@ def data_explorer(request, proj):
                 'labeled_inputs': p.get_page(page_number),
                 'paginator': p,
                 'current_page': page_number,
-                'total_datapoints': len(labeled_inputs)
+                'total_datapoints': len(labeled_inputs),
+                'flagged_datapoints': flagged_datapoints
             })
         elif project.task_type == 'corr':
             label_relations = LabelRelation.objects.filter(project=project, undone=False).order_by('-dt_created')
@@ -587,7 +591,8 @@ def data_explorer(request, proj):
                 'relations': p.get_page(page_number),
                 'paginator': p,
                 'current_page': page_number,
-                'total_datapoints': len(rels_with_context)
+                'total_datapoints': len(rels_with_context),
+                'flagged_datapoints': flagged_datapoints
             })
     else:
         raise Http404
@@ -613,3 +618,19 @@ def export(request, proj):
         return JsonResponse({"data": exporter(project)})
     else:
         raise Http404
+
+
+@login_required
+@require_http_methods(["POST"])
+def flag_text(request, proj):
+    feedback = request.POST.get('feedback')
+    dp_id = request.POST.get('dp_id')
+    ds_id = request.POST.get('ds_id')
+
+    project = Project.objects.filter(pk=proj).get()
+    data_source = DataSource.objects.get(pk=ds_id)
+
+    project_data = ProjectData.objects.get(project=project, datasource=data_source)
+    DataAccessLog.objects.create(
+        user=request.user, project_data=project_data, datapoint=str(dp_id), flags=feedback)
+    return JsonResponse({})

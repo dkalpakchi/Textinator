@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'tinymce',
     'chartjs',
     'projects',
+    'surveys'
     # 'django_extensions',
 ]
 

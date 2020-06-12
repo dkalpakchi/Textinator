@@ -730,8 +730,8 @@ $(document).ready(function() {
         success: function(d) {
           var $selector = $('.selector');
           // update text, source id and datapoint id
-          $selector.attr('data-s', d.source_id);
-          $selector.attr('data-dp', d.dp_id);
+          el.attr('data-s', d.source_id);
+          el.attr('data-dp', d.dp_id);
 
           if (d.source_id == -1) {
             var $text = $selector.closest('article.text');
@@ -800,7 +800,6 @@ $(document).ready(function() {
 
             initPreMarkers();
 
-            el.attr('data-s', d.idsource);
             $button.attr('disabled', false);
           }
           el.removeClass('is-loading');
@@ -1050,4 +1049,59 @@ $(document).ready(function() {
   /******************/
   /* - Handling SVG */
   /******************/
+
+
+
+  /**
+   * Modals handling
+   */
+
+  $('#flagTextButton').on('click', function() {
+    $('.flag.modal').addClass('is-active');
+  })
+
+  $('#flagTextForm').on('submit', function(e) {
+    e.preventDefault();
+    var $form = $("#flagTextForm");
+
+    $.ajax({
+      type: $form.attr('method'),
+      url: $form.attr('action'),
+      dataType: "json",
+      data: {
+        "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val(),
+        "feedback": $form.find('textarea[name="feedback"]').val(),
+        "ds_id": selectorArea.getAttribute('data-s'),
+        "dp_id": selectorArea.getAttribute('data-dp')
+      },
+      success: function(d) {
+        alert("Thank you for your feedback!");
+        $('.flag.modal').removeClass('is-active');
+        getNewText(function() { return true; }, $('#getNewArticle'));
+      },
+      error: function() {
+        alert("Your feedback was not recorded. Please try again later.");
+      }
+    })
+  })
+
+  $('#guidelinesButton').on('click', function() {
+    $('.guidelines.modal').addClass('is-active');
+  });
+
+  $('.modal-close').on('click', function() {
+    $('.modal').removeClass('is-active');
+    $('.countdown svg circle:last-child').trigger('cdAnimate');
+  });
+
+  $('.modal-background').on('click', function() {
+    $('.modal').removeClass('is-active');
+    $('.countdown svg circle:last-child').trigger('cdAnimate');
+  });
+
+  $('#guidelinesButton').click();
+
+  /**
+   * - Modals handling
+   */
 });

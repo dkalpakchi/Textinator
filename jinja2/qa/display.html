@@ -4,7 +4,11 @@
       <article class="{% if source_id != -1 %}text {% endif %}message">
         <div class="message-header">
           <p>Text</p>
-          <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
+          <a id="flagTextButton" class="is-pulled-right">
+            <span class="icon is-small">
+              <i class="fas fa-flag"></i>
+            </span>
+          </a>
         </div>
         <div class="selector element content message-body" data-s="{{source_id}}" data-dp="{{dp_id}}" data-f="{{source_finished}}">
           {% if source_id != -1 %}
@@ -88,6 +92,7 @@
         <article class="reminders message">
           <div class="message-header">
             <p>Reminders</p>
+            <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
           </div>
           <div class="message-body">
             {{project.reminders|safe}}
@@ -140,7 +145,7 @@
     </div>
   </div>
 
-  <div class="modal">
+  <div class="guidelines modal">
     <div class="modal-background"></div>
     <div class="modal-content">
       <div class="guidelines card">
@@ -193,23 +198,38 @@
     <button class="modal-close is-large" aria-label="close"></button>
   </div>
 
+  <div class="flag modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+      <div class="card">
+        <div class="card-header">
+          <p class="card-header-title">
+            Your feedback on this text
+          </p>
+        </div>
+        <div class="card-content">
+          <form id="flagTextForm" action="{{ url('projects:flag_text', kwargs={'proj':project.pk}) }}" method="POST">
+            {{ csrf_input }}
+            <div class="field">
+              <label class="label">What is the problem with this text?</label>
+              <div class="control">
+                <textarea name="feedback" class="textarea" placeholder="Please describe any problems you experience, e.g. weird formatting, wrong sentence starts, empty text, etc."></textarea>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="control">
+                <input type="submit" class="button is-link" value="Submit">
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close"></button>
+  </div>
+
   <script>
-    $('#guidelinesButton').on('click', function() {
-      $('.modal').addClass('is-active');
-    });
-
-    $('.modal-close').on('click', function() {
-      $('.modal').removeClass('is-active');
-      $('.countdown svg circle:last-child').trigger('cdAnimate');
-    });
-
-    $('.modal-background').on('click', function() {
-      $('.modal').removeClass('is-active');
-      $('.countdown svg circle:last-child').trigger('cdAnimate');
-    });
-
-    $('#guidelinesButton').click();
-
     const tour = new Shepherd.Tour({
       defaultStepOptions: {
         scrollTo: {
@@ -282,7 +302,7 @@
     });
 
     $('#followIntroTour').on('click', function() {
-      $('.modal').removeClass('is-active');
+      $('.guidelines.modal').removeClass('is-active');
       tour.start();
     });
   </script>
