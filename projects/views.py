@@ -156,7 +156,7 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
             if ds.pk not in self.l2i:
                 self.l2i[ds.pk] = i
                 i += 1
-        self.x_axis = sorted([self.dataset_info[k]['name'] for k in self.logs_by_ds_and_user.keys()])
+        self.x_axis = [self.dataset_info[k]['name'] for k in self.logs_by_ds_and_user.keys()]
 
         self.project = Project.objects.get(pk=self.pk)
         self.participants = self.project.participants.all()
