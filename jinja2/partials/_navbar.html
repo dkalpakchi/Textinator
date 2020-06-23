@@ -51,18 +51,6 @@
         </a>
       </li>
     {% endif %}
-    <!--<li class="my-surveys{% if request.path == url('surveys:index') %} is-active{% endif %}">
-      <a href="{{ url('surveys:index') }}">
-        <span class="icon is-small"><i class="fas fa-list"></i></span>
-        <span>My Surveys</span>
-      </a>
-    </li>
-    <li class="open-surveys{% if request.path == url('surveys:open') %} is-active{% endif %}">
-      <a href="{{ url('surveys:open') }}">
-        <span class="icon is-small"><i class="fas fa-question-circle"></i></span>
-        <span>Open Surveys</span>
-      </a>
-    </li>-->
     <li class='is-pulled-right'>
       <span class='text'>Welcome, {{user.get_full_name() or user.username}}!</span>
       {% if user.is_staff %}
