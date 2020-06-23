@@ -154,11 +154,12 @@ class LabelAdmin(CommonModelAdmin):
        'marker',
        'user',
        'project',
-       ('dt_created', DateTimeRangeFilter)
+       ('dt_created', DateTimeRangeFilter),
+       'undone'
     )
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
     inlines = [LabelReviewInline]
-    search_fields = ['text']
+    search_fields = ['context__content', 'input__content']
 
     def get_queryset(self, request):
         qs = super(LabelAdmin, self).get_queryset(request)
