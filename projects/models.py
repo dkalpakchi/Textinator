@@ -18,7 +18,7 @@ from .helpers import *
 
 
 class CommonModel(models.Model):
-    dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name="Created at")
+    dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name="creation date")
 
     class Meta:
         abstract = True

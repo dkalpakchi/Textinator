@@ -4,7 +4,8 @@ from django.db.models.fields import AutoField
 from django import forms
 from django.contrib.auth.models import User, Permission
 from django_admin_json_editor import JSONEditorWidget
-from django.contrib.admin import SimpleListFilter
+from django.contrib.admin import SimpleListFilter, DateFieldListFilter
+from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 
 from .models import *
 
@@ -152,7 +153,8 @@ class LabelAdmin(CommonModelAdmin):
     list_filter = (
        'marker',
        'user',
-       'project'
+       'project',
+       ('dt_created', DateTimeRangeFilter)
     )
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
     inlines = [LabelReviewInline]
