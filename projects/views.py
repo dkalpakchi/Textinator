@@ -682,13 +682,13 @@ def time_report(request, proj):
                 if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
                     l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
                     timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60. / 60, 2)
-                    time_spent[u][f"{l1.dt_created.month}/{l1.dt_created.year}"] += timing
+                    time_spent[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += timing
             except:
                 pass
     
     for u, td in time_spent.items():
         keys = sorted(td.keys())
-        month, year = keys[0].split('/')
+        year, month = keys[0].split('/')
         data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2)])
         for k in keys[1:]:
             month, year = k.split('/')
@@ -703,7 +703,7 @@ def time_report(request, proj):
 
     t = Table(data, colWidths=[150, 150, 150])
     t.setStyle(LIST_STYLE)
-    w, h = t.wrapOn(p, A4[0] / 4, 750)
+    w, h = t.wrapOn(p, A4[0] / 8, 0.8 * A4[1])
     t.drawOn(p, A4[0] / 8, 0.8 * A4[1])
 
     # Close the PDF object cleanly, and we're done.
@@ -713,4 +713,4 @@ def time_report(request, proj):
     # FileResponse sets the Content-Disposition header so that browsers
     # present the option to save the file.
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename='hello.pdf')
+    return FileResponse(buffer, as_attachment=True, filename='time_report.pdf')
