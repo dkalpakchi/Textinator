@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import yaml
 
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -256,3 +260,7 @@ TINYMCE_DEFAULT_CONFIG = {
 # }
 
 FILEBROWSER_MAX_UPLOAD_SIZE = 20971520
+
+
+pdfmetrics.registerFont(TTFont('Terminator',
+    os.path.join(BASE_DIR, 'static', 'styles', 'terminator real nfi.ttf')))

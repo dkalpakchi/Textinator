@@ -1,11 +1,12 @@
 import json
 import os
+import io
 import random
 import bisect
 import uuid
 from collections import defaultdict, OrderedDict
 
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
@@ -17,6 +18,11 @@ from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+
 from chartjs.views.columns import BaseColumnsHighChartsView
 from chartjs.views.lines import BaseLineChartView
 
@@ -26,6 +32,11 @@ from .view_helpers import process_chunk
 from .exporters import *
 
 from Textinator.jinja2 import prettify
+
+
+PT2MM = 0.3527777778
+MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+               'August', 'September', 'October', 'November', 'December']
 
 ##
 ## Chart views
@@ -83,7 +94,8 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         for u in self.labels_by_user:
             ll = self.labels_by_user[u]
             for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-                if l1 and l2 and l1.dt_created and l2.dt_created:
+                if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
+                    l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
                     timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
                     if timing < 60:
                         timings.append(timing)
@@ -634,3 +646,71 @@ def flag_text(request, proj):
     DataAccessLog.objects.create(
         user=request.user, project_data=project_data, datapoint=str(dp_id), flags=feedback)
     return JsonResponse({})
+
+
+@login_required
+def time_report(request, proj):
+    project = Project.objects.filter(pk=proj).get()
+
+    # Create a file-like buffer to receive PDF data.
+    buffer = io.BytesIO()
+
+    # Create the PDF object, using the buffer as its "file."
+    p = canvas.Canvas(buffer)
+
+    # Draw things on the PDF. Here's where the PDF generation happens.
+    # See the ReportLab documentation for the full list of functionality.
+    p.setFont("Terminator", size=18)
+    system_name = "Textinator"
+    p.drawString(A4[0] / 2 - 18 * PT2MM * len(system_name) * 1.1, 0.95 * A4[1], system_name)
+
+    p.setFont("Helvetica", size=14)
+    report_name = f'Time report for project "{project.title}"'
+    p.drawString(A4[0] / 2 - (14 * PT2MM * len(report_name) / 2), 0.92 * A4[1], report_name)
+
+    labels = Label.objects.filter(project__id=proj, undone=False).order_by('dt_created').all()
+    labels_by_user = defaultdict(list)
+    for l in labels:
+        labels_by_user[l.user.username].append(l)
+
+    time_spent = defaultdict(lambda: defaultdict(int))
+    data = [['User', 'Month', 'Time (in hours)']]
+    for u in labels_by_user:
+        ll = labels_by_user[u]
+        for l1, l2 in zip(ll[:len(ll)], ll[1:]):
+            try:
+                if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
+                    l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
+                    timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60. / 60, 2)
+                    time_spent[u][f"{l1.dt_created.month}/{l1.dt_created.year}"] += timing
+            except:
+                pass
+    
+    for u, td in time_spent.items():
+        keys = sorted(td.keys())
+        month, year = keys[0].split('/')
+        data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2)])
+        for k in keys[1:]:
+            month, year = k.split('/')
+            data.append(['', f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[k], 2)])
+
+    LIST_STYLE = TableStyle([
+        ('LINEABOVE', (0,0), (-1,0), 2, colors.black),
+        ('LINEABOVE', (0,1), (-1,-1), 0.25, colors.black),
+        ('LINEBELOW', (0,-1), (-1,-1), 2, colors.black),
+        ('ALIGN', (1,1), (-1,-1), 'RIGHT')]
+    )
+
+    t = Table(data, colWidths=[150, 150, 150])
+    t.setStyle(LIST_STYLE)
+    w, h = t.wrapOn(p, A4[0] / 4, 750)
+    t.drawOn(p, A4[0] / 8, 0.8 * A4[1])
+
+    # Close the PDF object cleanly, and we're done.
+    p.showPage()
+    p.save()
+
+    # FileResponse sets the Content-Disposition header so that browsers
+    # present the option to save the file.
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename='hello.pdf')
