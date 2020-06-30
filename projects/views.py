@@ -703,8 +703,8 @@ def time_report(request, proj):
 
     t = Table(data, colWidths=[150, 150, 150])
     t.setStyle(LIST_STYLE)
-    w, h = t.wrapOn(p, 400, 100)
-    t.drawOn(p, A4[0] / 8, 0.8 * A4[1])
+    w, h = t.wrapOn(p, 540, 720)
+    t.drawOn(p, A4[0] / 8, 0.8 * A4[1] - h)
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
