@@ -19,3 +19,4 @@ psycopg2==2.8.5
 python-memcached==1.59
 django-admin-rangefilter==0.6.
 Jinja2==2.10.11
+reportlab==3.5.34

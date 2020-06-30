@@ -691,7 +691,7 @@ def time_report(request, proj):
         year, month = keys[0].split('/')
         data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2)])
         for k in keys[1:]:
-            month, year = k.split('/')
+            year, month = k.split('/')
             data.append(['', f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[k], 2)])
 
     LIST_STYLE = TableStyle([
