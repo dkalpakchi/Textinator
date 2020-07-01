@@ -682,7 +682,7 @@ def time_report(request, proj):
                 if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
                     l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
                     timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60. / 60, 2)
-                    if timing < 0.5:
+                    if timing < 0.6:
                         time_spent[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += timing
             except:
                 pass
