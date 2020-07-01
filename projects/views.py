@@ -674,7 +674,8 @@ def time_report(request, proj):
         labels_by_user[l.user.username].append(l)
 
     time_spent = defaultdict(lambda: defaultdict(int))
-    data = [['User', 'Month', 'Time (in hours)']]
+    datapoints_created = defaultdict(lambda: defaultdict(int))
+    data = [['User', 'Month', 'Time (in hours)', 'Number of datapoints']]
     for u in labels_by_user:
         ll = labels_by_user[u]
         for l1, l2 in zip(ll[:len(ll)], ll[1:]):
@@ -683,17 +684,18 @@ def time_report(request, proj):
                     l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
                     timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60. / 60, 2)
                     if timing <= 1:
-                        time_spent[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += timing
+                        time_spent[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += timing                    
+                    datapoints_created[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += 1
             except:
                 pass
     
     for u, td in time_spent.items():
         keys = sorted(td.keys())
         year, month = keys[0].split('/')
-        data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2)])
+        data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2), datapoints_created[u][keys[0]]])
         for k in keys[1:]:
             year, month = k.split('/')
-            data.append(['', f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[k], 2)])
+            data.append(['', f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[k], 2), datapoints_created[u][k]])
 
     LIST_STYLE = TableStyle([
         ('LINEABOVE', (0,0), (-1,0), 2, colors.black),
@@ -702,7 +704,7 @@ def time_report(request, proj):
         ('ALIGN', (1,1), (-1,-1), 'RIGHT')]
     )
 
-    t = Table(data, colWidths=[150, 150, 150])
+    t = Table(data, colWidths=[110, 110, 110, 110])
     t.setStyle(LIST_STYLE)
     w, h = t.wrapOn(p, 540, 720)
     t.drawOn(p, A4[0] / 8, 0.8 * A4[1] - h)
