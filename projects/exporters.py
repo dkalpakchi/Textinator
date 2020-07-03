@@ -67,7 +67,8 @@ def export_qa(project):
                 "start": label.start,
                 "end": label.end,
                 "type": label.marker.name,
-                "comment": label.comment
+                "comment": label.comment,
+                "context": label.context.content
             })
         resp.append(obj)
     return resp
