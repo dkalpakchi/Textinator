@@ -38,6 +38,13 @@
         </a>
       </li>
     {% endif %}
+
+    <li class='my-projects'>
+      <a href="{{ url('survey-list') }}">
+        <span class="icon is-small"><i class="fas fa-list-alt" aria-hidden="true"></i></span>
+        <span>Surveys</span>
+      </a>
+    </li>
     {% if shared_projects %}
       {% if request.path == url('projects:index') %}
       <li {% if request.GET.n == 'sp' %}class='is-active'{% endif %} data-tab="shared-projects" class='shared-projects'>

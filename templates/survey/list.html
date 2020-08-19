@@ -1,12 +1,21 @@
 {% extends 'survey/base.html' %}
 {% load i18n %}
+{% load survey_extras %}
 
 {% block body %}
 <div id="intro">
-	<ul>
-		{% for survey in surveys %}
-		<li><a href="{{ survey.get_absolute_url }}">{% trans "Take the Survey"%} "{{survey.name}}"</a></li>
-		{% endfor %}
-	</div>
+  <ul>
+    {% for survey in surveys %}
+      {% if survey.id in started_surveys %}
+        {% if started_surveys|get_by_key:survey.id %}
+          <li><a href="{{ started_surveys|get_by_key:survey.id }}">{% trans "Continue the Survey"%} {{survey.name}}</a></li>
+        {% else %}
+          <li><a href="{{ survey.get_absolute_url }}">{% trans "Take the Survey"%} {{survey.name}}</a></li>
+        {% endif %}
+      {% else %}
+        <li><a href="{{ survey.get_absolute_url }}">{% trans "Take the Survey"%} {{survey.name}}</a></li>
+      {% endif %}
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}
