@@ -391,3 +391,7 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
   left: 50%;
   font-size: 12px;
 }
+
+.survey-table label {
+  margin-right: 1em;
+}
