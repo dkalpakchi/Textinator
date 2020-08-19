@@ -10,7 +10,7 @@ from django.contrib.auth.models import User, Permission
 from django.core.cache import caches
 from django.utils import timezone
 
-from tinymce.models import HTMLField
+from tinymce import HTMLField
 from filebrowser.fields import FileBrowseField
 
 from .datasources import *

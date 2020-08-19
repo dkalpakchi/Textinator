@@ -71,6 +71,12 @@ pre {
   font-size: 2.5em;
 }
 
+.logo-spaced {
+  font-family: 'Terminator Real NFI';
+  font-size: 1.5em;
+  letter-spacing: 1.5em;
+}
+
 .logo a {
   border-bottom: none;
   padding: 0;
@@ -378,4 +384,10 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 
 .reminders ul, .reminders ol {
   margin-left: 1em;
+}
+
+.survey-progress-value {
+  position: absolute;
+  left: 50%;
+  font-size: 12px;
 }

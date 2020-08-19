@@ -1,0 +1,57 @@
+{% extends 'survey/base.html' %}
+{% load i18n %}
+{% load survey_extras %}
+{% load static %}
+
+{% block title %} {{survey.name}} {% endblock title %}
+
+{% block extrajs %}
+  {{response_form.media}}
+  {% if asset_context.flatpickr %}
+    <script type="text/javascript" src="{% static 'survey/js/flatpickr.min.js' %}"></script>
+  {% endif %}
+  <script type="text/javascript" src="{% static 'scripts/survey.js' %}"></script>
+{% endblock %}
+
+{% block extracss %}
+  {% if asset_context.flatpickr %}
+    {{ block.super }}
+    <link href="{% static 'survey/css/flatpickr.min.css'%}" rel="stylesheet" type="text/css"/>
+  {% endif %}
+{% endblock %}
+
+
+
+{% block body %}
+	<h1 class="title"> {{survey.name}} </h1>
+	<div class="survey-description">
+    <h3>Guidelines</h3>
+    <div>{{survey.description|safe}}</div>
+  </div>
+  <div class="container column">
+    {% if step|add:step >= response_form.steps_count %}
+      <span class="survey-progress-value" style="color: white;">{{step}} / {{response_form.steps_count}}</span>
+    {% else %}
+      <span class="survey-progress-value">{{step}} / {{response_form.steps_count}}</span>
+    {% endif %}
+    <progress class="progress is-primary" value="{{step}}" max="{{response_form.steps_count}}"></progress>
+  </div>
+	<div>
+      {% if step and step != 0 %}
+		<form action="{% url 'survey-detail-step' id=survey.id step=step seed=response_form.random_seed %}" method="post">
+	{% else %}
+		<form action="{% url 'survey-detail' id=survey.id %}" method="post">
+	{% endif %}
+	    {% csrf_token %}
+      <input type="hidden" name="seed" value="{{response_form.random_seed}}">
+	    {% include "survey/question.html" %}
+		  {% if survey.editable_answers or response_form.response is None %}
+	      <input
+          class="button is-primary"
+	        type="submit"
+	        value="{% trans "Next!" %}"
+        >
+		  {% endif %}
+	 </form>
+  </div>
+{% endblock %}

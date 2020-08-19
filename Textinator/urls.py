@@ -36,7 +36,8 @@ urlpatterns = [
         path('accounts/', include('django_registration.backends.one_step.urls')),
         path('accounts/', include('django.contrib.auth.urls')),
         path('projects/', include('projects.urls')),
-        path('tinymce/', include('tinymce.urls'))
+        path('tinymce/', include('tinymce.urls')),
+        path('survey/', include('survey.urls'))
     ]))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -13,12 +13,16 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import yaml
 
+from pathlib import Path
+
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 
 # Quick-start development settings - unsuitable for production
@@ -53,9 +57,10 @@ INSTALLED_APPS = [
     'tinymce',
     'chartjs',
     'projects',
-    'rangefilter'
+    'rangefilter',
     # 'surveys'
     # 'django_extensions',
+    'survey'
 ]
 
 MIDDLEWARE = [
@@ -264,3 +269,9 @@ FILEBROWSER_MAX_UPLOAD_SIZE = 20971520
 
 pdfmetrics.registerFont(TTFont('Terminator',
     os.path.join(BASE_DIR, 'static', 'styles', 'terminator real nfi.ttf')))
+
+
+
+CSV_DIRECTORY = Path("csv") # Define the directory where csv are exported
+TEX_DIRECTORY = Path("tex") # Define the directory where tex files and pdf are exported
+
