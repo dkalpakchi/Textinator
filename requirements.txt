@@ -1,1 +1,1 @@
-git+git://github.com/dkalpakchi/django-survey@208719a2d96ee3483dd2f8ead8aaf20937575f5b
+git+git://github.com/dkalpakchi/django-survey@bae760f436dd973dc7876e90ba0c3074c1c45c38
