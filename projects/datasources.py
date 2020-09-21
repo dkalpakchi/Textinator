@@ -87,8 +87,8 @@ class TextFileSource(DataSource):
                         self.__files.append(os.path.join(d, f))
 
         for fname in self.__files:
-            with open(fname) as f:
-                self._add_datapoint(f.read().replace('\n', '\n\n'))
+            with open(fname, encoding='utf8') as f:
+                self._add_datapoint(f.read())
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)
