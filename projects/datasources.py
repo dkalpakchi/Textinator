@@ -87,7 +87,8 @@ class TextFileSource(DataSource):
                         self.__files.append(os.path.join(d, f))
 
         for fname in self.__files:
-            with open(fname, encoding='utf8') as f:
+            # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
+            with open(fname, encoding='utf-8-sig') as f:
                 self._add_datapoint(f.read())
 
     def get_random_datapoint(self):
