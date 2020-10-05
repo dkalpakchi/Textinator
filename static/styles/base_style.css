@@ -395,3 +395,7 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 .survey-table label {
   margin-right: 1em;
 }
+
+label.error {
+  vertical-align: top;
+}
