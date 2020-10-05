@@ -19,7 +19,7 @@
 
       <form method="post" action="{% url 'login' %}" class='form'>
         {% csrf_token %}
-        <input type="hidden" name="next" value="{% url 'projects:index' %}">
+        <input type="hidden" name="next" value="{% if next %}{{next}}{% else %}{% url 'projects:index' %}{% endif %}">
         <div class="field">
           <label for="username" class="label">Username or e-mail:</label>
           <div class="control">
