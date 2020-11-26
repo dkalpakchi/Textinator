@@ -227,9 +227,21 @@ textarea {
   font-size: 2em;
 }
 
-.selector.element span.tag:hover, .selector.element span.tag.active {
+.selector.element span.tag {
+  border: 1px solid white;
+}
+
+.selector.element span.tag:hover {
+  cursor: pointer;
+}
+
+.selector.element span.tag.active {
   border: 1px solid black;
   cursor: pointer;
+}
+
+.selector.element span.tag > span.tag {
+  margin: 0em 0.5em;
 }
 
 .selector.element p:last-child {

@@ -2,8 +2,12 @@
   <div class="column is-three-quarters">
     <article class="text message">
       <div class="message-header">
-        <p>Article</p>
-        <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
+        <p>Text</p>
+        <a id="flagTextButton" class="is-pulled-right">
+          <span class="icon is-small">
+            <i class="fas fa-flag"></i>
+          </span>
+        </a>
       </div>
       <div class="selector element content message-body" data-s="{{source_id}}" data-dp="{{dp_id}}">{{text|prettify}}</div>
     </article>
@@ -30,35 +34,56 @@
     </article>
   </div>
 </div>
-<article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-comment="{{project.allow_commenting_on_labels|bool2str}}">
-  <div class="message-header">
-    <p>Markers</p>
+<div class="columns">
+  <div class="column is-three-quarters">
+    <!-- FIXME: This is only temporary height fix -->
+    <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-comment="{{project.allow_commenting_on_labels|bool2str}}" style="height: 100%;">
+      <div class="message-header">
+        <p>Markers</p>
+      </div>
+      <div class="message-body">
+        <div class="field is-grouped is-grouped-multiline">
+          {% for marker in task_markers %}
+            <div class="control">
+              {{marker|display_marker}}
+            </div>
+          {% endfor %}
+          {% for marker in project.markers.all() %}
+            <div class="control">
+              {{marker|display_marker}}
+            </div>
+          {% endfor %}
+          {% for relation in task_relations %}
+            <div class="control">
+              {{relation|display_relation}}
+            </div>
+          {% endfor %}
+          {% for relation in project.relation_set.all() %}
+            <div class="control">
+              {{relation|display_relation}}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
   </div>
-  <div class="message-body">
-    <div class="field is-grouped is-grouped-multiline">
-      {% for marker in task_markers %}
-        <div class="control">
-          {{marker|display_marker}}
-        </div>
-      {% endfor %}
-      {% for marker in project.markers.all() %}
-        <div class="control">
-          {{marker|display_marker}}
-        </div>
-      {% endfor %}
-      {% for relation in task_relations %}
-        <div class="control">
-          {{relation|display_relation}}
-        </div>
-      {% endfor %}
-      {% for relation in project.relation_set.all() %}
-        <div class="control">
-          {{relation|display_relation}}
-        </div>
-      {% endfor %}
-    </div>
+  <div class="column">
+    <article class="reminders message">
+      <div class="message-header">
+        <p>Reminders</p>
+        <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
+      </div>
+      <div class="message-body">
+        {% if project.reminders %}
+          {{project.reminders|safe}}
+        {% else %}
+          No reminders are set
+        {% endif %}
+      </div>
+    </article>
   </div>
-</article>
+</div>
+
 
 <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
   {{ csrf_input }}

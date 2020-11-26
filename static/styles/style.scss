@@ -30,3 +30,16 @@ $radius-rounded: 290486px !default;
         }
     }
 }
+
+.selector .tag {
+  position: relative;
+  padding-left: 1.25em;
+}
+
+.selector .tag .rel {
+  position: absolute;
+  top: 0;
+  left: 4px;
+  color: white;
+  font-size: 0.8em;
+}

@@ -43,7 +43,7 @@ MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
 ##
 
 class LabelLengthJSONView(BaseColumnsHighChartsView):
-    title = "Label lengths"
+    title = "Label lengths (words)"
     yUnit = "labels"
 
     def get_labels(self):
@@ -80,7 +80,7 @@ label_lengths_chart_json = LabelLengthJSONView.as_view()
 
 
 class UserTimingJSONView(BaseColumnsHighChartsView):
-    title = "User timing, in minutes"
+    title = "User timing (minutes)"
     yUnit = "labels"
 
     def get_labels(self):
@@ -147,7 +147,7 @@ user_timing_chart_json = UserTimingJSONView.as_view()
 
 
 class UserProgressJSONView(BaseColumnsHighChartsView):
-    title = "Progress"
+    title = "Progress (%)"
     yUnit = "%"
 
     def get_labels(self):
@@ -199,13 +199,19 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
     def get_context_data(self, **kwargs):
         self.pk = kwargs.get('pk')
         data = super(UserProgressJSONView, self).get_context_data(**kwargs)
+        y = self.get_yAxis()
+        y["max"] = 100
+        print(y)
+        data.update({
+            "yAxis": y
+        })
         return data
 
 user_progress_chart_json = UserProgressJSONView.as_view()
 
 
 class DataSourceSizeJSONView(BaseColumnsHighChartsView):
-    title = "Data source sizes"
+    title = "Data source sizes (texts)"
     yUnit = "texts"
 
     def get_labels(self):
@@ -562,7 +568,7 @@ def data_explorer(request, proj):
             page_number = 1
 
         project_data = ProjectData.objects.filter(project=project).all()
-        flagged_datapoints = DataAccessLog.objects.filter(project_data__in=project_data).exclude(flags="").count()
+        flagged_datapoints = DataAccessLog.objects.filter(project_data__in=project_data).exclude(flags="")
 
         if project.task_type == 'qa':
             inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()

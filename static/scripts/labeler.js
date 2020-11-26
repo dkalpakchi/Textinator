@@ -3,22 +3,25 @@ $(document).ready(function() {
       relations = [],                                       // the array of all relations for this article, not submitted yet
       lastNodeInRelationId = 0,                             // TODO: maybe remove
       selectorArea = document.querySelector('.selector'),   // the area where the article is
-      resetTextHTML = selectorArea.innerHTML,               // the HTML of the loaded article
-      resetText = selectorArea.textContent,                 // the text of the loaded article
+      resetTextHTML = selectorArea == null ? "" : selectorArea.innerHTML,  // the HTML of the loaded article
+      resetText = selectorArea == null ? "" : selectorArea.textContent,    // the text of the loaded article
       contextSize = $('#taskArea').data('context'),         // the size of the context to be saved 'p', 't' or 'no'
       qStart = new Date(),                                  // the time the page was loaded or the last submission was made
       labelId = 0,                                          // internal JS label id for the labels of the current article
       activeLabels = labelId,                               // a number of labels currently present in the article
+      relationId = 1,                                       // the ID of a current relation
       radius = 10,
       graphIds = [],
       currentRelationId = null,
       comments = {},
       markersArea = document.querySelector('.markers'),
-      allowSelectingLabels = markersArea.getAttribute('data-select') == 'true',
-      allowCommentingLabels = markersArea.getAttribute('data-comment') == 'true',
-      markersInRelations = [].concat.apply([], Array.from(markersArea.querySelectorAll('div.relation.tags')).map(
+      allowSelectingLabels = markersArea == null ? false : markersArea.getAttribute('data-select') == 'true',
+      allowCommentingLabels = markersArea == null ? false : markersArea.getAttribute('data-comment') == 'true',
+      markersInRelations = markersArea == null ? [] :
+        [].concat.apply([], Array.from(markersArea.querySelectorAll('div.relation.tags')).map(
         x => x.getAttribute('data-b').split('-:-'))),
-      nonRelationMarkers = Array.from(markersArea.querySelectorAll('div.marker.tags')).map(
+      nonRelationMarkers = markersArea == null ? [] :
+        Array.from(markersArea.querySelectorAll('div.marker.tags')).map(
         x => x.getAttribute('data-s')).filter(x => !markersInRelations.includes(x));
 
   $('.button-scrolling').each(function(i, x) {
@@ -154,16 +157,22 @@ $(document).ready(function() {
     node.innerHTML = resetTextHTML;
   }
 
-  // activate labels on click
+  // activate pre-marked labels on click
   if (allowSelectingLabels) {
     $('article.text span.tag').on('click', function(e) {
       e.preventDefault();
-      if (!$(e.target).prop('in_relation'))
+      if (!$(e.target).prop('in_relation') && !window.getSelection().toString())
         if (e.target.classList.contains('active'))
           e.target.classList.remove('active');
         else
           e.target.classList.add('active');
     })
+
+    // stop hover propagation
+    $('.selector.element span.tag').mouseover(function(e) {
+      e.stopPropagation();
+      console.log("HERE");
+    });
   }
 
   // labeling piece of text with a given marker if the marker is clicked
@@ -185,8 +194,11 @@ $(document).ready(function() {
       deleteMarkedBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         var el = e.target,
-            parent = el.parentNode; // actual span
+            parent = el.parentNode, // actual span
+            sibling = e.target.nextSibling; // the span with a relation number (if any)
 
+        if (sibling != null)
+          sibling.remove();
         chunks = chunks.filter(function(x) { return x.id != chunk.id })
         mergeWithNeighbors(parent);
         $(el).prop('in_relation', false);
@@ -210,17 +222,56 @@ $(document).ready(function() {
 
       if (allowSelectingLabels) {
         markedSpan.addEventListener('click', function(e) {
-          if (!$(e.target).prop('in_relation'))
-            if (e.target.classList.contains('active'))
+          e.stopPropagation();
+          var $target = $(e.target);
+          if (!$target.prop('in_relation') && !window.getSelection().toString()) {
+            if (e.target.classList.contains('active') && $target.prop('selected')) {
               e.target.classList.remove('active');
-            else
+              $target.prop('selected', false);
+            } else {
               e.target.classList.add('active');
-        })
+              $target.prop('selected', true);
+            }
+          }
+        }, false);
+        markedSpan.addEventListener('mouseover', function(e) {
+          e.stopPropagation();          
+          if (e.target.classList.contains("tag"))
+            if (!$(e.target).prop('selected'))
+              e.target.classList.add('active');
+          else
+            if (!$(e.target.parentNode).prop('selected'))
+              e.target.parentNode.classList.add('active');
+        });
+        markedSpan.addEventListener('mouseout', function(e) {
+          e.stopPropagation();
+          if (e.target.classList.contains("tag"))
+            if (!$(e.target).prop('selected'))
+              e.target.classList.remove('active');
+          else
+            if (!$(e.target.parentNode).prop('selected'))
+              e.target.parentNode.classList.remove('active');
+        });
       }
 
       if (chunk['node'] !== undefined && chunk['node'] != null) {
         // TODO: figure out when it would happen
         var parent = chunk['node'].parentNode;
+        
+        var checker = parent,
+            elements = [];
+        while (checker.tagName != 'BODY') {
+          if (checker.classList.contains('tag')) {
+            elements.push(checker);
+          }
+          checker = checker.parentNode;
+        }
+
+        for (var i = 0, len = elements.length; i < len; i++) {
+          elements[i].style.paddingTop = 20 + 5 * i + "px";
+          elements[i].style.paddingBottom = 20 + 5 * i + "px";
+        }
+        
         parent.replaceChild(leftTextNode, chunk['node']);
         parent.insertBefore(markedSpan, leftTextNode.nextSibling);
         parent.insertBefore(rightTextNode, markedSpan.nextSibling);
@@ -316,6 +367,7 @@ $(document).ready(function() {
         between = this.getAttribute('data-b').split('-:-'),
         direction = this.getAttribute('data-d'),
         rule = this.getAttribute('data-r');
+
     if ($parts.length >= 2) {
       var nodes = {},
           links = [];
@@ -341,8 +393,8 @@ $(document).ready(function() {
 
       var from = null,
           to = null;
-      if (direction == '0') {
-        // first -> second
+      if (direction == '0' || direction == '2') {
+        // first -> second or bidirectional
         from = between[0];
         to = between[1];
       } else if (direction == '1') {
@@ -353,10 +405,13 @@ $(document).ready(function() {
 
       nodes[from].forEach(function(f) {
         nodes[to].forEach(function(t) {
-          links.push({
-            'source': f.id,
-            'target': t.id
-          })
+          if (f.id != t.id) {
+            // prevent loops
+            links.push({
+              'source': f.id,
+              'target': t.id
+            })
+          }
         })
       })
 
@@ -382,9 +437,11 @@ $(document).ready(function() {
         'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
         'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
         'links': links
-      }, (from != null && to != null))
+      }, (from != null && to != null && direction != '2'))
     }
     $parts.removeClass('active');
+    $parts.append($('<span class="rel">' + relationId + '</span>'));
+    relationId++;
   })
 
   // adding the information about the node, representing a label, to the chunks array
@@ -967,7 +1024,7 @@ $(document).ready(function() {
     var text = svg.selectAll("text")
       .data(data.nodes)
       .enter().append("text")
-        .text(function(d) { return d.name; });
+        .text(function(d) { return d.name.length > 10 ? d.name.substr(0, 10) + '...' : d.name ; });
 
     // Let's list the force we wanna apply on the network
     var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
@@ -975,8 +1032,8 @@ $(document).ready(function() {
               .id(function(d) { return d.id; })                     // This provide  the id of a node
               .links(data.links)                                    // and this the list of links
         )
-        .force("charge", d3.forceManyBody().strength(-400))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-        .force("center", d3.forceCenter(radius, 10))                // This force attracts nodes to the center of the svg area
+        .force("charge", d3.forceManyBody().strength(-500))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+        .force("center", d3.forceCenter(radius, 30))                // This force attracts nodes to the center of the svg area
         .stop()
 
     // This function is run at each iteration of the force algorithm, updating the nodes position.

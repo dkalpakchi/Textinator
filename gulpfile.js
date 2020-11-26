@@ -69,6 +69,6 @@ gulp.task('d3', function() {
     .pipe(gulp.dest('static/scripts'))
 })
 
-gulp.task('default', gulp.series(['bulma', 'jquery', 'fontawesome', 'shepherd', 'd3', 'tooltip:js'], function(done) {
+gulp.task('default', gulp.series(['bulma', 'jquery', 'fontawesome', 'shepherd', 'd3'], function(done) {
   done();
 }));

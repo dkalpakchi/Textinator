@@ -2,10 +2,12 @@
 
 {% block custom_styles %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="{{ static('styles/data-explorer.css') }}">
 {% endblock %}
 
 {% block custom_scripts %}
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script type="text/javascript" src="{{ static('scripts/bulma-collapsible.min.js') }}"></script>
 <script type="text/javascript" src="{{ static('scripts/data_explorer.js') }}"></script>
 {% endblock %}
 
@@ -15,7 +17,7 @@
     <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
     <a href="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
     <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-warning">Generate a PDF time report</a>
-    <div class="is-pulled-right">In total: {{ total_datapoints }} {% if labeled_inputs %}input(s){% else %}relation(s){% endif %}, {{flagged_datapoints}} flagged datapoint(s) </div>
+    <div class="is-pulled-right">In total: {{ total_datapoints }} {% if labeled_inputs %}input(s){% else %}relation(s){% endif %}, {{flagged_datapoints.count()}} flagged datapoint(s) </div>
   </div>
 
   <script type="text/javascript" src="{{ static('js/highcharts/highcharts.js') }}"></script>
@@ -56,6 +58,39 @@
           });
         </script>
       </div>
+    </div>
+  {% endif %}
+
+  {% if flagged_datapoints %}
+    <div class="container is-fluid mb-4">
+      <article id="flaggedCollapse" class="message is-danger">
+        <div class="message-header">
+          <span class="icon is-small">
+            <i class="fas fa-flag"></i>
+          </span>
+          &nbsp;&nbsp;Flagged datapoints
+        </div>
+        <div class="message-body">
+          <table class="table is-fullwidth">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Comment</th>
+                <th>Text sample</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for flagged in flagged_datapoints %}
+                <tr>
+                  <td>{{ flagged.user.username }}</td>
+                  <td>{{ flagged.flags }}</td>
+                  <td>{{ flagged.project_data.datasource.get(flagged.datapoint)|truncate(100,True) }}</td>
+                </tr>
+              {% endfor %}  
+            </tbody>
+          </table>
+        </div>
+      </article>
     </div>
   {% endif %}
 

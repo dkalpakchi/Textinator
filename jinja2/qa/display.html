@@ -88,17 +88,19 @@
       {% endif %}
     </div>
     <div class="column">
-      {% if project.reminders %}
-        <article class="reminders message">
-          <div class="message-header">
-            <p>Reminders</p>
-            <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
-          </div>
-          <div class="message-body">
+      <article class="reminders message">
+        <div class="message-header">
+          <p>Reminders</p>
+          <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
+        </div>
+        <div class="message-body">
+          {% if project.reminders %}
             {{project.reminders|safe}}
-          </div>
-        </article>
-      {% endif %}
+          {% else %}
+            No reminders are set
+          {% endif %}
+        </div>
+      </article>
       <article class="achievements message is-info">
         <div class="message-header">
           <p>Achievements</p>
@@ -242,7 +244,10 @@
         }
       },
       theme: 'default',
-      useModalOverlay: true
+      useModalOverlay: true,
+      complete: function() {
+        window.scrollTo(0, 0);
+      }
     });
 
     tour.addStep('article', {
@@ -304,6 +309,7 @@
     $('#followIntroTour').on('click', function() {
       $('.guidelines.modal').removeClass('is-active');
       tour.start();
+      tour.complete();
     });
   </script>
 {% else %}

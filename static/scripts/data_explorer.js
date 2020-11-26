@@ -3,4 +3,11 @@ $(document).ready(function() {
     collapsible: true,
     active: false
   });
+
+  $("#flaggedCollapse").accordion({
+    collapsible: true,
+    active: false,
+    icons: false,
+    
+  });
 })
