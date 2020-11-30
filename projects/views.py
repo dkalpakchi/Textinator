@@ -201,7 +201,6 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
         data = super(UserProgressJSONView, self).get_context_data(**kwargs)
         y = self.get_yAxis()
         y["max"] = 100
-        print(y)
         data.update({
             "yAxis": y
         })
@@ -218,7 +217,6 @@ class DataSourceSizeJSONView(BaseColumnsHighChartsView):
         """Return 7 labels for the x-axis."""
         self.project = Project.objects.get(pk=self.pk)
         self.x_axis = list(self.project.datasources.values_list('name', flat=True))
-        print(self.x_axis)
         return self.x_axis
 
     def get_providers(self):
@@ -248,7 +246,6 @@ class IndexView(LoginRequiredMixin, generic.ListView):
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
         data['profiles'] = UserProfile.objects.filter(user=self.request.user).all()
-        data['open_projects'] = Project.objects.filter(is_open=True).exclude(participants__in=[self.request.user]).all()
         return data
 
 
@@ -477,15 +474,12 @@ def update_participations(request):
     template = ''
     if n == 'p':
         open_projects = Project.objects.filter(is_open=True).exclude(participants__in=[request.user]).all()
-        template = render_to_string('partials/_open_projects.html', {
-            'open_projects': open_projects
-        }, request=request)
+        template = render_to_string('partials/_open_projects.html', {}, request=request)
     elif n == 'o':
         participations = request.user.participations.all()
-        template = render_to_string('partials/_participations.html', {
-            'participations': participations
-        }, request=request)
-        
+        template = render_to_string('partials/_participations.html', {}, request=request)
+    elif n == 's':
+        template = render_to_string('partials/_shared_projects.html', {}, request=request)
     return JsonResponse({
         'template': template
     })
@@ -559,9 +553,8 @@ def undo_last(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def data_explorer(request, proj):
-    if request.user.is_staff:
-        project = Project.objects.filter(pk=proj).get()
-
+    project = Project.objects.filter(pk=proj).get()
+    if project.author == request.user or project.shared_with(request.user):
         try:
             page_number = int(request.GET.get('page', 1))
         except:

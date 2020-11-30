@@ -4,7 +4,7 @@ $(document).ready(function() {
       lastNodeInRelationId = 0,                             // TODO: maybe remove
       selectorArea = document.querySelector('.selector'),   // the area where the article is
       resetTextHTML = selectorArea == null ? "" : selectorArea.innerHTML,  // the HTML of the loaded article
-      resetText = selectorArea == null ? "" : selectorArea.textContent,    // the text of the loaded article
+      resetText = selectorArea == null ? "" : selectorArea.textContent.trim(),    // the text of the loaded article
       contextSize = $('#taskArea').data('context'),         // the size of the context to be saved 'p', 't' or 'no'
       qStart = new Date(),                                  // the time the page was loaded or the last submission was made
       labelId = 0,                                          // internal JS label id for the labels of the current article
@@ -964,143 +964,144 @@ $(document).ready(function() {
   /******************/
   /* + Handling SVG */
   /******************/
-  
-  /* Relations */
-  var svg = d3.select("#relations")
-    .append("svg")
-      .attr("width", "100%")
-      .attr("height", "100%");
+  if (typeof d3 !== 'undefined') {
+    /* Relations */
+    var svg = d3.select("#relations")
+      .append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%");
 
-  // TODO: this marker should be visible w.r.t. the target node
-  svg.append("svg:defs").append("svg:marker")
-    .attr("id", "triangle")
-    .attr("refX", 6)
-    .attr("refY", 6)
-    .attr("markerWidth", 20)
-    .attr("markerHeight", 20)
-    .attr("markerUnits","userSpaceOnUse")
-    .attr("orient", "auto")
-    .append("path")
-    .attr("d", "M 0 0 12 6 0 12 3 6")
-    .style("fill", "black");
+    // TODO: this marker should be visible w.r.t. the target node
+    svg.append("svg:defs").append("svg:marker")
+      .attr("id", "triangle")
+      .attr("refX", 6)
+      .attr("refY", 6)
+      .attr("markerWidth", 20)
+      .attr("markerHeight", 20)
+      .attr("markerUnits","userSpaceOnUse")
+      .attr("orient", "auto")
+      .append("path")
+      .attr("d", "M 0 0 12 6 0 12 3 6")
+      .style("fill", "black");
 
-  function drawNetwork(data, arrows) {
-    if (arrows === undefined) arrows = false;
+    function drawNetwork(data, arrows) {
+      if (arrows === undefined) arrows = false;
 
-    var svg = d3.select("#relations svg")
+      var svg = d3.select("#relations svg")
 
-    svg.selectAll('g')
-      .attr('class', 'hidden');
+      svg.selectAll('g')
+        .attr('class', 'hidden');
 
-    svg = svg.append("g")
-      .attr('id', data.id)
+      svg = svg.append("g")
+        .attr('id', data.id)
 
-    var link = svg
-      .selectAll("line")
-      .data(data.links)
-      .enter()
-      .append("line")
-        .style("stroke", "#aaa");
+      var link = svg
+        .selectAll("line")
+        .data(data.links)
+        .enter()
+        .append("line")
+          .style("stroke", "#aaa");
 
-    if (arrows)
-      link = link.attr("marker-end", "url(#triangle)");
+      if (arrows)
+        link = link.attr("marker-end", "url(#triangle)");
 
-    // Initialize the nodes
-    var node = svg
-      .selectAll("circle")
-      .data(data.nodes)
-      .enter()
-      .append("circle")
-        .attr("r", radius)
-        .attr('data-id', function(d) { return d.id })
-        .style("fill", function(d) { return d.color })
-        .on("mouseover", function(d, i) {
-          $('#' + d.dom).addClass('active');
-        })
-        .on("mouseout", function(d, i) {
-          $('#' + d.dom).removeClass('active');
-        })
+      // Initialize the nodes
+      var node = svg
+        .selectAll("circle")
+        .data(data.nodes)
+        .enter()
+        .append("circle")
+          .attr("r", radius)
+          .attr('data-id', function(d) { return d.id })
+          .style("fill", function(d) { return d.color })
+          .on("mouseover", function(d, i) {
+            $('#' + d.dom).addClass('active');
+          })
+          .on("mouseout", function(d, i) {
+            $('#' + d.dom).removeClass('active');
+          })
 
-    var text = svg.selectAll("text")
-      .data(data.nodes)
-      .enter().append("text")
-        .text(function(d) { return d.name.length > 10 ? d.name.substr(0, 10) + '...' : d.name ; });
+      var text = svg.selectAll("text")
+        .data(data.nodes)
+        .enter().append("text")
+          .text(function(d) { return d.name.length > 10 ? d.name.substr(0, 10) + '...' : d.name ; });
 
-    // Let's list the force we wanna apply on the network
-    var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
-        .force("link", d3.forceLink()                               // This force provides links between nodes
-              .id(function(d) { return d.id; })                     // This provide  the id of a node
-              .links(data.links)                                    // and this the list of links
-        )
-        .force("charge", d3.forceManyBody().strength(-500))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-        .force("center", d3.forceCenter(radius, 30))                // This force attracts nodes to the center of the svg area
-        .stop()
+      // Let's list the force we wanna apply on the network
+      var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
+          .force("link", d3.forceLink()                               // This force provides links between nodes
+                .id(function(d) { return d.id; })                     // This provide  the id of a node
+                .links(data.links)                                    // and this the list of links
+          )
+          .force("charge", d3.forceManyBody().strength(-500))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+          .force("center", d3.forceCenter(radius, 30))                // This force attracts nodes to the center of the svg area
+          .stop()
 
-    // This function is run at each iteration of the force algorithm, updating the nodes position.
-    function ticked() {
-      /* update the simulation */
-      text
-        .attr("x", function(d) { return d.x + radius * 1.2; })
-        .attr("y", function(d) { return d.y; })
+      // This function is run at each iteration of the force algorithm, updating the nodes position.
+      function ticked() {
+        /* update the simulation */
+        text
+          .attr("x", function(d) { return d.x + radius * 1.2; })
+          .attr("y", function(d) { return d.y; })
 
-      link
-        .attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { 
-          var dx = 0.7 * Math.abs(d.target.x - d.source.x); 
-          if (d.target.x > d.source.x) {
-            return d.source.x + dx;
-          } else {
-            return d.source.x - dx;
-          }
-        })
-        .attr("y2", function(d) {
-          var dx = 0.7 * Math.abs(d.target.x - d.source.x);
-          var x = null;
-          if (d.target.x > d.source.x) {
-            x = d.source.x + dx;
-          } else {
-            x = d.source.x - dx;
-          }
+        link
+          .attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { 
+            var dx = 0.7 * Math.abs(d.target.x - d.source.x); 
+            if (d.target.x > d.source.x) {
+              return d.source.x + dx;
+            } else {
+              return d.source.x - dx;
+            }
+          })
+          .attr("y2", function(d) {
+            var dx = 0.7 * Math.abs(d.target.x - d.source.x);
+            var x = null;
+            if (d.target.x > d.source.x) {
+              x = d.source.x + dx;
+            } else {
+              x = d.source.x - dx;
+            }
 
-          var dy = Math.abs(x - d.source.x) * Math.abs(d.target.y - d.source.y) / Math.abs(d.target.x - d.source.x)
+            var dy = Math.abs(x - d.source.x) * Math.abs(d.target.y - d.source.y) / Math.abs(d.target.x - d.source.x)
 
-          if (d.target.y > d.source.y) {
-            // means arrow down
-            return d.source.y + dy;
-          } else {
-            // means arrow up
-            return d.source.y - dy;
-          }
-        });
+            if (d.target.y > d.source.y) {
+              // means arrow down
+              return d.source.y + dy;
+            } else {
+              // means arrow up
+              return d.source.y - dy;
+            }
+          });
 
-      node
-       .attr("cx", function(d) { return d.x; })
-       .attr("cy", function(d) { return d.y; });
-    }
-
-    function finalizeSimulation() {
-      var group = d3.select('g#' + data.id);
-
-      if (!group.empty()) {
-        var bbox = group.node().getBBox();
-
-        var svgBbox = document.querySelector('svg').getBoundingClientRect();
-
-        var mx = svgBbox.width / 2 - bbox.width / 4;
-        var my = svgBbox.height / 2 - bbox.height / 2;
-
-        group.attr("transform", "translate(" + mx + ", " + my + ")");
+        node
+         .attr("cx", function(d) { return d.x; })
+         .attr("cy", function(d) { return d.y; });
       }
-    }
 
-    for (var i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
-      simulation.tick();
-      ticked();
-    }
-    finalizeSimulation();
+      function finalizeSimulation() {
+        var group = d3.select('g#' + data.id);
 
-    $("#relationId").text(currentRelationId + 1);
+        if (!group.empty()) {
+          var bbox = group.node().getBBox();
+
+          var svgBbox = document.querySelector('svg').getBoundingClientRect();
+
+          var mx = svgBbox.width / 2 - bbox.width / 4;
+          var my = svgBbox.height / 2 - bbox.height / 2;
+
+          group.attr("transform", "translate(" + mx + ", " + my + ")");
+        }
+      }
+
+      for (var i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
+        simulation.tick();
+        ticked();
+      }
+      finalizeSimulation();
+
+      $("#relationId").text(currentRelationId + 1);
+    }
   }
 
   /******************/
@@ -1161,4 +1162,6 @@ $(document).ready(function() {
   /**
    * - Modals handling
    */
+  
+  window.chunks = chunks;
 });

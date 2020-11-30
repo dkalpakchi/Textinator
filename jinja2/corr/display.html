@@ -1,153 +1,22 @@
 <div class="columns">
   <div class="column is-three-quarters">
-    <article class="text message">
-      <div class="message-header">
-        <p>Text</p>
-        <a id="flagTextButton" class="is-pulled-right">
-          <span class="icon is-small">
-            <i class="fas fa-flag"></i>
-          </span>
-        </a>
-      </div>
-      <div class="selector element content message-body" data-s="{{source_id}}" data-dp="{{dp_id}}">{{text|prettify}}</div>
-    </article>
+    {% include 'partials/components/areas/text.html' %}
   </div>
   <div class="column">
-    <article class="relations message">
-      <div class="message-header">
-        <p>Relations</p>
-        <div class="text-right">
-          <a id='prevRelation'><span class="icon is-small"><i class="fas fa-angle-left"></i></span></a>
-          <span id='relationId'>0</span>
-          <a id='nextRelation'><span class="icon is-small"><i class="fas fa-angle-right"></i></span></a>
-        </div>
-      </div>
-      <div class="message-body">
-        <div id="relations"></div>
-        <a id='removeRelation' class="button is-fullwidth">
-          <span class="icon">
-            <i class="fas fa-trash-alt"></i>
-          </span>
-          <span>Remove relation</span>
-        </a>
-      </div>
-    </article>
+    {% include 'partials/components/areas/relations.html' %}
   </div>
 </div>
 <div class="columns">
   <div class="column is-three-quarters">
-    <!-- FIXME: This is only temporary height fix -->
-    <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-comment="{{project.allow_commenting_on_labels|bool2str}}" style="height: 100%;">
-      <div class="message-header">
-        <p>Markers</p>
-      </div>
-      <div class="message-body">
-        <div class="field is-grouped is-grouped-multiline">
-          {% for marker in task_markers %}
-            <div class="control">
-              {{marker|display_marker}}
-            </div>
-          {% endfor %}
-          {% for marker in project.markers.all() %}
-            <div class="control">
-              {{marker|display_marker}}
-            </div>
-          {% endfor %}
-          {% for relation in task_relations %}
-            <div class="control">
-              {{relation|display_relation}}
-            </div>
-          {% endfor %}
-          {% for relation in project.relation_set.all() %}
-            <div class="control">
-              {{relation|display_relation}}
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </article>
+    {% include 'partials/components/areas/markers.html' %}
+    {% include 'partials/components/areas/submission.html' %}
   </div>
   <div class="column">
-    <article class="reminders message">
-      <div class="message-header">
-        <p>Reminders</p>
-        <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
-      </div>
-      <div class="message-body">
-        {% if project.reminders %}
-          {{project.reminders|safe}}
-        {% else %}
-          No reminders are set
-        {% endif %}
-      </div>
-    </article>
+    {% include 'partials/components/areas/reminders.html' %}
   </div>
 </div>
 
-
-<form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
-  {{ csrf_input }}
-  <div class="field is-grouped">
-    <div class="control">
-      <button class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></button>
-    </div>
-    <div class="control">
-      <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last</span></button>
-    </div>
-    <div class='control'>
-      <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle"><span class="icon"><i class="fas fa-newspaper"></i></span><span>Get new text</span></a>
-    </div>
-  </div>
-</form>
-
-<div class="modal">
-  <div class="modal-background"></div>
-  <div class="modal-content">
-    <div class="guidelines card">
-      <header class="card-header">
-        <p class="card-header-title">
-          {{project.title}}
-        </p>
-      </header>
-      <div class="card-content">
-        <div class="content">
-          <p class='has-text-weight-bold'>Guidelines</p>
-          <p class='has-text-justified'>{{project.guidelines}}</p>
-        </div>
-        <div class="content">
-          <div id="followIntroTour" class='ui button'>Follow the intro tour</div>
-        </div>
-        <div class='content'>
-          <p class='has-text-weight-bold'>Contact information</p>
-          <!-- TODO: make this table responsive -->
-          <table class='table'>
-            <tbody>
-              <tr>
-                <td>Responsible</td>
-                <td>{{project.author.first_name}} {{project.author.last_name}}</td>
-              </tr>
-              <tr>
-                <td>Contact email</td>
-                <td>{{project.author.email}}</td>
-              </tr>
-              <tr>
-                <td>Published at</td>
-                <td>{{project.dt_publish}}</td>
-              </tr>
-              <tr>
-                <td>To be finished at</td>
-                <td>
-                  {{project.dt_finish}}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  <button class="modal-close is-large" aria-label="close"></button>
-</div>
+{% include 'partials/components/modals/guidelines.html' %}
 
 <script>
   $('#guidelinesButton').on('click', function() {

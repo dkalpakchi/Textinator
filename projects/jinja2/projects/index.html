@@ -19,13 +19,7 @@
       {% endif %}
     </div>
     <div data-content="shared-projects" {% if request.GET.n == 'sp' %}class='is-active'{% endif %}>
-      {% if shared_projects %}
-        <div class="shared-projects">
-          {% for project in shared_projects %}
-            <li>{{ project.title }}</li>
-          {% endfor %}
-        </div>
-      {% endif %}
+      {% include 'partials/_shared_projects.html' %}
     </div>
     <div data-content="open-projects" {% if request.GET.n == 'o' %}class='is-active'{% endif %}>
       {% include 'partials/_open_projects.html' %}

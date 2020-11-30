@@ -1,0 +1,13 @@
+<article class="reminders message">
+  <div class="message-header">
+    <p>Reminders</p>
+    <a id="guidelinesButton" class="is-pulled-right">GUIDELINES</a>
+  </div>
+  <div class="message-body">
+    {% if project.reminders %}
+      {{project.reminders|safe}}
+    {% else %}
+      No reminders are set
+    {% endif %}
+  </div>
+</article>

@@ -411,3 +411,7 @@ button.ui-timepicker-trigger:hover, button.ui-datetime-now:hover,
 label.error {
   vertical-align: top;
 }
+
+.no-decoration {
+  text-decoration: none !important;
+}

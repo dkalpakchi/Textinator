@@ -207,6 +207,9 @@ class Project(CommonModel):
     def has_participant(self, user):
         return user in self.participants.all()
 
+    def shared_with(self, user):
+        return user in self.collaborators.all()
+
     def save(self, *args, **kwargs):
         super(Project, self).save(*args, **kwargs)
 

@@ -24,10 +24,6 @@
     {% block custom_scripts %}{% endblock %}
   </head>
   <body is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
-    {% set user_projects=user.project_set.all() %} 
-    {% set shared_projects=user.shared_projects.all() %}
-    {% set participations=user.participations.all() %}
-
     {% include 'partials/_navbar.html' %}
     {% block content %}{% endblock %}
   </body>

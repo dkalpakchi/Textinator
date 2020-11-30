@@ -1,0 +1,43 @@
+<article class="achievements message is-info">
+  <div class="message-header">
+    <p>Achievements</p>
+  </div>
+  <div class="message-body">
+    {% if project.points_scope != 'n' %}
+      <nav class="level">
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">Submitted in total</p>
+            <p class="title">
+              <div class="tt-set-size tt-charts-container">
+                <div class="tt-pie-wrapper no-margin">
+                  <span id="submittedTotal" class="tt-label">{{profile.submitted()}}<span class="smaller">q</span></span>                  
+                  <div class="tt-pie">
+                    <div class="left-side half-circle"></div>
+                    <div class="right-side half-circle"></div>
+                  </div>
+                </div>
+              </div>
+            </p>
+          </div>
+        </div>
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">Submitted today</p>
+            <p class="title">
+              <div class="tt-set-size tt-charts-container">
+                <div class="tt-pie-wrapper no-margin">
+                  <span id="submittedToday" class="tt-label">{{profile.submitted_today()}}<span class="smaller">q</span></span>
+                  <div class="tt-pie">
+                    <div class="left-side half-circle"></div>
+                    <div class="right-side half-circle"></div>
+                  </div>
+                </div>
+              </div>
+            </p>
+          </div>
+        </div>
+      </nav>
+    {% endif %}
+  </div>
+</article>

@@ -1,0 +1,34 @@
+<article class="question message is-primary">
+  <div class="message-header">
+    <p>Your question</p>
+  </div>
+  <div class="message-body">
+    <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
+      {{ csrf_input }}
+      <input type="hidden" name="pid" value="{{project.pk}}">
+      <div class="field">
+        <div class="control">
+          <input class='question input' type="text" name="input" placeholder="Type in your question here">
+        </div>
+      </div>
+      <div class="field is-grouped">
+        <div class="control">
+          <button class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></button>
+        </div>
+        <div class="control">
+          <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last submission</span></button>
+        </div>
+        {% if not project.round_length or project.round_length > 1 %}
+          <div class='control'>
+            <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle"><span class="icon"><i class="fas fa-newspaper"></i></span><span>Get new text</span></a>
+          </div>
+        {% endif %}
+        {% if project.round_length %}
+          <div class='control'>
+            <a href="{{ url('projects:new_article', kwargs={'proj':project.pk}) }}" class="button" id="finishRound" data-active="{{'t' if project.round_length == 1 else 'f'}}">Finish round</a>
+          </div>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</article>

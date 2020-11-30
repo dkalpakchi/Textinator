@@ -1,0 +1,17 @@
+<article class="{% if source_id != -1 %}text {% endif %}message">
+  <div class="message-header">
+    <p>Text</p>
+    <a id="flagTextButton" class="no-decoration is-pulled-right">
+      <span class="icon is-small">
+        <i class="fas fa-flag"></i>
+      </span>
+    </a>
+  </div>
+  <div class="selector element content message-body" data-s="{{source_id}}" data-dp="{{dp_id}}" data-f="{{source_finished}}">
+    {% if source_id != -1 %}
+      {{text|prettify}}
+    {% else %}
+      {% include 'partials/_great_job.html' %}
+    {% endif %}
+  </div>
+</article>

@@ -21,7 +21,7 @@
   </div>
 
   <script type="text/javascript" src="{{ static('js/highcharts/highcharts.js') }}"></script>
-  {% if user.is_superuser %}
+  {% if project.author == user or project.shared_with(user) %}
     <div class="container columns">
       <div class="column">
         <div id="labelLengthsChart" width="300" height="150"></div>

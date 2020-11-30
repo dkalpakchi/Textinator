@@ -21,7 +21,8 @@ $(document).ready(function() {
 
     var $target = $(e.target),
         $inputForm = $target.closest('.join.form'),
-        inputFormData = $inputForm.serializeObject();
+        inputFormData = $inputForm.serializeObject(),
+        $newlyShared = $('#newShared');
 
     $.ajax({
       method: "POST",
@@ -29,7 +30,6 @@ $(document).ready(function() {
       dataType: "json",
       data: inputFormData,
       success: function(data) {
-        console.log("SUCCESS!")
         if (data['result'] == 'joined')
           $target.val('Leave');
         else
@@ -39,16 +39,36 @@ $(document).ready(function() {
         $.ajax({
           method: 'GET',
           url: encodeURI('/textinator/projects/participations/update?n=' + inputFormData['n']),
-          success: function(data) {
-            console.log(data)
+          success: function(data2) {
             var $tab = null;
             if (inputFormData['n'] == 'o') {
               $tab = $('div[data-content="participations"]');  
             } else if (inputFormData['n'] == 'p') {
               $tab = $('div[data-content="open-projects"]');
+            } else if (inputFormData['n'] == 's') {
+              $tab = $('div[data-content="shared-projects"]');
             }
             if ($tab)
-              $tab.html(data['template']);
+              $tab.html(data2['template']);
+
+            if (inputFormData['n'] == 's') {
+              console.log($newlyShared.text())
+              if (data['result'] == 'joined') {
+                var newlyShared = parseInt($newlyShared.text()) - 1;
+                $newlyShared.text(newlyShared);
+                if (newlyShared > 0) {
+                  $newlyShared.removeClass('is-hidden');
+                } else {
+                  $newlyShared.addClass('is-hidden');
+                }
+              } else {
+                var newlyShared = parseInt($newlyShared.text()) + 1;
+                $newlyShared.text(newlyShared);
+                if (newlyShared > 0) {
+                  $newlyShared.removeClass('is-hidden');
+                }
+              }
+            }
             $('.join.form .submit.button').off('click');
             $('.join.form .submit.button').on('click', joinFormSubmit);
             $('[data-link]').off('click')

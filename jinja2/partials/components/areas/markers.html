@@ -1,0 +1,32 @@
+<article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-comment="{{project.allow_commenting_on_labels|bool2str}}">
+  <div class="message-header">
+    <p>Markers</p>
+  </div>
+  <div class="message-body">
+    <div class="field is-grouped is-grouped-multiline">
+      {% set project_markers=project.markers.distinct() %}
+      {% for marker in task_markers %}
+        {% if marker not in project_markers %}
+          <div class="control">
+            {{marker|display_marker}}
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% for marker in project_markers %}
+        <div class="control">
+          {{marker|display_marker}}
+        </div>
+      {% endfor %}
+      {% for relation in task_relations %}
+        <div class="control">
+          {{relation|display_relation}}
+        </div>
+      {% endfor %}
+      {% for relation in project.relation_set.all() %}
+        <div class="control">
+          {{relation|display_relation}}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</article>

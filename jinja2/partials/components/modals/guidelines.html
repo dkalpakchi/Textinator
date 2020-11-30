@@ -1,0 +1,52 @@
+<div class="guidelines modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div class="guidelines card">
+      <header class="card-header">
+        <p class="card-header-title">
+          {{project.title}}
+        </p>
+      </header>
+      <div class="card-content">
+        <div class="button-scrolling content">
+          <p class='has-text-weight-bold'>Guidelines</p>
+          <p class='has-text-justified'>{{project.guidelines|safe}}</p>
+        </div>
+        <div class="content">
+          <div id="followIntroTour" class='ui button'>Follow the UI intro tour</div>
+        </div>
+        <div class='content'>
+          <p class='has-text-weight-bold'>Contact information</p>
+          <!-- TODO: make this table responsive -->
+          <table class='table'>
+            <tbody>
+              <tr>
+                <td>Responsible</td>
+                <td>{{project.author.first_name}} {{project.author.last_name}}</td>
+              </tr>
+              <tr>
+                <td>Contact email</td>
+                <td>{{project.author.email}}</td>
+              </tr>
+              {% if project.dt_publish %}
+                <tr>
+                  <td>Published at</td>
+                  <td>{{project.dt_publish}}</td>
+                </tr>
+              {% endif %}
+              {% if project.dt_finish %}
+                <tr>
+                  <td>To be finished at</td>
+                  <td>
+                    {{project.dt_finish}}
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
