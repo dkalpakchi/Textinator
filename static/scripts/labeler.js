@@ -10,10 +10,10 @@ $(document).ready(function() {
       qStart = new Date(),                                  // the time the page was loaded or the last submission was made
       labelId = 0,                                          // internal JS label id for the labels of the current article
       activeLabels = labelId,                               // a number of labels currently present in the article
-      relationId = 1,                                       // the ID of a current relation
+      lastRelationId = 1,                                   // the ID of the last unsubmitted relation
       radius = 10,
       graphIds = [],
-      currentRelationId = null,
+      currentRelationId = null,                             // the ID of the current relation
       comments = {},
       markersArea = document.querySelector('.markers'),
       allowSelectingLabels = markersArea == null ? false : markersArea.getAttribute('data-select') == 'true',
@@ -148,25 +148,30 @@ $(document).ready(function() {
       }
     }
 
-    if (pieces[0].nodeType == 3 && prev.nodeType == 3)
-      parent.replaceChild(document.createTextNode(prev.data + pieces[0].data), prev);
-    else
-      parent.insertBefore(pieces[0], next);
-
-    parent.removeChild(node);
-    for (var i = 1; i < pieces.length - 1; i++) {
-      parent.insertBefore(pieces[i], next)
-    }
-
     if (pieces.length > 1) {
+      if (pieces[0].nodeType == 3 && prev.nodeType == 3)
+        parent.replaceChild(document.createTextNode(prev.data + pieces[0].data), prev);
+      else
+        parent.insertBefore(pieces[0], next);
+
+      parent.removeChild(node);
+      for (var i = 1; i < pieces.length - 1; i++) {
+        parent.insertBefore(pieces[i], next)
+      }
+
       if (pieces[pieces.length-1].nodeType == 3 && next.nodeType == 3) {
         parent.replaceChild(document.createTextNode(pieces[pieces.length-1].data + next.data), next);
       }
       else {
         parent.insertBefore(pieces[pieces.length-1], next);
-      }  
+      }
+    } else {
+      console.log(pieces[0])
+      console.log(next.data)
+      parent.replaceChild(document.createTextNode(prev.data + pieces[0].data + next.data), prev);
+      parent.removeChild(node);
+      parent.removeChild(next);
     }
-    
   }
 
   function removeAllChildren(node) {
@@ -181,22 +186,68 @@ $(document).ready(function() {
     node.innerHTML = resetTextHTML;
   }
 
-  // activate pre-marked labels on click
-  if (allowSelectingLabels) {
-    $('article.text span.tag').on('click', function(e) {
-      e.preventDefault();
-      if (!$(e.target).prop('in_relation') && !window.getSelection().toString())
-        if (e.target.classList.contains('active'))
-          e.target.classList.remove('active');
-        else
-          e.target.classList.add('active');
-    })
-
-    // stop hover propagation
-    $('.selector.element span.tag').mouseover(function(e) {
+  // event delegation
+  $('.selector.element').on('click', function(e) {
+    var target = e.target;
+    if (target.nodeName == "BUTTON" && target.classList.contains('delete')) {
+      // when a delete button on any label is clicked
       e.stopPropagation();
-    });
-  }
+      var el = e.target,
+          parent = el.parentNode, // actual span
+          sibling = e.target.nextSibling; // the span with a relation number (if any)
+
+      target.remove();
+      if (sibling != null)
+        sibling.remove();
+      chunks = chunks.filter(function(x) { return x.id != target.getAttribute('data-j') })
+      mergeWithNeighbors(parent);
+      $(el).prop('in_relation', false);
+      activeLabels--;
+    } else if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
+      if (allowSelectingLabels) {
+        var $target = $(e.target);
+        if (!$target.prop('in_relation') && !window.getSelection().toString()) {
+          if (e.target.classList.contains('active') && $target.prop('selected')) {
+            e.target.classList.remove('active');
+            $target.prop('selected', false);
+          } else {
+            e.target.classList.add('active');
+            $target.prop('selected', true);
+          }
+        }
+      }
+    }
+  });
+
+  $('.selector.element').on('mouseover', function(e) {
+    var target = e.target;
+    if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
+      if (allowSelectingLabels) {
+        e.stopPropagation();
+        if (e.target.classList.contains("tag"))
+          if (!$(e.target).prop('selected'))
+            e.target.classList.add('active');
+        else
+          if (!$(e.target.parentNode).prop('selected'))
+            e.target.parentNode.classList.add('active');
+      }
+    }
+  });
+
+  $('.selector.element').on('mouseout', function(e) {
+    var target = e.target;
+    if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
+      if (allowSelectingLabels) {
+        e.stopPropagation();
+        if (e.target.classList.contains("tag"))
+          if (!$(e.target).prop('selected'))
+            e.target.classList.remove('active');
+        else
+          if (!$(e.target.parentNode).prop('selected'))
+            e.target.parentNode.classList.remove('active');
+      }
+    }
+  })
 
   // labeling piece of text with a given marker if the marker is clicked
   $('.marker.tags').on('click', function() {
@@ -214,22 +265,9 @@ $(document).ready(function() {
       }
       markedSpan.setAttribute('data-s', this.getAttribute('data-s'));
       markedSpan.setAttribute('data-i', labelId);
+      markedSpan.setAttribute('data-j', idc);
       $(markedSpan).prop('in_relation', false);
       deleteMarkedBtn.className = 'delete is-small';
-      deleteMarkedBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var el = e.target,
-            parent = el.parentNode, // actual span
-            sibling = e.target.nextSibling; // the span with a relation number (if any)
-
-        this.remove();
-        if (sibling != null)
-          sibling.remove();
-        chunks = chunks.filter(function(x) { return x.id != chunk.id })
-        mergeWithNeighbors(parent);
-        $(el).prop('in_relation', false);
-        activeLabels--;
-      }, true);
       markedSpan.appendChild(deleteMarkedBtn)
 
       if (allowCommentingLabels) {
@@ -246,40 +284,6 @@ $(document).ready(function() {
         });
       }
 
-      if (allowSelectingLabels) {
-        markedSpan.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var $target = $(e.target);
-          if (!$target.prop('in_relation') && !window.getSelection().toString()) {
-            if (e.target.classList.contains('active') && $target.prop('selected')) {
-              e.target.classList.remove('active');
-              $target.prop('selected', false);
-            } else {
-              e.target.classList.add('active');
-              $target.prop('selected', true);
-            }
-          }
-        }, false);
-        markedSpan.addEventListener('mouseover', function(e) {
-          e.stopPropagation();          
-          if (e.target.classList.contains("tag"))
-            if (!$(e.target).prop('selected'))
-              e.target.classList.add('active');
-          else
-            if (!$(e.target.parentNode).prop('selected'))
-              e.target.parentNode.classList.add('active');
-        });
-        markedSpan.addEventListener('mouseout', function(e) {
-          e.stopPropagation();
-          if (e.target.classList.contains("tag"))
-            if (!$(e.target).prop('selected'))
-              e.target.classList.remove('active');
-          else
-            if (!$(e.target.parentNode).prop('selected'))
-              e.target.parentNode.classList.remove('active');
-        });
-      }
-
       if (chunk['node'] !== undefined && chunk['node'] != null) {
         // TODO: figure out when it would happen
         var parent = chunk['node'].parentNode;
@@ -289,10 +293,20 @@ $(document).ready(function() {
           parent.insertBefore(markedSpan, leftTextNode.nextSibling);
           parent.insertBefore(rightTextNode, markedSpan.nextSibling);  
         } else {
-          var newNode = document.createElement(chunk['node'].nodeName);
+          var newNode = document.createElement(chunk['node'].nodeName),
+              cnodes = chunk['node'].childNodes;
+          for (var i = 0; i < cnodes.length; i++) {
+            if (cnodes[i] == chunk['left'])
+              break;
+            newNode.appendChild(cnodes[i].cloneNode(true));
+          }
           newNode.appendChild(leftTextNode);
           newNode.appendChild(markedSpan);
           newNode.appendChild(rightTextNode);
+          for (var j = i + 1; j < cnodes.length; j++) {
+            if (cnodes[j] == chunk['right']) continue;
+            newNode.appendChild(cnodes[j].cloneNode(true));
+          }
           parent.replaceChild(newNode, chunk['node']);
         }
 
@@ -305,9 +319,9 @@ $(document).ready(function() {
             checker = checker.parentNode;
           }
 
-          for (var i = 0, len = elements.length; i < len; i++) {
-            elements[i].style.paddingTop = 10 + 10 * i + "px";
-            elements[i].style.paddingBottom = 10 + 10 * i + "px";
+          for (var j = 0, len = elements.length; j < len; j++) {
+            elements[j].style.paddingTop = 10 + 10 * j + "px";
+            elements[j].style.paddingBottom = 10 + 10 * j + "px";
           }
         }
         
@@ -476,8 +490,8 @@ $(document).ready(function() {
       }, (from != null && to != null && direction != '2'))
 
       $parts.removeClass('active');
-      $parts.append($('<span class="rel">' + relationId + '</span>'));
-      relationId++;
+      $parts.append($('<span class="rel">' + lastRelationId + '</span>'));
+      lastRelationId++;
     }
   })
 
@@ -847,14 +861,19 @@ $(document).ready(function() {
           $submittedToday.text(data['submitted_today']);
           $submittedToday.append($('<span class="smaller">q</span>'));
           
-          relations = [];
           qStart = new Date();
 
           // TODO; trigger iff .countdown is present
           $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
 
+          // fix relations
+          relations = [];
+          currentRelationId = null;
+          lastRelationId = 1;
+          graphIds = [];
           // clear svg
           d3.selectAll("svg > *").remove()
+          showRelationGraph(currentRelationId);
 
           activeLabels = 0;
 
@@ -956,16 +975,6 @@ $(document).ready(function() {
               comments = {};
             }
 
-            if (allowSelectingLabels) {
-              $('article.text span.tag').on('click', function(e) {
-                if (!$(e.target).prop('in_relation'))
-                  if (e.target.classList.contains('active'))
-                    e.target.classList.remove('active');
-                  else
-                    e.target.classList.add('active');
-              })
-            }
-
             initPreMarkers();
 
             $button.attr('disabled', false);
@@ -1012,15 +1021,19 @@ $(document).ready(function() {
   });
 
   function showRelationGraph(id) {
-    var svg = d3.select("#relations svg")
+    if (id == null || id === undefined)
+      $('#relationId').text(0);
+    else {
+      var svg = d3.select("#relations svg")
 
-    svg.selectAll('g')
-      .attr('class', 'hidden');
+      svg.selectAll('g')
+        .attr('class', 'hidden');
 
-    d3.select('g#' + graphIds[id])
-      .attr('class', '');
+      d3.select('g#' + graphIds[id])
+        .attr('class', '');
 
-    $('#relationId').text(id + 1);
+      $('#relationId').text(id + 1);
+    }
   }
 
   $('#prevRelation').on('click', function(e) {
