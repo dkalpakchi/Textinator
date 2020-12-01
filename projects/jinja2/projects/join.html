@@ -3,7 +3,7 @@
 {% block content %}
 <div class="section hero is-large">
   <div class="container box is-vcentered is-centered">
-    {% if project.is_open or project.has_participant(request.user) or project.shared_with(request.user) %}
+    {% if project.is_open or project.author == request.user or project.has_participant(request.user) or project.shared_with(request.user) %}
       <h1 class="title">
         Please confirm your decision to join
       </h1>
