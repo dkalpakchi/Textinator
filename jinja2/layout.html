@@ -25,6 +25,8 @@
   </head>
   <body is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
     {% include 'partials/_navbar.html' %}
-    {% block content %}{% endblock %}
+    <div class="container is-fluid">
+        {% block content %}{% endblock %}
+    </div>
   </body>
 </html>

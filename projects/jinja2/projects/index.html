@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-  <div id="tab-content" class='container is-fluid'>
+  <div id="tab-content">
     <div data-content="my-projects" {% if request.GET.n == 'mp' %}class='is-active'{% endif %}>
       {% if user_projects %}
         <div class="my-projects tile is-ancestor">

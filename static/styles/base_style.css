@@ -415,3 +415,40 @@ label.error {
 .no-decoration {
   text-decoration: none !important;
 }
+
+nav .column {
+  padding-bottom: 0;
+}
+
+nav .column:first-child {
+  padding-right: 0;
+}
+
+nav .column:last-child {
+  border-bottom: 1px solid #dbdbdb;
+}
+
+nav .dropdown {
+  align-items: center;
+  color: #4a4a4a;
+  display: flex;
+  justify-content: center;
+  margin-bottom: -1px;
+  padding: .5em 1em;
+}
+
+nav div.profile {
+  user-select: none;
+}
+
+nav div.profile:hover {
+  cursor: pointer;
+}
+
+nav .icon:first-child {
+  margin-right: 0.5em;
+}
+
+nav .icon:last-child {
+  margin-left: 0.5em;
+}

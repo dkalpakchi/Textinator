@@ -130,5 +130,9 @@ $(document).ready(function() {
     if (interval != null) {
       resetTimer();
     }
-  });  
+  });
+
+  $('nav .dropdown').on('click', function() {
+    $(this).toggleClass('is-active');
+  })
 });

@@ -1,92 +1,113 @@
-<div class="tabs">
-  <ul>
-    <li class='logo'>
-      <a href="/textinator">Textinator</a>
-    </li>
-    {% if request.path == url('projects:index') %}
-    <li class="challenges{% if request.GET.n == 'p' or 'n' not in request.GET %} is-active{% endif %}" data-tab="participations">
-      <a>
-    {% else %}
-    <li class='challenges'>
-      <a href="{{ url('projects:index') }}?n=p">
-    {% endif %}
-        <span class="icon is-small"><i class="fas fa-medal" aria-hidden="true"></i></span>
-        <span>My Challenges</span>
-      </a>
-    </li>
-    {% if request.path == url('projects:index') %}
-    <li class="open-challenges{% if request.GET.n == 'o' %} is-active{% endif %}" data-tab="open-projects">
-      <a>
-    {% else %}
-    <li class='open-challenges'>
-      <a href="{{ url('projects:index') }}?n=o">
-    {% endif %}
-        <span class="icon is-small"><i class="fas fa-trophy" aria-hidden="true"></i></span>
-        <span>Open Challenges</span>
-      </a>
-    </li>
-    {% if user_projects %}
-      {% if request.path == url('projects:index') %}
-      <li {% if request.GET.n == 'mp' %}class='is-active'{% endif %} data-tab="my-projects" class='my-projects'>
-        <a>
-      {% else %}
-      <li class='my-projects'>
-        <a href="{{ url('projects:index') }}?n=mp">
-      {% endif %}
-          <span class="icon is-small"><i class="fas fa-project-diagram" aria-hidden="true"></i></span>
-          <span>My Projects</span>
-        </a>
-      </li>
-    {% endif %}
-
-    {% if shared_projects %}
-      {% if request.path == url('projects:index') %}
-      <li {% if request.GET.n == 'sp' %}class='is-active'{% endif %} data-tab="shared-projects" class='shared-projects'>
-        <a>
-      {% else %}
-      <li class='shared-projects'>
-        <a href="{{ url('projects:index') }}?n=sp">
-      {% endif %}
-          <span class="icon is-small"><i class="fas fa-users" aria-hidden="true"></i></span>
-          <span>Shared projects</span>
-
-          &nbsp;&nbsp;<span id="newShared" class="tag is-danger is-normal is-rounded {% if newly_shared|length <= 0 %}is-hidden{% endif %}">
-            {{newly_shared|length}}
-          </span>
-          
-        </a>
-      </li>
-    {% endif %}
-
-    <li class='my-projects'>
-      <a href="{{ url('survey-list') }}">
-        <span class="icon is-small"><i class="fas fa-list-alt" aria-hidden="true"></i></span>
-        <span>Surveys</span>
-      </a>
-    </li>
-    
-    <li class='is-pulled-right'>
-      <span class='text'>Welcome, {{user.get_full_name() or user.username}}!</span>
-      {% if project and (project.author == user or project.shared_with(user)) %}
-        <a href="{{ url('projects:data_explorer', kwargs={'proj': project.pk}) }}" class='admin'>
-          <span class="icon is-small"><i class="fas fa-chart-bar"></i></span>
-          <span>Data explorer</span>
-        </a>
-      {% endif %}
-      {% if user.is_staff %}
-        {% if project %}
-        <a href="{{ url('admin:projects_project_change', kwargs={'object_id': project.id}) }}" class='admin'>
+<nav class="columns">
+  <div class="column is-four-fifths">
+    <div class="tabs">
+      <ul>
+        <li class='logo'>
+          <a href="/textinator">Textinator</a>
+        </li>
+        {% if request.path == url('projects:index') %}
+        <li class="challenges{% if request.GET.n == 'p' or 'n' not in request.GET %} is-active{% endif %}" data-tab="participations">
+          <a>
         {% else %}
-        <a href="{{ url('admin:index') }}" class='admin'>
+        <li class='challenges'>
+          <a href="{{ url('projects:index') }}?n=p">
         {% endif %}
-          <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
-          <span>Admin</span>
-        </a>
-      {% endif %}
-      <a href="{{ url('logout') }}">
-        <span class="icon is-small"><i class="fas fa-sign-out-alt"></i></span>
-        Logout
-      </a>
-    </li>
-  </ul>
-</div>
+            <span class="icon is-small"><i class="fas fa-medal" aria-hidden="true"></i></span>
+            <span>My Challenges</span>
+          </a>
+        </li>
+        {% if request.path == url('projects:index') %}
+        <li class="open-challenges{% if request.GET.n == 'o' %} is-active{% endif %}" data-tab="open-projects">
+          <a>
+        {% else %}
+        <li class='open-challenges'>
+          <a href="{{ url('projects:index') }}?n=o">
+        {% endif %}
+            <span class="icon is-small"><i class="fas fa-trophy" aria-hidden="true"></i></span>
+            <span>Open Challenges</span>
+          </a>
+        </li>
+        {% if user_projects %}
+          {% if request.path == url('projects:index') %}
+          <li {% if request.GET.n == 'mp' %}class='is-active'{% endif %} data-tab="my-projects" class='my-projects'>
+            <a>
+          {% else %}
+          <li class='my-projects'>
+            <a href="{{ url('projects:index') }}?n=mp">
+          {% endif %}
+              <span class="icon is-small"><i class="fas fa-project-diagram" aria-hidden="true"></i></span>
+              <span>My Projects</span>
+            </a>
+          </li>
+        {% endif %}
+
+        {% if shared_projects %}
+          {% if request.path == url('projects:index') %}
+          <li {% if request.GET.n == 'sp' %}class='is-active'{% endif %} data-tab="shared-projects" class='shared-projects'>
+            <a>
+          {% else %}
+          <li class='shared-projects'>
+            <a href="{{ url('projects:index') }}?n=sp">
+          {% endif %}
+              <span class="icon is-small"><i class="fas fa-users" aria-hidden="true"></i></span>
+              <span>Shared projects</span>
+
+              &nbsp;&nbsp;<span id="newShared" class="tag is-danger is-normal is-rounded {% if newly_shared|length <= 0 %}is-hidden{% endif %}">
+                {{newly_shared|length}}
+              </span>
+              
+            </a>
+          </li>
+        {% endif %}
+
+        <li class='my-projects'>
+          <a href="{{ url('survey-list') }}">
+            <span class="icon is-small"><i class="fas fa-list-alt" aria-hidden="true"></i></span>
+            <span>Surveys</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="column">
+    <div class="dropdown is-right is-pulled-right">
+      <div class="dropdown-trigger">
+        <div class="profile">
+          <span class="icon is-small">
+            <i class="fas fa-user" aria-hidden="true"></i>
+          </span>
+          <span>My Profile</span>
+        </div>
+      </div>
+      <div class="dropdown-menu" id="dropdown-menu" role="menu">
+        <div class="dropdown-content">
+          <span class='text dropdown-item'>Welcome, {{user.get_full_name() or user.username}}!</span>
+          <a href="{{ url('users:settings') }}" class='dropdown-item'>
+            <span class="icon is-small"><i class="fas fa-cog"></i></span>
+            <span>Settings</span>
+          </a>
+          {% if project and (project.author == user or project.shared_with(user)) %}
+            <a href="{{ url('projects:data_explorer', kwargs={'proj': project.pk}) }}" class='admin dropdown-item'>
+              <span class="icon is-small"><i class="fas fa-chart-bar"></i></span>
+              <span>Data explorer</span>
+            </a>
+          {% endif %}
+          {% if user.is_staff %}
+            {% if project %}
+            <a href="{{ url('admin:projects_project_change', kwargs={'object_id': project.id}) }}" class='admin dropdown-item'>
+            {% else %}
+            <a href="{{ url('admin:index') }}" class='admin dropdown-item'>
+            {% endif %}
+              <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
+              <span>Admin</span>
+            </a>
+          {% endif %}
+          <a href="{{ url('logout') }}" class="dropdown-item">
+            <span class="icon is-small"><i class="fas fa-sign-out-alt"></i></span>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>  
+</nav>

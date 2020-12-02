@@ -37,7 +37,8 @@ urlpatterns = [
         path('accounts/', include('django.contrib.auth.urls')),
         path('projects/', include('projects.urls')),
         path('tinymce/', include('tinymce.urls')),
-        path('survey/', include('survey.urls'))
+        path('survey/', include('survey.urls')),
+        path('users/', include('users.urls'))
     ]))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
