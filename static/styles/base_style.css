@@ -2,6 +2,10 @@ body[is-inside] {
   overflow: hidden;
 }
 
+body .container:first-of-type {
+  margin-top: 1em;
+}
+
 @font-face {
   font-family: 'Terminator Real NFI';
   font-style: normal;
@@ -86,10 +90,22 @@ pre {
   font-size: 1.5em;
 }
 
-.tabs .logo {
-  font-size: 1em;
+.navbar .logo {
+  font-size: 1.25em;
   padding-left: 50px;
   padding-right: 50px;
+}
+
+.navbar.has-bottom-border {
+  border-bottom: 1px solid #dbdbdb;
+}
+
+.navbar .icon:first-child {
+  margin-right: 0.5em;
+}
+
+.navbar .icon:last-child {
+  margin-left: 0.5em;
 }
 
 .is-flex.is-vcentered {
@@ -416,39 +432,3 @@ label.error {
   text-decoration: none !important;
 }
 
-nav .column {
-  padding-bottom: 0;
-}
-
-nav .column:first-child {
-  padding-right: 0;
-}
-
-nav .column:last-child {
-  border-bottom: 1px solid #dbdbdb;
-}
-
-nav .dropdown {
-  align-items: center;
-  color: #4a4a4a;
-  display: flex;
-  justify-content: center;
-  margin-bottom: -1px;
-  padding: .5em 1em;
-}
-
-nav div.profile {
-  user-select: none;
-}
-
-nav div.profile:hover {
-  cursor: pointer;
-}
-
-nav .icon:first-child {
-  margin-right: 0.5em;
-}
-
-nav .icon:last-child {
-  margin-left: 0.5em;
-}

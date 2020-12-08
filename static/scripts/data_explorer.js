@@ -8,6 +8,5 @@ $(document).ready(function() {
     collapsible: true,
     active: false,
     icons: false,
-    
   });
 })

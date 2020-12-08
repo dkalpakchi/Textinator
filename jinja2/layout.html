@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="has-navbar-fixed-top">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,7 +26,7 @@
   <body is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
     {% include 'partials/_navbar.html' %}
     <div class="container is-fluid">
-        {% block content %}{% endblock %}
+      {% block content %}{% endblock %}
     </div>
   </body>
 </html>

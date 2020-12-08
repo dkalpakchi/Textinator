@@ -1,9 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="textinator">
-  <div id="taskArea" data-context="{{project.context_size}}">
-    {{task_type_template|safe}}
-  </div>
+<div id="taskArea" data-context="{{project.context_size}}">
+  {{task_type_template|safe}}
 </div>
 {% endblock %}

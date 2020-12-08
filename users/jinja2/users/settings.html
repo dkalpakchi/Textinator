@@ -1,5 +1,20 @@
 {% extends "layout.html" %}
 
 {% block content %}
-Settings
+<h1 class="title">Settings</h1>
+<h2 class="subtitle">Global Texinator settings for all included apps</h2>
+<form action="" class="form">
+  <div class="field">
+    <label class="label">{{_("Language")}}</label>
+    <div class="control">
+      <div class="select">
+        <select>
+          {% for lang in settings.LANGUAGES %}
+            <option value="lang[0]">{{lang[1]}}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+</form>
 {% endblock %}

@@ -1,30 +1,749 @@
-$(document).ready(function() {
-  var chunks = [],                                          // the array of all chunk of text marked with a label, but not submitted yet
-      candidates = [],                                      // the array of all candidate chunks to be marked
-      relations = [],                                       // the array of all relations for this article, not submitted yet
-      lastNodeInRelationId = 0,                             // TODO: maybe remove
-      selectorArea = document.querySelector('.selector'),   // the area where the article is
-      resetTextHTML = selectorArea == null ? "" : selectorArea.innerHTML,  // the HTML of the loaded article
-      resetText = selectorArea == null ? "" : selectorArea.textContent.trim(),    // the text of the loaded article
-      contextSize = $('#taskArea').data('context'),         // the size of the context to be saved 'p', 't' or 'no'
-      qStart = new Date(),                                  // the time the page was loaded or the last submission was made
-      labelId = 0,                                          // internal JS label id for the labels of the current article
-      activeLabels = labelId,                               // a number of labels currently present in the article
-      lastRelationId = 1,                                   // the ID of the last unsubmitted relation
+var labelerModule = (function() {
+  var chunks = [], // the array of all chunk of text marked with a label, but not submitted yet
+      relations = [], // the array of all relations for this article, not submitted yet
+      labelId = 0,
+      activeLabels = 0, // a number of labels currently present in the article
+      lastRelationId = 1, // the ID of the last unsubmitted relation
+      lastNodeInRelationId = 0, // TODO: maybe remove
       radius = 10,
       graphIds = [],
-      currentRelationId = null,                             // the ID of the current relation
-      comments = {},
-      markersArea = document.querySelector('.markers'),
-      allowSelectingLabels = markersArea == null ? false : markersArea.getAttribute('data-select') == 'true',
-      allowCommentingLabels = markersArea == null ? false : markersArea.getAttribute('data-comment') == 'true',
+      currentRelationId = null, // the ID of the current relation
+      contextSize = undefined, // the size of the context to be saved 'p', 't' or 'no'
+      markersArea = null,
+      selectorArea = null,   // the area where the article is
+      resetTextHTML = null,  // the HTML of the loaded article
+      resetText = null,    // the text of the loaded article
+      markersInRelations = [],
+      nonRelationMarkers = [],
+      comments = {};
+
+  var labeler = {
+    allowSelectingLabels: false,
+    allowCommentingLabels: false,
+    init: function() {
+      contextSize = $('#taskArea').data('context');
+      markersArea = document.querySelector('.markers');
+      selectorArea = document.querySelector('.selector');
+      resetTextHTML = selectorArea == null ? "" : selectorArea.innerHTML;
+      resetText = selectorArea == null ? "" : selectorArea.textContent.trim();
+      this.allowSelectingLabels = markersArea == null ? false : markersArea.getAttribute('data-select') == 'true';
+      this.allowCommentingLabels = markersArea == null ? false : markersArea.getAttribute('data-comment') == 'true';
       markersInRelations = markersArea == null ? [] :
         [].concat.apply([], Array.from(markersArea.querySelectorAll('div.relation.tags')).map(
-        x => x.getAttribute('data-b').split('-:-'))),
+        x => x.getAttribute('data-b').split('-:-')));
       nonRelationMarkers = markersArea == null ? [] :
         Array.from(markersArea.querySelectorAll('div.marker.tags')).map(
         x => x.getAttribute('data-s')).filter(x => !markersInRelations.includes(x));
+      this.initSvg();
+    },
+    disableChunk: function(c) {
+      $('span.tag[data-i="' + c['id'] + '"]').addClass('is-disabled');
+      c['submittable'] = false;
+    },
+    enableChunk: function(c) {
+      $('span.tag[data-i="' + c['id'] + '"]').removeClass('is-disabled');
+      c['submittable'] = true;
+    },
+    disableChunks: function(chunks) {
+      // disable given chunks visually
+      for (var c in chunks) {
+        disableChunk(chunks[c])
+      }
+      return chunks;
+    },
+    getActiveChunk: function() {
+      return chunks[chunks.length-1];
+    },
+    previousTextLength: function(node, inParagraph) {
+      // calculate the length of the text preceding the node
+      // inParagraph is a boolean variable indicating whether preceding text
+      // is taken only from the current paragraph or from the whole article
+      if (inParagraph === undefined) inParagraph = true;
 
+      var len = 0;
+      var prev = node.previousSibling;
+
+      // paragraph scope
+      while (prev != null) {
+        if (prev.nodeType == 1) {
+          if (prev.tagName == "BR") {
+            // if newline
+            len += 1
+          } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A") {
+            // if there is a label
+            len += prev.textContent.length
+          }
+        } else if (prev.nodeType == 3) {
+          len += prev.length
+        }
+        prev = prev.previousSibling
+      }
+
+      if (inParagraph) return len;
+
+      // all text scope
+      // Find previous <p>
+      var parent = node.parentNode;
+      if (parent != null) {
+        var parentSibling = parent.previousElementSibling;
+        while (parentSibling != null) {
+          if (parentSibling.tagName == "P") {
+            len += parentSibling.textContent.length + 1; // +2 because P
+          }
+          parentSibling = parentSibling.previousElementSibling;
+        }
+      }
+      return len;
+    },
+    mergeWithNeighbors: function(node) {
+      // merge the given node with two siblings - used when deleting a label
+      var next = node.nextSibling,
+          prev = node.previousSibling,
+          parent = node.parentNode;
+
+      var pieces = [],
+          element = document.createTextNode("");
+      for (var i = 0; i < node.childNodes.length; i++) {
+        var child = node.childNodes[i];
+        if (child.nodeType == 3) {
+          element = document.createTextNode(element.data + child.data);
+          if (i == node.childNodes.length - 1)
+            pieces.push(element);
+        } else {
+          pieces.push(element);
+          pieces.push(child);
+          element = document.createTextNode("");
+        }
+      }
+
+      if (pieces.length > 1) {
+        if (pieces[0].nodeType == 3 && prev.nodeType == 3)
+          parent.replaceChild(document.createTextNode(prev.data + pieces[0].data), prev);
+        else
+          parent.insertBefore(pieces[0], next);
+
+        parent.removeChild(node);
+        for (var i = 1; i < pieces.length - 1; i++) {
+          parent.insertBefore(pieces[i], next)
+        }
+
+        if (pieces[pieces.length-1].nodeType == 3 && next.nodeType == 3) {
+          parent.replaceChild(document.createTextNode(pieces[pieces.length-1].data + next.data), next);
+        }
+        else {
+          parent.insertBefore(pieces[pieces.length-1], next);
+        }
+      } else {
+        console.log(pieces[0])
+        console.log(next.data)
+        parent.replaceChild(document.createTextNode(prev.data + pieces[0].data + next.data), prev);
+        parent.removeChild(node);
+        parent.removeChild(next);
+      }
+    },
+    updateChunkFromNode: function(node) {
+      // adding the information about the node, representing a label, to the chunks array
+      var chunk = {},
+          marker = document.querySelector('div.marker.tags[data-s="' + node.getAttribute('data-s') + '"]'),
+          markerText = marker.querySelector('span.tag:first-child');
+      chunk['node'] = null;
+      chunk['text'] = node.parentNode != null ? node.parentNode.textContent : node.textContent; // if no parent, assume the whole paragraph was taken?
+      chunk['lengthBefore'] = 0;
+      chunk['marked'] = true;
+      chunk['id'] = labelId;
+      chunk['label'] = node.getAttribute('data-s');
+      chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
+      
+      if (contextSize == 'p') {
+        // paragraph
+        chunk['context'] = chunk['text'];
+        chunk['start'] = this.previousTextLength(node, true);
+      } else if (contextSize == 't') {
+        // text
+        chunk['context'] = this.resetText;
+        chunk['start'] = this.previousTextLength(node, false);
+      } else if (contextSize == 's') {
+        // TODO sentence
+
+      } else if (contextSize == 'no') {
+        chunk['context'] = null;
+        chunk['lengthBefore'] = null;
+      } else {
+        // not implemented
+        console.error("Context size " + contextSize + " is not implemented");
+        return;
+      }
+      chunk['end'] = chunk['start'] + node.textContent.length;
+      
+      chunks.push(chunk);
+    },
+    updateChunkFromSelection: function() {
+      function getDepthAcc(element,depth) {
+        if(element.parentNode==null)
+          return depth;
+        else
+          return getDepthAcc(element.parentNode,depth+1);
+      }
+        
+      function getDepth(element) {
+        return getDepthAcc(element,0);
+      }
+
+      // getting a chunk from the selection; the chunk then either is being added to the chunks array, if the last chunk was submitted
+      // or replaces the last chunk if the last chunk was not submitted
+      var selection = window.getSelection();
+
+      if (selection && !selection.isCollapsed) {
+        // group selections:
+        //  - a label spanning other labels is selected, they should end up in the same group
+        //  - two disjoint spans of text are selected, they should end up in separate groups
+        var groups = [],
+            group = [];
+        group.push(selection.getRangeAt(0));
+        for (var i = 1; i < selection.rangeCount; i++) {
+          var last = group[group.length-1],
+              cand = selection.getRangeAt(i);
+          if (last.endContainer.nextSibling == cand.startContainer) {
+            group.push(cand);
+          } else {
+            groups.push(group);
+            group = [cand];
+          }
+        }
+        if (group)
+          groups.push(group)
+
+        for (var i = 0; i < groups.length; i++) {
+          var chunk = {},
+              group = groups[i],
+              N = group.length;
+              minDepth = Number.MAX_VALUE,
+              selectionLength = 0,
+              pieces = [];
+          for (var j = 0; j < N; j++) {
+            var node = group[j].commonAncestorContainer;
+            var depth = getDepth(node);
+            if (depth < minDepth) {
+              chunk['node'] = node;
+              minDepth = depth;
+            }
+
+            var startNode = group[j].startContainer,
+                endNode = group[j].endContainer;
+
+            if (startNode == endNode) {
+              selectionLength += group[j].endOffset - group[j].startOffset;
+              pieces.push(document.createTextNode(startNode.textContent.slice(group[j].startOffset, group[j].endOffset)))
+            } else {
+              if (startNode.nodeType == 3) {
+                var startPiece = startNode.textContent.slice(group[j].startOffset);
+                pieces.push(document.createTextNode(startPiece));
+              } else {
+                var startPiece = startNode.textContent;
+                pieces.push(startNode)
+              }
+
+              if (endNode.nodeType == 3) {
+                var endPiece = endNode.textContent.slice(0, group[j].endOffset);
+                pieces.push(document.createTextNode(endPiece));
+              } else {
+                var endPiece = endNode.textContent;
+                pieces.push(endNode)
+              }
+              selectionLength += startPiece.length + endPiece.length;
+            }
+          }
+
+          var groupStart = group[0].startContainer,
+              groupEnd = group[N-1].endContainer;
+
+          chunk['pieces'] = pieces;
+
+          chunk['left'] = groupStart;
+          chunk['right'] = groupEnd;
+
+          // these two are independent of whether we select ltr or rtl
+          chunk['start'] = group[0].startOffset;
+          chunk['end'] = chunk['start'] + selectionLength;
+          chunk['rightOffset'] = group[N-1].endOffset;
+
+          if (contextSize == 'p') {
+            // paragraph
+            chunk['context'] = chunk['node'].textContent; // the parent of anchor is <p> - just take it's length
+            chunk['lengthBefore'] = this.previousTextLength(chunk['node'], true);
+          } else if (contextSize == 't') {
+            // text
+            chunk['context'] = resetText;
+            chunk['lengthBefore'] = this.previousTextLength(chunk['node'], false);
+          } else if (contextSize == 's') {
+            // TODO sentence
+
+          } else if (contextSize == 'no') {
+            chunk['context'] = null;
+            chunk['lengthBefore'] = null;
+          } else {
+            // not implemented
+            console.error("Context size " + contextSize + " is not implemented");
+            return;
+          }
+
+          chunk['marked'] = false;
+          chunk['label'] = null;
+
+          var N = chunks.length;
+          if (N == 0 || (N > 0 && chunks[N-1] !== undefined && chunks[N-1]['marked'])) {
+            chunks.push(chunk);
+          } else {
+            chunks[N-1] = chunk;
+          }
+        }      
+      }
+    },
+    mark: function(obj, max_markers) {
+      if (chunks.length > 0 && activeLabels < max_markers) {
+        var chunk = this.getActiveChunk(),
+            idc = chunks.length - 1
+            color = obj.getAttribute('data-color'),
+            leftTextNode = document.createTextNode(chunk['left'].textContent.slice(0, chunk['start'])),
+            markedSpan = document.createElement('span'),
+            deleteMarkedBtn = document.createElement('button'),
+            rightTextNode = document.createTextNode(chunk['right'].textContent.slice(chunk['rightOffset']));
+        markedSpan.className = "tag is-" + color + " is-medium";
+        for (var i = 0; i < chunk['pieces'].length; i++) {
+          markedSpan.appendChild(chunk['pieces'][i]);
+        }
+        markedSpan.setAttribute('data-s', obj.getAttribute('data-s'));
+        markedSpan.setAttribute('data-i', labelId);
+        markedSpan.setAttribute('data-j', idc);
+        $(markedSpan).prop('in_relation', false);
+        deleteMarkedBtn.className = 'delete is-small';
+        markedSpan.appendChild(deleteMarkedBtn);
+
+        if (this.allowCommentingLabels) {
+          var $commentInput = $('<input data-i=' + labelId + ' value = ' + (comments[labelId] || '') + '>');
+          $commentInput.on('change', function(e) {
+            comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
+          });
+
+          tippy(markedSpan, {
+            content: $commentInput[0],
+            trigger: 'click',
+            interactive: true,
+            distance: 0
+          });
+        }
+
+        if (chunk['node'] !== undefined && chunk['node'] != null) {
+          // TODO: figure out when it would happen
+          var parent = chunk['node'].parentNode;
+
+          if (chunk['node'].nodeType == 3) {
+            parent.replaceChild(leftTextNode, chunk['node']);
+            parent.insertBefore(markedSpan, leftTextNode.nextSibling);
+            parent.insertBefore(rightTextNode, markedSpan.nextSibling);  
+          } else {
+            var newNode = document.createElement(chunk['node'].nodeName),
+                cnodes = chunk['node'].childNodes;
+            for (var i = 0; i < cnodes.length; i++) {
+              if (cnodes[i] == chunk['left'])
+                break;
+              newNode.appendChild(cnodes[i].cloneNode(true));
+            }
+            newNode.appendChild(leftTextNode);
+            newNode.appendChild(markedSpan);
+            newNode.appendChild(rightTextNode);
+            for (var j = i + 1; j < cnodes.length; j++) {
+              if (cnodes[j] == chunk['right']) continue;
+              newNode.appendChild(cnodes[j].cloneNode(true));
+            }
+            parent.replaceChild(newNode, chunk['node']);
+          }
+
+          var marked = parent.querySelectorAll('span.tag');
+          for (var i = 0; i < marked.length; i++) {
+            var checker = marked[i],
+                elements = [];
+            while (checker.classList.contains('tag')) {
+              elements.push(checker);
+              checker = checker.parentNode;
+            }
+
+            for (var j = 0, len = elements.length; j < len; j++) {
+              elements[j].style.paddingTop = 10 + 10 * j + "px";
+              elements[j].style.paddingBottom = 10 + 10 * j + "px";
+            }
+          }
+          
+          chunk['marked'] = true;
+          chunk['submittable'] = obj.getAttribute('data-submittable') === 'true';
+          chunk['id'] = labelId;
+          labelId++;
+          activeLabels++;
+          chunk['label'] = obj.getAttribute('data-s');
+          delete chunk['node']
+        }
+      }
+    },
+    checkRestrictions: function(inRelation) {
+      if (inRelation === undefined) inRelation = false;
+
+      var markers = document.querySelectorAll('.marker.tags[data-res]');
+      var messages = [];
+
+      var satisfied = Array.from(markers).map(function(x, i) {
+        var res = x.getAttribute('data-res').split('&');
+
+        for (var i = 0, len = res.length; i < len; i++) {
+          if (res[i]) {
+            var have = inRelation ? 
+              document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"].active:not(.is-disabled)').length :
+              document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]:not(.is-disabled)').length
+            var needed = parseInt(res[i].slice(2)),
+                restriction = res[i].slice(0, 2),
+                label = x.querySelector('span.tag').textContent;
+            if (restriction == 'ge') {
+              if (have >= needed) {
+                return true;
+              } else {
+                var diff = (needed - have)
+                messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
+                return false;
+              }
+            } else if (restriction == 'gs') {
+              if (have > needed) {
+                return true;
+              } else {
+                var diff = (needed - have + 1)
+                messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
+                return false;
+              }
+            } else if (restriction == 'le') {
+              if (have <= needed) {
+                return true;
+              } else {
+                messages.push('You can have max ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''));
+                return false;
+              }
+            } else if (restriction == 'ls') {
+              if (have < needed) {
+                return true;
+              } else {
+                messages.push('You can have max ' + (needed - 1) + ' "' + label + '" ' + 'label' + ((needed - 1) > 1 ? 's' : ''));
+                return false;
+              }
+            } else if (restriction == 'eq') {
+              if (have == needed) {
+                return true;
+              } else {
+                messages.push('You need to have exactly ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''))
+                return false;
+              }
+            } else {
+              return true;
+            }
+          } else {
+            return true;
+          }
+        }
+      }, markers);
+
+      var numSatisfied = satisfied.reduce(function(acc, val) { return acc + val; }, 0);
+
+      if (numSatisfied != markers.length) {
+        alert(messages.join('\n'));
+      }
+      return numSatisfied == markers.length
+    },
+    initSvg: function() {
+      if (typeof d3 !== 'undefined') {
+        /* Relations */
+        var svg = d3.select("#relations")
+          .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%");
+
+        // TODO: this marker should be visible w.r.t. the target node
+        svg.append("svg:defs").append("svg:marker")
+          .attr("id", "triangle")
+          .attr("refX", 6)
+          .attr("refY", 6)
+          .attr("markerWidth", 20)
+          .attr("markerHeight", 20)
+          .attr("markerUnits","userSpaceOnUse")
+          .attr("orient", "auto")
+          .append("path")
+          .attr("d", "M 0 0 12 6 0 12 3 6")
+          .style("fill", "black");
+      }
+    },
+    drawNetwork: function(data, arrows) {
+      if (typeof d3 !== 'undefined') {
+        if (arrows === undefined) arrows = false;
+
+        var svg = d3.select("#relations svg")
+
+        svg.selectAll('g')
+          .attr('class', 'hidden');
+
+        svg = svg.append("g")
+          .attr('id', data.id)
+
+        var link = svg
+          .selectAll("line")
+          .data(data.links)
+          .enter()
+          .append("line")
+            .style("stroke", "#aaa");
+
+        if (arrows)
+          link = link.attr("marker-end", "url(#triangle)");
+
+        // Initialize the nodes
+        var node = svg
+          .selectAll("circle")
+          .data(data.nodes)
+          .enter()
+          .append("circle")
+            .attr("r", radius)
+            .attr('data-id', function(d) { return d.id })
+            .style("fill", function(d) { return d.color })
+            .on("mouseover", function(d, i) {
+              $('#' + d.dom).addClass('active');
+            })
+            .on("mouseout", function(d, i) {
+              $('#' + d.dom).removeClass('active');
+            })
+
+        var text = svg.selectAll("text")
+          .data(data.nodes)
+          .enter().append("text")
+            .text(function(d) { return d.name.length > 10 ? d.name.substr(0, 10) + '...' : d.name ; });
+
+        // Let's list the force we wanna apply on the network
+        var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
+            .force("link", d3.forceLink()                               // This force provides links between nodes
+                  .id(function(d) { return d.id; })                     // This provide  the id of a node
+                  .links(data.links)                                    // and this the list of links
+            )
+            .force("charge", d3.forceManyBody().strength(-500))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+            .force("center", d3.forceCenter(radius, 30))                // This force attracts nodes to the center of the svg area
+            .stop()
+
+        // This function is run at each iteration of the force algorithm, updating the nodes position.
+        function ticked() {
+          /* update the simulation */
+          text
+            .attr("x", function(d) { return d.x + radius * 1.2; })
+            .attr("y", function(d) { return d.y; })
+
+          link
+            .attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { 
+              var dx = 0.7 * Math.abs(d.target.x - d.source.x); 
+              if (d.target.x > d.source.x) {
+                return d.source.x + dx;
+              } else {
+                return d.source.x - dx;
+              }
+            })
+            .attr("y2", function(d) {
+              var dx = 0.7 * Math.abs(d.target.x - d.source.x);
+              var x = null;
+              if (d.target.x > d.source.x) {
+                x = d.source.x + dx;
+              } else {
+                x = d.source.x - dx;
+              }
+
+              var dy = Math.abs(x - d.source.x) * Math.abs(d.target.y - d.source.y) / Math.abs(d.target.x - d.source.x)
+
+              if (d.target.y > d.source.y) {
+                // means arrow down
+                return d.source.y + dy;
+              } else {
+                // means arrow up
+                return d.source.y - dy;
+              }
+            });
+
+          node
+           .attr("cx", function(d) { return d.x; })
+           .attr("cy", function(d) { return d.y; });
+        }
+
+        function finalizeSimulation() {
+          var group = d3.select('g#' + data.id);
+
+          if (!group.empty()) {
+            var bbox = group.node().getBBox();
+
+            var svgBbox = document.querySelector('svg').getBoundingClientRect();
+
+            var mx = svgBbox.width / 2 - bbox.width / 4;
+            var my = svgBbox.height / 2 - bbox.height / 2;
+
+            group.attr("transform", "translate(" + mx + ", " + my + ")");
+          }
+        }
+
+        for (var i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
+          simulation.tick();
+          ticked();
+        }
+        finalizeSimulation();
+
+        $("#relationId").text(currentRelationId + 1);
+      }
+    },
+    previousRelation: function() {
+      if (currentRelationId == null) return currentRelationId;
+
+      currentRelationId--;
+      if (currentRelationId < 0) {
+        currentRelationId = 0;
+      }
+      return currentRelationId;
+    },
+    nextRelation: function() {
+      if (currentRelationId == null) return currentRelationId;
+
+      currentRelationId++;
+      if (currentRelationId >= graphIds.length) {
+        currentRelationId = graphIds.length - 1;
+      }
+      return currentRelationId;
+    },
+    removeCurrentRelation: function() {
+      $('g#' + graphIds[currentRelationId]).find('circle[data-id]').each(function(i, d) { 
+      var $el = $('#' + d.getAttribute('data-id'));
+        if ($el.length > 0) {
+          $el.prop('in_relation', false);
+          $el.attr('id', '');
+        }
+      });
+      d3.select('g#' + graphIds[currentRelationId]).remove();
+      relations = relations.filter(function(x) {
+        return x.id != graphIds[currentRelationId]
+      })
+
+      graphIds.splice(currentRelationId, 1);
+      currentRelationId = graphIds.length - 1;
+      return currentRelationId;
+    },
+    showRelationGraph(id) {
+      if (id == null || id === undefined)
+        $('#relationId').text(0);
+      else {
+        var svg = d3.select("#relations svg")
+
+        svg.selectAll('g')
+          .attr('class', 'hidden');
+
+        d3.select('g#' + graphIds[id])
+          .attr('class', '');
+
+        $('#relationId').text(id + 1);
+      }
+    },
+    markRelation: function(obj) {
+      if (!this.checkRestrictions(true)) return;
+
+      console.log(obj)
+
+      var $parts = $('.selector span.tag.active'),
+          between = obj.getAttribute('data-b').split('-:-'),
+          direction = obj.getAttribute('data-d'),
+          rule = obj.getAttribute('data-r');
+
+      if ($parts.length >= 2) {
+        var nodes = {},
+            links = [];
+        var startId = lastNodeInRelationId;
+        $parts.each(function(i) {
+          $parts[i].id = 'rl_' + lastNodeInRelationId;
+          lastNodeInRelationId++;
+
+          $($parts[i]).prop('in_relation', true);
+
+          var s = $parts[i].getAttribute('data-s');
+
+          if (!nodes.hasOwnProperty(s)) {
+            nodes[s] = [];
+          }
+          nodes[s].push({
+            'id': $parts[i].id,
+            'name': $parts[i].textContent,
+            'dom': $parts[i].id,
+            'color': getComputedStyle($parts[i])["background-color"]
+          });
+        });
+
+        var from = null,
+            to = null;
+        if (direction == '0' || direction == '2') {
+          // first -> second or bidirectional
+          from = between[0];
+          to = between[1];
+        } else if (direction == '1') {
+          // second -> first
+          from = between[1];
+          to = between[0];
+        }
+
+        nodes[from].forEach(function(f) {
+          nodes[to].forEach(function(t) {
+            if (f.id != t.id) {
+              // prevent loops
+              links.push({
+                'source': f.id,
+                'target': t.id
+              })
+            }
+          })
+        })
+
+        links.forEach(function(l) {
+          var source = document.querySelector('#' + l.source),
+              target = document.querySelector('#' + l.target);
+          relations.push({
+            "id": "n" + startId + "__" + (lastNodeInRelationId - 1),
+            'rule': rule,
+            's': source.getAttribute('data-i'),
+            't': target.getAttribute('data-i')
+          })
+        });
+
+        if (currentRelationId == null)
+          currentRelationId = 0;
+        else
+          currentRelationId++;
+
+        graphIds.push("n" + startId + "__" + (lastNodeInRelationId - 1));
+
+        this.drawNetwork({
+          'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
+          'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
+          'links': links
+        }, (from != null && to != null && direction != '2'))
+
+        $parts.removeClass('active');
+        $parts.append($('<span class="rel">' + lastRelationId + '</span>'));
+        lastRelationId++;
+      }
+    }
+  }
+
+  return labeler;
+})();
+
+
+$(document).ready(function() {
+  labelerModule.init();
+
+  var qStart = new Date();  // the time the page was loaded or the last submission was made                          
+      
+  // Guidelines "Show more" button
   $('.button-scrolling').each(function(i, x) {
     var $button = $("<button class='scrolling is-link button'>Show more</button>");
     var $el = $(x);
@@ -61,7 +780,7 @@ $(document).ready(function() {
     labelId = 0;
     $('article.text span.tag').each(function(i, node) {
       node.setAttribute('data-i', labelId);
-      updateChunkFromNode(node);
+      labelerModule.updateChunkFromNode(node);
 
       node.querySelector('button.delete').addEventListener('click', function(e) {
         e.stopPropagation();
@@ -83,96 +802,7 @@ $(document).ready(function() {
   initPreMarkers();
 
   // disable the undo button, since we haven't submitted anything
-  $('#undoLast').attr('disabled', true);
-
-  // calculate the length of the text preceding the node
-  // inParagraph is a boolean variable indicating whether preceding text is taken only from the current paragraph or from the whole article
-  function previousTextLength(node, inParagraph) {
-    if (inParagraph === undefined) inParagraph = true;
-
-    var len = 0;
-    var prev = node.previousSibling;
-
-    // paragraph scope
-    while (prev != null) {
-      if (prev.nodeType == 1) {
-        if (prev.tagName == "BR") {
-          // if newline
-          len += 1
-        } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A") {
-          // if there is a label
-          len += prev.textContent.length
-        }
-      } else if (prev.nodeType == 3) {
-        len += prev.length
-      }
-      prev = prev.previousSibling
-    }
-
-    if (inParagraph) return len;
-
-    // all text scope
-    // Find previous <p>
-    var parent = node.parentNode;
-    if (parent != null) {
-      var parentSibling = parent.previousElementSibling;
-      while (parentSibling != null) {
-        if (parentSibling.tagName == "P") {
-          len += parentSibling.textContent.length + 1; // +2 because P
-        }
-        parentSibling = parentSibling.previousElementSibling;
-      }
-    }
-    return len;
-  }
-
-  // merge the given node with two siblings - used when deleting a label
-  function mergeWithNeighbors(node) {
-    // check if text node
-    var next = node.nextSibling,
-        prev = node.previousSibling,
-        parent = node.parentNode;
-
-    var pieces = [],
-        element = document.createTextNode("");
-    for (var i = 0; i < node.childNodes.length; i++) {
-      var child = node.childNodes[i];
-      if (child.nodeType == 3) {
-        element = document.createTextNode(element.data + child.data);
-        if (i == node.childNodes.length - 1)
-          pieces.push(element);
-      } else {
-        pieces.push(element);
-        pieces.push(child);
-        element = document.createTextNode("");
-      }
-    }
-
-    if (pieces.length > 1) {
-      if (pieces[0].nodeType == 3 && prev.nodeType == 3)
-        parent.replaceChild(document.createTextNode(prev.data + pieces[0].data), prev);
-      else
-        parent.insertBefore(pieces[0], next);
-
-      parent.removeChild(node);
-      for (var i = 1; i < pieces.length - 1; i++) {
-        parent.insertBefore(pieces[i], next)
-      }
-
-      if (pieces[pieces.length-1].nodeType == 3 && next.nodeType == 3) {
-        parent.replaceChild(document.createTextNode(pieces[pieces.length-1].data + next.data), next);
-      }
-      else {
-        parent.insertBefore(pieces[pieces.length-1], next);
-      }
-    } else {
-      console.log(pieces[0])
-      console.log(next.data)
-      parent.replaceChild(document.createTextNode(prev.data + pieces[0].data + next.data), prev);
-      parent.removeChild(node);
-      parent.removeChild(next);
-    }
-  }
+  $('#undoLast').attr('disabled', true);  
 
   function removeAllChildren(node) {
     while (node.firstChild) {
@@ -183,7 +813,7 @@ $(document).ready(function() {
   function resetArticle() {
     var node = document.querySelector('.selector');
     removeAllChildren(node);
-    node.innerHTML = resetTextHTML;
+    node.innerHTML = labelerModule.resetTextHTML;
   }
 
   // event delegation
@@ -204,7 +834,7 @@ $(document).ready(function() {
       $(el).prop('in_relation', false);
       activeLabels--;
     } else if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
-      if (allowSelectingLabels) {
+      if (labelerModule.allowSelectingLabels) {
         var $target = $(e.target);
         if (!$target.prop('in_relation') && !window.getSelection().toString()) {
           if (e.target.classList.contains('active') && $target.prop('selected')) {
@@ -222,7 +852,7 @@ $(document).ready(function() {
   $('.selector.element').on('mouseover', function(e) {
     var target = e.target;
     if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
-      if (allowSelectingLabels) {
+      if (labelerModule.allowSelectingLabels) {
         e.stopPropagation();
         if (e.target.classList.contains("tag"))
           if (!$(e.target).prop('selected'))
@@ -237,7 +867,7 @@ $(document).ready(function() {
   $('.selector.element').on('mouseout', function(e) {
     var target = e.target;
     if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
-      if (allowSelectingLabels) {
+      if (labelerModule.allowSelectingLabels) {
         e.stopPropagation();
         if (e.target.classList.contains("tag"))
           if (!$(e.target).prop('selected'))
@@ -250,426 +880,18 @@ $(document).ready(function() {
   })
 
   // labeling piece of text with a given marker if the marker is clicked
-  $('.marker.tags').on('click', function() {
-    if (chunks.length > 0 && activeLabels < $('article.markers').attr('data-mmpi')) {
-      var chunk = chunks[chunks.length - 1],
-          idc = chunks.length - 1
-          color = this.getAttribute('data-color'),
-          leftTextNode = document.createTextNode(chunk['left'].textContent.slice(0, chunk['start'])),
-          markedSpan = document.createElement('span'),
-          deleteMarkedBtn = document.createElement('button'),
-          rightTextNode = document.createTextNode(chunk['right'].textContent.slice(chunk['rightOffset']));
-      markedSpan.className = "tag is-" + color + " is-medium";
-      for (var i = 0; i < chunk['pieces'].length; i++) {
-        markedSpan.appendChild(chunk['pieces'][i]);
-      }
-      markedSpan.setAttribute('data-s', this.getAttribute('data-s'));
-      markedSpan.setAttribute('data-i', labelId);
-      markedSpan.setAttribute('data-j', idc);
-      $(markedSpan).prop('in_relation', false);
-      deleteMarkedBtn.className = 'delete is-small';
-      markedSpan.appendChild(deleteMarkedBtn)
-
-      if (allowCommentingLabels) {
-        var $commentInput = $('<input data-i=' + labelId + ' value = ' + (comments[labelId] || '') + '>');
-        $commentInput.on('change', function(e) {
-          comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
-        });
-
-        tippy(markedSpan, {
-          content: $commentInput[0],
-          trigger: 'click',
-          interactive: true,
-          distance: 0
-        });
-      }
-
-      if (chunk['node'] !== undefined && chunk['node'] != null) {
-        // TODO: figure out when it would happen
-        var parent = chunk['node'].parentNode;
-
-        if (chunk['node'].nodeType == 3) {
-          parent.replaceChild(leftTextNode, chunk['node']);
-          parent.insertBefore(markedSpan, leftTextNode.nextSibling);
-          parent.insertBefore(rightTextNode, markedSpan.nextSibling);  
-        } else {
-          var newNode = document.createElement(chunk['node'].nodeName),
-              cnodes = chunk['node'].childNodes;
-          for (var i = 0; i < cnodes.length; i++) {
-            if (cnodes[i] == chunk['left'])
-              break;
-            newNode.appendChild(cnodes[i].cloneNode(true));
-          }
-          newNode.appendChild(leftTextNode);
-          newNode.appendChild(markedSpan);
-          newNode.appendChild(rightTextNode);
-          for (var j = i + 1; j < cnodes.length; j++) {
-            if (cnodes[j] == chunk['right']) continue;
-            newNode.appendChild(cnodes[j].cloneNode(true));
-          }
-          parent.replaceChild(newNode, chunk['node']);
-        }
-
-        var marked = parent.querySelectorAll('span.tag');
-        for (var i = 0; i < marked.length; i++) {
-          var checker = marked[i],
-              elements = [];
-          while (checker.classList.contains('tag')) {
-            elements.push(checker);
-            checker = checker.parentNode;
-          }
-
-          for (var j = 0, len = elements.length; j < len; j++) {
-            elements[j].style.paddingTop = 10 + 10 * j + "px";
-            elements[j].style.paddingBottom = 10 + 10 * j + "px";
-          }
-        }
-        
-        chunk['marked'] = true;
-        chunk['submittable'] = this.getAttribute('data-submittable') === 'true';
-        chunk['id'] = labelId;
-        labelId++;
-        activeLabels++;
-        chunk['label'] = this.getAttribute('data-s');
-        delete chunk['node']
-      }
-    }
+  $('.marker.tags').on('click', function(e) {
+    var mmpi = $('article.markers').attr('data-mmpi');
+    labelerModule.mark(this, mmpi);
   });
 
 
-  function checkRestrictions(inRelation) {
-    if (inRelation === undefined) inRelation = false;
-
-    var markers = document.querySelectorAll('.marker.tags[data-res]');
-    var messages = [];
-
-    var satisfied = Array.from(markers).map(function(x, i) {
-      var res = x.getAttribute('data-res').split('&');
-
-      for (var i = 0, len = res.length; i < len; i++) {
-        if (res[i]) {
-          var have = inRelation ? 
-            document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"].active:not(.is-disabled)').length :
-            document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]:not(.is-disabled)').length
-          var needed = parseInt(res[i].slice(2)),
-              restriction = res[i].slice(0, 2),
-              label = x.querySelector('span.tag').textContent;
-          if (restriction == 'ge') {
-            if (have >= needed) {
-              return true;
-            } else {
-              var diff = (needed - have)
-              messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
-              return false;
-            }
-          } else if (restriction == 'gs') {
-            if (have > needed) {
-              return true;
-            } else {
-              var diff = (needed - have + 1)
-              messages.push('You need at least ' + diff + ' more "' + label + '" ' + 'label' + (diff > 1 ? 's' : ''));
-              return false;
-            }
-          } else if (restriction == 'le') {
-            if (have <= needed) {
-              return true;
-            } else {
-              messages.push('You can have max ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''));
-              return false;
-            }
-          } else if (restriction == 'ls') {
-            if (have < needed) {
-              return true;
-            } else {
-              messages.push('You can have max ' + (needed - 1) + ' "' + label + '" ' + 'label' + ((needed - 1) > 1 ? 's' : ''));
-              return false;
-            }
-          } else if (restriction == 'eq') {
-            if (have == needed) {
-              return true;
-            } else {
-              messages.push('You need to have exactly ' + needed + ' "' + label + '" ' + 'label' + (needed > 1 ? 's' : ''))
-              return false;
-            }
-          } else {
-            return true;
-          }
-        } else {
-          return true;
-        }
-      }
-    }, markers);
-
-    var numSatisfied = satisfied.reduce(function(acc, val) { return acc + val; }, 0);
-
-    if (numSatisfied != markers.length) {
-      alert(messages.join('\n'));
-    }
-    return numSatisfied == markers.length
-  }
-
+  // check marker restrictions
 
   // putting the activated labels in a relationship
-  $('.relation.tags').on('click', function() {
-    if (!checkRestrictions(true)) return;
-
-    var $parts = $('.selector span.tag.active'),
-        between = this.getAttribute('data-b').split('-:-'),
-        direction = this.getAttribute('data-d'),
-        rule = this.getAttribute('data-r');
-
-    if ($parts.length >= 2) {
-      var nodes = {},
-          links = [];
-      var startId = lastNodeInRelationId;
-      $parts.each(function(i) {
-        $parts[i].id = 'rl_' + lastNodeInRelationId;
-        lastNodeInRelationId++;
-
-        $($parts[i]).prop('in_relation', true);
-
-        var s = $parts[i].getAttribute('data-s');
-
-        if (!nodes.hasOwnProperty(s)) {
-          nodes[s] = [];
-        }
-        nodes[s].push({
-          'id': $parts[i].id,
-          'name': $parts[i].textContent,
-          'dom': $parts[i].id,
-          'color': getComputedStyle($parts[i])["background-color"]
-        });
-      });
-
-      var from = null,
-          to = null;
-      if (direction == '0' || direction == '2') {
-        // first -> second or bidirectional
-        from = between[0];
-        to = between[1];
-      } else if (direction == '1') {
-        // second -> first
-        from = between[1];
-        to = between[0];
-      }
-
-      nodes[from].forEach(function(f) {
-        nodes[to].forEach(function(t) {
-          if (f.id != t.id) {
-            // prevent loops
-            links.push({
-              'source': f.id,
-              'target': t.id
-            })
-          }
-        })
-      })
-
-      links.forEach(function(l) {
-        var source = document.querySelector('#' + l.source),
-            target = document.querySelector('#' + l.target);
-        relations.push({
-          "id": "n" + startId + "__" + (lastNodeInRelationId - 1),
-          'rule': rule,
-          's': source.getAttribute('data-i'),
-          't': target.getAttribute('data-i')
-        })
-      });
-
-      if (currentRelationId == null)
-        currentRelationId = 0;
-      else
-        currentRelationId++;
-
-      graphIds.push("n" + startId + "__" + (lastNodeInRelationId - 1));
-
-      drawNetwork({
-        'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
-        'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
-        'links': links
-      }, (from != null && to != null && direction != '2'))
-
-      $parts.removeClass('active');
-      $parts.append($('<span class="rel">' + lastRelationId + '</span>'));
-      lastRelationId++;
-    }
+  $('.relation.tags').on('click', function(e) {
+    labelerModule.markRelation(this);
   })
-
-  function getDepthAcc(element,depth) {
-    if(element.parentNode==null)
-      return depth;
-    else
-      return getDepthAcc(element.parentNode,depth+1);
-  }
-    
-  function getDepth(element) {
-    return getDepthAcc(element,0);
-  }
-
-  // adding the information about the node, representing a label, to the chunks array
-  function updateChunkFromNode(node) {
-    var chunk = {},
-        marker = document.querySelector('div.marker.tags[data-s="' + node.getAttribute('data-s') + '"]'),
-        markerText = marker.querySelector('span.tag:first-child');
-    chunk['node'] = null;
-    chunk['text'] = node.parentNode != null ? node.parentNode.textContent : node.textContent; // if no parent, assume the whole paragraph was taken?
-    chunk['lengthBefore'] = 0;
-    chunk['marked'] = true;
-    chunk['id'] = labelId;
-    chunk['label'] = node.getAttribute('data-s');
-    chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
-    
-    if (contextSize == 'p') {
-      // paragraph
-      chunk['context'] = chunk['text'];
-      chunk['start'] = previousTextLength(node, true);
-    } else if (contextSize == 't') {
-      // text
-      chunk['context'] = resetText;
-      chunk['start'] = previousTextLength(node, false);
-    } else if (contextSize == 's') {
-      // TODO sentence
-
-    } else if (contextSize == 'no') {
-      chunk['context'] = null;
-      chunk['lengthBefore'] = null;
-    } else {
-      // not implemented
-      console.error("Context size " + contextSize + " is not implemented");
-      return;
-    }
-    chunk['end'] = chunk['start'] + node.textContent.length;
-    
-    chunks.push(chunk);
-  }
-
-  // getting a chunk from the selection; the chunk then either is being added to the chunks array, if the last chunk was submitted
-  // or replaces the last chunk if the last chunk was not submitted
-  function updateChunkFromSelection() {
-    var selection = window.getSelection();
-
-    if (selection && !selection.isCollapsed) {
-      // group selections:
-      //  - a label spanning other labels is selected, they should end up in the same group
-      //  - two disjoint spans of text are selected, they should end up in separate groups
-      var groups = [],
-          group = [];
-      group.push(selection.getRangeAt(0));
-      for (var i = 1; i < selection.rangeCount; i++) {
-        var last = group[group.length-1],
-            cand = selection.getRangeAt(i);
-        if (last.endContainer.nextSibling == cand.startContainer) {
-          group.push(cand);
-        } else {
-          groups.push(group);
-          group = [cand];
-        }
-      }
-      if (group)
-        groups.push(group)
-
-      for (var i = 0; i < groups.length; i++) {
-        var chunk = {},
-            group = groups[i],
-            N = group.length;
-            minDepth = Number.MAX_VALUE,
-            selectionLength = 0,
-            pieces = [];
-        for (var j = 0; j < N; j++) {
-          var node = group[j].commonAncestorContainer;
-          var depth = getDepth(node);
-          if (depth < minDepth) {
-            chunk['node'] = node;
-            minDepth = depth;
-          }
-
-          var startNode = group[j].startContainer,
-              endNode = group[j].endContainer;
-
-          if (startNode == endNode) {
-            selectionLength += group[j].endOffset - group[j].startOffset;
-            pieces.push(document.createTextNode(startNode.textContent.slice(group[j].startOffset, group[j].endOffset)))
-          } else {
-            if (startNode.nodeType == 3) {
-              var startPiece = startNode.textContent.slice(group[j].startOffset);
-              pieces.push(document.createTextNode(startPiece));
-            } else {
-              var startPiece = startNode.textContent;
-              pieces.push(startNode)
-            }
-
-            if (endNode.nodeType == 3) {
-              var endPiece = endNode.textContent.slice(0, group[j].endOffset);
-              pieces.push(document.createTextNode(endPiece));
-            } else {
-              var endPiece = endNode.textContent;
-              pieces.push(endNode)
-            }
-            selectionLength += startPiece.length + endPiece.length;
-          }
-        }
-
-        var groupStart = group[0].startContainer,
-            groupEnd = group[N-1].endContainer;
-
-        chunk['pieces'] = pieces;
-
-        chunk['left'] = groupStart;
-        chunk['right'] = groupEnd;
-
-        // these two are independent of whether we select ltr or rtl
-        chunk['start'] = group[0].startOffset;
-        chunk['end'] = chunk['start'] + selectionLength;
-        chunk['rightOffset'] = group[N-1].endOffset;
-        if (contextSize == 'p') {
-          // paragraph
-          chunk['context'] = chunk['node'].textContent; // the parent of anchor is <p> - just take it's length
-          chunk['lengthBefore'] = previousTextLength(chunk['node'], true);
-        } else if (contextSize == 't') {
-          // text
-          chunk['context'] = resetText;
-          chunk['lengthBefore'] = previousTextLength(chunk['node'], false);
-        } else if (contextSize == 's') {
-          // TODO sentence
-
-        } else if (contextSize == 'no') {
-          chunk['context'] = null;
-          chunk['lengthBefore'] = null;
-        } else {
-          // not implemented
-          console.error("Context size " + contextSize + " is not implemented");
-          return;
-        }
-
-        chunk['marked'] = false;
-        chunk['label'] = null;
-
-        if (chunks.length == 0 || (chunks.length > 0 && chunks[chunks.length - 1] !== undefined && chunks[chunks.length - 1]['marked'])) {
-          chunks.push(chunk);
-        } else {
-          chunks[chunks.length - 1] = chunk;
-        }
-      }      
-    }
-  }
-
-  function disableChunk(c) {
-    $('span.tag[data-i="' + c['id'] + '"]').addClass('is-disabled');
-    c['submittable'] = false;
-  }
-
-  function enableChunk(c) {
-    $('span.tag[data-i="' + c['id'] + '"]').removeClass('is-disabled');
-    c['submittable'] = true;
-  }
-
-  // disable given chunks visually
-  function disableChunks(chunks) {
-    for (var c in chunks) {
-      disableChunk(chunks[c])
-    }
-    return chunks;
-  }
 
   // adding chunk if a piece of text was selected with a mouse
   $('.selector').on('mouseup', function(e) {
@@ -682,7 +904,7 @@ $(document).ready(function() {
         isRightMB = e.button == 2;
 
     if (!$(e.target).hasClass('delete') && !isRightMB) {
-      updateChunkFromSelection();
+      labelerModule.updateChunkFromSelection();
     }
   })
 
@@ -692,9 +914,10 @@ $(document).ready(function() {
     if (selection && (selection.anchorNode != null)) {
       var isArticleParent = selection.anchorNode.parentNode == document.querySelector('.selector');
       if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
-        updateChunkFromSelection();
+        labelerModule.updateChunkFromSelection();
       } else {
         var $shortcut = $('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
+        console.log($shortcut);
         if ($shortcut.length > 0) {
           $shortcut.click();
         }
@@ -959,7 +1182,7 @@ $(document).ready(function() {
 
             $('#undoLast').attr('disabled', true);
 
-            if (allowCommentingLabels) {
+            if (labelerModule.allowCommentingLabels) {
               var $commentInput = $('<input data-i=' + labelId + ' value = ' + (comments[labelId] || '') + '>');
               $commentInput.on('change', function(e) {
                 comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
@@ -1020,219 +1243,21 @@ $(document).ready(function() {
     }, $button);
   });
 
-  function showRelationGraph(id) {
-    if (id == null || id === undefined)
-      $('#relationId').text(0);
-    else {
-      var svg = d3.select("#relations svg")
-
-      svg.selectAll('g')
-        .attr('class', 'hidden');
-
-      d3.select('g#' + graphIds[id])
-        .attr('class', '');
-
-      $('#relationId').text(id + 1);
-    }
-  }
-
   $('#prevRelation').on('click', function(e) {
     e.preventDefault();
-
-    if (currentRelationId == null) return;
-
-    currentRelationId--;
-    if (currentRelationId < 0) {
-      currentRelationId = 0;
-      return;
-    }
-
-    showRelationGraph(currentRelationId);
+    labelerModule.showRelationGraph(labelerModule.previousRelation());
   })
 
   $('#nextRelation').on('click', function(e) {
     e.preventDefault();
-
-    if (currentRelationId == null) return;
-
-    currentRelationId++;
-    if (currentRelationId >= graphIds.length) {
-      currentRelationId = graphIds.length - 1;
-      return;
-    }
-
-    showRelationGraph(currentRelationId);
+    labelerModule.showRelationGraph(labelerModule.nextRelation());
   })
 
 
   $('#removeRelation').on('click', function(e) {
     e.preventDefault();
-
-    $('g#' + graphIds[currentRelationId]).find('circle[data-id]').each(function(i, d) { 
-      var $el = $('#' + d.getAttribute('data-id'));
-      if ($el.length > 0) {
-        $el.prop('in_relation', false);
-        $el.attr('id', '');
-      }
-    });
-    d3.select('g#' + graphIds[currentRelationId]).remove();
-    relations = relations.filter(function(x) {
-      return x.id != graphIds[currentRelationId]
-    })
-
-    graphIds.splice(currentRelationId, 1);
-    currentRelationId = graphIds.length - 1;
-    showRelationGraph(currentRelationId);
+    labelerModule.showRelationGraph(labelerModule.removeCurrentRelation());
   })
-
-  /******************/
-  /* + Handling SVG */
-  /******************/
-  if (typeof d3 !== 'undefined') {
-    /* Relations */
-    var svg = d3.select("#relations")
-      .append("svg")
-        .attr("width", "100%")
-        .attr("height", "100%");
-
-    // TODO: this marker should be visible w.r.t. the target node
-    svg.append("svg:defs").append("svg:marker")
-      .attr("id", "triangle")
-      .attr("refX", 6)
-      .attr("refY", 6)
-      .attr("markerWidth", 20)
-      .attr("markerHeight", 20)
-      .attr("markerUnits","userSpaceOnUse")
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M 0 0 12 6 0 12 3 6")
-      .style("fill", "black");
-
-    function drawNetwork(data, arrows) {
-      if (arrows === undefined) arrows = false;
-
-      var svg = d3.select("#relations svg")
-
-      svg.selectAll('g')
-        .attr('class', 'hidden');
-
-      svg = svg.append("g")
-        .attr('id', data.id)
-
-      var link = svg
-        .selectAll("line")
-        .data(data.links)
-        .enter()
-        .append("line")
-          .style("stroke", "#aaa");
-
-      if (arrows)
-        link = link.attr("marker-end", "url(#triangle)");
-
-      // Initialize the nodes
-      var node = svg
-        .selectAll("circle")
-        .data(data.nodes)
-        .enter()
-        .append("circle")
-          .attr("r", radius)
-          .attr('data-id', function(d) { return d.id })
-          .style("fill", function(d) { return d.color })
-          .on("mouseover", function(d, i) {
-            $('#' + d.dom).addClass('active');
-          })
-          .on("mouseout", function(d, i) {
-            $('#' + d.dom).removeClass('active');
-          })
-
-      var text = svg.selectAll("text")
-        .data(data.nodes)
-        .enter().append("text")
-          .text(function(d) { return d.name.length > 10 ? d.name.substr(0, 10) + '...' : d.name ; });
-
-      // Let's list the force we wanna apply on the network
-      var simulation = d3.forceSimulation(data.nodes)                 // Force algorithm is applied to data.nodes
-          .force("link", d3.forceLink()                               // This force provides links between nodes
-                .id(function(d) { return d.id; })                     // This provide  the id of a node
-                .links(data.links)                                    // and this the list of links
-          )
-          .force("charge", d3.forceManyBody().strength(-500))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-          .force("center", d3.forceCenter(radius, 30))                // This force attracts nodes to the center of the svg area
-          .stop()
-
-      // This function is run at each iteration of the force algorithm, updating the nodes position.
-      function ticked() {
-        /* update the simulation */
-        text
-          .attr("x", function(d) { return d.x + radius * 1.2; })
-          .attr("y", function(d) { return d.y; })
-
-        link
-          .attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { 
-            var dx = 0.7 * Math.abs(d.target.x - d.source.x); 
-            if (d.target.x > d.source.x) {
-              return d.source.x + dx;
-            } else {
-              return d.source.x - dx;
-            }
-          })
-          .attr("y2", function(d) {
-            var dx = 0.7 * Math.abs(d.target.x - d.source.x);
-            var x = null;
-            if (d.target.x > d.source.x) {
-              x = d.source.x + dx;
-            } else {
-              x = d.source.x - dx;
-            }
-
-            var dy = Math.abs(x - d.source.x) * Math.abs(d.target.y - d.source.y) / Math.abs(d.target.x - d.source.x)
-
-            if (d.target.y > d.source.y) {
-              // means arrow down
-              return d.source.y + dy;
-            } else {
-              // means arrow up
-              return d.source.y - dy;
-            }
-          });
-
-        node
-         .attr("cx", function(d) { return d.x; })
-         .attr("cy", function(d) { return d.y; });
-      }
-
-      function finalizeSimulation() {
-        var group = d3.select('g#' + data.id);
-
-        if (!group.empty()) {
-          var bbox = group.node().getBBox();
-
-          var svgBbox = document.querySelector('svg').getBoundingClientRect();
-
-          var mx = svgBbox.width / 2 - bbox.width / 4;
-          var my = svgBbox.height / 2 - bbox.height / 2;
-
-          group.attr("transform", "translate(" + mx + ", " + my + ")");
-        }
-      }
-
-      for (var i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
-        simulation.tick();
-        ticked();
-      }
-      finalizeSimulation();
-
-      $("#relationId").text(currentRelationId + 1);
-    }
-  }
-
-  /******************/
-  /* - Handling SVG */
-  /******************/
-
-
 
   /**
    * Modals handling

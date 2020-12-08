@@ -3,6 +3,7 @@ import pytz
 import markdown
 from datetime import datetime
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.utils.translation import gettext, ngettext
 from django.urls import reverse
 from urllib.parse import urlparse
 
@@ -49,6 +50,7 @@ def prettify(value):
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('sass_processor.jinja2.ext.SassSrc')
+    extensions.append('jinja2.ext.i18n')
     options['extensions'] = extensions
     env = Environment(**options)
     env.globals.update({
@@ -61,4 +63,7 @@ def environment(**options):
     env.filters['display_relation'] = display_relation
     env.filters['prettify'] = prettify
     env.filters['bool2str'] = lambda x: str(x).lower()
+    # i18n template functions
+    env.install_gettext_callables(gettext=gettext, ngettext=ngettext,
+        newstyle=True)
     return env
