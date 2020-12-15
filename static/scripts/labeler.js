@@ -17,6 +17,168 @@ var labelerModule = (function() {
       nonRelationMarkers = [],
       comments = {};
 
+  function isDefined(x) {
+    return x != null && x !== undefined;
+  }
+
+  function insertAfter(newNode, existingNode) {
+    existingNode.parentNode.insertBefore(newNode, existingNode.nextSibling);
+  }
+
+  function previousTextLength(node, inParagraph) {
+    // calculate the length of the text preceding the node
+    // inParagraph is a boolean variable indicating whether preceding text
+    // is taken only from the current paragraph or from the whole article
+    if (inParagraph === undefined) inParagraph = true;
+
+    var len = 0;
+    var prev = node.previousSibling;
+
+    // paragraph scope
+    while (prev != null) {
+      if (prev.nodeType == 1) {
+        if (prev.tagName == "BR") {
+          // if newline
+          len += 1
+        } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A") {
+          // if there is a label
+          len += prev.textContent.length
+        }
+      } else if (prev.nodeType == 3) {
+        len += prev.length
+      }
+      prev = prev.previousSibling
+    }
+
+    if (inParagraph) return len;
+
+    // all text scope
+    // Find previous <p>
+    var parent = node.parentNode;
+    if (parent != null) {
+      var parentSibling = parent.previousElementSibling;
+      while (parentSibling != null) {
+        if (parentSibling.tagName == "P") {
+          len += parentSibling.textContent.length + 1; // +2 because P
+        }
+        parentSibling = parentSibling.previousElementSibling;
+      }
+    }
+    return len;
+  }
+
+  function isDeleteButton(node) {
+    return node.nodeName == "BUTTON" && node.classList.contains('delete');
+  }
+
+  function mergeWithNeighbors(node) {
+    // merge the given node with two siblings - used when deleting a label
+    var next = node.nextSibling,
+        prev = node.previousSibling,
+        parent = node.parentNode;
+
+    var pieces = [],
+        element = document.createTextNode("");
+    for (var i = 0; i < node.childNodes.length; i++) {
+      var child = node.childNodes[i];
+      if (child.nodeType == 3) {
+        element = document.createTextNode(element.data + child.data);
+        if (i == node.childNodes.length - 1)
+          pieces.push(element);
+      } else {
+        pieces.push(element);
+        pieces.push(child);
+        element = document.createTextNode("");
+      }
+    }
+
+    if (pieces.length > 1) {
+      if (pieces[0].nodeType == 3 && prev.nodeType == 3)
+        parent.replaceChild(document.createTextNode(prev.data + pieces[0].data), prev);
+      else
+        parent.insertBefore(pieces[0], next);
+
+      parent.removeChild(node);
+      for (var i = 1; i < pieces.length - 1; i++) {
+        parent.insertBefore(pieces[i], next)
+      }
+
+      if (pieces[pieces.length-1].nodeType == 3 && next.nodeType == 3) {
+        parent.replaceChild(document.createTextNode(pieces[pieces.length-1].data + next.data), next);
+      }
+      else {
+        parent.insertBefore(pieces[pieces.length-1], next);
+      }
+    } else {
+      var next_data = next != null && isDefined(next.data) ? next.data : "";
+      if (prev == null) {
+        parent.replaceChild(document.createTextNode(pieces[0].data + next_data), node);
+      } else {
+        var prev_data = isDefined(prev.data) ? prev.data : "";
+        parent.replaceChild(document.createTextNode(prev_data + pieces[0].data + next_data), prev);
+        parent.removeChild(node);
+      }
+      if (next != null && !isDeleteButton(next))
+        parent.removeChild(next);
+    }
+  }
+
+  function isFullySelected(node, startOffset, endOffset) {
+    if (node.nodeType == 3) {
+      if (startOffset === undefined && endOffset === undefined) return false;
+      var text = endOffset === undefined ? node.textContent.slice(startOffset) : node.textContent.slice(startOffset, endOffset);
+      return node.textContent == text;
+    } else {
+      return node.parentNode.textContent == node.textContent;
+    }
+  }
+
+  function getPiece(node, startOffset, endOffset) {
+    var fullySelected = isFullySelected(node, startOffset, endOffset);   
+    if (node.nodeType == 3 && !fullySelected) {
+      if (startOffset === undefined && endOffset === undefined) return node;
+      var piece = endOffset === undefined ? node.textContent.slice(startOffset) : node.textContent.slice(startOffset, endOffset);
+      return document.createTextNode(piece);
+    } else if (node.nodeType != 3 && fullySelected) {
+      return node.parentNode;
+    } else {
+      return node;
+    }
+  }
+
+  function getPieces(group, isLast) {
+    // group is a Range object
+    console.log(group)
+    var startNode = group.startContainer,
+        startOffset = group.startOffset,
+        endNode = group.endContainer,
+        endOffset = group.endOffset;
+
+    if (startNode == endNode) {
+      if (isFullySelected(startNode, startOffset, endOffset)) {
+        return [startNode];
+      } else {
+        return [document.createTextNode(startNode.textContent.slice(startOffset, endOffset))];
+      }      
+    }
+
+    var pieces = [getPiece(startNode, startOffset, undefined)];
+    var sb = pieces[0];
+
+    if (sb.previousSibling == null && sb.nextSibling == null) {
+      // probably not part of DOM yet, so a slice
+      sb = startNode;
+    }
+
+    while (sb != endNode && !sb.contains(endNode)) {
+      sb = sb.nextSibling;
+      if (sb == null) break;
+      pieces.push(sb == endNode ? getPiece(endNode, 0, endOffset) : getPiece(sb, undefined, undefined));
+    }
+    console.log(pieces);
+    return pieces;
+  }
+
   var labeler = {
     allowSelectingLabels: false,
     allowCommentingLabels: false,
@@ -54,92 +216,27 @@ var labelerModule = (function() {
     getActiveChunk: function() {
       return chunks[chunks.length-1];
     },
-    previousTextLength: function(node, inParagraph) {
-      // calculate the length of the text preceding the node
-      // inParagraph is a boolean variable indicating whether preceding text
-      // is taken only from the current paragraph or from the whole article
-      if (inParagraph === undefined) inParagraph = true;
+    // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
+    initPreMarkers: function() {
+      this.labelId = 0;
+      $('article.text span.tag').each(function(i, node) {
+        node.setAttribute('data-i', this.labelId);
+        this.updateChunkFromNode(node);
 
-      var len = 0;
-      var prev = node.previousSibling;
+        node.querySelector('button.delete').addEventListener('click', function(e) {
+          e.stopPropagation();
+          var el = e.target,
+              parent = el.parentNode; // actual span
 
-      // paragraph scope
-      while (prev != null) {
-        if (prev.nodeType == 1) {
-          if (prev.tagName == "BR") {
-            // if newline
-            len += 1
-          } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A") {
-            // if there is a label
-            len += prev.textContent.length
-          }
-        } else if (prev.nodeType == 3) {
-          len += prev.length
-        }
-        prev = prev.previousSibling
-      }
-
-      if (inParagraph) return len;
-
-      // all text scope
-      // Find previous <p>
-      var parent = node.parentNode;
-      if (parent != null) {
-        var parentSibling = parent.previousElementSibling;
-        while (parentSibling != null) {
-          if (parentSibling.tagName == "P") {
-            len += parentSibling.textContent.length + 1; // +2 because P
-          }
-          parentSibling = parentSibling.previousElementSibling;
-        }
-      }
-      return len;
-    },
-    mergeWithNeighbors: function(node) {
-      // merge the given node with two siblings - used when deleting a label
-      var next = node.nextSibling,
-          prev = node.previousSibling,
-          parent = node.parentNode;
-
-      var pieces = [],
-          element = document.createTextNode("");
-      for (var i = 0; i < node.childNodes.length; i++) {
-        var child = node.childNodes[i];
-        if (child.nodeType == 3) {
-          element = document.createTextNode(element.data + child.data);
-          if (i == node.childNodes.length - 1)
-            pieces.push(element);
-        } else {
-          pieces.push(element);
-          pieces.push(child);
-          element = document.createTextNode("");
-        }
-      }
-
-      if (pieces.length > 1) {
-        if (pieces[0].nodeType == 3 && prev.nodeType == 3)
-          parent.replaceChild(document.createTextNode(prev.data + pieces[0].data), prev);
-        else
-          parent.insertBefore(pieces[0], next);
-
-        parent.removeChild(node);
-        for (var i = 1; i < pieces.length - 1; i++) {
-          parent.insertBefore(pieces[i], next)
-        }
-
-        if (pieces[pieces.length-1].nodeType == 3 && next.nodeType == 3) {
-          parent.replaceChild(document.createTextNode(pieces[pieces.length-1].data + next.data), next);
-        }
-        else {
-          parent.insertBefore(pieces[pieces.length-1], next);
-        }
-      } else {
-        console.log(pieces[0])
-        console.log(next.data)
-        parent.replaceChild(document.createTextNode(prev.data + pieces[0].data + next.data), prev);
-        parent.removeChild(node);
-        parent.removeChild(next);
-      }
+          chunks.splice(this.labelId, 1);
+          mergeWithNeighbors(parent);
+          $(el).prop('in_relation', false);
+          resetTextHTML = selectorArea.innerHTML
+          this.activeLabels--;
+        })
+        this.labelId++;
+      })
+      this.activeLabels = this.labelId;
     },
     updateChunkFromNode: function(node) {
       // adding the information about the node, representing a label, to the chunks array
@@ -157,11 +254,11 @@ var labelerModule = (function() {
       if (contextSize == 'p') {
         // paragraph
         chunk['context'] = chunk['text'];
-        chunk['start'] = this.previousTextLength(node, true);
+        chunk['start'] = previousTextLength(node, true);
       } else if (contextSize == 't') {
         // text
         chunk['context'] = this.resetText;
-        chunk['start'] = this.previousTextLength(node, false);
+        chunk['start'] = previousTextLength(node, false);
       } else if (contextSize == 's') {
         // TODO sentence
 
@@ -213,13 +310,29 @@ var labelerModule = (function() {
         if (group)
           groups.push(group)
 
+        // FIXME:
+        //  - when highlighting nested ltr can't highlight more than 2 nested correctly
+        //  - rtl highlighting doesn't work at all
+
         for (var i = 0; i < groups.length; i++) {
           var chunk = {},
               group = groups[i],
               N = group.length;
               minDepth = Number.MAX_VALUE,
-              selectionLength = 0,
-              pieces = [];
+              pieces = [],
+              // these two offsets are independent of whether we select ltr or rtl
+              groupStart = {
+                'whole': isFullySelected(group[0].startContainer, group[0].startOffset, true),
+                'node': group[0].startContainer,
+                'offset': group[0].startOffset, 
+                'depth': getDepth(group[0].startContainer)
+              },
+              groupEnd = {
+                'whole': isFullySelected(group[N-1].endContainer, group[N-1].endOffset, false),
+                'node': group[N-1].endContainer,
+                'offset': group[N-1].endOffset,
+                'depth': getDepth(group[N-1].endContainer)
+              };
           for (var j = 0; j < N; j++) {
             var node = group[j].commonAncestorContainer;
             var depth = getDepth(node);
@@ -227,54 +340,48 @@ var labelerModule = (function() {
               chunk['node'] = node;
               minDepth = depth;
             }
-
-            var startNode = group[j].startContainer,
-                endNode = group[j].endContainer;
-
-            if (startNode == endNode) {
-              selectionLength += group[j].endOffset - group[j].startOffset;
-              pieces.push(document.createTextNode(startNode.textContent.slice(group[j].startOffset, group[j].endOffset)))
-            } else {
-              if (startNode.nodeType == 3) {
-                var startPiece = startNode.textContent.slice(group[j].startOffset);
-                pieces.push(document.createTextNode(startPiece));
-              } else {
-                var startPiece = startNode.textContent;
-                pieces.push(startNode)
-              }
-
-              if (endNode.nodeType == 3) {
-                var endPiece = endNode.textContent.slice(0, group[j].endOffset);
-                pieces.push(document.createTextNode(endPiece));
-              } else {
-                var endPiece = endNode.textContent;
-                pieces.push(endNode)
-              }
-              selectionLength += startPiece.length + endPiece.length;
-            }
+            
+            pieces.push.apply(pieces, getPieces(group[j], j == N-1));
+            console.log("P", pieces);
           }
 
-          var groupStart = group[0].startContainer,
-              groupEnd = group[N-1].endContainer;
+          // we know that chunk['node'] should give us an enclosing <p>, so force for it
+          if (chunk['node'].tagName != "P") {
+            var p = chunk['node'].parentNode;
+            while (p.tagName != "P" && p.tagName != "BODY") 
+              p = p.parentNode;
+            if (chunk['node'].textContent != p.textContent)
+              chunk['node'] = p;
+          }
 
           chunk['pieces'] = pieces;
+
+          if (groupStart['depth'] != groupEnd['depth']) {
+            // if we have nested labels
+            if (groupStart['depth'] < groupEnd['depth']) {
+              while (groupStart['depth'] != groupEnd['depth']) {
+                groupEnd['node'] = groupEnd['node'].parentNode;
+                groupEnd['depth']--;
+              }
+            } else {
+              while (groupStart['depth'] != groupEnd['depth']) {
+                groupStart['node'] = groupStart['node'].parentNode;
+                groupStart['depth']--;
+              }
+            }
+          }
 
           chunk['left'] = groupStart;
           chunk['right'] = groupEnd;
 
-          // these two are independent of whether we select ltr or rtl
-          chunk['start'] = group[0].startOffset;
-          chunk['end'] = chunk['start'] + selectionLength;
-          chunk['rightOffset'] = group[N-1].endOffset;
-
           if (contextSize == 'p') {
             // paragraph
             chunk['context'] = chunk['node'].textContent; // the parent of anchor is <p> - just take it's length
-            chunk['lengthBefore'] = this.previousTextLength(chunk['node'], true);
+            chunk['lengthBefore'] = previousTextLength(chunk['node'], true);
           } else if (contextSize == 't') {
             // text
             chunk['context'] = resetText;
-            chunk['lengthBefore'] = this.previousTextLength(chunk['node'], false);
+            chunk['lengthBefore'] = previousTextLength(chunk['node'], false);
           } else if (contextSize == 's') {
             // TODO sentence
 
@@ -296,7 +403,8 @@ var labelerModule = (function() {
           } else {
             chunks[N-1] = chunk;
           }
-        }      
+          console.log(chunk)
+        } 
       }
     },
     mark: function(obj, max_markers) {
@@ -304,13 +412,16 @@ var labelerModule = (function() {
         var chunk = this.getActiveChunk(),
             idc = chunks.length - 1
             color = obj.getAttribute('data-color'),
-            leftTextNode = document.createTextNode(chunk['left'].textContent.slice(0, chunk['start'])),
+            leftTextNode = chunk['left']['whole'] ? chunk['left']['node'] :
+              document.createTextNode(chunk['left']['node'].textContent.slice(0, chunk['left']['offset'])),
             markedSpan = document.createElement('span'),
             deleteMarkedBtn = document.createElement('button'),
-            rightTextNode = document.createTextNode(chunk['right'].textContent.slice(chunk['rightOffset']));
+            rightTextNode = chunk['right']['whole'] ? chunk['right']['node'] :
+              document.createTextNode(chunk['right']['node'].textContent.slice(chunk['right']['offset']));
         markedSpan.className = "tag is-" + color + " is-medium";
         for (var i = 0; i < chunk['pieces'].length; i++) {
-          markedSpan.appendChild(chunk['pieces'][i]);
+          if (isDefined(chunk['pieces'][i]))
+            markedSpan.appendChild(chunk['pieces'][i]);
         }
         markedSpan.setAttribute('data-s', obj.getAttribute('data-s'));
         markedSpan.setAttribute('data-i', labelId);
@@ -333,30 +444,44 @@ var labelerModule = (function() {
           });
         }
 
-        if (chunk['node'] !== undefined && chunk['node'] != null) {
+        if (isDefined(chunk['node'])) {
           // TODO: figure out when it would happen
           var parent = chunk['node'].parentNode;
 
           if (chunk['node'].nodeType == 3) {
-            parent.replaceChild(leftTextNode, chunk['node']);
-            parent.insertBefore(markedSpan, leftTextNode.nextSibling);
-            parent.insertBefore(rightTextNode, markedSpan.nextSibling);  
+            if (leftTextNode != null) {
+              parent.replaceChild(leftTextNode, chunk['node']);
+              parent.insertBefore(markedSpan, leftTextNode.nextSibling);
+            } else {
+              parent.replaceChild(markedSpan, chunk['node']);
+            }
+            if (rightTextNode != null)
+                parent.insertBefore(rightTextNode, markedSpan.nextSibling);
+            
           } else {
-            var newNode = document.createElement(chunk['node'].nodeName),
-                cnodes = chunk['node'].childNodes;
-            for (var i = 0; i < cnodes.length; i++) {
-              if (cnodes[i] == chunk['left'])
-                break;
-              newNode.appendChild(cnodes[i].cloneNode(true));
+            var leftParent;
+            if (isDefined(leftTextNode)) {
+              if (chunk['left']['whole']) {
+                leftParent = leftTextNode.parentNode;
+                leftParent.replaceChild(markedSpan, leftTextNode);
+              } else {
+                leftParent = chunk['left']['node'].parentNode;
+                leftParent.replaceChild(leftTextNode, chunk['left']['node']);
+                leftParent.insertBefore(markedSpan, leftTextNode.nextSibling);
+              }
             }
-            newNode.appendChild(leftTextNode);
-            newNode.appendChild(markedSpan);
-            newNode.appendChild(rightTextNode);
-            for (var j = i + 1; j < cnodes.length; j++) {
-              if (cnodes[j] == chunk['right']) continue;
-              newNode.appendChild(cnodes[j].cloneNode(true));
+              
+            if (isDefined(rightTextNode)) {
+              if (chunk['right']['whole']) {
+                if (chunk['left']['node'] != chunk['right']['node'])
+                  rightTextNode.parentNode.removeChild(rightTextNode);
+              } else {
+                var rightParent = markedSpan.parentNode;
+                rightParent.insertBefore(rightTextNode, markedSpan.nextSibling);
+                if (chunk['left']['node'] != chunk['right']['node'])
+                  chunk['right']['node'].parentNode.removeChild(chunk['right']['node']);
+              }
             }
-            parent.replaceChild(newNode, chunk['node']);
           }
 
           var marked = parent.querySelectorAll('span.tag');
@@ -649,8 +774,6 @@ var labelerModule = (function() {
     markRelation: function(obj) {
       if (!this.checkRestrictions(true)) return;
 
-      console.log(obj)
-
       var $parts = $('.selector span.tag.active'),
           between = obj.getAttribute('data-b').split('-:-'),
           direction = obj.getAttribute('data-d'),
@@ -731,6 +854,21 @@ var labelerModule = (function() {
         $parts.append($('<span class="rel">' + lastRelationId + '</span>'));
         lastRelationId++;
       }
+    },
+    labelDeleteHandler: function(e) {
+      // when a delete button on any label is clicked
+      e.stopPropagation();
+      var target = e.target,
+          parent = target.parentNode, // actual span
+          sibling = target.nextSibling; // the span with a relation number (if any)
+
+      target.remove();
+      if (sibling != null)
+        sibling.remove();
+      chunks = chunks.filter(function(x) { return x.id != target.getAttribute('data-j') })
+      mergeWithNeighbors(parent);
+      // $(target).prop('in_relation', false);
+      activeLabels--;
     }
   }
 
@@ -775,31 +913,8 @@ $(document).ready(function() {
     $el.append($button);
   });
 
-  // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
-  function initPreMarkers() {
-    labelId = 0;
-    $('article.text span.tag').each(function(i, node) {
-      node.setAttribute('data-i', labelId);
-      labelerModule.updateChunkFromNode(node);
-
-      node.querySelector('button.delete').addEventListener('click', function(e) {
-        e.stopPropagation();
-        var el = e.target,
-            parent = el.parentNode; // actual span
-
-        chunks.splice(labelId, 1);
-        mergeWithNeighbors(parent);
-        $(el).prop('in_relation', false);
-        resetTextHTML = selectorArea.innerHTML
-        activeLabels--;
-      })
-      labelId++;
-    })
-    activeLabels = labelId;
-  }
-
   // do initialize pre-markers for the current article
-  initPreMarkers();
+  labelerModule.initPreMarkers();
 
   // disable the undo button, since we haven't submitted anything
   $('#undoLast').attr('disabled', true);  
@@ -820,19 +935,7 @@ $(document).ready(function() {
   $('.selector.element').on('click', function(e) {
     var target = e.target;
     if (target.nodeName == "BUTTON" && target.classList.contains('delete')) {
-      // when a delete button on any label is clicked
-      e.stopPropagation();
-      var el = e.target,
-          parent = el.parentNode, // actual span
-          sibling = e.target.nextSibling; // the span with a relation number (if any)
-
-      target.remove();
-      if (sibling != null)
-        sibling.remove();
-      chunks = chunks.filter(function(x) { return x.id != target.getAttribute('data-j') })
-      mergeWithNeighbors(parent);
-      $(el).prop('in_relation', false);
-      activeLabels--;
+      labelerModule.labelDeleteHandler(e);
     } else if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
       if (labelerModule.allowSelectingLabels) {
         var $target = $(e.target);
@@ -917,7 +1020,6 @@ $(document).ready(function() {
         labelerModule.updateChunkFromSelection();
       } else {
         var $shortcut = $('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
-        console.log($shortcut);
         if ($shortcut.length > 0) {
           $shortcut.click();
         }
