@@ -4,7 +4,9 @@
       {% include 'partials/components/areas/text.html' %}
       {% if source_id != -1 %}
         {% include 'partials/components/areas/markers.html' %}
-        {% include 'partials/components/areas/text_submission.html' %}
+        {% with area_title="Your question", input_placeholder="Type in your question here" %}
+          {% include 'partials/components/areas/text_submission.html' %}
+        {% endwith %}
       {% endif %}
     </div>
     <div class="column">

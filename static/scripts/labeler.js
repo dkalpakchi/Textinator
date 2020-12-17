@@ -15,10 +15,27 @@ var labelerModule = (function() {
       resetText = null,    // the text of the loaded article
       markersInRelations = [],
       nonRelationMarkers = [],
-      comments = {};
+      comments = {},
+      submittableChunks = []; // chunks to be submitted
+
+  function clearSelection() {
+    if (window.getSelection) {
+      if (window.getSelection().empty) {  // Chrome
+        window.getSelection().empty();
+      } else if (window.getSelection().removeAllRanges) {  // Firefox
+        window.getSelection().removeAllRanges();
+      }
+    } else if (document.selection) {  // IE?
+      document.selection.empty();
+    }
+  }
 
   function isDefined(x) {
     return x != null && x !== undefined;
+  }
+
+  function getTextLength(node) {
+    return node.nodeType == 3 ? node.length : node.textContent.length;
   }
 
   function insertAfter(newNode, existingNode) {
@@ -40,7 +57,7 @@ var labelerModule = (function() {
         if (prev.tagName == "BR") {
           // if newline
           len += 1
-        } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A") {
+        } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A" || prev.tagName == "P") {
           // if there is a label
           len += prev.textContent.length
         }
@@ -69,6 +86,17 @@ var labelerModule = (function() {
 
   function isDeleteButton(node) {
     return node.nodeName == "BUTTON" && node.classList.contains('delete');
+  }
+
+  function isLabel(node) {
+    return node.nodeName == "SPAN" && node.classList.contains("tag");
+  }
+
+  function getEnclosingLabel(node) {
+    while (isLabel(node.parentNode)) {
+      node = node.parentNode;
+    }
+    return node;
   }
 
   function mergeWithNeighbors(node) {
@@ -123,24 +151,102 @@ var labelerModule = (function() {
     }
   }
 
+  /*
+   * From MDN (https://developer.mozilla.org/en-US/docs/Web/API/Range/startOffset)
+   * If the startContainer is a Node of type Text, Comment, or CDATASection,
+   * then the offset is the number of characters from the start of the startContainer
+   * to the boundary point of the Range. For other Node types, the startOffset is
+   * the number of child nodes between the start of the startContainer and the boundary point of the Range
+   * 
+   * The same is true for endContainer and endOffset
+   */
+  function getSelectionFromRange(range, config) {
+    if (range.startContainer == range.endContainer) {
+      var node = range.startContainer
+      if (node.nodeType == 3) { // Text
+        return node.textContent.slice(range.startOffset, range.endOffset);
+      } else {
+        return node.textContent;
+      }
+    } else {
+      var start = range.startContainer,
+          end = range.endContainer,
+          startText = "",
+          endText = "";
+
+      if (start.nodeType == 3) {
+        startText += start.textContent.slice(range.startOffset);
+      } else {
+        for (var i = 0; i < range.startOffset; i++) {
+          var n = start.childNodes[i];
+          if (n != end) {
+            startText += n.textContent;
+          }
+        }
+      }
+      if (config.startOnly) return startText;
+
+      if (end.nodeType == 3) {
+        endText += end.textContent.slice(0, range.endOffset);
+      } else {
+        for (var i = 0; i < range.endOffset; i++) {
+          var n = end.childNodes[i];
+          endText += n.textContent;
+        }
+      }
+      if (config.endOnly) return endText;
+
+      if (startText == endText && (start.contains(end) || end.contains(start))) {
+        return startText;
+      } else {
+        return startText + endText;
+      }
+    }
+  }
+
+  function isRangeFullySelected(range, config) {
+    var text = getSelectionFromRange(range, config);
+    if (range.startContainer == range.endContainer) {
+      var node = range.startContainer
+      if (node.nodeType == 3) {
+        return node.textContent == text;
+      } else {
+        return getEnclosingLabel(node).textContent == text;
+      }
+    } else {
+      var node = getEnclosingLabel(range.endContainer);
+      return node.textContent == text;
+    } 
+  }
+
   function isFullySelected(node, startOffset, endOffset) {
     if (node.nodeType == 3) {
       if (startOffset === undefined && endOffset === undefined) return false;
       var text = endOffset === undefined ? node.textContent.slice(startOffset) : node.textContent.slice(startOffset, endOffset);
-      return node.textContent == text;
+      return {'node': node, 'bool': node.textContent == text};
     } else {
-      return node.parentNode.textContent == node.textContent;
+      if (startOffset === undefined && endOffset === undefined) {
+        var n = getEnclosingLabel(node);
+        return {'node': n, 'bool': n.textContent == node.textContent};
+      } else if (endOffset === undefined) {
+        return {'node': node, 'bool': node.textContent.slice(startOffset) == node.textContent};
+      } else if (startOffset === undefined) {
+        return {'node': node, 'bool': node.textContent.slice(0, endOffset) == node.textContent};
+      } else {
+        return {'node': node, 'bool': node.textContent.slice(startOffset, endOffset) == node.textContent};
+      }
     }
   }
 
   function getPiece(node, startOffset, endOffset) {
-    var fullySelected = isFullySelected(node, startOffset, endOffset);   
-    if (node.nodeType == 3 && !fullySelected) {
+    var fullySelected = isFullySelected(node, startOffset, endOffset);
+    console.log("FS", fullySelected)
+    if (node.nodeType == 3 && !fullySelected.bool) {
       if (startOffset === undefined && endOffset === undefined) return node;
       var piece = endOffset === undefined ? node.textContent.slice(startOffset) : node.textContent.slice(startOffset, endOffset);
       return document.createTextNode(piece);
-    } else if (node.nodeType != 3 && fullySelected) {
-      return node.parentNode;
+    } else if (node.nodeType != 3 && fullySelected.bool) {
+      return fullySelected.node;
     } else {
       return node;
     }
@@ -148,14 +254,13 @@ var labelerModule = (function() {
 
   function getPieces(group, isLast) {
     // group is a Range object
-    console.log(group)
     var startNode = group.startContainer,
         startOffset = group.startOffset,
         endNode = group.endContainer,
         endOffset = group.endOffset;
 
     if (startNode == endNode) {
-      if (isFullySelected(startNode, startOffset, endOffset)) {
+      if (isFullySelected(startNode, startOffset, endOffset).bool) {
         return [startNode];
       } else {
         return [document.createTextNode(startNode.textContent.slice(startOffset, endOffset))];
@@ -173,10 +278,27 @@ var labelerModule = (function() {
     while (sb != endNode && !sb.contains(endNode)) {
       sb = sb.nextSibling;
       if (sb == null) break;
+      if (isDeleteButton(sb)) continue;
       pieces.push(sb == endNode ? getPiece(endNode, 0, endOffset) : getPiece(sb, undefined, undefined));
     }
-    console.log(pieces);
-    return pieces;
+
+    // check if commonAncestor is not covering everything
+    var piecesText = pieces.map((x) => x.textContent).reduce((a, b) => a + b, "");
+    if (piecesText == group.commonAncestorContainer.textContent) {
+      return [group.commonAncestorContainer];
+    } else if (piecesText == endNode.parentNode.textContent) {
+      return [endNode.parentNode];
+    } else {
+      return pieces;
+    }
+  }
+
+  // checks if a chunk is in any of the relations
+  function isInRelations(c) {
+    for (var i = 0, len = relations.length; i < len; i++) {
+      if (relations[i].s == c.id || relations[i].t == c.id) return true;
+    }
+    return false;
   }
 
   var labeler = {
@@ -209,7 +331,7 @@ var labelerModule = (function() {
     disableChunks: function(chunks) {
       // disable given chunks visually
       for (var c in chunks) {
-        disableChunk(chunks[c])
+        this.disableChunk(chunks[c])
       }
       return chunks;
     },
@@ -296,11 +418,12 @@ var labelerModule = (function() {
         //  - two disjoint spans of text are selected, they should end up in separate groups
         var groups = [],
             group = [];
+        window.s = selection;
         group.push(selection.getRangeAt(0));
         for (var i = 1; i < selection.rangeCount; i++) {
           var last = group[group.length-1],
               cand = selection.getRangeAt(i);
-          if (last.endContainer.nextSibling == cand.startContainer) {
+          if ((last.endContainer.nextSibling == cand.startContainer) || (last.endContainer.parentNode.nextSibling == cand.startContainer)) {
             group.push(cand);
           } else {
             groups.push(group);
@@ -309,6 +432,8 @@ var labelerModule = (function() {
         }
         if (group)
           groups.push(group)
+
+        console.log("g", groups)
 
         // FIXME:
         //  - when highlighting nested ltr can't highlight more than 2 nested correctly
@@ -322,17 +447,36 @@ var labelerModule = (function() {
               pieces = [],
               // these two offsets are independent of whether we select ltr or rtl
               groupStart = {
-                'whole': isFullySelected(group[0].startContainer, group[0].startOffset, true),
+                'whole': isRangeFullySelected(group[0], group[0] == group[N-1] ? {'startOnly': true} : {}),
+                'homogenous': group[0] == group[N-1] || group[0].startContainer == group[0].endContainer,
                 'node': group[0].startContainer,
                 'offset': group[0].startOffset, 
                 'depth': getDepth(group[0].startContainer)
               },
               groupEnd = {
-                'whole': isFullySelected(group[N-1].endContainer, group[N-1].endOffset, false),
+                'whole': isRangeFullySelected(group[N-1], group[0] == group[N-1] ? {'endOnly': true} : {}),
+                'homogenous': group[0] == group[N-1] || group[N-1].startContainer == group[N-1].endContainer,
                 'node': group[N-1].endContainer,
                 'offset': group[N-1].endOffset,
                 'depth': getDepth(group[N-1].endContainer)
               };
+
+          // check that the selection does not span two nodes while not covering them fully
+          // console.log(group[0], group[N-1])
+          var skipCondition = [
+            (!groupStart.whole || !groupEnd.homogenous),
+            (!groupStart.homogenous || !groupEnd.whole),
+            (!groupStart.whole || !groupEnd.whole),
+            (groupStart.node.nodeType != 3 || groupEnd.node.nodeType != 3), // problematic if <t1> <l1 t2 <l2 t3> t4> and select up until end of l2
+                                                                            // for some reason the endContainer is then t3 and not l2
+            (groupStart.node != groupEnd.node)
+          ]
+
+          if (skipCondition.every((x) => x)) {
+            console.log("SKIP")
+            continue;
+          }
+
           for (var j = 0; j < N; j++) {
             var node = group[j].commonAncestorContainer;
             var depth = getDepth(node);
@@ -342,7 +486,6 @@ var labelerModule = (function() {
             }
             
             pieces.push.apply(pieces, getPieces(group[j], j == N-1));
-            console.log("P", pieces);
           }
 
           // we know that chunk['node'] should give us an enclosing <p>, so force for it
@@ -371,8 +514,21 @@ var labelerModule = (function() {
             }
           }
 
+          // check that neither groupStart nor groupEnd is in pieces
+          var L = pieces.length;
+          if (pieces[0].nodeType == 1 && pieces[0].contains(groupStart.node)) {
+            groupStart['node'] = pieces[0];
+            groupStart['whole'] = true;
+          }
+
+          if (pieces[L-1].nodeType == 1 && pieces[L-1].contains(groupEnd.node)) {
+            groupEnd['node'] = pieces[L-1];
+            groupEnd['whole'] = true;
+          }
+          
           chunk['left'] = groupStart;
           chunk['right'] = groupEnd;
+
 
           if (contextSize == 'p') {
             // paragraph
@@ -394,8 +550,13 @@ var labelerModule = (function() {
             return;
           }
 
+          chunk['start'] = groupStart.offset;
+          chunk['end'] = chunk['start'] + pieces.map(getTextLength).reduce((a, b) => a + b, 0);
+
           chunk['marked'] = false;
           chunk['label'] = null;
+
+          console.log(pieces);
 
           var N = chunks.length;
           if (N == 0 || (N > 0 && chunks[N-1] !== undefined && chunks[N-1]['marked'])) {
@@ -403,12 +564,11 @@ var labelerModule = (function() {
           } else {
             chunks[N-1] = chunk;
           }
-          console.log(chunk)
         } 
       }
     },
     mark: function(obj, max_markers) {
-      if (chunks.length > 0 && activeLabels < max_markers) {
+      if (chunks.length > 0 && chunks.length > labelId && activeLabels < max_markers) {
         var chunk = this.getActiveChunk(),
             idc = chunks.length - 1
             color = obj.getAttribute('data-color'),
@@ -421,7 +581,7 @@ var labelerModule = (function() {
         markedSpan.className = "tag is-" + color + " is-medium";
         for (var i = 0; i < chunk['pieces'].length; i++) {
           if (isDefined(chunk['pieces'][i]))
-            markedSpan.appendChild(chunk['pieces'][i]);
+            markedSpan.appendChild(chunk['pieces'][i].cloneNode(true));
         }
         markedSpan.setAttribute('data-s', obj.getAttribute('data-s'));
         markedSpan.setAttribute('data-i', labelId);
@@ -482,8 +642,16 @@ var labelerModule = (function() {
                   chunk['right']['node'].parentNode.removeChild(chunk['right']['node']);
               }
             }
+
+            // clean pieces
+            var pieces2remove = chunk['pieces'];
+            for (var j = 0; j < pieces2remove.length; j++) {
+              if (pieces2remove[j].parentNode != null)
+                pieces2remove[j].parentNode.removeChild(pieces2remove[j]);
+            }
           }
 
+          // FIXME: nested padding of the 3rd level doesn't work appropriately
           var marked = parent.querySelectorAll('span.tag');
           for (var i = 0; i < marked.length; i++) {
             var checker = marked[i],
@@ -494,8 +662,16 @@ var labelerModule = (function() {
             }
 
             for (var j = 0, len = elements.length; j < len; j++) {
-              elements[j].style.paddingTop = 10 + 10 * j + "px";
-              elements[j].style.paddingBottom = 10 + 10 * j + "px";
+              var pTopStr = elements[j].style.paddingTop,
+                  pBotStr = elements[j].style.paddingBottom,
+                  pTop = parseFloat(pTopStr.slice(0, -2)),
+                  pBot = parseFloat(pBotStr.slice(0, -2)),
+                  npTop = 10 + 10 * j,
+                  npBot = 10 + 10 * j;
+              if (pTopStr == "" || (isDefined(pTopStr) && !isNaN(pTop) && pTop < npTop))
+                elements[j].style.paddingTop = npTop + "px";
+              if (pBotStr == "" || (isDefined(pBotStr) && !isNaN(pBot) && pBot < npBot))
+                elements[j].style.paddingBottom = npBot + "px";
             }
           }
           
@@ -505,7 +681,9 @@ var labelerModule = (function() {
           labelId++;
           activeLabels++;
           chunk['label'] = obj.getAttribute('data-s');
+
           delete chunk['node']
+          clearSelection(); // force clear selection
         }
       }
     },
@@ -869,6 +1047,51 @@ var labelerModule = (function() {
       mergeWithNeighbors(parent);
       // $(target).prop('in_relation', false);
       activeLabels--;
+    },
+    getSubmittableDict: function(stringify) {
+      if (!isDefined(stringify)) stringify = false;
+      if (relations.length > 0) {
+        // if there are any relations, submit only those chunks that have to do with the relations
+        submittableChunks = chunks.filter(isInRelations)
+        
+        var nonRelationChunks = chunks.filter(x => !submittableChunks.includes(x));
+        for (var i = 0, len = nonRelationChunks.length; i < len; i++) {
+          if (nonRelationMarkers.includes(nonRelationChunks[i]['label'])) {
+            submittableChunks.push(nonRelationChunks[i]);
+          }
+        }
+      } else {
+        // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relations
+        submittableChunks = chunks.filter(function(c) { return c.submittable })
+      }
+
+      // add comments to chunks
+      for (var i = 0, len = submittableChunks.length; i < len; i++) {
+        submittableChunks[i]['comment'] = comments[submittableChunks[i]['id']] || '';
+      }
+
+      return {
+        "relations": stringify ? JSON.stringify(relations) : relations,
+        "chunks": stringify ? JSON.stringify(submittableChunks) : submittableChunks
+      }
+    },
+    postSubmitHandler: function() {
+      relations = [];
+      currentRelationId = null;
+      lastRelationId = 1;
+      graphIds = [];
+      // clear svg
+      d3.selectAll("svg > *").remove()
+      this.showRelationGraph(currentRelationId);
+      activeLabels = 0;
+
+      chunks.forEach(function(c) {
+        if (c in submittableChunks) {
+          // means already submitted, so mark as such
+          c.submittable = false;
+        }
+      });
+      submittableChunks = [];
     }
   }
 
@@ -879,7 +1102,8 @@ var labelerModule = (function() {
 $(document).ready(function() {
   labelerModule.init();
 
-  var qStart = new Date();  // the time the page was loaded or the last submission was made                          
+  var sessionStart = new Date(),  // the time the page was loaded or the last submission was made
+      $selector = $('.selector.element');
       
   // Guidelines "Show more" button
   $('.button-scrolling').each(function(i, x) {
@@ -932,7 +1156,7 @@ $(document).ready(function() {
   }
 
   // event delegation
-  $('.selector.element').on('click', function(e) {
+  $selector.on('click', function(e) {
     var target = e.target;
     if (target.nodeName == "BUTTON" && target.classList.contains('delete')) {
       labelerModule.labelDeleteHandler(e);
@@ -952,7 +1176,7 @@ $(document).ready(function() {
     }
   });
 
-  $('.selector.element').on('mouseover', function(e) {
+  $selector.on('mouseover', function(e) {
     var target = e.target;
     if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
       if (labelerModule.allowSelectingLabels) {
@@ -967,7 +1191,7 @@ $(document).ready(function() {
     }
   });
 
-  $('.selector.element').on('mouseout', function(e) {
+  $selector.on('mouseout', function(e) {
     var target = e.target;
     if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
       if (labelerModule.allowSelectingLabels) {
@@ -982,22 +1206,8 @@ $(document).ready(function() {
     }
   })
 
-  // labeling piece of text with a given marker if the marker is clicked
-  $('.marker.tags').on('click', function(e) {
-    var mmpi = $('article.markers').attr('data-mmpi');
-    labelerModule.mark(this, mmpi);
-  });
-
-
-  // check marker restrictions
-
-  // putting the activated labels in a relationship
-  $('.relation.tags').on('click', function(e) {
-    labelerModule.markRelation(this);
-  })
-
   // adding chunk if a piece of text was selected with a mouse
-  $('.selector').on('mouseup', function(e) {
+  $selector.on('mouseup', function(e) {
     var isRightMB;
     e = e || window.event;
 
@@ -1026,6 +1236,17 @@ $(document).ready(function() {
       }
     }
   });
+
+  // labeling piece of text with a given marker if the marker is clicked
+  $('.marker.tags').on('click', function(e) {
+    var mmpi = $('article.markers').attr('data-mmpi');
+    labelerModule.mark(this, mmpi);
+  });
+
+  // putting the activated labels in a relationship
+  $('.relation.tags').on('click', function(e) {
+    labelerModule.markRelation(this);
+  })
 
   // undo last relation/label if the button is clicked
   $('#undoLast').on('click', function(e) {
@@ -1067,69 +1288,42 @@ $(document).ready(function() {
     })
   })
 
-  // function that checks if a chunk is in any of the relations
-  function isInRelations(c) {
-    for (var i = 0, len = relations.length; i < len; i++) {
-      if (relations[i].s == c.id || relations[i].t == c.id) return true;
-    }
-    return false;
-  }
-
   // submitting the marked labels and/or relations with(out) inputs
   $('#inputForm .submit.button').on('click', function(e) {
     e.preventDefault();
 
     // check if restrictions are violated
-    if (!checkRestrictions()) return;
+    if (!labelerModule.checkRestrictions()) return;
 
     var $inputForm = $('#inputForm'),
-        $qInput = $inputForm.find('input.question'),
-        $questionBlock = $('article.question');
+        $inputTextField = $inputForm.find('input[name="text_input"]'),
+        $inputBlock = $inputForm.closest('article');
 
-    if ($qInput.length > 0 && $qInput.val().trim() == 0) {
+    if ($inputTextField.length > 0 && $inputTextField.val().trim() == 0) {
       alert("Please write a question first.");
       return;
     }
 
-    $qInput.prop("disabled", false);
+    $inputTextField.prop("disabled", false);
 
     var inputFormData = $inputForm.serializeObject(),
-        underReview = $questionBlock.prop('review') || false;
+        underReview = $inputBlock.prop('review') || false;
 
     // if there's an input form field, then create input_context
     if (inputFormData.hasOwnProperty('input'))
       inputFormData['input_context'] = selectorArea.textContent;
 
-    inputFormData['relations'] = JSON.stringify(relations);
-
-    var $selector = $('.selector.element');
-
-    // if there are any relations, submit only those chunks that have to do with the relations
-    // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relation
-    if (relations.length > 0) {
-      inputFormData['chunks'] = chunks.filter(isInRelations)
-      
-      var nonRelationChunks = chunks.filter(x => !inputFormData['chunks'].includes(x));
-      for (var i = 0, len = nonRelationChunks.length; i < len; i++) {
-        if (nonRelationMarkers.includes(nonRelationChunks[i]['label'])) {
-          inputFormData['chunks'].push(nonRelationChunks[i]);
-        }
-      }
-    } else {
-      inputFormData['chunks'] = chunks.filter(function(c) { return c.submittable })
-    }
-
-    for (var i=0, len=inputFormData['chunks'].length; i < len; i++) {
-      inputFormData['chunks'][i]['comment'] = comments[inputFormData['chunks'][i]['id']] || '';
-    }
+    $.extend(inputFormData, labelerModule.getSubmittableDict());
 
     inputFormData['is_review'] = underReview;
-    inputFormData['time'] = Math.round(((new Date()).getTime() - qStart.getTime()) / 1000, 1);
+    inputFormData['time'] = Math.round(((new Date()).getTime() - sessionStart.getTime()) / 1000, 1);
     inputFormData['datasource'] = parseInt($selector.attr('data-s'));
     inputFormData['datapoint'] = parseInt($selector.attr('data-dp'));
 
-    if (inputFormData['chunks'].length > 0 || relations.length > 0) {
+    if (inputFormData['chunks'].length > 0 || inputFormData['relations'].length > 0) {
       inputFormData['chunks'] = JSON.stringify(inputFormData['chunks']);
+      inputFormData['relations'] = JSON.stringify(inputFormData['relations']);
+      console.log(inputFormData);
       $.ajax({
         method: "POST",
         url: inputForm.action,
@@ -1137,30 +1331,31 @@ $(document).ready(function() {
         data: inputFormData,
         success: function(data) {
           if (data['error'] == false) {
-            var articleNode = document.querySelector('.selector'),
-                $title = $questionBlock.find('.message-header p');
+            var $title = $inputBlock.find('.message-header p');
 
             if (data['next_task'] == 'regular') {
               // no review task
               // resetArticle();
               
-              disableChunks(JSON.parse(inputFormData['chunks']));
+              labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
 
-              $questionBlock.removeClass('is-warning');
-              $questionBlock.addClass('is-primary');
-              $questionBlock.prop('review', false);
+              $inputBlock.removeClass('is-warning');
+              $inputBlock.addClass('is-primary');
+              $inputBlock.prop('review', false);
 
               // TODO: get title for a review task from the server
               //       make it a configurable project setting
               $title.html("Your question");
 
-              if ($qInput.length > 0) {
-                $qInput.prop("disabled", false);
-                $qInput.val('');
-                $qInput.focus();  
+              if ($inputTextField.length > 0) {
+                $inputTextField.prop("disabled", false);
+                $inputTextField.val('');
+                $inputTextField.focus();  
               }
             } else {
               // review task
+              // FIXME
+              var articleNode = document.querySelector('.selector');
               removeAllChildren(articleNode);
               articleNode.innerHTML = data['input']['context'];
 
@@ -1186,27 +1381,14 @@ $(document).ready(function() {
           $submittedToday.text(data['submitted_today']);
           $submittedToday.append($('<span class="smaller">q</span>'));
           
-          qStart = new Date();
+          sessionStart = new Date();
 
           // TODO; trigger iff .countdown is present
           $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
 
-          // fix relations
-          relations = [];
-          currentRelationId = null;
-          lastRelationId = 1;
-          graphIds = [];
-          // clear svg
-          d3.selectAll("svg > *").remove()
-          showRelationGraph(currentRelationId);
-
-          activeLabels = 0;
+          labelerModule.postSubmitHandler();
 
           $('#undoLast').attr('disabled', false);
-
-          chunks.forEach(function(c) {
-            c.submittable = false;
-          })
         },
         error: function() {
           console.log("ERROR!");
@@ -1217,7 +1399,7 @@ $(document).ready(function() {
             $qInput.prop('disabled', false);
           }
           $('#undoLast').attr('disabled', true);
-          qStart = new Date();
+          sessionStart = new Date();
           $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');
         }
       })
