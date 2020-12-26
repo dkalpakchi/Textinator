@@ -34,8 +34,8 @@ var labelerModule = (function() {
     return x != null && x !== undefined;
   }
 
-  function getTextLength(node) {
-    return node.nodeType == 3 ? node.length : node.textContent.length;
+  function getSelectionLength(range) {
+    return range.toString().length;
   }
 
   function insertAfter(newNode, existingNode) {
@@ -43,45 +43,54 @@ var labelerModule = (function() {
   }
 
   function previousTextLength(node, inParagraph) {
+    function getPrevLength(prev) {
+      var len = 0;
+      while (prev != null) {
+        if (prev.nodeType == 1) {
+          if (prev.tagName == "BR") {
+            // if newline
+            len += 1
+          } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A") {
+            // if there is a label
+            len += prev.textContent.length
+          }
+        } else if (prev.nodeType == 3) {
+          len += prev.length
+        }
+        prev = prev.previousSibling
+      }
+      return len;
+    }
+
     // calculate the length of the text preceding the node
     // inParagraph is a boolean variable indicating whether preceding text
     // is taken only from the current paragraph or from the whole article
     if (inParagraph === undefined) inParagraph = true;
 
-    var len = 0;
-    var prev = node.previousSibling;
+    var textLength = getPrevLength(node.previousSibling);
+    var enclosingLabel = getEnclosingLabel(node);
+    if (enclosingLabel != null)
+      textLength += getPrevLength(enclosingLabel.previousSibling);
 
-    // paragraph scope
-    while (prev != null) {
-      if (prev.nodeType == 1) {
-        if (prev.tagName == "BR") {
-          // if newline
-          len += 1
-        } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A" || prev.tagName == "P") {
-          // if there is a label
-          len += prev.textContent.length
-        }
-      } else if (prev.nodeType == 3) {
-        len += prev.length
-      }
-      prev = prev.previousSibling
-    }
+    if (inParagraph) return textLength;
 
-    if (inParagraph) return len;
+    console.log(textLength);
 
     // all text scope
     // Find previous <p>
-    var parent = node.parentNode;
+    var parent = getEnclosingParagraph(node);
     if (parent != null) {
       var parentSibling = parent.previousElementSibling;
       while (parentSibling != null) {
         if (parentSibling.tagName == "P") {
-          len += parentSibling.textContent.length + 1; // +2 because P
+          textLength += parentSibling.textContent.length + 1; // +2 because P
         }
         parentSibling = parentSibling.previousElementSibling;
       }
     }
-    return len;
+    console.log(textLength);
+    window.c = chunks;
+    return textLength;
   }
 
   function isDeleteButton(node) {
@@ -96,7 +105,13 @@ var labelerModule = (function() {
     while (isLabel(node.parentNode)) {
       node = node.parentNode;
     }
-    return node;
+    return isLabel(node) ? node : null;
+  }
+
+  function getEnclosingParagraph(node) {
+    while (node.tagName != "P" && node.tagName != "BODY") 
+      node = node.parentNode;
+    return node.tagName == "P" ? node : null;
   }
 
   function mergeWithNeighbors(node) {
@@ -204,95 +219,6 @@ var labelerModule = (function() {
     }
   }
 
-  function isRangeFullySelected(range, config) {
-    var text = getSelectionFromRange(range, config);
-    if (range.startContainer == range.endContainer) {
-      var node = range.startContainer
-      if (node.nodeType == 3) {
-        return node.textContent == text;
-      } else {
-        return getEnclosingLabel(node).textContent == text;
-      }
-    } else {
-      var node = getEnclosingLabel(range.endContainer);
-      return node.textContent == text;
-    } 
-  }
-
-  function isFullySelected(node, startOffset, endOffset) {
-    if (node.nodeType == 3) {
-      if (startOffset === undefined && endOffset === undefined) return false;
-      var text = endOffset === undefined ? node.textContent.slice(startOffset) : node.textContent.slice(startOffset, endOffset);
-      return {'node': node, 'bool': node.textContent == text};
-    } else {
-      if (startOffset === undefined && endOffset === undefined) {
-        var n = getEnclosingLabel(node);
-        return {'node': n, 'bool': n.textContent == node.textContent};
-      } else if (endOffset === undefined) {
-        return {'node': node, 'bool': node.textContent.slice(startOffset) == node.textContent};
-      } else if (startOffset === undefined) {
-        return {'node': node, 'bool': node.textContent.slice(0, endOffset) == node.textContent};
-      } else {
-        return {'node': node, 'bool': node.textContent.slice(startOffset, endOffset) == node.textContent};
-      }
-    }
-  }
-
-  function getPiece(node, startOffset, endOffset) {
-    var fullySelected = isFullySelected(node, startOffset, endOffset);
-    console.log("FS", fullySelected)
-    if (node.nodeType == 3 && !fullySelected.bool) {
-      if (startOffset === undefined && endOffset === undefined) return node;
-      var piece = endOffset === undefined ? node.textContent.slice(startOffset) : node.textContent.slice(startOffset, endOffset);
-      return document.createTextNode(piece);
-    } else if (node.nodeType != 3 && fullySelected.bool) {
-      return fullySelected.node;
-    } else {
-      return node;
-    }
-  }
-
-  function getPieces(group, isLast) {
-    // group is a Range object
-    var startNode = group.startContainer,
-        startOffset = group.startOffset,
-        endNode = group.endContainer,
-        endOffset = group.endOffset;
-
-    if (startNode == endNode) {
-      if (isFullySelected(startNode, startOffset, endOffset).bool) {
-        return [startNode];
-      } else {
-        return [document.createTextNode(startNode.textContent.slice(startOffset, endOffset))];
-      }      
-    }
-
-    var pieces = [getPiece(startNode, startOffset, undefined)];
-    var sb = pieces[0];
-
-    if (sb.previousSibling == null && sb.nextSibling == null) {
-      // probably not part of DOM yet, so a slice
-      sb = startNode;
-    }
-
-    while (sb != endNode && !sb.contains(endNode)) {
-      sb = sb.nextSibling;
-      if (sb == null) break;
-      if (isDeleteButton(sb)) continue;
-      pieces.push(sb == endNode ? getPiece(endNode, 0, endOffset) : getPiece(sb, undefined, undefined));
-    }
-
-    // check if commonAncestor is not covering everything
-    var piecesText = pieces.map((x) => x.textContent).reduce((a, b) => a + b, "");
-    if (piecesText == group.commonAncestorContainer.textContent) {
-      return [group.commonAncestorContainer];
-    } else if (piecesText == endNode.parentNode.textContent) {
-      return [endNode.parentNode];
-    } else {
-      return pieces;
-    }
-  }
-
   // checks if a chunk is in any of the relations
   function isInRelations(c) {
     for (var i = 0, len = relations.length; i < len; i++) {
@@ -397,17 +323,6 @@ var labelerModule = (function() {
       chunks.push(chunk);
     },
     updateChunkFromSelection: function() {
-      function getDepthAcc(element,depth) {
-        if(element.parentNode==null)
-          return depth;
-        else
-          return getDepthAcc(element.parentNode,depth+1);
-      }
-        
-      function getDepth(element) {
-        return getDepthAcc(element,0);
-      }
-
       // getting a chunk from the selection; the chunk then either is being added to the chunks array, if the last chunk was submitted
       // or replaces the last chunk if the last chunk was not submitted
       var selection = window.getSelection();
@@ -415,15 +330,17 @@ var labelerModule = (function() {
       if (selection && !selection.isCollapsed) {
         // group selections:
         //  - a label spanning other labels is selected, they should end up in the same group
-        //  - two disjoint spans of text are selected, they should end up in separate groups
+        //  - two disjoint spans of text are selected, they should end up in separate groups (possible only in Firefox)
         var groups = [],
             group = [];
-        window.s = selection;
         group.push(selection.getRangeAt(0));
         for (var i = 1; i < selection.rangeCount; i++) {
           var last = group[group.length-1],
               cand = selection.getRangeAt(i);
-          if ((last.endContainer.nextSibling == cand.startContainer) || (last.endContainer.parentNode.nextSibling == cand.startContainer)) {
+          // NOTE:
+          // - can't use `cand.compareBoundaryPoints(Range.END_TO_START, last)` because of delete buttons in the labels
+          if ((last.endContainer.nextSibling == cand.startContainer) ||
+             (last.endContainer.parentNode.nextSibling == cand.startContainer)) {
             group.push(cand);
           } else {
             groups.push(group);
@@ -433,111 +350,24 @@ var labelerModule = (function() {
         if (group)
           groups.push(group)
 
-        console.log("g", groups)
-
-        // FIXME:
-        //  - when highlighting nested ltr can't highlight more than 2 nested correctly
-        //  - rtl highlighting doesn't work at all
 
         for (var i = 0; i < groups.length; i++) {
           var chunk = {},
               group = groups[i],
               N = group.length;
-              minDepth = Number.MAX_VALUE,
-              pieces = [],
-              // these two offsets are independent of whether we select ltr or rtl
-              groupStart = {
-                'whole': isRangeFullySelected(group[0], group[0] == group[N-1] ? {'startOnly': true} : {}),
-                'homogenous': group[0] == group[N-1] || group[0].startContainer == group[0].endContainer,
-                'node': group[0].startContainer,
-                'offset': group[0].startOffset, 
-                'depth': getDepth(group[0].startContainer)
-              },
-              groupEnd = {
-                'whole': isRangeFullySelected(group[N-1], group[0] == group[N-1] ? {'endOnly': true} : {}),
-                'homogenous': group[0] == group[N-1] || group[N-1].startContainer == group[N-1].endContainer,
-                'node': group[N-1].endContainer,
-                'offset': group[N-1].endOffset,
-                'depth': getDepth(group[N-1].endContainer)
-              };
 
-          // check that the selection does not span two nodes while not covering them fully
-          // console.log(group[0], group[N-1])
-          var skipCondition = [
-            (!groupStart.whole || !groupEnd.homogenous),
-            (!groupStart.homogenous || !groupEnd.whole),
-            (!groupStart.whole || !groupEnd.whole),
-            (groupStart.node.nodeType != 3 || groupEnd.node.nodeType != 3), // problematic if <t1> <l1 t2 <l2 t3> t4> and select up until end of l2
-                                                                            // for some reason the endContainer is then t3 and not l2
-            (groupStart.node != groupEnd.node)
-          ]
-
-          if (skipCondition.every((x) => x)) {
-            console.log("SKIP")
-            continue;
-          }
-
-          for (var j = 0; j < N; j++) {
-            var node = group[j].commonAncestorContainer;
-            var depth = getDepth(node);
-            if (depth < minDepth) {
-              chunk['node'] = node;
-              minDepth = depth;
-            }
-            
-            pieces.push.apply(pieces, getPieces(group[j], j == N-1));
-          }
-
-          // we know that chunk['node'] should give us an enclosing <p>, so force for it
-          if (chunk['node'].tagName != "P") {
-            var p = chunk['node'].parentNode;
-            while (p.tagName != "P" && p.tagName != "BODY") 
-              p = p.parentNode;
-            if (chunk['node'].textContent != p.textContent)
-              chunk['node'] = p;
-          }
-
-          chunk['pieces'] = pieces;
-
-          if (groupStart['depth'] != groupEnd['depth']) {
-            // if we have nested labels
-            if (groupStart['depth'] < groupEnd['depth']) {
-              while (groupStart['depth'] != groupEnd['depth']) {
-                groupEnd['node'] = groupEnd['node'].parentNode;
-                groupEnd['depth']--;
-              }
-            } else {
-              while (groupStart['depth'] != groupEnd['depth']) {
-                groupStart['node'] = groupStart['node'].parentNode;
-                groupStart['depth']--;
-              }
-            }
-          }
-
-          // check that neither groupStart nor groupEnd is in pieces
-          var L = pieces.length;
-          if (pieces[0].nodeType == 1 && pieces[0].contains(groupStart.node)) {
-            groupStart['node'] = pieces[0];
-            groupStart['whole'] = true;
-          }
-
-          if (pieces[L-1].nodeType == 1 && pieces[L-1].contains(groupEnd.node)) {
-            groupEnd['node'] = pieces[L-1];
-            groupEnd['whole'] = true;
-          }
-          
-          chunk['left'] = groupStart;
-          chunk['right'] = groupEnd;
-
+          chunk['range'] = group[0].cloneRange();
+          chunk['range'].setEnd(group[N-1].endContainer, group[N-1].endOffset);
 
           if (contextSize == 'p') {
             // paragraph
-            chunk['context'] = chunk['node'].textContent; // the parent of anchor is <p> - just take it's length
-            chunk['lengthBefore'] = previousTextLength(chunk['node'], true);
+            var p = getEnclosingParagraph(chunk['range'].commonAncestorContainer);
+            chunk['context'] = p == null ? null : p.textContent;
+            chunk['lengthBefore'] = previousTextLength(chunk['range'].startContainer, true);
           } else if (contextSize == 't') {
             // text
             chunk['context'] = resetText;
-            chunk['lengthBefore'] = previousTextLength(chunk['node'], false);
+            chunk['lengthBefore'] = previousTextLength(chunk['range'].startContainer, false);
           } else if (contextSize == 's') {
             // TODO sentence
 
@@ -550,13 +380,13 @@ var labelerModule = (function() {
             return;
           }
 
-          chunk['start'] = groupStart.offset;
-          chunk['end'] = chunk['start'] + pieces.map(getTextLength).reduce((a, b) => a + b, 0);
+          chunk['start'] = chunk['range'].startOffset;
+          chunk['end'] = chunk['start'] + group.map(getSelectionLength).reduce((a, b) => a + b, 0);
 
           chunk['marked'] = false;
           chunk['label'] = null;
 
-          console.log(pieces);
+          console.log(chunk);
 
           var N = chunks.length;
           if (N == 0 || (N > 0 && chunks[N-1] !== undefined && chunks[N-1]['marked'])) {
@@ -572,23 +402,14 @@ var labelerModule = (function() {
         var chunk = this.getActiveChunk(),
             idc = chunks.length - 1
             color = obj.getAttribute('data-color'),
-            leftTextNode = chunk['left']['whole'] ? chunk['left']['node'] :
-              document.createTextNode(chunk['left']['node'].textContent.slice(0, chunk['left']['offset'])),
             markedSpan = document.createElement('span'),
-            deleteMarkedBtn = document.createElement('button'),
-            rightTextNode = chunk['right']['whole'] ? chunk['right']['node'] :
-              document.createTextNode(chunk['right']['node'].textContent.slice(chunk['right']['offset']));
+            deleteMarkedBtn = document.createElement('button');
         markedSpan.className = "tag is-" + color + " is-medium";
-        for (var i = 0; i < chunk['pieces'].length; i++) {
-          if (isDefined(chunk['pieces'][i]))
-            markedSpan.appendChild(chunk['pieces'][i].cloneNode(true));
-        }
         markedSpan.setAttribute('data-s', obj.getAttribute('data-s'));
         markedSpan.setAttribute('data-i', labelId);
         markedSpan.setAttribute('data-j', idc);
         $(markedSpan).prop('in_relation', false);
         deleteMarkedBtn.className = 'delete is-small';
-        markedSpan.appendChild(deleteMarkedBtn);
 
         if (this.allowCommentingLabels) {
           var $commentInput = $('<input data-i=' + labelId + ' value = ' + (comments[labelId] || '') + '>');
@@ -604,87 +425,48 @@ var labelerModule = (function() {
           });
         }
 
-        if (isDefined(chunk['node'])) {
-          // TODO: figure out when it would happen
-          var parent = chunk['node'].parentNode;
+        // NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
+        // "An exception will be thrown, however, if the Range splits a non-Text node with only one of its boundary points."
+        // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
+        markedSpan.appendChild(chunk['range'].extractContents())
+        markedSpan.appendChild(deleteMarkedBtn);
+        chunk['range'].insertNode(markedSpan);
 
-          if (chunk['node'].nodeType == 3) {
-            if (leftTextNode != null) {
-              parent.replaceChild(leftTextNode, chunk['node']);
-              parent.insertBefore(markedSpan, leftTextNode.nextSibling);
-            } else {
-              parent.replaceChild(markedSpan, chunk['node']);
-            }
-            if (rightTextNode != null)
-                parent.insertBefore(rightTextNode, markedSpan.nextSibling);
-            
-          } else {
-            var leftParent;
-            if (isDefined(leftTextNode)) {
-              if (chunk['left']['whole']) {
-                leftParent = leftTextNode.parentNode;
-                leftParent.replaceChild(markedSpan, leftTextNode);
-              } else {
-                leftParent = chunk['left']['node'].parentNode;
-                leftParent.replaceChild(leftTextNode, chunk['left']['node']);
-                leftParent.insertBefore(markedSpan, leftTextNode.nextSibling);
-              }
-            }
-              
-            if (isDefined(rightTextNode)) {
-              if (chunk['right']['whole']) {
-                if (chunk['left']['node'] != chunk['right']['node'])
-                  rightTextNode.parentNode.removeChild(rightTextNode);
-              } else {
-                var rightParent = markedSpan.parentNode;
-                rightParent.insertBefore(rightTextNode, markedSpan.nextSibling);
-                if (chunk['left']['node'] != chunk['right']['node'])
-                  chunk['right']['node'].parentNode.removeChild(chunk['right']['node']);
-              }
-            }
-
-            // clean pieces
-            var pieces2remove = chunk['pieces'];
-            for (var j = 0; j < pieces2remove.length; j++) {
-              if (pieces2remove[j].parentNode != null)
-                pieces2remove[j].parentNode.removeChild(pieces2remove[j]);
-            }
+        // FIXME: nested padding of the 3rd level doesn't work appropriately
+        var marked = chunk['range'].commonAncestorContainer.querySelectorAll('span.tag');
+        console.log(marked);
+        for (var i = 0; i < marked.length; i++) {
+          var checker = marked[i],
+              elements = [];
+          while (checker.classList.contains('tag')) {
+            elements.push(checker);
+            checker = checker.parentNode;
           }
 
-          // FIXME: nested padding of the 3rd level doesn't work appropriately
-          var marked = parent.querySelectorAll('span.tag');
-          for (var i = 0; i < marked.length; i++) {
-            var checker = marked[i],
-                elements = [];
-            while (checker.classList.contains('tag')) {
-              elements.push(checker);
-              checker = checker.parentNode;
-            }
+          console.log(elements);
 
-            for (var j = 0, len = elements.length; j < len; j++) {
-              var pTopStr = elements[j].style.paddingTop,
-                  pBotStr = elements[j].style.paddingBottom,
-                  pTop = parseFloat(pTopStr.slice(0, -2)),
-                  pBot = parseFloat(pBotStr.slice(0, -2)),
-                  npTop = 10 + 10 * j,
-                  npBot = 10 + 10 * j;
-              if (pTopStr == "" || (isDefined(pTopStr) && !isNaN(pTop) && pTop < npTop))
-                elements[j].style.paddingTop = npTop + "px";
-              if (pBotStr == "" || (isDefined(pBotStr) && !isNaN(pBot) && pBot < npBot))
-                elements[j].style.paddingBottom = npBot + "px";
-            }
+          for (var j = 0, len = elements.length; j < len; j++) {
+            var pTopStr = elements[j].style.paddingTop,
+                pBotStr = elements[j].style.paddingBottom,
+                pTop = parseFloat(pTopStr.slice(0, -2)),
+                pBot = parseFloat(pBotStr.slice(0, -2)),
+                npTop = 10 + 10 * j,
+                npBot = 10 + 10 * j;
+            if (pTopStr == "" || (isDefined(pTopStr) && !isNaN(pTop)))
+              elements[j].style.paddingTop = npTop + "px";
+            if (pBotStr == "" || (isDefined(pBotStr) && !isNaN(pBot)))
+              elements[j].style.paddingBottom = npBot + "px";
           }
-          
-          chunk['marked'] = true;
-          chunk['submittable'] = obj.getAttribute('data-submittable') === 'true';
-          chunk['id'] = labelId;
-          labelId++;
-          activeLabels++;
-          chunk['label'] = obj.getAttribute('data-s');
-
-          delete chunk['node']
-          clearSelection(); // force clear selection
         }
+        
+        chunk['marked'] = true;
+        chunk['submittable'] = obj.getAttribute('data-submittable') === 'true';
+        chunk['id'] = labelId;
+        labelId++;
+        activeLabels++;
+        chunk['label'] = obj.getAttribute('data-s');
+
+        clearSelection(); // force clear selection
       }
     },
     checkRestrictions: function(inRelation) {
