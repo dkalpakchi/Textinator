@@ -9,8 +9,6 @@ var labelerModule = (function() {
       graphIds = [],
       currentRelationId = null, // the ID of the current relation
       contextSize = undefined, // the size of the context to be saved 'p', 't' or 'no'
-      markersArea = null,
-      selectorArea = null,   // the area where the article is
       resetTextHTML = null,  // the HTML of the loaded article
       resetText = null,    // the text of the loaded article
       markersInRelations = [],
@@ -74,8 +72,6 @@ var labelerModule = (function() {
 
     if (inParagraph) return textLength;
 
-    console.log(textLength);
-
     // all text scope
     // Find previous <p>
     var parent = getEnclosingParagraph(node);
@@ -88,8 +84,6 @@ var labelerModule = (function() {
         parentSibling = parentSibling.previousElementSibling;
       }
     }
-    console.log(textLength);
-    window.c = chunks;
     return textLength;
   }
 
@@ -230,21 +224,115 @@ var labelerModule = (function() {
   var labeler = {
     allowSelectingLabels: false,
     allowCommentingLabels: false,
+    disableSubmittedLabels: false,
+    markersArea: null,
+    selectorArea: null,   // the area where the article is
     init: function() {
       contextSize = $('#taskArea').data('context');
-      markersArea = document.querySelector('.markers');
-      selectorArea = document.querySelector('.selector');
-      resetTextHTML = selectorArea == null ? "" : selectorArea.innerHTML;
-      resetText = selectorArea == null ? "" : selectorArea.textContent.trim();
-      this.allowSelectingLabels = markersArea == null ? false : markersArea.getAttribute('data-select') == 'true';
-      this.allowCommentingLabels = markersArea == null ? false : markersArea.getAttribute('data-comment') == 'true';
-      markersInRelations = markersArea == null ? [] :
-        [].concat.apply([], Array.from(markersArea.querySelectorAll('div.relation.tags')).map(
+      this.markersArea = document.querySelector('.markers');
+      this.selectorArea = document.querySelector('.selector');
+      resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
+      resetText = this.selectorArea == null ? "" : this.selectorArea.textContent.trim();
+      this.allowSelectingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-select') == 'true';
+      this.allowCommentingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-comment') == 'true';
+      this.disableSubmittedLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-disable') == 'true';
+      markersInRelations = this.markersArea == null ? [] :
+        [].concat.apply([], Array.from(this.markersArea.querySelectorAll('div.relation.tags')).map(
         x => x.getAttribute('data-b').split('-:-')));
-      nonRelationMarkers = markersArea == null ? [] :
-        Array.from(markersArea.querySelectorAll('div.marker.tags')).map(
+      nonRelationMarkers = this.markersArea == null ? [] :
+        Array.from(this.markersArea.querySelectorAll('div.marker.tags')).map(
         x => x.getAttribute('data-s')).filter(x => !markersInRelations.includes(x));
       this.initSvg();
+      this.initEvents();
+    },
+    initEvents : function() {
+      // event delegation
+      if (this.selectorArea != null) {
+        this.selectorArea.addEventListener('click', function(e) {
+          var target = e.target;
+          if (isDeleteButton(target)) {
+            labelerModule.labelDeleteHandler(e);
+          } else if (isLabel(target)) {
+            if (labelerModule.allowSelectingLabels) {
+              var $target = $(target);
+              if ($target.prop('in_relation')) {
+                labelerModule.showRelationGraph(
+                  parseInt(target.querySelector('[data-m="r"]').textContent) - 1
+                );
+              } else if (!window.getSelection().toString()) {
+                if (target.classList.contains('active') && $target.prop('selected')) {
+                  target.classList.remove('active');
+                  $target.prop('selected', false);
+                } else {
+                  target.classList.add('active');
+                  $target.prop('selected', true);
+                }
+              }
+            }
+          }
+        }, false);
+
+        this.selectorArea.addEventListener('mouseover', function(e) {
+          var target = e.target;
+          if (isLabel(target)) {
+            if (labelerModule.allowSelectingLabels) {
+              e.stopPropagation();
+              if (target.classList.contains("tag"))
+                if (!$(target).prop('selected'))
+                  target.classList.add('active');
+              else
+                if (!$(target.parentNode).prop('selected'))
+                  target.parentNode.classList.add('active');
+            }
+          }
+        }, false);
+
+        this.selectorArea.addEventListener('mouseout', function(e) {
+          var target = e.target;
+          if (isLabel(target)) {
+            if (labelerModule.allowSelectingLabels) {
+              e.stopPropagation();
+              if (target.classList.contains("tag"))
+                if (!$(target).prop('selected'))
+                  target.classList.remove('active');
+              else
+                if (!$(target.parentNode).prop('selected'))
+                  target.parentNode.classList.remove('active');
+            }
+          }
+        }, false)
+
+        // adding chunk if a piece of text was selected with a mouse
+        this.selectorArea.addEventListener('mouseup', function(e) {
+          var isRightMB;
+          e = e || window.event;
+
+          if ("which" in e)  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+              isRightMB = e.which == 3; 
+          else if ("button" in e)  // IE, Opera 
+              isRightMB = e.button == 2;
+
+          if (!isDeleteButton(e.target) && !isRightMB) {
+            labelerModule.updateChunkFromSelection();
+          }
+        }, false);
+
+        // adding chunk if a piece of text was selected with a keyboard
+        document.addEventListener("keyup", function(e) {
+          var selection = window.getSelection();
+          if (selection && (selection.anchorNode != null)) {
+            var isArticleParent = selection.anchorNode.parentNode == document.querySelector('.selector');
+            if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
+              labelerModule.updateChunkFromSelection();
+            } else {
+              var shortcut = document.querySelector('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
+              if (shortcut != null) {
+                shortcut.click();
+              }
+            }
+          }
+        }, false);
+      }
     },
     disableChunk: function(c) {
       $('span.tag[data-i="' + c['id'] + '"]').addClass('is-disabled');
@@ -385,8 +473,7 @@ var labelerModule = (function() {
 
           chunk['marked'] = false;
           chunk['label'] = null;
-
-          console.log(chunk);
+          // console.log(chunk);
 
           var N = chunks.length;
           if (N == 0 || (N > 0 && chunks[N-1] !== undefined && chunks[N-1]['marked'])) {
@@ -419,7 +506,6 @@ var labelerModule = (function() {
 
           tippy(markedSpan, {
             content: $commentInput[0],
-            trigger: 'click',
             interactive: true,
             distance: 0
           });
@@ -428,13 +514,25 @@ var labelerModule = (function() {
         // NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
         // "An exception will be thrown, however, if the Range splits a non-Text node with only one of its boundary points."
         // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
-        markedSpan.appendChild(chunk['range'].extractContents())
+        var nodeAfterEnd = chunk['range'].endContainer.nextSibling;
+        if (nodeAfterEnd != null && isDeleteButton(nodeAfterEnd)) {
+          while (isLabel(nodeAfterEnd.parentNode)) {
+            nodeAfterEnd = nodeAfterEnd.parentNode;
+            if (nodeAfterEnd.nextSibling == null || !isDeleteButton(nodeAfterEnd.nextSibling))
+              break;
+            nodeAfterEnd = nodeAfterEnd.nextSibling;
+          }
+          chunk['range'].setEndAfter(nodeAfterEnd);
+        }
+        markedSpan.appendChild(chunk['range'].extractContents());
         markedSpan.appendChild(deleteMarkedBtn);
         chunk['range'].insertNode(markedSpan);
 
-        // FIXME: nested padding of the 3rd level doesn't work appropriately
+        var nodeAfterMarked = markedSpan.nextSibling;
+        if (isLabel(nodeAfterMarked) && nodeAfterMarked.textContent == "")
+          nodeAfterMarked.remove();
+
         var marked = chunk['range'].commonAncestorContainer.querySelectorAll('span.tag');
-        console.log(marked);
         for (var i = 0; i < marked.length; i++) {
           var checker = marked[i],
               elements = [];
@@ -442,8 +540,6 @@ var labelerModule = (function() {
             elements.push(checker);
             checker = checker.parentNode;
           }
-
-          console.log(elements);
 
           for (var j = 0, len = elements.length; j < len; j++) {
             var pTopStr = elements[j].style.paddingTop,
@@ -811,7 +907,7 @@ var labelerModule = (function() {
         }, (from != null && to != null && direction != '2'))
 
         $parts.removeClass('active');
-        $parts.append($('<span class="rel">' + lastRelationId + '</span>'));
+        $parts.append($('<span data-m="r" class="rel">' + lastRelationId + '</span>'));
         lastRelationId++;
       }
     },
@@ -885,7 +981,7 @@ $(document).ready(function() {
   labelerModule.init();
 
   var sessionStart = new Date(),  // the time the page was loaded or the last submission was made
-      $selector = $('.selector.element');
+      $selector = $(labelerModule.selectorArea);
       
   // Guidelines "Show more" button
   $('.button-scrolling').each(function(i, x) {
@@ -936,88 +1032,6 @@ $(document).ready(function() {
     removeAllChildren(node);
     node.innerHTML = labelerModule.resetTextHTML;
   }
-
-  // event delegation
-  $selector.on('click', function(e) {
-    var target = e.target;
-    if (target.nodeName == "BUTTON" && target.classList.contains('delete')) {
-      labelerModule.labelDeleteHandler(e);
-    } else if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
-      if (labelerModule.allowSelectingLabels) {
-        var $target = $(e.target);
-        if (!$target.prop('in_relation') && !window.getSelection().toString()) {
-          if (e.target.classList.contains('active') && $target.prop('selected')) {
-            e.target.classList.remove('active');
-            $target.prop('selected', false);
-          } else {
-            e.target.classList.add('active');
-            $target.prop('selected', true);
-          }
-        }
-      }
-    }
-  });
-
-  $selector.on('mouseover', function(e) {
-    var target = e.target;
-    if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
-      if (labelerModule.allowSelectingLabels) {
-        e.stopPropagation();
-        if (e.target.classList.contains("tag"))
-          if (!$(e.target).prop('selected'))
-            e.target.classList.add('active');
-        else
-          if (!$(e.target.parentNode).prop('selected'))
-            e.target.parentNode.classList.add('active');
-      }
-    }
-  });
-
-  $selector.on('mouseout', function(e) {
-    var target = e.target;
-    if (target.nodeName == "SPAN" && target.classList.contains('tag')) {
-      if (labelerModule.allowSelectingLabels) {
-        e.stopPropagation();
-        if (e.target.classList.contains("tag"))
-          if (!$(e.target).prop('selected'))
-            e.target.classList.remove('active');
-        else
-          if (!$(e.target.parentNode).prop('selected'))
-            e.target.parentNode.classList.remove('active');
-      }
-    }
-  })
-
-  // adding chunk if a piece of text was selected with a mouse
-  $selector.on('mouseup', function(e) {
-    var isRightMB;
-    e = e || window.event;
-
-    if ("which" in e)  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
-        isRightMB = e.which == 3; 
-    else if ("button" in e)  // IE, Opera 
-        isRightMB = e.button == 2;
-
-    if (!$(e.target).hasClass('delete') && !isRightMB) {
-      labelerModule.updateChunkFromSelection();
-    }
-  })
-
-  // adding chunk if a piece of text was selected with a keyboard
-  $(document).on("keyup", function(e) {
-    var selection = window.getSelection();
-    if (selection && (selection.anchorNode != null)) {
-      var isArticleParent = selection.anchorNode.parentNode == document.querySelector('.selector');
-      if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
-        labelerModule.updateChunkFromSelection();
-      } else {
-        var $shortcut = $('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
-        if ($shortcut.length > 0) {
-          $shortcut.click();
-        }
-      }
-    }
-  });
 
   // labeling piece of text with a given marker if the marker is clicked
   $('.marker.tags').on('click', function(e) {
@@ -1119,7 +1133,8 @@ $(document).ready(function() {
               // no review task
               // resetArticle();
               
-              labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
+              if (labelerModule.disableSubmittedLabels)
+                labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
 
               $inputBlock.removeClass('is-warning');
               $inputBlock.addClass('is-primary');
@@ -1204,7 +1219,6 @@ $(document).ready(function() {
           "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val()
         },
         success: function(d) {
-          var $selector = $('.selector');
           // update text, source id and datapoint id
           el.attr('data-s', d.source_id);
           el.attr('data-dp', d.dp_id);
@@ -1256,7 +1270,7 @@ $(document).ready(function() {
 
               tippy('span.tag', {
                 content: $commentInput[0],
-                trigger: 'click',
+                trigger: 'hover',
                 interactive: true,
                 distance: 0
               });
