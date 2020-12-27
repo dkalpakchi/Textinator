@@ -1,3 +1,10 @@
+var utils = {
+  isDefined: function(x) {
+    return x != null && x !== undefined;
+  }
+};
+
+
 var labelerModule = (function() {
   var chunks = [], // the array of all chunk of text marked with a label, but not submitted yet
       relations = [], // the array of all relations for this article, not submitted yet
@@ -13,7 +20,6 @@ var labelerModule = (function() {
       resetText = null,    // the text of the loaded article
       markersInRelations = [],
       nonRelationMarkers = [],
-      comments = {},
       submittableChunks = []; // chunks to be submitted
 
   function clearSelection() {
@@ -26,10 +32,6 @@ var labelerModule = (function() {
     } else if (document.selection) {  // IE?
       document.selection.empty();
     }
-  }
-
-  function isDefined(x) {
-    return x != null && x !== undefined;
   }
 
   function getSelectionLength(range) {
@@ -147,11 +149,11 @@ var labelerModule = (function() {
         parent.insertBefore(pieces[pieces.length-1], next);
       }
     } else {
-      var next_data = next != null && isDefined(next.data) ? next.data : "";
+      var next_data = next != null && utils.isDefined(next.data) ? next.data : "";
       if (prev == null) {
         parent.replaceChild(document.createTextNode(pieces[0].data + next_data), node);
       } else {
-        var prev_data = isDefined(prev.data) ? prev.data : "";
+        var prev_data = utils.isDefined(prev.data) ? prev.data : "";
         parent.replaceChild(document.createTextNode(prev_data + pieces[0].data + next_data), prev);
         parent.removeChild(node);
       }
@@ -223,10 +225,10 @@ var labelerModule = (function() {
 
   var labeler = {
     allowSelectingLabels: false,
-    allowCommentingLabels: false,
     disableSubmittedLabels: false,
     markersArea: null,
     selectorArea: null,   // the area where the article is
+    contextMenuPlugins: {},
     init: function() {
       contextSize = $('#taskArea').data('context');
       this.markersArea = document.querySelector('.markers');
@@ -234,7 +236,6 @@ var labelerModule = (function() {
       resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
       resetText = this.selectorArea == null ? "" : this.selectorArea.textContent.trim();
       this.allowSelectingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-select') == 'true';
-      this.allowCommentingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-comment') == 'true';
       this.disableSubmittedLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-disable') == 'true';
       markersInRelations = this.markersArea == null ? [] :
         [].concat.apply([], Array.from(this.markersArea.querySelectorAll('div.relation.tags')).map(
@@ -334,6 +335,11 @@ var labelerModule = (function() {
         }, false);
       }
     },
+    register: function(plugin) {
+      var p = Object.assign({}, plugin);
+      delete p.name;
+      this.contextMenuPlugins[plugin.name] = p;
+    },
     disableChunk: function(c) {
       $('span.tag[data-i="' + c['id'] + '"]').addClass('is-disabled');
       c['submittable'] = false;
@@ -375,6 +381,7 @@ var labelerModule = (function() {
       this.activeLabels = this.labelId;
     },
     updateChunkFromNode: function(node) {
+      // FIXME: adjust to the new chunk structure
       // adding the information about the node, representing a label, to the chunks array
       var chunk = {},
           marker = document.querySelector('div.marker.tags[data-s="' + node.getAttribute('data-s') + '"]'),
@@ -498,18 +505,24 @@ var labelerModule = (function() {
         $(markedSpan).prop('in_relation', false);
         deleteMarkedBtn.className = 'delete is-small';
 
-        if (this.allowCommentingLabels) {
-          var $commentInput = $('<input data-i=' + labelId + ' value = ' + (comments[labelId] || '') + '>');
-          $commentInput.on('change', function(e) {
-            comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
-          });
+        var div = document.createElement('div');
 
-          tippy(markedSpan, {
-            content: $commentInput[0],
-            interactive: true,
-            distance: 0
-          });
+        for (var name in this.contextMenuPlugins) {
+          var btn = document.createElement('button');
+          btn.className = "button is-primary is-small is-fullwidth is-rounded is-outlined mb-1";
+          btn.textContent = this.contextMenuPlugins[name].verboseName;
+          var plugin = this.contextMenuPlugins[name];
+          if (plugin.isAllowed()) plugin.exec(markedSpan, btn);
+          div.appendChild(btn);
         }
+        div.lastChild.classList.remove('mb-1');
+
+        tippy(markedSpan, {
+          content: div,
+          interactive: true,
+          distance: 0,
+          placement: "bottom"
+        });
 
         // NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
         // "An exception will be thrown, however, if the Range splits a non-Text node with only one of its boundary points."
@@ -548,9 +561,9 @@ var labelerModule = (function() {
                 pBot = parseFloat(pBotStr.slice(0, -2)),
                 npTop = 10 + 10 * j,
                 npBot = 10 + 10 * j;
-            if (pTopStr == "" || (isDefined(pTopStr) && !isNaN(pTop)))
+            if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
               elements[j].style.paddingTop = npTop + "px";
-            if (pBotStr == "" || (isDefined(pBotStr) && !isNaN(pBot)))
+            if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
               elements[j].style.paddingBottom = npBot + "px";
           }
         }
@@ -828,6 +841,10 @@ var labelerModule = (function() {
       }
     },
     markRelation: function(obj) {
+      // TODO(dmytro):
+      // - chain vs graph representation
+      // - add the marked node to the relationships (through plugins?)
+      // 
       if (!this.checkRestrictions(true)) return;
 
       var $parts = $('.selector span.tag.active'),
@@ -927,7 +944,7 @@ var labelerModule = (function() {
       activeLabels--;
     },
     getSubmittableDict: function(stringify) {
-      if (!isDefined(stringify)) stringify = false;
+      if (!utils.isDefined(stringify)) stringify = false;
       if (relations.length > 0) {
         // if there are any relations, submit only those chunks that have to do with the relations
         submittableChunks = chunks.filter(isInRelations)
@@ -943,9 +960,15 @@ var labelerModule = (function() {
         submittableChunks = chunks.filter(function(c) { return c.submittable })
       }
 
-      // add comments to chunks
+      // TODO(dmytro): plugins should be handled on the server side
+      // maybe mark somehow how to store those?
+      
+      // add plugin info to chunks
       for (var i = 0, len = submittableChunks.length; i < len; i++) {
-        submittableChunks[i]['comment'] = comments[submittableChunks[i]['id']] || '';
+        submittableChunks[i]['plugins'] = {};
+        for (var name in this.contextMenuPlugins) {
+          submittableChunks[i]['plugins'][name] = this.contextMenuPlugins[name].storage[submittableChunks[i]['id']] || ''; 
+        }
       }
 
       return {
@@ -976,9 +999,62 @@ var labelerModule = (function() {
   return labeler;
 })();
 
+/**
+ * Labeler plugins
+ */
+
+var commentsPlugin = function(cfg) {
+  var config = {
+    name: "comments",
+    verboseName: 'Add a comment'
+  }
+
+  if (utils.isDefined(cfg)) {
+    for (var k in cfg) {
+      config[k] = cfg[k];
+    }
+  }
+
+  return {
+    name: config.name,
+    verboseName: config.verboseName,
+    storage: {},
+    init: function(cfg) {
+      
+      return this;
+    },
+    isAllowed: function() {
+      return labelerModule.markersArea == null ? false : labelerModule.markersArea.getAttribute('data-comment') == 'true';
+    },
+    exec: function(label, menuItem) {
+      var id = label.getAttribute('data-i'),
+          storage = this.storage,
+          commentInput = document.createElement("input");
+      commentInput.setAttribute('data-i', id);
+      commentInput.setAttribute('value', storage[id] || '');
+      commentInput.addEventListener('change', function(e) {
+        var target = e.target;
+        storage[parseInt(target.getAttribute('data-i'))] = target.value;
+      }, false);
+
+      tippy(utils.isDefined(menuItem) ? menuItem : label, {
+        content: commentInput,
+        interactive: true,
+        distance: 0,
+        placement: "right"
+      });
+    }
+  }
+};
+
 
 $(document).ready(function() {
   labelerModule.init();
+  labelerModule.register(commentsPlugin());
+  labelerModule.register(commentsPlugin({
+    "name": "corrections",
+    "verboseName": "Add a correction"
+  }));
 
   var sessionStart = new Date(),  // the time the page was loaded or the last submission was made
       $selector = $(labelerModule.selectorArea);
@@ -1083,6 +1159,11 @@ $(document).ready(function() {
       }
     })
   })
+
+
+  // TODO(dmytro):
+  // - after the relationship is submitted, the ID starts over, whereas old ID is still there - confusing
+  // - making labels in relationships transparent works very poorly for nested labels, so think of another way
 
   // submitting the marked labels and/or relations with(out) inputs
   $('#inputForm .submit.button').on('click', function(e) {
