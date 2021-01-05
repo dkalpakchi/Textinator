@@ -73,12 +73,23 @@ class DataSource(CommonModel):
     def __str__(self):
         return self.name
 
+
+class MarkerAction(CommonModel):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(null=False)
+    file = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class Marker(CommonModel):
     name = models.CharField(max_length=50, unique=True)
     short = models.CharField(max_length=10, help_text='By default the capitalized first three character of the label', unique=True)
     color = models.CharField(max_length=10, choices=settings.MARKER_COLORS)
     for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
     shortcut = models.CharField(max_length=10, help_text="Keyboard shortcut for marking a piece of text with this label", null=True, blank=True)
+    actions = models.ManyToManyField(MarkerAction, through='MarkerContextMenuItem', blank=True)
 
     def save(self, *args, **kwargs):
         if not self.short:
@@ -98,6 +109,20 @@ class Marker(CommonModel):
 
     def __str__(self):
         return str(self.name)
+
+
+class MarkerContextMenuItem(CommonModel):
+    action = models.ForeignKey(MarkerAction, on_delete=models.CASCADE)
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    verbose = models.CharField(max_length=50)
+
+    def to_json(self):
+        return {
+            'verboseName': self.verbose,
+            'name': "{}_{}".format(self.action.name, self.pk),
+            'file': self.action.file
+        }
+
 
 class Project(CommonModel):
     title = models.CharField(max_length=50)
@@ -269,6 +294,7 @@ class Relation(CommonModel):
         ('1', 'Directed from the second to the first'),
         ('2', 'Bi-directional')
     ])
+    # representation = models.CharField(max_length=1, choices=[('g', 'Graph'), ('c', 'Chain')], default='g')
 
     @property
     def between(self):

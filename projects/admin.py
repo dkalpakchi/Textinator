@@ -44,6 +44,14 @@ class UserProfileInline(admin.StackedInline):
     classes = ['collapse']
 
 
+class MarkerContextMenuItemInline(admin.StackedInline):
+    model = MarkerContextMenuItem
+    verbose_name = "Context menu item"
+    verbose_name_plural = "Context menu items"
+    extra = 0
+    classes = ['collapse']
+
+
 class LabelInline(admin.StackedInline):
     readonly_fields = ('text',)
     model = Label
@@ -236,6 +244,7 @@ class DataAccessLogAdmin(admin.ModelAdmin):
 @admin.register(Marker)
 class MarkerAdmin(CommonModelAdmin):
     list_display = ['name', 'short', 'color']
+    inlines = [MarkerContextMenuItemInline]
 
 @admin.register(Relation)
 class RelationAdmin(CommonModelAdmin): pass

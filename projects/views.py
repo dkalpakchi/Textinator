@@ -286,6 +286,14 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                 print("ProjectData does not exist")
                 pass
 
+        menu_items, project_markers = {}, proj.markers.distinct()
+        for m in project_markers:
+            menu_items[m.short] = [item.to_json() for item in MarkerContextMenuItem.objects.filter(marker=m).all()]
+
+        for m in task_markers:
+            if m not in project_markers:
+                menu_items.append([item.to_json() for item in MarkerContextMenuItem.object.filter(marker=m).all()])
+
         ctx = {
             'text': apply_premarkers(proj, dp),
             'source_id': source_id,
@@ -295,7 +303,8 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             'project': proj,
             'task_markers': task_markers,
             'task_relations': task_relations,
-            'profile': u_profile
+            'profile': u_profile,
+            'marker_actions': menu_items
         }
 
         tmpl = get_template(os.path.join(proj.task_type, 'display.html'))
