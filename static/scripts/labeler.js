@@ -8,14 +8,13 @@
 
   var labelerModule = (function() {
     var chunks = [], // the array of all chunk of text marked with a label, but not submitted yet
-        relations = [], // the array of all relations for this article, not submitted yet
+        relations = {}, // a map from relationId to the list of relations constituting it
         labelId = 0,
         activeLabels = 0, // a number of labels currently present in the article
+        currentRelationId = null, // the ID of the current relation (for a visual pane)
         lastRelationId = 1, // the ID of the last unsubmitted relation
         lastNodeInRelationId = 0, // TODO: maybe remove
         radius = 10,
-        graphIds = [],
-        currentRelationId = null, // the ID of the current relation
         contextSize = undefined, // the size of the context to be saved 'p', 't' or 'no'
         resetTextHTML = null,  // the HTML of the loaded article
         resetText = null,    // the text of the loaded article
@@ -218,8 +217,10 @@
 
     // checks if a chunk is in any of the relations
     function isInRelations(c) {
-      for (var i = 0, len = relations.length; i < len; i++) {
-        if (relations[i].s == c.id || relations[i].t == c.id) return true;
+      for (var key in relations) {
+        for (var i = 0, len = relations[key].length; i < len; i++) {
+          if (relations[key][i].s == c.id || relations[key][i].t == c.id) return true;
+        }
       }
       return false;
     }
@@ -259,7 +260,7 @@
                 var $target = $(target);
                 if ($target.prop('in_relation')) {
                   labelerModule.showRelationGraph(
-                    parseInt(target.querySelector('[data-m="r"]').textContent) - 1
+                    parseInt(target.querySelector('[data-m="r"]').textContent)
                   );
                 } else if (!window.getSelection().toString()) {
                   if (target.classList.contains('active') && $target.prop('selected')) {
@@ -511,8 +512,6 @@
           markedSpan.setAttribute('data-j', idc);
           $(markedSpan).prop('in_relation', false);
           deleteMarkedBtn.className = 'delete is-small';
-
-          console.log(this.contextMenuPlugins);
 
           if (this.contextMenuPlugins) {
             function createButton(plugin) {
@@ -804,15 +803,15 @@
           }
           finalizeSimulation();
 
-          $("#relationId").text(currentRelationId + 1);
+          $("#relationId").text(currentRelationId);
         }
       },
       previousRelation: function() {
         if (currentRelationId == null) return currentRelationId;
 
         currentRelationId--;
-        if (currentRelationId < 0) {
-          currentRelationId = 0;
+        if (currentRelationId <= 0) {
+          currentRelationId = 1;
         }
         return currentRelationId;
       },
@@ -820,25 +819,24 @@
         if (currentRelationId == null) return currentRelationId;
 
         currentRelationId++;
+        var graphIds = Object.keys(relations);
         if (currentRelationId >= graphIds.length) {
           currentRelationId = graphIds.length - 1;
         }
         return currentRelationId;
       },
       removeCurrentRelation: function() {
-        $('g#' + graphIds[currentRelationId]).find('circle[data-id]').each(function(i, d) { 
+        $('g#' + relations[currentRelationId]['graphId']).find('circle[data-id]').each(function(i, d) { 
         var $el = $('#' + d.getAttribute('data-id'));
           if ($el.length > 0) {
             $el.prop('in_relation', false);
             $el.attr('id', '');
           }
         });
-        d3.select('g#' + graphIds[currentRelationId]).remove();
-        relations = relations.filter(function(x) {
-          return x.id != graphIds[currentRelationId]
-        })
+        d3.select('g#' + relations[currentRelationId]['graphId']).remove();
+        delete relations[currentRelationId];
 
-        graphIds.splice(currentRelationId, 1);
+        var graphIds = Object.keys(relations);
         currentRelationId = graphIds.length - 1;
         return currentRelationId;
       },
@@ -851,10 +849,10 @@
           svg.selectAll('g')
             .attr('class', 'hidden');
 
-          d3.select('g#' + graphIds[id])
+          d3.select('g#' + relations[id]['graphId'])
             .attr('class', '');
 
-          $('#relationId').text(id + 1);
+          $('#relationId').text(id);
         }
       },
       markRelation: function(obj) {
@@ -916,23 +914,32 @@
             })
           })
 
+          relations[lastRelationId] = {
+            'graphId': "n" + startId + "__" + (lastNodeInRelationId - 1),
+            'rule': rule,
+            'links': [],
+            'd3': {
+              'nodes': nodes,
+              'links': links,
+              'from': from,
+              'to': to,
+              'direction': direction
+            }
+          };
+
           links.forEach(function(l) {
             var source = document.querySelector('#' + l.source),
                 target = document.querySelector('#' + l.target);
-            relations.push({
-              "id": "n" + startId + "__" + (lastNodeInRelationId - 1),
-              'rule': rule,
+            relations[lastRelationId]['links'].push({
               's': source.getAttribute('data-i'),
               't': target.getAttribute('data-i')
             })
           });
 
           if (currentRelationId == null)
-            currentRelationId = 0;
+            currentRelationId = 1;
           else
             currentRelationId++;
-
-          graphIds.push("n" + startId + "__" + (lastNodeInRelationId - 1));
 
           this.drawNetwork({
             'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
@@ -944,6 +951,9 @@
           $parts.append($('<span data-m="r" class="rel">' + lastRelationId + '</span>'));
           lastRelationId++;
         }
+      },
+      addToRelation: function(obj, relId) {
+        // relations[relId] = 
       },
       labelDeleteHandler: function(e) {
         // when a delete button on any label is clicked
@@ -962,7 +972,7 @@
       },
       getSubmittableDict: function(stringify) {
         if (!utils.isDefined(stringify)) stringify = false;
-        if (relations.length > 0) {
+        if (relations) {
           // if there are any relations, submit only those chunks that have to do with the relations
           submittableChunks = chunks.filter(isInRelations)
           
@@ -976,20 +986,20 @@
           // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relations
           submittableChunks = chunks.filter(function(c) { return c.submittable })
         }
-
-        // TODO(dmytro): plugins should be handled on the server side
-        // maybe mark somehow how to store those?
         
         // add plugin info to chunks
         for (var i = 0, len = submittableChunks.length; i < len; i++) {
-          submittableChunks[i]['plugins'] = {};
+          submittableChunks[i]['extra'] = {};
           for (var name in this.contextMenuPlugins) {
-            submittableChunks[i]['plugins'][name] = this.contextMenuPlugins[name].storage[submittableChunks[i]['id']] || ''; 
+            submittableChunks[i]['extra'][name] = this.contextMenuPlugins[name].storage[submittableChunks[i]['id']] || ''; 
           }
         }
 
+        var submitRelations = [];
+        submitRelations.concat.apply(submitRelations, Object.values(relations).map(function(x) { return x['links'] }));
+
         return {
-          "relations": stringify ? JSON.stringify(relations) : relations,
+          "relations": stringify ? JSON.stringify(submitRelations) : submitRelations,
           "chunks": stringify ? JSON.stringify(submittableChunks) : submittableChunks
         }
       },
@@ -997,7 +1007,6 @@
         relations = [];
         currentRelationId = null;
         lastRelationId = 1;
-        graphIds = [];
         // clear svg
         d3.selectAll("svg > *").remove()
         this.showRelationGraph(currentRelationId);
@@ -1012,8 +1021,6 @@
         submittableChunks = [];
       }
     }
-
-    
   })();
 
   $(document).ready(function() {

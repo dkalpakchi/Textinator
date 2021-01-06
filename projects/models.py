@@ -148,7 +148,6 @@ class Project(CommonModel):
     is_open = models.BooleanField(default=False)
     is_peer_reviewed = models.BooleanField(default=False)
     allow_selecting_labels = models.BooleanField(default=False)
-    allow_commenting_on_labels = models.BooleanField(default=False)
     disable_submitted_labels = models.BooleanField(default=True)
     max_markers_per_input = models.PositiveIntegerField(null=True, blank=True)
     round_length = models.PositiveIntegerField(null=True, blank=True, help_text="The number of text snippets consituting one round of the game")

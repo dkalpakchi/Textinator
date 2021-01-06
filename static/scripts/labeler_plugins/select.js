@@ -1,13 +1,13 @@
 /**
- * name: comments
- * description: A plugin adding a text field to a marker's context menu
+ * name: select
+ * description: A plugin allowing to select from the list of alternatives
  * author: Dmytro Kalpakchi
  */
 
 var plugin = function(cfg, labeler) {
   var config = {
-    name: "comments",
-    verboseName: 'Add a comment'
+    name: "select",
+    verboseName: 'Select from a list'
   }
 
   function isDefined(x) {
