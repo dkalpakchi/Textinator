@@ -24,7 +24,8 @@ var plugin = function(cfg, labeler) {
     name: config.name,
     verboseName: config.verboseName,
     storage: {},
-    isAllowed: function() {
+    update: false,
+    isAllowed: function(obj) {
       return labeler.markersArea != null;
     },
     exec: function(label, menuItem) {
@@ -41,8 +42,8 @@ var plugin = function(cfg, labeler) {
       tippy(isDefined(menuItem) ? menuItem : label, {
         content: commentInput,
         interactive: true,
-        distance: 0,
-        placement: "right"
+        placement: "right",
+        trigger: 'click'
       });
     }
   }

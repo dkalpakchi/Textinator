@@ -249,7 +249,7 @@
         this.initSvg();
         this.initEvents();
       },
-      initEvents : function() {
+      initEvents: function() {
         // event delegation
         if (this.selectorArea != null) {
           this.selectorArea.addEventListener('click', function(e) {
@@ -343,6 +343,16 @@
         delete p.name;
         if (!(label in this.contextMenuPlugins)) this.contextMenuPlugins[label] = {};
         this.contextMenuPlugins[label][plugin.name] = p;
+
+        if (p.update) {
+          document.addEventListener(p.update, function(e) {
+            const event = new Event(p.update);
+            // select all labels and dispatch events
+            document.querySelectorAll('span.tag').forEach(function(x) {
+              x.dispatchEvent(event);
+            });
+          }, false);
+        }
       },
       disableChunk: function(c) {
         $('span.tag[data-i="' + c['id'] + '"]').addClass('is-disabled');
@@ -515,7 +525,19 @@
               var btn = document.createElement('button');
               btn.className = "button is-primary is-small is-fullwidth is-rounded is-outlined mb-1";
               btn.textContent = plugin.verboseName;
-              if (plugin.isAllowed()) plugin.exec(markedSpan, btn);
+              if (plugin.isAllowed(markedSpan)) {
+                plugin.exec(markedSpan, btn);
+
+                if (plugin.update) {
+                  // TODO: we dispatch event from the document whenever any relation change is occuring
+                  //       then we catching it here, but it gets overriden for every new markedSpan
+                  markedSpan.addEventListener(plugin.update, function (e) {
+                    (function(b) {
+                      plugin.exec(e.target, b)
+                    })(btn);
+                  }, false);
+                }
+              }
               return btn;
             }
 
@@ -837,6 +859,10 @@
           $("#relationId").text(currentRelationId);
         }
       },
+      getAvailableRelationIds: function() {
+        window.r = relations;
+        return Object.keys(relations);
+      },
       previousRelation: function() {
         if (currentRelationId == null) return currentRelationId;
 
@@ -851,24 +877,26 @@
 
         currentRelationId++;
         var graphIds = Object.keys(relations);
-        if (currentRelationId >= graphIds.length) {
-          currentRelationId = graphIds.length - 1;
+        if (currentRelationId > graphIds.length) {
+          currentRelationId = graphIds.length;
         }
         return currentRelationId;
       },
-      removeCurrentRelation: function() {
-        $('g#' + relations[currentRelationId]['graphId']).find('circle[data-id]').each(function(i, d) { 
-        var $el = $('#' + d.getAttribute('data-id'));
+      removeRelation: function(idx) {
+        $('g#' + relations[idx]['graphId']).find('circle[data-id]').each(function(i, d) { 
+          var $el = $('#' + d.getAttribute('data-id'));
           if ($el.length > 0) {
             $el.prop('in_relation', false);
             $el.attr('id', '');
           }
         });
-        d3.select('g#' + relations[currentRelationId]['graphId']).remove();
-        delete relations[currentRelationId];
-
+        d3.select('g#' + relations[idx]['graphId']).remove();
+        delete relations[idx];
+      },
+      removeCurrentRelation: function() {
+        this.removeRelation(currentRelationId);
         var graphIds = Object.keys(relations);
-        currentRelationId = graphIds.length - 1;
+        currentRelationId = graphIds.length;
         return currentRelationId;
       },
       showRelationGraph(id) {
@@ -975,16 +1003,87 @@
           this.drawNetwork({
             'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
             'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
-            'links': links
+            'links': [].concat(links) // necessary since d3 changes the structure of links
           }, (from != null && to != null && direction != '2'))
 
           $parts.removeClass('active');
           $parts.append($('<span data-m="r" class="rel">' + lastRelationId + '</span>'));
           lastRelationId++;
+
+          const event = new Event('labeler_relationschange');
+          // Dispatch the event.
+          document.dispatchEvent(event);
         }
       },
-      addToRelation: function(obj, relId) {
-        // relations[relId] = 
+      changeRelation: function(obj, fromId, toId) {
+        var labelId = obj.id,
+            il = obj.getAttribute('data-i'),
+            short = obj.getAttribute('data-s'),
+            fromRel = relations[fromId],
+            toRel = relations[toId];
+
+        if (utils.isDefined(fromRel) && utils.isDefined(toRel)) {
+          var newNodes = fromRel.d3.nodes[short].filter(function(x) { return x.id == labelId });
+          fromRel.d3.nodes[short] = fromRel.d3.nodes[short].filter(function(x) { return x.id != labelId });
+          fromRel.links = fromRel.links.filter(function(x) { return x.s != il && x.t != il });
+          fromRel.d3.links = fromRel.d3.links.filter(function(x) { return x.source.id != labelId && x.target.id != labelId})
+          d3.select('g#' + fromRel.graphId).remove();
+          this.drawNetwork({
+            'id': fromRel.graphId,
+            'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes)),
+            'links': [].concat(fromRel.d3.links)
+          }, (fromRel.d3.from != null && fromRel.d3.to != null && fromRel.d3.direction != '2'))
+
+          var newLinks = [];
+          if (toRel.d3.to == short) {
+            toRel.d3.nodes[toRel.d3.from].forEach(function(f) {
+              newNodes.forEach(function(t) {
+                if (f.id != t.id) {
+                  // prevent loops
+                  newLinks.push({
+                    'source': f.id,
+                    'target': t.id
+                  })
+                }
+              })
+            });
+          }
+          
+          if (toRel.d3.from == short) {
+            newNodes.forEach(function(f) {
+              toRel.d3.nodes[toRel.d3.to].forEach(function(t) {
+                if (f.id != t.id) {
+                  // prevent loops
+                  newLinks.push({
+                    'source': f.id,
+                    'target': t.id
+                  })
+                }
+              })
+            });
+          }
+          toRel.d3.nodes[short] = toRel.d3.nodes[short].concat(newNodes);
+
+          newLinks.forEach(function(l) {
+            var source = document.querySelector('#' + l.source),
+                target = document.querySelector('#' + l.target);
+            toRel.links.push({
+              's': source.getAttribute('data-i'),
+              't': target.getAttribute('data-i')
+            })
+          });
+
+          toRel.d3.links = toRel.d3.links.concat(newLinks);
+
+          d3.select('g#' + toRel.graphId).remove();
+          this.drawNetwork({
+            'id': toRel.graphId,
+            'nodes': Array.prototype.concat.apply([], Object.values(toRel.d3.nodes)),
+            'links': [].concat(toRel.d3.links)
+          }, (toRel.d3.from != null && toRel.d3.to != null && toRel.d3.direction != '2'))
+
+          obj.querySelector('[data-m="r"]').textContent = toId;
+        }
       },
       labelDeleteHandler: function(e) {
         // when a delete button on any label is clicked
@@ -1041,7 +1140,7 @@
         }
       },
       postSubmitHandler: function() {
-        relations = [];
+        relations = {};
         currentRelationId = null;
         lastRelationId = 1;
         // clear svg
