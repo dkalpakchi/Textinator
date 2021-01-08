@@ -218,8 +218,9 @@
     // checks if a chunk is in any of the relations
     function isInRelations(c) {
       for (var key in relations) {
-        for (var i = 0, len = relations[key].length; i < len; i++) {
-          if (relations[key][i].s == c.id || relations[key][i].t == c.id) return true;
+        var links = relations[key]['links'];
+        for (var i = 0, len = links.length; i < len; i++) {
+          if (links[i].s == c.id || links[i].t == c.id) return true;
         }
       }
       return false;
@@ -338,12 +339,8 @@
         }
       },
       register: function(plugin, label) {
-        console.log(plugin)
         var p = Object.assign({}, plugin);
         delete p.name;
-        console.log(this.contextMenuPlugins)
-        console.log(label)
-        console.log(label in this.contextMenuPlugins)
         if (!(label in this.contextMenuPlugins)) this.contextMenuPlugins[label] = {};
         this.contextMenuPlugins[label][plugin.name] = p;
       },
@@ -532,34 +529,68 @@
             }
             div.lastChild.classList.remove('mb-1');
 
-            tippy(markedSpan, {
+            const instance = tippy(markedSpan, {
               content: div,
               interactive: true,
-              distance: 0,
+              trigger: 'manual',
               placement: "bottom"
+            });
+
+            markedSpan.addEventListener('contextmenu', function(event) {
+              event.preventDefault();
+              event.stopPropagation();
+              var targetRect = event.target.getBoundingClientRect();
+
+              instance.setProps({
+                getReferenceClientRect: function() {
+                  return {
+                    width: 0,
+                    height: 0,
+                    top: targetRect.bottom,
+                    bottom: targetRect.bottom,
+                    left: event.clientX,
+                    right: event.clientX,  
+                  }
+                }
+              });
+
+              instance.show();
             });
           }
 
           // NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
           // "An exception will be thrown, however, if the Range splits a non-Text node with only one of its boundary points."
           // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
-          var nodeAfterEnd = chunk['range'].endContainer.nextSibling;
-          if (nodeAfterEnd != null && isDeleteButton(nodeAfterEnd)) {
-            while (isLabel(nodeAfterEnd.parentNode)) {
-              nodeAfterEnd = nodeAfterEnd.parentNode;
-              if (nodeAfterEnd.nextSibling == null || !isDeleteButton(nodeAfterEnd.nextSibling))
-                break;
-              nodeAfterEnd = nodeAfterEnd.nextSibling;
+          try {
+            chunk['range'].surroundContents(markedSpan);
+            markedSpan.appendChild(deleteMarkedBtn);
+          } catch (error) {
+            var nodeAfterEnd = chunk['range'].endContainer.nextSibling;
+            if (nodeAfterEnd != null && isDeleteButton(nodeAfterEnd)) {
+              while (isLabel(nodeAfterEnd.parentNode)) {
+                nodeAfterEnd = nodeAfterEnd.parentNode;
+                if (nodeAfterEnd.nextSibling == null || !isDeleteButton(nodeAfterEnd.nextSibling))
+                  break;
+                nodeAfterEnd = nodeAfterEnd.nextSibling;
+              }
+              chunk['range'].setEndAfter(nodeAfterEnd);
             }
-            chunk['range'].setEndAfter(nodeAfterEnd);
-          }
-          markedSpan.appendChild(chunk['range'].extractContents());
-          markedSpan.appendChild(deleteMarkedBtn);
-          chunk['range'].insertNode(markedSpan);
 
-          var nodeAfterMarked = markedSpan.nextSibling;
-          if (isLabel(nodeAfterMarked) && nodeAfterMarked.textContent == "")
-            nodeAfterMarked.remove();
+            var nodeBeforeStart = chunk['range'].startContainer.previousSibling;
+            if (nodeBeforeStart == null) {
+              var start = chunk['range'].startContainer;
+              while (isLabel(start.parentNode)) {
+                start = start.parentNode;
+              }
+              if (start != chunk['range'].startContainer)
+                chunk['range'].setStartBefore(start);
+            }
+            
+            markedSpan.appendChild(chunk['range'].extractContents());
+            markedSpan.appendChild(deleteMarkedBtn);
+            chunk['range'].insertNode(markedSpan);
+          }
+          
 
           var marked = chunk['range'].commonAncestorContainer.querySelectorAll('span.tag');
           for (var i = 0; i < marked.length; i++) {
@@ -990,13 +1021,19 @@
         // add plugin info to chunks
         for (var i = 0, len = submittableChunks.length; i < len; i++) {
           submittableChunks[i]['extra'] = {};
-          for (var name in this.contextMenuPlugins) {
-            submittableChunks[i]['extra'][name] = this.contextMenuPlugins[name].storage[submittableChunks[i]['id']] || ''; 
+          var plugins = this.contextMenuPlugins[submittableChunks[i].label];
+          for (var name in plugins) {
+            submittableChunks[i]['extra'][name] = plugins[name].storage[submittableChunks[i]['id']] || ''; 
           }
         }
 
         var submitRelations = [];
-        submitRelations.concat.apply(submitRelations, Object.values(relations).map(function(x) { return x['links'] }));
+        submitRelations = submitRelations.concat.apply(submitRelations, Object.values(relations).map(function(x) {
+          return {
+            'links': x['links'],
+            'rule': x['rule']
+          }
+        }));
 
         return {
           "relations": stringify ? JSON.stringify(submitRelations) : submitRelations,
@@ -1185,7 +1222,6 @@
       if (inputFormData['chunks'].length > 0 || inputFormData['relations'].length > 0) {
         inputFormData['chunks'] = JSON.stringify(inputFormData['chunks']);
         inputFormData['relations'] = JSON.stringify(inputFormData['relations']);
-        console.log(inputFormData);
         $.ajax({
           method: "POST",
           url: inputForm.action,

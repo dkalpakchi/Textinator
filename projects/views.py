@@ -380,20 +380,21 @@ def record_datapoint(request, proj):
         saved_labels += just_saved
 
     for rel in relations:
-        source_id, target_id = int(rel['s']), int(rel['t'])
+        for link in rel['links']:
+            source_id, target_id = int(link['s']), int(link['t'])
 
-        try:
-            source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
-            target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
-        except Label.DoesNotExist:
-            continue
+            try:
+                source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
+                target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
+            except Label.DoesNotExist:
+                continue
 
-        try:
-            rule = Relation.objects.filter(pk=rel['rule']).get()
-        except Relation.DoesNotExist:
-            continue
+            try:
+                rule = Relation.objects.filter(pk=rel['rule']).get()
+            except Relation.DoesNotExist:
+                continue
 
-        LabelRelation.objects.create(rule=rule, first_label=source_label, second_label=target_label, user=user, project=project, batch=batch)
+            LabelRelation.objects.create(rule=rule, first_label=source_label, second_label=target_label, user=user, project=project, batch=batch)
 
     # Peer review task
     # if project.is_peer_reviewed:

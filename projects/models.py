@@ -5,6 +5,7 @@ from datetime import datetime
 from collections import defaultdict
 
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.core.cache import caches
@@ -115,11 +116,12 @@ class MarkerContextMenuItem(CommonModel):
     action = models.ForeignKey(MarkerAction, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     verbose = models.CharField(max_length=50)
+    field = models.CharField(max_length=50, null=True, blank=True)
 
     def to_json(self):
         return {
             'verboseName': self.verbose,
-            'name': "{}_{}".format(self.action.name, self.pk),
+            'name': self.field or "{}_{}".format(self.action.name, self.pk),
             'file': self.action.file
         }
 
@@ -334,7 +336,7 @@ class Label(CommonModel):
     start = models.PositiveIntegerField(null=True)
     end = models.PositiveIntegerField(null=True)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    comment = models.TextField(null=True, blank=True)
+    extra = JSONField(null=True, blank=True)
     input = models.ForeignKey(Input, on_delete=models.CASCADE, null=True, blank=True)     # if input is there, input should be not NULL
     context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True, blank=True) # if there is no input, there must be context
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
