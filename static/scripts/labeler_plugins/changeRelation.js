@@ -38,28 +38,25 @@ var plugin = function(cfg, labeler) {
         return option;
       }
 
-      var relSpan = label.querySelector('[data-m="r"]');
-          relId = isDefined(relSpan) ? relSpan.textContent : 0,
-          storage = this.storage,
-          select = document.createElement('select');
-      if (!(label.id in storage))
-        storage[label.id] = relId;
+      var select = document.createElement('select'),
+          relSpan = label.querySelector('[data-m="r"]'),
+          relId = isDefined(relSpan) ? parseInt(relSpan.textContent) : -1;
 
-      select.appendChild(createOption("no", 0));
+      select.appendChild(createOption("no", -1));
       var lst = labeler.getAvailableRelationIds();
       for (var k in lst) {
         select.appendChild(createOption(lst[k], lst[k]));
       }
-      select.value = storage[label.id];
+      select.value = relId;
 
       select.addEventListener('change', function(e) {
         var target = e.target,
             idx = parseInt(target.value);
         labeler.changeRelation(label, relId, idx);
-        storage[label.id] = idx;
+        instance.hide();
       }, false);
 
-      tippy(isDefined(menuItem) ? menuItem : label, {
+      const instance = tippy(isDefined(menuItem) ? menuItem : label, {
         content: select,
         trigger: 'click',
         interactive: true,

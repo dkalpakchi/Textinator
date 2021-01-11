@@ -62,4 +62,4 @@ def process_chunk(chunk, batch, inp, project, data_source, user, caches, boolean
                 )
                 label_cache[chunk['id']] = new_label.id
                 saved_labels += 1
-    return (ctx_cache, inp_cache, label_cache), inp, saved_labels
+        return (ctx_cache, inp_cache, label_cache), inp, saved_labels

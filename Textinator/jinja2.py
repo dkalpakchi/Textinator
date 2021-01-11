@@ -29,9 +29,13 @@ def display_marker(marker):
 
 def display_relation(rel):
     template = Template("""
-    <div class="relation tags has-addons" data-b="{{rel.between}}" data-d="{{rel.direction}}" data-r="{{rel.id}}">
-        <span class="tag arrow is-grey">&#8594;</span>
-        <span class="tag is-dark">{{rel.name}}</span>
+    <div class="relation tags has-addons" data-b="{{rel.between}}" data-d="{{rel.direction}}" data-r="{{rel.id}}"
+        data-shortcut="{{rel.shortcut|upper}}">
+      <span class="tag arrow is-grey">&#8594;</span>
+      <span class="tag is-black">{{rel.name}}</span>
+      {% if rel.shortcut %}
+        <span class="tag is-dark">{{rel.shortcut|upper}}</span>
+      {% endif %}
     </div>
     """)
     return Markup(template.render(rel=rel))

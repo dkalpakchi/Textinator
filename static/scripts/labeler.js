@@ -7,6 +7,8 @@
 
 
   var labelerModule = (function() {
+    const RELATION_CHANGE_EVENT = 'labeler_relationschange';
+
     var chunks = [], // the array of all chunk of text marked with a label, but not submitted yet
         relations = {}, // a map from relationId to the list of relations constituting it
         labelId = 0,
@@ -18,6 +20,7 @@
         contextSize = undefined, // the size of the context to be saved 'p', 't' or 'no'
         resetTextHTML = null,  // the HTML of the loaded article
         resetText = null,    // the text of the loaded article
+        pluginsToRegister = 0,
         markersInRelations = [],
         nonRelationMarkers = [],
         submittableChunks = []; // chunks to be submitted
@@ -69,7 +72,7 @@
 
       var textLength = getPrevLength(node.previousSibling);
       var enclosingLabel = getEnclosingLabel(node);
-      if (enclosingLabel != null)
+      if (enclosingLabel != null && enclosingLabel != node)
         textLength += getPrevLength(enclosingLabel.previousSibling);
 
       if (inParagraph) return textLength;
@@ -220,10 +223,87 @@
       for (var key in relations) {
         var links = relations[key]['links'];
         for (var i = 0, len = links.length; i < len; i++) {
-          if (links[i].s == c.id || links[i].t == c.id) return true;
+          if (links[i].s == c.id || links[i].t == c.id) return key;
         }
       }
       return false;
+    }
+
+    function removeAllChildren(node) {
+      while (node.firstChild) {
+        node.removeChild(node.firstChild);
+      }
+    }
+
+    function initContextMenu(markedSpan, plugins) {
+      if (Object.values(plugins).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
+        function createButton(plugin) {
+          var btn = document.createElement('button');
+          btn.className = "button is-primary is-small is-fullwidth is-rounded is-outlined mb-1";
+          btn.textContent = plugin.verboseName;
+          if (plugin.isAllowed(markedSpan)) {
+            plugin.exec(markedSpan, btn);
+
+            if (plugin.update) {
+              // TODO: we dispatch event from the document whenever any relation change is occuring
+              //       then we catching it here, but it gets overriden for every new markedSpan
+              markedSpan.addEventListener(plugin.update, function (e) {
+                (function(b) {
+                  plugin.exec(e.target, b)
+                })(btn);
+              }, false);
+            }
+          }
+          return btn;
+        }
+
+        var short = markedSpan.getAttribute('data-s');
+        var div = document.createElement('div');
+        var subset = Object.assign({}, plugins[short], plugins[undefined]);
+        var keys = Object.keys(subset);
+        keys.sort(function(x, y) {
+          if (subset[x].verboseName < subset[y].verboseName) return -1;
+          else if (subset[x].verboseName > subset[y].verboseName) return 1;
+          else return 0;
+        });
+        for (var name in keys) {
+          div.appendChild(createButton(subset[keys[name]]));
+        }
+        div.lastChild.classList.remove('mb-1');
+
+        const instance = tippy(markedSpan, {
+          content: div,
+          interactive: true,
+          trigger: 'manual',
+          placement: "bottom"
+        });
+
+        markedSpan.addEventListener('contextmenu', function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          var targetRect = event.target.getBoundingClientRect();
+
+          instance.setProps({
+            getReferenceClientRect: function() {
+              var half = (targetRect.right - targetRect.left) / 2;
+              return {
+                width: 0,
+                height: 0,
+                top: targetRect.bottom,
+                bottom: targetRect.bottom,
+                left: targetRect.left + half,
+                right: targetRect.left + half,
+              }
+            }
+          });
+
+          instance.show();
+        });
+      }
+    }
+
+    function getMarkerForChunk(c) {
+      return document.querySelector('div.marker.tags[data-s="' + c['label'] + '"]');
     }
 
     return {
@@ -329,7 +409,14 @@
               if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
                 labelerModule.updateChunkFromSelection();
               } else {
-                var shortcut = document.querySelector('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
+                if (e.shiftKey) {
+                  var shortcut = document.querySelector('[data-shortcut="SHIFT + ' + String.fromCharCode(e.which) + '"]');
+                } else if (e.ctrlKey) {
+                  var shortcut = document.querySelector('[data-shortcut="CTRL + ' + String.fromCharCode(e.which) + '"]');
+                } else {
+                  var shortcut = document.querySelector('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
+                }
+                
                 if (shortcut != null) {
                   shortcut.click();
                 }
@@ -353,55 +440,54 @@
             });
           }, false);
         }
+        pluginsToRegister--;
+
+        if (pluginsToRegister <= 0) {
+          this.initPreMarkers();
+        }
+      },
+      expectToRegister: function() {
+        pluginsToRegister++;
       },
       disableChunk: function(c) {
-        $('span.tag[data-i="' + c['id'] + '"]').addClass('is-disabled');
+        var $el = $('span.tag[data-i="' + c['id'] + '"]');
+        $el.addClass('is-disabled');
+        $el.find('span[data-m="r"]').remove();
         c['submittable'] = false;
       },
       enableChunk: function(c) {
-        $('span.tag[data-i="' + c['id'] + '"]').removeClass('is-disabled');
+        var $el = $('span.tag[data-i="' + c['id'] + '"]');
+        $el.removeClass('is-disabled');
+        $el.prop('in_relation', false);
         c['submittable'] = true;
       },
-      disableChunks: function(chunks) {
+      disableChunks: function(chunksList) {
         // disable given chunks visually
-        for (var c in chunks) {
-          this.disableChunk(chunks[c])
+        for (var c in chunksList) {
+          this.disableChunk(chunksList[c])
         }
-        return chunks;
+        return chunksList;
       },
       getActiveChunk: function() {
         return chunks[chunks.length-1];
       },
       // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
       initPreMarkers: function() {
-        this.labelId = 0;
+        labelId = 0;
+        var control = this;
         $('article.text span.tag').each(function(i, node) {
-          node.setAttribute('data-i', this.labelId);
-          this.updateChunkFromNode(node);
-
-          node.querySelector('button.delete').addEventListener('click', function(e) {
-            e.stopPropagation();
-            var el = e.target,
-                parent = el.parentNode; // actual span
-
-            chunks.splice(this.labelId, 1);
-            mergeWithNeighbors(parent);
-            $(el).prop('in_relation', false);
-            resetTextHTML = selectorArea.innerHTML
-            this.activeLabels--;
-          })
-          this.labelId++;
+          node.setAttribute('data-i', labelId);
+          control.updateChunkFromNode(node);
+          initContextMenu(node, control.contextMenuPlugins);
+          labelId++;
         })
-        this.activeLabels = this.labelId;
+        activeLabels = labelId;
       },
       updateChunkFromNode: function(node) {
-        // FIXME: adjust to the new chunk structure
         // adding the information about the node, representing a label, to the chunks array
         var chunk = {},
             marker = document.querySelector('div.marker.tags[data-s="' + node.getAttribute('data-s') + '"]'),
             markerText = marker.querySelector('span.tag:first-child');
-        chunk['node'] = null;
-        chunk['text'] = node.parentNode != null ? node.parentNode.textContent : node.textContent; // if no parent, assume the whole paragraph was taken?
         chunk['lengthBefore'] = 0;
         chunk['marked'] = true;
         chunk['id'] = labelId;
@@ -414,7 +500,7 @@
           chunk['start'] = previousTextLength(node, true);
         } else if (contextSize == 't') {
           // text
-          chunk['context'] = this.resetText;
+          chunk['context'] = resetText;
           chunk['start'] = previousTextLength(node, false);
         } else if (contextSize == 's') {
           // TODO sentence
@@ -428,7 +514,6 @@
           return;
         }
         chunk['end'] = chunk['start'] + node.textContent.length;
-        
         chunks.push(chunk);
       },
       updateChunkFromSelection: function() {
@@ -494,9 +579,9 @@
 
             chunk['marked'] = false;
             chunk['label'] = null;
-            // console.log(chunk);
 
             var N = chunks.length;
+            chunk['id'] = labelId;
             if (N == 0 || (N > 0 && chunks[N-1] !== undefined && chunks[N-1]['marked'])) {
               chunks.push(chunk);
             } else {
@@ -506,145 +591,86 @@
         }
       },
       mark: function(obj, max_markers) {
-        if (chunks.length > 0 && chunks.length > labelId && activeLabels < max_markers) {
-          var chunk = this.getActiveChunk(),
-              idc = chunks.length - 1
-              color = obj.getAttribute('data-color'),
-              markedSpan = document.createElement('span'),
-              deleteMarkedBtn = document.createElement('button'),
-              short = obj.getAttribute('data-s');
-          markedSpan.className = "tag is-" + color + " is-medium";
-          markedSpan.setAttribute('data-s', short);
-          markedSpan.setAttribute('data-i', labelId);
-          markedSpan.setAttribute('data-j', idc);
-          $(markedSpan).prop('in_relation', false);
-          deleteMarkedBtn.className = 'delete is-small';
+        if (chunks.length > 0 && activeLabels < max_markers) {
+          var chunk = this.getActiveChunk();
 
-          if (this.contextMenuPlugins) {
-            function createButton(plugin) {
-              var btn = document.createElement('button');
-              btn.className = "button is-primary is-small is-fullwidth is-rounded is-outlined mb-1";
-              btn.textContent = plugin.verboseName;
-              if (plugin.isAllowed(markedSpan)) {
-                plugin.exec(markedSpan, btn);
+          if (!chunk.marked) {
+            var color = obj.getAttribute('data-color'),
+                markedSpan = document.createElement('span'),
+                deleteMarkedBtn = document.createElement('button');
+            markedSpan.className = "tag is-" + color + " is-medium";
+            markedSpan.setAttribute('data-s', obj.getAttribute('data-s'));
+            markedSpan.setAttribute('data-i', chunk['id']);
+            $(markedSpan).prop('in_relation', false);
+            deleteMarkedBtn.className = 'delete is-small';
 
-                if (plugin.update) {
-                  // TODO: we dispatch event from the document whenever any relation change is occuring
-                  //       then we catching it here, but it gets overriden for every new markedSpan
-                  markedSpan.addEventListener(plugin.update, function (e) {
-                    (function(b) {
-                      plugin.exec(e.target, b)
-                    })(btn);
-                  }, false);
+            initContextMenu(markedSpan, this.contextMenuPlugins);
+
+            // NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
+            // "An exception will be thrown, however, if the Range splits a non-Text node with only one of its boundary points."
+            // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
+            try {
+              chunk['range'].surroundContents(markedSpan);
+              markedSpan.appendChild(deleteMarkedBtn);
+            } catch (error) {
+              var nodeAfterEnd = chunk['range'].endContainer.nextSibling;
+              if (nodeAfterEnd != null && isDeleteButton(nodeAfterEnd)) {
+                while (isLabel(nodeAfterEnd.parentNode)) {
+                  nodeAfterEnd = nodeAfterEnd.parentNode;
+                  if (nodeAfterEnd.nextSibling == null || !isDeleteButton(nodeAfterEnd.nextSibling))
+                    break;
+                  nodeAfterEnd = nodeAfterEnd.nextSibling;
                 }
+                chunk['range'].setEndAfter(nodeAfterEnd);
               }
-              return btn;
-            }
 
-            var div = document.createElement('div');
-            for (var name in this.contextMenuPlugins[short]) {
-              div.appendChild(createButton(this.contextMenuPlugins[short][name]));
-            }
-
-            for (var name in this.contextMenuPlugins[undefined]) {
-              div.appendChild(createButton(this.contextMenuPlugins[undefined][name]));
-            }
-            div.lastChild.classList.remove('mb-1');
-
-            const instance = tippy(markedSpan, {
-              content: div,
-              interactive: true,
-              trigger: 'manual',
-              placement: "bottom"
-            });
-
-            markedSpan.addEventListener('contextmenu', function(event) {
-              event.preventDefault();
-              event.stopPropagation();
-              var targetRect = event.target.getBoundingClientRect();
-
-              instance.setProps({
-                getReferenceClientRect: function() {
-                  return {
-                    width: 0,
-                    height: 0,
-                    top: targetRect.bottom,
-                    bottom: targetRect.bottom,
-                    left: event.clientX,
-                    right: event.clientX,  
-                  }
+              var nodeBeforeStart = chunk['range'].startContainer.previousSibling;
+              if (nodeBeforeStart == null) {
+                var start = chunk['range'].startContainer;
+                while (isLabel(start.parentNode)) {
+                  start = start.parentNode;
                 }
-              });
-
-              instance.show();
-            });
-          }
-
-          // NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
-          // "An exception will be thrown, however, if the Range splits a non-Text node with only one of its boundary points."
-          // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
-          try {
-            chunk['range'].surroundContents(markedSpan);
-            markedSpan.appendChild(deleteMarkedBtn);
-          } catch (error) {
-            var nodeAfterEnd = chunk['range'].endContainer.nextSibling;
-            if (nodeAfterEnd != null && isDeleteButton(nodeAfterEnd)) {
-              while (isLabel(nodeAfterEnd.parentNode)) {
-                nodeAfterEnd = nodeAfterEnd.parentNode;
-                if (nodeAfterEnd.nextSibling == null || !isDeleteButton(nodeAfterEnd.nextSibling))
-                  break;
-                nodeAfterEnd = nodeAfterEnd.nextSibling;
+                if (start != chunk['range'].startContainer)
+                  chunk['range'].setStartBefore(start);
               }
-              chunk['range'].setEndAfter(nodeAfterEnd);
+              
+              markedSpan.appendChild(chunk['range'].extractContents());
+              markedSpan.appendChild(deleteMarkedBtn);
+              chunk['range'].insertNode(markedSpan);
             }
 
-            var nodeBeforeStart = chunk['range'].startContainer.previousSibling;
-            if (nodeBeforeStart == null) {
-              var start = chunk['range'].startContainer;
-              while (isLabel(start.parentNode)) {
-                start = start.parentNode;
+            var marked = chunk['range'].commonAncestorContainer.querySelectorAll('span.tag');
+            for (var i = 0; i < marked.length; i++) {
+              var checker = marked[i],
+                  elements = [];
+              while (checker.classList.contains('tag')) {
+                elements.push(checker);
+                checker = checker.parentNode;
               }
-              if (start != chunk['range'].startContainer)
-                chunk['range'].setStartBefore(start);
+
+              for (var j = 0, len = elements.length; j < len; j++) {
+                var pTopStr = elements[j].style.paddingTop,
+                    pBotStr = elements[j].style.paddingBottom,
+                    pTop = parseFloat(pTopStr.slice(0, -2)),
+                    pBot = parseFloat(pBotStr.slice(0, -2)),
+                    npTop = 10 + 10 * j,
+                    npBot = 10 + 10 * j;
+                if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
+                  elements[j].style.paddingTop = npTop + "px";
+                if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
+                  elements[j].style.paddingBottom = npBot + "px";
+              }
             }
             
-            markedSpan.appendChild(chunk['range'].extractContents());
-            markedSpan.appendChild(deleteMarkedBtn);
-            chunk['range'].insertNode(markedSpan);
+            chunk['marked'] = true;
+            chunk['submittable'] = obj.getAttribute('data-submittable') === 'true';
+            chunk['id'] = labelId;
+            labelId++;
+            activeLabels++;
+            chunk['label'] = obj.getAttribute('data-s');
+
+            clearSelection(); // force clear selection
           }
-          
-
-          var marked = chunk['range'].commonAncestorContainer.querySelectorAll('span.tag');
-          for (var i = 0; i < marked.length; i++) {
-            var checker = marked[i],
-                elements = [];
-            while (checker.classList.contains('tag')) {
-              elements.push(checker);
-              checker = checker.parentNode;
-            }
-
-            for (var j = 0, len = elements.length; j < len; j++) {
-              var pTopStr = elements[j].style.paddingTop,
-                  pBotStr = elements[j].style.paddingBottom,
-                  pTop = parseFloat(pTopStr.slice(0, -2)),
-                  pBot = parseFloat(pBotStr.slice(0, -2)),
-                  npTop = 10 + 10 * j,
-                  npBot = 10 + 10 * j;
-              if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
-                elements[j].style.paddingTop = npTop + "px";
-              if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
-                elements[j].style.paddingBottom = npBot + "px";
-            }
-          }
-          
-          chunk['marked'] = true;
-          chunk['submittable'] = obj.getAttribute('data-submittable') === 'true';
-          chunk['id'] = labelId;
-          labelId++;
-          activeLabels++;
-          chunk['label'] = obj.getAttribute('data-s');
-
-          clearSelection(); // force clear selection
         }
       },
       checkRestrictions: function(inRelation) {
@@ -860,8 +886,10 @@
         }
       },
       getAvailableRelationIds: function() {
-        window.r = relations;
         return Object.keys(relations);
+      },
+      countUnsubmittedChunks: function() {
+        return chunks.filter(function(c) { return c.submittable }).length;
       },
       previousRelation: function() {
         if (currentRelationId == null) return currentRelationId;
@@ -888,15 +916,41 @@
           if ($el.length > 0) {
             $el.prop('in_relation', false);
             $el.attr('id', '');
+            $el.find('[data-m="r"]').remove();
           }
         });
         d3.select('g#' + relations[idx]['graphId']).remove();
         delete relations[idx];
+        var map = {}
+        var keys = Object.keys(relations);
+        keys.sort();
+        for (var k in keys) {
+          if (keys[k] > idx) {
+            $('g#' + relations[keys[k]]['graphId']).find('circle[data-id]').each(function(i, d) { 
+              var $el = $('#' + d.getAttribute('data-id'));
+              if ($el.length > 0) {
+                $el.find('[data-m="r"]').text(keys[k]-1);
+              }
+            });
+            relations[keys[k]-1] = relations[keys[k]];
+            map[keys[k]] = keys[k] - 1;
+            delete relations[keys[k]];
+          } else {
+            map[keys[k]] = keys[k];
+          }
+        }
+        lastRelationId = keys[k];
+
+        const event = new Event(RELATION_CHANGE_EVENT);
+        // Dispatch the event.
+        document.dispatchEvent(event);
+
+        return map;
       },
       removeCurrentRelation: function() {
         this.removeRelation(currentRelationId);
         var graphIds = Object.keys(relations);
-        currentRelationId = graphIds.length;
+        currentRelationId = graphIds.length > 0 ? graphIds.length : null;
         return currentRelationId;
       },
       showRelationGraph(id) {
@@ -913,12 +967,11 @@
 
           $('#relationId').text(id);
         }
+        currentRelationId = id;
       },
       markRelation: function(obj) {
         // TODO(dmytro):
         // - chain vs graph representation
-        // - add the marked node to the relationships (through plugins?)
-        // 
         if (!this.checkRestrictions(true)) return;
 
         var $parts = $('.selector span.tag.active'),
@@ -1010,30 +1063,62 @@
           $parts.append($('<span data-m="r" class="rel">' + lastRelationId + '</span>'));
           lastRelationId++;
 
-          const event = new Event('labeler_relationschange');
+          const event = new Event(RELATION_CHANGE_EVENT);
           // Dispatch the event.
           document.dispatchEvent(event);
         }
       },
       changeRelation: function(obj, fromId, toId) {
-        var labelId = obj.id,
+        var objId = obj.id,
             il = obj.getAttribute('data-i'),
             short = obj.getAttribute('data-s'),
             fromRel = relations[fromId],
-            toRel = relations[toId];
+            toRel = relations[toId],
+            // a relation map, which is initially identity, but might become smth else if anything is deleted
+            map = {[fromId]: fromId, [toId]: toId}; 
 
-        if (utils.isDefined(fromRel) && utils.isDefined(toRel)) {
-          var newNodes = fromRel.d3.nodes[short].filter(function(x) { return x.id == labelId });
-          fromRel.d3.nodes[short] = fromRel.d3.nodes[short].filter(function(x) { return x.id != labelId });
+        if (utils.isDefined(fromRel)) {
+          var newNodes = fromRel.d3.nodes[short].filter(function(x) { return x.id == objId });
           fromRel.links = fromRel.links.filter(function(x) { return x.s != il && x.t != il });
-          fromRel.d3.links = fromRel.d3.links.filter(function(x) { return x.source.id != labelId && x.target.id != labelId})
+          fromRel.d3.nodes[short] = fromRel.d3.nodes[short].filter(function(x) { return x.id != objId });
           d3.select('g#' + fromRel.graphId).remove();
-          this.drawNetwork({
-            'id': fromRel.graphId,
-            'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes)),
-            'links': [].concat(fromRel.d3.links)
-          }, (fromRel.d3.from != null && fromRel.d3.to != null && fromRel.d3.direction != '2'))
+          if (fromRel.links.length > 0) {
+            fromRel.d3.links = fromRel.d3.links.filter(function(x) { return x.source.id != objId && x.target.id != objId});       
+            this.drawNetwork({
+              'id': fromRel.graphId,
+              'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes)),
+              'links': [].concat(fromRel.d3.links)
+            }, (fromRel.d3.from != null && fromRel.d3.to != null && fromRel.d3.direction != '2'))
+          } else {
+            document.querySelector('#' + fromRel.d3.nodes[short][0].dom).querySelector('span[data-m="r"]').remove();
+            map = this.removeRelation(fromId);
+            this.showRelationGraph(null);
+          }
+        } else {
+          // means obj was in no relation previously
+          obj.id = 'rl_' + lastNodeInRelationId;
+          lastNodeInRelationId++;
+          var relSpan = obj.querySelector('span[data-m="r"]');
+          if (relSpan == null) {
+            relSpan = document.createElement('span');
+            relSpan.setAttribute('data-m', 'r');
+            relSpan.classList.add('rel');
+            relSpan.textContent = "";
+            obj.appendChild(relSpan);  
+          }
+          
+          $(obj).prop('in_relation', true);
+          var newNodes = [
+            {
+              'id': obj.id,
+              'name': obj.textContent,
+              'dom': obj.id,
+              'color': getComputedStyle(obj)["background-color"]
+            }
+          ];
+        }
 
+        if (utils.isDefined(toRel)) {
           var newLinks = [];
           if (toRel.d3.to == short) {
             toRel.d3.nodes[toRel.d3.from].forEach(function(f) {
@@ -1082,27 +1167,39 @@
             'links': [].concat(toRel.d3.links)
           }, (toRel.d3.from != null && toRel.d3.to != null && toRel.d3.direction != '2'))
 
-          obj.querySelector('[data-m="r"]').textContent = toId;
+          obj.querySelector('[data-m="r"]').textContent = map[toId];
+
+          this.showRelationGraph(map[toId]);
         }
+
+        const event = new Event(RELATION_CHANGE_EVENT);
+        // Dispatch the event.
+        document.dispatchEvent(event);
       },
       labelDeleteHandler: function(e) {
         // when a delete button on any label is clicked
         e.stopPropagation();
         var target = e.target,
             parent = target.parentNode, // actual span
-            sibling = target.nextSibling; // the span with a relation number (if any)
+            sibling = target.nextSibling,
+            chunkId = parent.getAttribute('data-i'),
+            chunk2del = chunks.filter(function(x) { return x.id == chunkId}); // the span with a relation number (if any)
+
+        var rel = isInRelations(chunk2del[0]);
+        if (rel)
+          this.changeRelation(parent, rel, null);
 
         target.remove();
         if (sibling != null)
           sibling.remove();
-        chunks = chunks.filter(function(x) { return x.id != target.getAttribute('data-j') })
+        chunks = chunks.filter(function(x) { return x.id != chunkId });
         mergeWithNeighbors(parent);
         // $(target).prop('in_relation', false);
         activeLabels--;
       },
       getSubmittableDict: function(stringify) {
         if (!utils.isDefined(stringify)) stringify = false;
-        if (relations) {
+        if (Object.values(relations).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
           // if there are any relations, submit only those chunks that have to do with the relations
           submittableChunks = chunks.filter(isInRelations)
           
@@ -1139,7 +1236,18 @@
           "chunks": stringify ? JSON.stringify(submittableChunks) : submittableChunks
         }
       },
-      postSubmitHandler: function() {
+      unmarkChunk: function(c) {
+        var label = document.querySelector('span.tag[data-i="' + c['id'] + '"]');
+        label.querySelector('span').remove();
+        label.querySelector('button').remove();
+        mergeWithNeighbors(label);
+      },
+      unmark: function(chunksList) {
+        for (var c in chunksList) {
+          this.unmarkChunk(chunksList[c])
+        }
+      },
+      postSubmitHandler: function(batch) {
         relations = {};
         currentRelationId = null;
         lastRelationId = 1;
@@ -1149,36 +1257,60 @@
         activeLabels = 0;
 
         chunks.forEach(function(c) {
-          if (c in submittableChunks) {
+          if (submittableChunks.includes(c)) {
             // means already submitted, so mark as such
             c.submittable = false;
+            c.batch = batch;
           }
         });
         submittableChunks = [];
+      },
+      resetArticle: function() {
+        this.selectorArea.innerHTML = resetTextHTML;
+      },
+      restart: function() {
+        chunks = [];
+        resetTextHTML = this.selectorArea.innerHTML;
+        resetText = this.selectorArea.textContent;
+
+        this.initPreMarkers();
+      },
+      undo: function(batches) {
+        var control = this;
+        chunks.forEach(function(c) {
+          if (batches.includes(c.batch)) {
+            if (control.disableSubmittedLabels) {
+              control.enableChunk(c);
+            }
+          }
+        });
       }
     }
   })();
 
   $(document).ready(function() {
     labelerModule.init();
+    
+    window.lm = labelerModule;
 
     /**
      * Labeler plugins
      */
-    var labelerPlugins = JSON.parse(document.querySelector("#labelerPlugins").textContent);
+    var labelerPluginsDOM = document.querySelector("#labelerPlugins"),
+        labelerPlugins = JSON.parse(labelerPluginsDOM.textContent);
     for (var markerShort in labelerPlugins) {
       for (var i = 0, len = labelerPlugins[markerShort].length; i < len; i++) {
         var pluginCfg = labelerPlugins[markerShort][i];
-        $.getScript('/textinator/static/scripts/labeler_plugins/' + pluginCfg['file'], (function(cfg, ms) {
+        $.getScript(labelerPluginsDOM.getAttribute('data-url') + pluginCfg['file'], (function(cfg, ms) {
           return function() {
             labelerModule.register(plugin(cfg, labelerModule), ms);
           }
         })(pluginCfg, markerShort));
+        labelerModule.expectToRegister();
       }
     }
 
-    var sessionStart = new Date(),  // the time the page was loaded or the last submission was made
-        $selector = $(labelerModule.selectorArea);
+    var sessionStart = new Date();  // the time the page was loaded or the last submission was made
         
     // Guidelines "Show more" button
     $('.button-scrolling').each(function(i, x) {
@@ -1212,23 +1344,8 @@
       $el.append($button);
     });
 
-    // do initialize pre-markers for the current article
-    labelerModule.initPreMarkers();
-
     // disable the undo button, since we haven't submitted anything
     $('#undoLast').attr('disabled', true);  
-
-    function removeAllChildren(node) {
-      while (node.firstChild) {
-        node.removeChild(node.firstChild);
-      }
-    }
-
-    function resetArticle() {
-      var node = document.querySelector('.selector');
-      removeAllChildren(node);
-      node.innerHTML = labelerModule.resetTextHTML;
-    }
 
     // labeling piece of text with a given marker if the marker is clicked
     $('.marker.tags').on('click', function(e) {
@@ -1254,15 +1371,7 @@
           'csrfmiddlewaretoken': $target.closest('form').find('input[name="csrfmiddlewaretoken"]').val()
         },
         success: function(data) {
-          chunks.forEach(function(c) {
-            if (data['labels'].includes(c.context.slice(c.lengthBefore + c.start, c.lengthBefore + c.end))) {
-              var $el = $('span.tag[data-i="' + c.id + '"]');
-              $el.removeClass('is-disabled');
-              $el.prop('in_relation', false);
-
-              enableChunk(c);
-            }
-          });
+          labelerModule.undo(data.batch);
 
           var $submitted = $('#submittedTotal'),
               $submittedToday = $('#submittedToday');
@@ -1294,7 +1403,7 @@
       if (!labelerModule.checkRestrictions()) return;
 
       var $inputForm = $('#inputForm'),
-          $inputTextField = $inputForm.find('input[name="text_input"]'),
+          $inputTextField = $inputForm.find('input[name="input"]'),
           $inputBlock = $inputForm.closest('article');
 
       if ($inputTextField.length > 0 && $inputTextField.val().trim() == 0) {
@@ -1309,14 +1418,14 @@
 
       // if there's an input form field, then create input_context
       if (inputFormData.hasOwnProperty('input'))
-        inputFormData['input_context'] = selectorArea.textContent;
+        inputFormData['input_context'] = labelerModule.selectorArea.textContent;
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());
 
       inputFormData['is_review'] = underReview;
       inputFormData['time'] = Math.round(((new Date()).getTime() - sessionStart.getTime()) / 1000, 1);
-      inputFormData['datasource'] = parseInt($selector.attr('data-s'));
-      inputFormData['datapoint'] = parseInt($selector.attr('data-dp'));
+      inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
+      inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
 
       if (inputFormData['chunks'].length > 0 || inputFormData['relations'].length > 0) {
         inputFormData['chunks'] = JSON.stringify(inputFormData['chunks']);
@@ -1336,6 +1445,8 @@
                 
                 if (labelerModule.disableSubmittedLabels)
                   labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
+                else
+                  labelerModule.unmark(JSON.parse(inputFormData['chunks']));
 
                 $inputBlock.removeClass('is-warning');
                 $inputBlock.addClass('is-primary');
@@ -1351,11 +1462,8 @@
                   $inputTextField.focus();  
                 }
               } else {
-                // review task
-                // FIXME
-                var articleNode = document.querySelector('.selector');
-                removeAllChildren(articleNode);
-                articleNode.innerHTML = data['input']['context'];
+                // FIXME: review task
+                labelerModule.resetArticle();
 
                 $questionBlock.removeClass('is-primary');
                 $questionBlock.addClass('is-warning');
@@ -1363,9 +1471,9 @@
 
                 $title.html("Review question");
 
-                if ($qInput.length > 0) {
-                  $qInput.val(data['input']['content']);
-                  $qInput.prop("disabled", true);
+                if ($inputTextField.length > 0) {
+                  $inputTextField.val(data['input']['content']);
+                  $inputTextField.prop("disabled", true);
                 }
               }
             }
@@ -1384,17 +1492,17 @@
             // TODO; trigger iff .countdown is present
             $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
 
-            labelerModule.postSubmitHandler();
+            labelerModule.postSubmitHandler(data.batch);
 
             $('#undoLast').attr('disabled', false);
           },
           error: function() {
             console.log("ERROR!");
             if (underReview)
-              $qInput.prop("disabled", true)
+              $inputTextField.prop("disabled", true)
             else {
-              $qInput.val('');
-              $qInput.prop('disabled', false);
+              $inputTextField.val('');
+              $inputTextField.prop('disabled', false);
             }
             $('#undoLast').attr('disabled', true);
             sessionStart = new Date();
@@ -1423,6 +1531,8 @@
             // update text, source id and datapoint id
             el.attr('data-s', d.source_id);
             el.attr('data-dp', d.dp_id);
+
+            var $selector = $(labelerModule.selectorArea);
 
             if (d.source_id == -1) {
               var $text = $selector.closest('article.text');
@@ -1454,33 +1564,8 @@
               $text.siblings('article').remove()
             } else {
               $selector.html(d.text);
-
-              chunks = [];
-              labelId = $('article.text').find('span.tag').length; // count the number of pre-markers
-              activeLabels = labelId;
-              resetTextHTML = selectorArea.innerHTML;
-              resetText = selectorArea.textContent;
-
+              labelerModule.restart();
               $('#undoLast').attr('disabled', true);
-
-              if (labelerModule.allowCommentingLabels) {
-                var $commentInput = $('<input data-i=' + labelId + ' value = ' + (comments[labelId] || '') + '>');
-                $commentInput.on('change', function(e) {
-                  comments[parseInt(e.target.getAttribute('data-i'))] = $commentInput.val();
-                });
-
-                tippy('span.tag', {
-                  content: $commentInput[0],
-                  trigger: 'hover',
-                  interactive: true,
-                  distance: 0
-                });
-
-                comments = {};
-              }
-
-              initPreMarkers();
-
               $button.attr('disabled', false);
             }
             el.removeClass('is-loading');
@@ -1504,9 +1589,10 @@
 
       if ($button.attr('disabled')) return;
 
+      // TODO: should I also count relations here?
       getNewText(function() {
         var confirmationText = "All your unsubmitted labels will be removed. Are you sure?";
-        return chunks.filter(function(c) { return c.submittable }).length > 0 ? confirm(confirmationText) : true;
+        return labelerModule.countUnsubmittedChunks() > 0 ? confirm(confirmationText) : true;
       }, $button);
     });
 
@@ -1559,8 +1645,8 @@
         data: {
           "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val(),
           "feedback": $form.find('textarea[name="feedback"]').val(),
-          "ds_id": selectorArea.getAttribute('data-s'),
-          "dp_id": selectorArea.getAttribute('data-dp')
+          "ds_id": labelerModule.selectorArea.getAttribute('data-s'),
+          "dp_id": labelerModule.selectorArea.getAttribute('data-dp')
         },
         success: function(d) {
           alert("Thank you for your feedback!");

@@ -17,10 +17,11 @@
 </div>
 
 {% include 'partials/components/modals/guidelines.html' %}
+{% include 'partials/components/modals/flag.html' %}
 
 <script>
   $('#guidelinesButton').on('click', function() {
-    $('.modal').addClass('is-active');
+    $('.guidelines.modal').addClass('is-active');
   });
 
   $('.modal-close').on('click', function() {

@@ -1,6 +1,3 @@
-<script id="labelerPlugins" type="application/json">
-  {{ marker_actions|tojson|safe }}
-</script>
 <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
   <div class="message-header">
     <p>Markers</p>

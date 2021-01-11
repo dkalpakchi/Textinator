@@ -1,6 +1,20 @@
 {% extends "layout.html" %}
 
+{% block custom_scripts %}
+<script id="labelerPlugins" data-url="{{ static('scripts/labeler_plugins/') }}" type="application/json">
+  {{ marker_actions|tojson|safe }}
+</script>
+<script type="text/javascript" src="{{ static('scripts/labeler.js') }}"></script>
+{% endblock %}
+
 {% block content %}
+{% if project.temporary_message %}
+  <article class="message is-info">
+    <div class="message-body">
+      {{project.temporary_message|safe}}
+    </div>
+  </article>
+{% endif %}
 <div id="taskArea" data-context="{{project.context_size}}">
   {{task_type_template|safe}}
 </div>

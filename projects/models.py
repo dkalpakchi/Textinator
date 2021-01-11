@@ -5,7 +5,6 @@ from datetime import datetime
 from collections import defaultdict
 
 from django.db import models
-from django.contrib.postgres.fields import JSONField
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.core.cache import caches
@@ -133,6 +132,7 @@ class Project(CommonModel):
     supported_by = models.CharField(max_length=1000, null=True, blank=True)
     guidelines = HTMLField(null=True, blank=True)
     reminders = HTMLField(null=True, blank=True)
+    temporary_message = HTMLField(null=True, blank=True)
     video_summary = FileBrowseField(max_length=1000, null=True, blank=True)
     sampling_with_replacement = models.BooleanField(default=True)
     # TODO: implement a context of a sentence
@@ -295,6 +295,7 @@ class Relation(CommonModel):
         ('1', 'Directed from the second to the first'),
         ('2', 'Bi-directional')
     ])
+    shortcut = models.CharField(max_length=15, help_text="Keyboard shortcut for marking a piece of text with this label", null=True, blank=True)
     # representation = models.CharField(max_length=1, choices=[('g', 'Graph'), ('c', 'Chain')], default='g')
 
     @property
@@ -336,7 +337,7 @@ class Label(CommonModel):
     start = models.PositiveIntegerField(null=True)
     end = models.PositiveIntegerField(null=True)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    extra = JSONField(null=True, blank=True)
+    extra = models.JSONField(null=True, blank=True)
     input = models.ForeignKey(Input, on_delete=models.CASCADE, null=True, blank=True)     # if input is there, input should be not NULL
     context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True, blank=True) # if there is no input, there must be context
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

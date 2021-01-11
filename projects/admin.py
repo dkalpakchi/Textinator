@@ -80,7 +80,7 @@ class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
         fields = [
-            'title', 'short_description', 'institution', 'supported_by', 'guidelines', 'reminders',
+            'title', 'short_description', 'institution', 'supported_by', 'temporary_message', 'guidelines', 'reminders',
             'video_summary', 'sampling_with_replacement', 'context_size', 'task_type', 'dt_publish',
             'dt_finish', 'collaborators', 'author', 'datasources', 'is_open', 'is_peer_reviewed',
             'allow_selecting_labels', 'disable_submitted_labels', 'max_markers_per_input',
@@ -228,7 +228,10 @@ class DataSourceForm(forms.ModelForm):
 @admin.register(DataSource)
 class DataSourceAdmin(CommonModelAdmin):
     class Media:
-        js = ('scripts/datasource.js',)
+        js = (
+            'admin/js/vendor/jquery/jquery{}.js'.format('' if settings.DEBUG else '.min'),
+            'scripts/datasource.js'
+        )
     
     form = DataSourceForm
     list_display = ['name', 'source_type']
@@ -247,7 +250,12 @@ class MarkerAdmin(CommonModelAdmin):
     inlines = [MarkerContextMenuItemInline]
 
 @admin.register(Relation)
-class RelationAdmin(CommonModelAdmin): pass
+class RelationAdmin(CommonModelAdmin):
+    class Media:
+        js = (
+            'admin/js/vendor/jquery/jquery{}.js'.format('' if settings.DEBUG else '.min'),
+            'scripts/shortcut_picker.js'
+        )
 
 @admin.register(Level)
 class LevelAdmin(CommonModelAdmin): pass

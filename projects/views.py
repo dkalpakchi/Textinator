@@ -303,12 +303,12 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             'project': proj,
             'task_markers': task_markers,
             'task_relations': task_relations,
-            'profile': u_profile,
-            'marker_actions': menu_items
+            'profile': u_profile
         }
 
         tmpl = get_template(os.path.join(proj.task_type, 'display.html'))
         data['task_type_template'] = tmpl.render(ctx, self.request)
+        data['marker_actions'] = menu_items
 
         # with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
         #     tmpl = Template(f.read().replace('\n', ''))
@@ -375,9 +375,11 @@ def record_datapoint(request, proj):
     label_cache = {}
     for chunk in chunks:
         # inp is typically the same for all chunks
-        ret_caches, inp, just_saved = process_chunk(chunk, batch, inp, project, data_source, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
-        ctx_cache, inp_cache, label_cache = ret_caches
-        saved_labels += just_saved
+        res_chunk = process_chunk(chunk, batch, inp, project, data_source, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
+        if res_chunk:
+            ret_caches, inp, just_saved = res_chunk
+            ctx_cache, inp_cache, label_cache = ret_caches
+            saved_labels += just_saved
 
     for rel in relations:
         for link in rel['links']:
@@ -415,7 +417,8 @@ def record_datapoint(request, proj):
         } if inp else None,
         'submitted': u_profile.submitted(),
         'submitted_today': u_profile.submitted_today(),
-        'next_task': 'regular'
+        'next_task': 'regular',
+        'batch': str(batch)
     })
 
 
@@ -513,7 +516,6 @@ def undo_last(request, proj):
     label_batch = Label.objects.filter(user=user, project=project).order_by('-dt_created').all()[:1].values('batch')
     last_labels = Label.objects.filter(batch__in=label_batch).all()
     
-    labels = []
     last_input = ''
 
     if last_rels and last_labels:
@@ -524,11 +526,9 @@ def undo_last(request, proj):
             for last_rel in last_rels:
                 last_rel.first_label.undone = True
                 last_rel.first_label.save()
-                labels.append(last_rel.first_label.text)
 
                 last_rel.second_label.undone = True
                 last_rel.second_label.save()
-                labels.append(last_rel.second_label.text)
 
                 last_rel.undone = True
                 last_rel.save()
@@ -540,20 +540,18 @@ def undo_last(request, proj):
             for last_label in last_labels:
                 last_label.undone = True
                 last_label.save()
-                labels.append(last_label.text)
             if last_label.input:
                 last_input = last_label.input.content
     elif last_labels:
         for last_label in last_labels:
             last_label.undone = True
             last_label.save()
-            labels.append(last_label.text)
         if last_label.input:
             last_input = last_label.input.content
 
     return JsonResponse({
         'error': False,
-        'labels': labels,
+        'batch': list(map(lambda x: str(x['batch']), label_batch)),
         'input': last_input,
         'submitted': u_profile.submitted() if u_profile else 'NA',
         'submitted_today': u_profile.submitted_today() if u_profile else 'NA'
