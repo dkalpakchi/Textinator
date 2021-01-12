@@ -112,6 +112,7 @@ TEMPLATES = [
             ],
             'libraries': {
                 'common_extras': 'Textinator.templatetags.common_extras',
+                'survey_extras': 'survey.templatetags.survey_extras'
             },
         },
     }

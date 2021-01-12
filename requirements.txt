@@ -9,6 +9,7 @@ reportlab==3.5.34
 PyMySQL==0.9.3
 requests==2.22.0
 seaborn==0.9.0
+django_tinymce==3.2.0
 django_tinymce4_lite==1.8.0
 django_filebrowser_no_grappelli==3.8.0
 django-sass-processor==0.8.2
@@ -20,5 +21,4 @@ mysql_connector_repackaged==0.3.1
 python-dotenv==0.15.0
 PyYAML==5.3.1
 django-registration==3.1.1
-django-survey-and-report==1.3.31
-git+git://github.com/dkalpakchi/django-survey@bae760f436dd973dc7876e90ba0c3074c1c45c38
+git+git://github.com/dkalpakchi/django-survey@ceb5fe2a3b0957da4a495d929b93ca80e4b9110f
