@@ -16,7 +16,6 @@
         currentRelationId = null, // the ID of the current relation (for a visual pane)
         lastRelationId = 1, // the ID of the last unsubmitted relation
         lastNodeInRelationId = 0, // TODO: maybe remove
-        radius = 10,
         contextSize = undefined, // the size of the context to be saved 'p', 't' or 'no'
         resetTextHTML = null,  // the HTML of the loaded article
         resetText = null,    // the text of the loaded article
@@ -46,6 +45,25 @@
     }
 
     function previousTextLength(node, inParagraph) {
+      function removeRelationIds(prev) {
+        var markers = prev.querySelectorAll('span[data-m]');
+        var textContent = [];
+        for (var i = 0, len = markers.length; i < len; i++) {
+          textContent.push(markers[i].textContent);
+          markers[i].textContent = "";
+        }
+        return {
+          'markers': markers,
+          'textContent': textContent
+        }
+      }
+
+      function addRelationIds(obj) {
+        for (var i = 0, len = obj.markers.length; i < len; i++) {
+          obj.markers[i].textContent = obj.textContent[i];
+        }
+      }
+
       function getPrevLength(prev) {
         var len = 0;
         while (prev != null) {
@@ -53,9 +71,13 @@
             if (prev.tagName == "BR") {
               // if newline
               len += 1
-            } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || prev.tagName == "A") {
-              // if there is a label
-              len += prev.textContent.length
+            } else if (prev.tagName == "SPAN" && prev.classList.contains("tag")) {
+              // if there is a label, need to remove the possible relation label before calculating textContent
+              var res = removeRelationIds(prev);
+              len += prev.textContent.length;
+              addRelationIds(res);
+            } else if (prev.tagName == "A") {
+              len += prev.textContent.length;
             }
           } else if (prev.nodeType == 3) {
             len += prev.length
@@ -84,7 +106,9 @@
         var parentSibling = parent.previousElementSibling;
         while (parentSibling != null) {
           if (parentSibling.tagName == "P") {
+            var res = removeRelationIds(parentSibling);
             textLength += parentSibling.textContent.length + 1; // +2 because P
+            addRelationIds(res);
           }
           parentSibling = parentSibling.previousElementSibling;
         }
@@ -309,6 +333,7 @@
     return {
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
+      drawingType: 'list',
       markersArea: null,
       selectorArea: null,   // the area where the article is
       contextMenuPlugins: {},
@@ -769,7 +794,8 @@
         if (typeof d3 !== 'undefined') {
           if (arrows === undefined) arrows = false;
 
-          var svg = d3.select("#relations svg")
+          var svg = d3.select("#relations svg"),
+              radius = 10;
 
           svg.selectAll('g')
             .attr('class', 'hidden');
@@ -881,6 +907,50 @@
             ticked();
           }
           finalizeSimulation();
+
+          $("#relationId").text(currentRelationId);
+        }
+      },
+      drawList: function(data) {
+        if (typeof d3 !== 'undefined') {
+          var svg = d3.select("#relations svg"),
+              radius = 10;
+
+          svg.selectAll('g')
+            .attr('class', 'hidden');
+
+          svg = svg.append("g")
+            .attr('id', data.id)
+
+          data.nodes.forEach(function(n, i) {
+            n['x'] = 10;
+            n['y'] = 15 + i * (2 * radius + 7);
+          })
+
+          // Initialize the nodes
+          var node = svg
+            .selectAll("circle")
+            .data(data.nodes)
+            .enter()
+            .append("circle")
+              .attr("cx", function(d) { return d.x; })
+              .attr("cy", function(d) { return d.y; })
+              .attr("r", radius)
+              .attr('data-id', function(d) { return d.id })
+              .style("fill", function(d) { return d.color })
+              .on("mouseover", function(d, i) {
+                $('#' + d.dom).addClass('active');
+              })
+              .on("mouseout", function(d, i) {
+                $('#' + d.dom).removeClass('active');
+              });
+
+          var text = svg.selectAll("text")
+            .data(data.nodes)
+            .enter().append("text")
+              .text(function(d) { return d.name.length > 20 ? d.name.substr(0, 20) + '...' : d.name ; })
+              .attr("x", function(d) { return d.x + radius * 1.3; })
+              .attr("y", function(d) { return d.y + 0.5 * radius; });
 
           $("#relationId").text(currentRelationId);
         }
@@ -1053,11 +1123,18 @@
           else
             currentRelationId++;
 
-          this.drawNetwork({
-            'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
-            'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
-            'links': [].concat(links) // necessary since d3 changes the structure of links
-          }, (from != null && to != null && direction != '2'))
+          if (this.drawingType == 'network') {
+            this.drawNetwork({
+              'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
+              'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
+              'links': [].concat(links) // necessary since d3 changes the structure of links
+            }, (from != null && to != null && direction != '2'))
+          } else if (this.drawingType == 'list') {
+            this.drawList({
+              'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
+              'nodes': Array.prototype.concat.apply([], Object.values(nodes))
+            })  
+          }
 
           $parts.removeClass('active');
           $parts.append($('<span data-m="r" class="rel">' + lastRelationId + '</span>'));
@@ -1084,11 +1161,18 @@
           d3.select('g#' + fromRel.graphId).remove();
           if (fromRel.links.length > 0) {
             fromRel.d3.links = fromRel.d3.links.filter(function(x) { return x.source.id != objId && x.target.id != objId});       
-            this.drawNetwork({
-              'id': fromRel.graphId,
-              'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes)),
-              'links': [].concat(fromRel.d3.links)
-            }, (fromRel.d3.from != null && fromRel.d3.to != null && fromRel.d3.direction != '2'))
+            if (this.drawingType == 'network') {
+              this.drawNetwork({
+                'id': fromRel.graphId,
+                'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes)),
+                'links': [].concat(fromRel.d3.links)
+              }, (fromRel.d3.from != null && fromRel.d3.to != null && fromRel.d3.direction != '2'))
+            } else if (this.drawingType == 'list') {
+              this.drawList({
+                'id': fromRel.graphId,
+                'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes))
+              })
+            }
           } else {
             document.querySelector('#' + fromRel.d3.nodes[short][0].dom).querySelector('span[data-m="r"]').remove();
             map = this.removeRelation(fromId);
@@ -1161,11 +1245,19 @@
           toRel.d3.links = toRel.d3.links.concat(newLinks);
 
           d3.select('g#' + toRel.graphId).remove();
-          this.drawNetwork({
-            'id': toRel.graphId,
-            'nodes': Array.prototype.concat.apply([], Object.values(toRel.d3.nodes)),
-            'links': [].concat(toRel.d3.links)
-          }, (toRel.d3.from != null && toRel.d3.to != null && toRel.d3.direction != '2'))
+          if (this.drawingType == 'network') {
+            this.drawNetwork({
+              'id': toRel.graphId,
+              'nodes': Array.prototype.concat.apply([], Object.values(toRel.d3.nodes)),
+              'links': [].concat(toRel.d3.links)
+            }, (toRel.d3.from != null && toRel.d3.to != null && toRel.d3.direction != '2'))
+          } else if (this.drawingType == 'list') {
+            this.drawList({
+              'id': toRel.graphId,
+              'nodes': Array.prototype.concat.apply([], Object.values(toRel.d3.nodes))
+            })
+          }
+          
 
           obj.querySelector('[data-m="r"]').textContent = map[toId];
 
