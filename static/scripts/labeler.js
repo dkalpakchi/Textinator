@@ -24,6 +24,20 @@
         nonRelationMarkers = [],
         submittableChunks = []; // chunks to be submitted
 
+    function containsIdentical(arr, obj) {
+      for (var i in arr) {
+        var found = true;
+        for (var k in obj) {
+          found = found && arr[i].hasOwnProperty(k) && (obj[k] == arr[i][k]);
+          if (!found)
+            break;
+        }
+        if (found)
+          return true;
+      }
+      return false;
+    }
+
     function clearSelection() {
       if (window.getSelection) {
         if (window.getSelection().empty) {  // Chrome
@@ -284,6 +298,9 @@
         var short = markedSpan.getAttribute('data-s');
         var div = document.createElement('div');
         var subset = Object.assign({}, plugins[short], plugins[undefined]);
+
+        if (Object.keys(subset).length == 0) return;
+
         var keys = Object.keys(subset);
         keys.sort(function(x, y) {
           if (subset[x].verboseName < subset[y].verboseName) return -1;
@@ -333,22 +350,23 @@
     return {
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
-      drawingType: 'list',
+      drawingType: 'network',
       markersArea: null,
       selectorArea: null,   // the area where the article is
       contextMenuPlugins: {},
       init: function() {
         contextSize = $('#taskArea').data('context');
         this.markersArea = document.querySelector('.markers');
+        this.relationsArea = document.querySelector('.relations:not(.marked)');
         this.selectorArea = document.querySelector('.selector');
         resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
         resetText = this.selectorArea == null ? "" : this.selectorArea.textContent.trim();
         this.allowSelectingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-select') == 'true';
         this.disableSubmittedLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-disable') == 'true';
-        markersInRelations = this.markersArea == null ? [] :
-          [].concat.apply([], Array.from(this.markersArea.querySelectorAll('div.relation.tags')).map(
-          x => x.getAttribute('data-b').split('-:-')));
-        nonRelationMarkers = this.markersArea == null ? [] :
+        markersInRelations = this.relationsArea == null ? [] :
+          [].concat.apply([], Array.from(this.relationsArea.querySelectorAll('div.relation.tags')).map(
+          x => [].concat.apply([], x.getAttribute('data-b').split('|').map(y => y.split('-:-'))) ));
+        nonRelationMarkers = this.relationsArea == null ? [] :
           Array.from(this.markersArea.querySelectorAll('div.marker.tags')).map(
           x => x.getAttribute('data-s')).filter(x => !markersInRelations.includes(x));
         this.initSvg();
@@ -1045,7 +1063,7 @@
         if (!this.checkRestrictions(true)) return;
 
         var $parts = $('.selector span.tag.active'),
-            between = obj.getAttribute('data-b').split('-:-'),
+            between = obj.getAttribute('data-b').split('|').map(x => x.split('-:-')),
             direction = obj.getAttribute('data-d'),
             rule = obj.getAttribute('data-r');
 
@@ -1076,25 +1094,29 @@
               to = null;
           if (direction == '0' || direction == '2') {
             // first -> second or bidirectional
-            from = between[0];
-            to = between[1];
+            from = 0;
+            to = 1;
           } else if (direction == '1') {
             // second -> first
-            from = between[1];
-            to = between[0];
+            from = 1;
+            to = 0;
           }
 
-          nodes[from].forEach(function(f) {
-            nodes[to].forEach(function(t) {
-              if (f.id != t.id) {
-                // prevent loops
-                links.push({
-                  'source': f.id,
-                  'target': t.id
+          for (var i = 0, len = between.length; i < len; i++) {
+            if (utils.isDefined(nodes[between[i][from]]) && utils.isDefined(nodes[between[i][to]])) {
+              nodes[between[i][from]].forEach(function(f) {
+                nodes[between[i][to]].forEach(function(t) {
+                  if (f.id != t.id) {
+                    // prevent loops
+                    links.push({
+                      'source': f.id,
+                      'target': t.id
+                    })
+                  }
                 })
-              }
-            })
-          })
+              })
+            }
+          }
 
           relations[lastRelationId] = {
             'graphId': "n" + startId + "__" + (lastNodeInRelationId - 1),
@@ -1112,6 +1134,16 @@
           links.forEach(function(l) {
             var source = document.querySelector('#' + l.source),
                 target = document.querySelector('#' + l.target);
+            // if bidirectional, no need to store mirrored relations
+            console.log(containsIdentical(relations[lastRelationId]['links'], {
+              's': target.getAttribute('data-i'),
+              't': source.getAttribute('data-i')
+            }))
+            if (direction == 2 && containsIdentical(relations[lastRelationId]['links'], {
+              's': target.getAttribute('data-i'),
+              't': source.getAttribute('data-i')
+            })) return;
+
             relations[lastRelationId]['links'].push({
               's': source.getAttribute('data-i'),
               't': target.getAttribute('data-i')
@@ -1294,6 +1326,7 @@
         if (Object.values(relations).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
           // if there are any relations, submit only those chunks that have to do with the relations
           submittableChunks = chunks.filter(isInRelations)
+          console.log(submittableChunks)
           
           var nonRelationChunks = chunks.filter(x => !submittableChunks.includes(x));
           for (var i = 0, len = nonRelationChunks.length; i < len; i++) {

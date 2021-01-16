@@ -5,6 +5,7 @@ import random
 import bisect
 import uuid
 from collections import defaultdict, OrderedDict
+from itertools import chain
 
 from django.http import JsonResponse, Http404, FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -17,6 +18,7 @@ from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Q
 
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
@@ -334,8 +336,6 @@ def record_datapoint(request, proj):
     is_review = data.get('is_review', 'f') == 'true'
     is_resolution = data.get('is_resolution', 'f') == 'true'
 
-    batch = uuid.uuid4()
-
     user = request.user
     try:
         project = Project.objects.get(pk=proj)
@@ -352,7 +352,7 @@ def record_datapoint(request, proj):
     except DataSource.DoesNotExist:
         data_source = None
 
-    # First create a chunk for a input context (if available), which is always all text
+    # First create a chunk for an input context (if available), which is always all text
     if 'input_context' in data and type(data['input_context']) == str:
         ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
         if not ctx:
@@ -373,6 +373,7 @@ def record_datapoint(request, proj):
 
     saved_labels = 0
     label_cache = {}
+    batch = uuid.uuid4()
     for chunk in chunks:
         # inp is typically the same for all chunks
         res_chunk = process_chunk(chunk, batch, inp, project, data_source, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
@@ -382,6 +383,7 @@ def record_datapoint(request, proj):
             saved_labels += just_saved
 
     for rel in relations:
+        batch = uuid.uuid4()
         for link in rel['links']:
             source_id, target_id = int(link['s']), int(link['t'])
 
@@ -396,6 +398,10 @@ def record_datapoint(request, proj):
             except Relation.DoesNotExist:
                 continue
 
+            source_label.batch = batch
+            source_label.save()
+            target_label.batch = batch
+            target_label.save()
             LabelRelation.objects.create(rule=rule, first_label=source_label, second_label=target_label, user=user, project=project, batch=batch)
 
     # Peer review task
@@ -561,58 +567,77 @@ def undo_last(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def data_explorer(request, proj):
-    project = Project.objects.filter(pk=proj).get()
-    if project.author == request.user or project.shared_with(request.user):
-        try:
-            page_number = int(request.GET.get('page', 1))
-        except:
-            page_number = 1
+    def get_json_for_context(idc):
+        context = Context.objects.get(pk=idc)
+        relations = LabelRelation.objects.filter(project=project, undone=False).filter(
+            Q(first_label__context=context) | Q(second_label__context=context)
+        )
+        if not is_admin:
+            relations = relations.filter(user=request.user)
+        labels_in_relations_first = relations.values_list('first_label__pk', flat=True)
+        labels_in_relations_second = relations.values_list('second_label__pk', flat=True)
+        labels = Label.objects.filter(project=project, undone=False)\
+            .exclude(pk__in=labels_in_relations_first)\
+            .exclude(pk__in=labels_in_relations_second)
+        if not is_admin:
+            labels = labels.filter(user=request.user)
+        inputs = Input.objects.filter(context=context, pk__in=labels.values_list('input', flat=True))
+        labels = labels.filter(context=context)
 
+        rel_dict = defaultdict(set)
+        for r in relations:
+            rel_dict["{}_{}".format(str(r.first_label.batch), r.rule)].add(r.first_label)
+            rel_dict["{}_{}".format(str(r.second_label.batch), r.rule)].add(r.second_label)
+
+        print(relations)
+        return {
+            'data': context.content,
+            'bounded_labels': [{
+                'input': i.content,
+                'labels': [l.to_json() for l in i.get_labels()]
+            } for i in inputs],
+            'relations': {k: [s.to_json() for s in v] for k, v in rel_dict.items()},
+            'free_labels': [l.to_json() for l in labels],
+            'is_static': project.context_size != 't'
+        }
+
+    project = Project.objects.filter(pk=proj).get()
+
+    is_author, is_shared = project.author == request.user, project.shared_with(request.user)
+    if is_author or is_shared or project.has_participant(request.user):
+        is_admin = is_author or is_shared
+        context_id = request.GET.get('context')
+        if context_id:
+            return JsonResponse(get_json_for_context(context_id))
+    
         project_data = ProjectData.objects.filter(project=project).all()
         flagged_datapoints = DataAccessLog.objects.filter(project_data__in=project_data).exclude(flags="")
+        if not is_admin:
+            flagged_datapoints = flagged_datapoints.filter(user=request.user)
 
-        if project.task_type == 'qa':
-            inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()
-            inputs = Input.objects.filter(pk__in=inputs_pks).order_by('-dt_created').all()
-            labeled_inputs = [
-                (inp, Label.objects.filter(input=inp, undone=False).all())
-                for inp in inputs
-            ]
+        labels = Label.objects.filter(project=project, undone=False)
+        if not is_admin:
+            labels = labels.filter(user=request.user)
+        inputs = Input.objects.filter(pk__in=labels.values_list('input', flat=True).distinct())
+        relations = LabelRelation.objects.filter(project=project, undone=False)
+        if not is_admin:
+            relations = relations.filter(user=request.user)
+        context_ids = sorted(chain(
+            inputs.values_list('context', flat=True).distinct(),
+            labels.values_list('context', flat=True).distinct()
+        ))
 
-            p = Paginator(labeled_inputs, 20)
-            return render(request, 'projects/data_explorer.html', {
-                'project': project,
-                'labeled_inputs': p.get_page(page_number),
-                'paginator': p,
-                'current_page': page_number,
-                'total_datapoints': len(labeled_inputs),
-                'flagged_datapoints': flagged_datapoints
-            })
-        elif project.task_type == 'corr':
-            label_relations = LabelRelation.objects.filter(project=project, undone=False).order_by('-dt_created')
-
-            relations = OrderedDict()
-            for lr in label_relations:
-                fst, snd = lr.first_label, lr.second_label
-                if fst.context.pk in relations:
-                    relations[fst.context.pk].append((fst, snd))
-                else:
-                    relations[fst.context.pk] = [(fst, snd)]
-
-            rels_with_context = [
-                (Context.objects.get(pk=cpk), rels)
-                for cpk, rels in relations.items()
-            ]
-
-            p = Paginator(rels_with_context, 20)
-            return render(request, 'projects/data_explorer.html', {
-                'project': project,
-                'relations': p.get_page(page_number),
-                'paginator': p,
-                'current_page': page_number,
-                'total_datapoints': len(rels_with_context),
-                'flagged_datapoints': flagged_datapoints
-            })
+        ctx = {
+            'project': project,
+            'contexts': Context.objects.filter(pk__in=context_ids),
+            'total_labels': labels.count(),
+            'total_relations': relations.count(),
+            'total_inputs': inputs.count(),
+            'flagged_datapoints': flagged_datapoints
+        }
+        if context_ids:
+            ctx.update(get_json_for_context(context_ids[0]))
+        return render(request, 'projects/data_explorer.html', ctx)
     else:
         raise Http404
 

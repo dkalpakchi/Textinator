@@ -17,7 +17,7 @@
     <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
     <a href="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
     <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-warning">Generate a PDF time report</a>
-    <div class="is-pulled-right">In total: {{ total_datapoints }} {% if labeled_inputs %}input(s){% else %}relation(s){% endif %}, {{flagged_datapoints.count()}} flagged datapoint(s) </div>
+    <div class="is-pulled-right">In total: {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_datapoints.count()}} flagged text(s) </div>
   </div>
 
   <script type="text/javascript" src="{{ static('js/highcharts/highcharts.js') }}"></script>
@@ -94,82 +94,71 @@
     </div>
   {% endif %}
 
-  <div class="container is-fluid">
-    {% for input, labels in labeled_inputs %}
-      <div class="datapoint">
-        <h4 class='title is-4'>
-          {{input.content}} ({{input.id}})
-          <div class="subtitle is-6">Created by <i>{{labels[0].user}}</i> on {{input.dt_created}}</div>
-        </h4>
-        <section id="item-context-{{loop.index}}">
-          <h3>Context ({{input.context.id}})</h3>
-          <div>
-            {{input.context.content}}
+  <div class="explorer container is-fluid">
+    {% if contexts %}
+      <div class="field">
+        <label class="label">Context</label>
+        <div class="control">
+          <div class="select">
+            <select id="exploreContexts" data-url="{{url('projects:data_explorer', kwargs={'proj': project.pk})}}">
+              {% for c in contexts %}
+                <option value="{{c.pk}}">{{c.content|truncate(150,True)}}</option>
+              {% endfor %}
+            </select>
           </div>
-        </section>
-        <ul>
-          {% for label in labels %}
-            <li {% if label.undone %}class="red"{% endif %}>
-              {% if label.marker.short == 'COR' %}
-                <b>{{label.text}}</b>
-                {% if label.comment %}
-                  <span><b>--> {{label.comment}}</b></span>
-                {% endif %}
-              {% else %}
-                {{label.text}}
-                {% if label.comment %}
-                  <span>--> {{label.comment}}</span>
-                {% endif %}
-              {% endif %}
-
-              <span>({{label.user}}, {{label.pk}})</span>
-            </li>
-          {% endfor %}
-        </ul>
-        {% if user.is_superuser %}
-          <form method="POST" action="{{ url('projects:async_delete_input', kwargs={'inp': input.pk, 'proj': project.pk}) }}" id="deleteForm">
-            {{csrf_input}}
-            <div class="control">
-              <button class="ui button is-danger">
-                <span class="icon"><i class="fas fa-trash-alt"></i></span>
-                <span>Delete</span>
-              </button>
+        </div>
+      </div>
+    {% endif %}
+    {% if project.context_size == 't' %}
+      {% if bounded_labels %}
+        <div class="field">
+          <label class="label">Annotations</label>
+          <div class="control">
+            <div class="select">
+              <select id="contextAnnotations">
+                <option value="-1">Choose an annotation</option>
+                {% for b in bounded_labels %}
+                  <option value="{{b['input']}}">Input: {{b['input']}}</option>
+                {% endfor %}
+              </select>
             </div>
-          </form>
-        {% endif %}
-      </div>
-    {% endfor %}
+          </div>
+        </div>
+      {% endif %}
 
-    {% for context, rels in relations %}
-      <div class="datapoint relation">
-        <h4 class='title is-5'>
-          {{context.content}} ({{context.id}})
-          <div class="subtitle is-6">Created by <i>{{rels[0][0].user}}</i> on {{context.dt_created}}</div>
-        </h4>
-        <ul>
-          {% for fst, snd in rels %}
-            <li>
-              {{fst.text}} ==> {{snd.text}}
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endfor %}
-
-    {% if paginator.num_pages > 1 %}
-      <nav class="pagination" role="navigation" aria-label="pagination">
-        <ul class="pagination-list">
-          {% for p in paginator.page_range %}
-            <li>
-              {% if p == current_page %}
-              <a class="pagination-link is-current" aria-label="Page {{p}}">{{p}}</a>
-              {% else %}
-              <a class="pagination-link" href="{{ url('projects:data_explorer', kwargs={'proj': project.id}) }}?page={{p}}" aria-label="Goto page {{p}}">{{p}}</a>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      </nav>
+      {% if relations %}
+        <div class="field">
+          <label class="label">Relations</label>
+          <div class="control">
+            <div class="select">
+              <select id="contextRelations"></select>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% else %}
+      <ol id="contextAnnotations">
+        {% for b in bounded_labels %}
+          <li>Input: {{b['input']}}
+            <div class="alternative tags are-medium">
+              {% for l in b['labels'] %}
+                <span class="tags has-addons">
+                  <span class='tag is-{{l['marker']['color']}} is-medium'>{{l['marker']['name']}}</span>
+                  <span class="tag is-medium">{{l['text']}}</span>
+                  <span class="tag is-dark is-medium">{{l['user']}}, {{l['created']}}</span>
+                </span>
+              {% endfor %}
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+    {% if contexts %}
+      <article id="exploreText" class="context message is-dark">
+        {{contexts[0].content}}
+      </article>
+    {% else %}
+      <p>Nothing to show yet</p>
     {% endif %}
   </div>
 </div>

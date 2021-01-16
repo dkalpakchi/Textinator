@@ -1,19 +1,19 @@
 <article class="relations message">
   <div class="message-header">
     <p>Relations</p>
-    <div class="text-right">
-      <a id='prevRelation' class="no-decoration"><span class="icon is-small"><i class="fas fa-angle-left"></i></span></a>
-      <span id='relationId'>0</span>
-      <a id='nextRelation' class="no-decoration"><span class="icon is-small"><i class="fas fa-angle-right"></i></span></a>
-    </div>
   </div>
   <div class="message-body">
-    <div id="relations"></div>
-    <a id='removeRelation' class="button is-fullwidth">
-      <span class="icon">
-        <i class="fas fa-trash-alt"></i>
-      </span>
-      <span>Remove relation</span>
-    </a>
+    <div class="field is-grouped is-grouped-multiline">
+      {% for relation in task_relations %}
+        <div class="control">
+          {{relation|display_relation}}
+        </div>
+      {% endfor %}
+      {% for relation in project.relation_set.all() %}
+        <div class="control">
+          {{relation|display_relation}}
+        </div>
+      {% endfor %}
+    </div>
   </div>
 </article>

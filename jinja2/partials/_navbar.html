@@ -56,16 +56,16 @@
         </a>
 
         <div class="navbar-dropdown">
-          {% if project and (project.author == user or project.shared_with(user)) %}
+          {% if project and (project.author == user or project.shared_with(user) or project.has_participant(user)) %}
             <a href="{{ url('projects:data_explorer', kwargs={'proj': project.pk}) }}" class='admin navbar-item'>
               <span class="icon is-small"><i class="fas fa-chart-bar"></i></span>
               <span>Data explorer</span>
             </a>
           {% endif %}
-          <a href="{{ url('users:settings') }}" class='navbar-item'>
+          {# <a href="{{ url('users:settings') }}" class='navbar-item'>
             <span class="icon is-small"><i class="fas fa-cog"></i></span>
             <span>Settings</span>
-          </a>
+          </a> #}
           {% if user.is_staff %}
             {% if project %}
             <a href="{{ url('admin:projects_project_change', kwargs={'object_id': project.id}) }}" class='admin navbar-item'>

@@ -267,8 +267,8 @@ class PostProcessingMethodAdmin(CommonModelAdmin): pass
 class PreMarkerAdmin(CommonModelAdmin): pass
 
 admin.site.register(Permission)
-
 admin.site.register(ProjectData)
+admin.site.register(MarkerPair)
 
 
 admin.site.site_header = 'Textinator admin'

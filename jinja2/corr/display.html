@@ -3,12 +3,19 @@
     {% include 'partials/components/areas/text.html' %}
   </div>
   <div class="column">
-    {% include 'partials/components/areas/relations.html' %}
+    {% include 'partials/components/areas/marked_relations.html' %}
   </div>
 </div>
 <div class="columns">
   <div class="column is-three-quarters">
-    {% include 'partials/components/areas/markers.html' %}
+    <div class="columns">
+      <div class="column">
+        {% include 'partials/components/areas/markers.html' %}
+      </div>
+      <div class="column">
+        {% include 'partials/components/areas/relations.html' %}
+      </div>
+    </div>
     {% include 'partials/components/areas/submission.html' %}
   </div>
   <div class="column">

@@ -287,15 +287,15 @@ textarea {
   cursor: default !important;
 }
 
-.relations {
+.marked.relations {
   max-height: 600px;
 }
 
-.relations .message-body {
+.marked.relations .message-body {
   height: 84%;
 }
 
-.relations.message, #relations {
+.marked.relations.message, #relations {
   height: 100%;
 }
 

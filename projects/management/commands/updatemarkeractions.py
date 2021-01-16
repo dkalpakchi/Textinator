@@ -28,7 +28,9 @@ class Command(BaseCommand):
 
         for p in plugins:
             try:
-                MarkerAction.objects.get_or_create(name=p['name'], description=p['description'], file=p['file'])
+                m, created = MarkerAction.objects.get_or_create(name=p['name'], file=p['file'])
+                m.description = p['description']
+                m.save()
                 self.stdout.write(self.style.SUCCESS('Successfully registered plugin "%s"' % p['name']))
             except KeyError:
                 continue

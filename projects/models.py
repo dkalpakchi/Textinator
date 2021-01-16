@@ -104,11 +104,16 @@ class Marker(CommonModel):
         return '&'.join([str(r) for r in restrictions]) if stringify else restrictions
 
     def is_part_of_relation(self):
-        return bool(Relation.objects.filter(models.Q(first_node=self) | models.Q(second_node=self)).all())
-
+        return bool(Relation.objects.filter(models.Q(pairs__first=self) | models.Q(pairs__second=self)).all())
 
     def __str__(self):
         return str(self.name)
+
+    def to_json(self):
+        return {
+            'name': self.name,
+            'color': self.color
+        }
 
 
 class MarkerContextMenuItem(CommonModel):
@@ -116,13 +121,17 @@ class MarkerContextMenuItem(CommonModel):
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     verbose = models.CharField(max_length=50)
     field = models.CharField(max_length=50, null=True, blank=True)
+    config = models.JSONField(null=True, blank=True)
 
     def to_json(self):
-        return {
+        data =  {
             'verboseName': self.verbose,
             'name': self.field or "{}_{}".format(self.action.name, self.pk),
             'file': self.action.file
         }
+        if self.config:
+            data.update(self.config)
+        return data
 
 
 class Project(CommonModel):
@@ -284,12 +293,19 @@ class PreMarker(CommonModel):
     tokens = models.TextField(help_text="Comma-separated tokens that should be highlighted with a marker")
 
 
+class MarkerPair(CommonModel):
+    first = models.ForeignKey(Marker, related_name='first', on_delete=models.CASCADE)
+    second = models.ForeignKey(Marker, related_name='second', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.first.short + '-:-' + self.second.short
+
+
 class Relation(CommonModel):
     name = models.CharField(max_length=50, unique=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
     for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
-    first_node = models.ForeignKey(Marker, related_name="first_node", on_delete=models.CASCADE)
-    second_node = models.ForeignKey(Marker, related_name="second_node", on_delete=models.CASCADE)
+    pairs = models.ManyToManyField(MarkerPair)
     direction = models.CharField(max_length=1, choices=[
         ('0', 'Directed from the first to the second'),
         ('1', 'Directed from the second to the first'),
@@ -300,10 +316,17 @@ class Relation(CommonModel):
 
     @property
     def between(self):
-        return self.first_node.short + '-:-' + self.second_node.short
+        return "|".join([str(p) for p in self.pairs.all()])
 
     def __str__(self):
         return str(self.name)
+
+    def to_json(self):
+        return {
+            'name': self.name,
+            'pairs': [str(p) for p in pairs],
+            'direction': self.direction
+        }
 
 
 class Context(CommonModel):
@@ -329,6 +352,9 @@ class Input(CommonModel):
     def content_hash(self):
         return hash_text(self.content)
 
+    def get_labels(self):
+        return Label.objects.filter(input=self)
+
     def __str__(self):
         return truncate(self.content, 50)
 
@@ -346,9 +372,27 @@ class Label(CommonModel):
     undone = models.BooleanField(default=False)
     batch = models.UUIDField(null=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['project'])
+        ]
+
     @property
     def text(self):
         return self.context.content[self.start:self.end] if self.context else self.input.content[self.start:self.end]
+
+    def to_json(self):
+        return {
+            'input': self.input.content if self.input else None,
+            'marker': self.marker.to_json(),
+            'extra': self.extra,
+            'start': self.start,
+            'end': self.end,
+            'text': self.text,
+            'pk': self.pk,
+            'user': self.user.username,
+            'created': self.dt_created
+        }
 
 
 class LabelReview(CommonModel):
@@ -378,9 +422,18 @@ class LabelRelation(CommonModel):
     undone = models.BooleanField(default=False)
     batch = models.UUIDField(null=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['project'])
+        ]
+
     @property
     def graph(self):
         return str(self)
+
+    @property
+    def label_ids(self):
+        return [first_label.pk, second_label.pk]
 
     def __str__(self):
         if self.rule.direction == '0':
@@ -389,6 +442,16 @@ class LabelRelation(CommonModel):
             return "{} <-- {}".format(self.first_label.text, self.second_label.text)
         else:
             return "{} --- {}".format(self.first_label.text, self.second_label.text)
+
+    def to_json(self):
+        return {
+            'rule': self.rule.to_json(),
+            'first': self.first_label.to_json(),
+            'second': self.second_label.to_json(),
+            'user': self.user.username,
+            'created': self.dt_created,
+            'batch': self.batch
+        }
 
 
 

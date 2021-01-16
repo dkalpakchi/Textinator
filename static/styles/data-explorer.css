@@ -2,3 +2,27 @@
     background-color: #feecf0;
 }
 
+.explorer.container .select,
+.explorer.container select {
+    width: 100%;
+}
+
+.explorer .context {
+    text-align: justify !important;
+}
+
+ol li {
+    margin-bottom: 1em;
+}
+
+div.alternative.tags {
+    display: block;
+}
+
+div.alternative.tags span.tags {
+    margin-bottom: 0.1em;
+}
+
+.context.message {
+    margin-bottom: 2em;
+}
