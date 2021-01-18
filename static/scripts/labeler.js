@@ -374,11 +374,12 @@
     function countChunksByType() {
       var cnt = {};
       for (var c in chunks) {
-        if (!c.hasOwnProperty('batch') && !c.submittable) {
-          if (cnt.hasOwnProperty(chunks[c].label))
-            cnt[chunks[c].label]++;
+        var chunk = chunks[c];
+        if (!chunk.hasOwnProperty('batch') && !chunk.submittable && !isInRelations(chunk)) {
+          if (cnt.hasOwnProperty(chunk.label))
+            cnt[chunk.label]++;
           else
-            cnt[chunks[c].label] = 1;
+            cnt[chunk.label] = 1;
         }
       }
       return cnt;
@@ -499,25 +500,31 @@
           }, false);
 
           // adding chunk if a piece of text was selected with a keyboard
-          document.addEventListener("keypress", function(e) {
+          document.addEventListener("keydown", function(e) {
             var selection = window.getSelection();
             if (selection && (selection.anchorNode != null)) {
               var isArticleParent = selection.anchorNode.parentNode == document.querySelector('.selector');
               if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
                 labelerModule.updateChunkFromSelection();
+              }
+            }
+            var s = String.fromCharCode(e.which).toUpperCase();
+            if (e.shiftKey) {
+              var shortcut = document.querySelector('[data-shortcut="SHIFT + ' + s + '"]');
+            } else {
+              var shortcut = document.querySelector('[data-shortcut="' + s + '"]');
+            }
+            
+            if (shortcut != null) {
+              if (e.altKey && !e.shiftKey && !e.ctrlKey) {
+                var input = shortcut.querySelector('input[type="checkbox"]');
+                if (utils.isDefined(input)) {
+                  input.checked = !input.checked;
+                  const event = new Event('change', {bubbles: true});
+                  input.dispatchEvent(event);
+                }
               } else {
-                var s = String.fromCharCode(e.which).toUpperCase();
-                if (e.shiftKey) {
-                  var shortcut = document.querySelector('[data-shortcut="SHIFT + ' + s + '"]');
-                } else if (e.ctrlKey) {
-                  var shortcut = document.querySelector('[data-shortcut="CTRL + ' + s + '"]');
-                } else {
-                  var shortcut = document.querySelector('[data-shortcut="' + s + '"]');
-                }
-                
-                if (shortcut != null) {
-                  shortcut.click();
-                }
+                shortcut.click();
               }
             }
           }, false);
@@ -1165,7 +1172,7 @@
             nodes[s].push({
               'id': $parts[i].id,
               'name': $parts[i].textContent,
-              'dom': $parts[i].id,
+              'dom': $parts[i],
               'color': getComputedStyle($parts[i])["background-color"]
             });
           });
@@ -1182,23 +1189,34 @@
             to = 0;
           }
 
+          var sketches = [];
           for (var i = 0, len = between.length; i < len; i++) {
+            var sketch = {
+              'nodes': [],
+              'links': [],
+              'between': between[i]
+            }
             if (utils.isDefined(nodes[between[i][from]]) && utils.isDefined(nodes[between[i][to]])) {
+              sketch.nodes.push.apply(sketch.nodes, nodes[between[i][from]]);
+              if (nodes[between[i][from]] != nodes[between[i][to]]) {
+                sketch.nodes.push.apply(sketch.nodes, nodes[between[i][to]]);
+              }
               nodes[between[i][from]].forEach(function(f) {
                 nodes[between[i][to]].forEach(function(t) {
                   if (f.id != t.id) {
                     // prevent loops
-                    links.push({
+                    sketch.links.push({
                       'source': f.id,
                       'target': t.id
                     })
                   }
                 })
               })
+              sketches.push(sketch);
             }
           }
 
-          if (links.length == 0) {
+          if (sketches.length == 0) {
             alert("No relations could be formed among the selected labels");
             $parts.removeClass('active');
             $parts.prop('selected', false);
@@ -1206,59 +1224,72 @@
             return;
           }
 
-          relations[lastRelationId] = {
-            'graphId': "n" + startId + "__" + (lastNodeInRelationId - 1),
-            'rule': rule,
-            'links': [],
-            'd3': {
-              'nodes': nodes,
-              'links': links,
-              'from': from,
-              'to': to,
-              'direction': direction
+          var j = startId;
+          for (var i = 0, len = sketches.length; i < len; i++) {
+            j += sketches[i].length;
+            relations[lastRelationId] = {
+              'graphId': "n" + startId + "__" + (j - 1),
+              'rule': rule,
+              'between': sketches[i].between,
+              'links': [],
+              'd3': {
+                'nodes': sketch.nodes,
+                'links': sketch.links,
+                'from': from,
+                'to': to,
+                'direction': direction
+              }
+            };
+
+            sketch.links.forEach(function(l) {
+              var source = document.querySelector('#' + l.source),
+                  target = document.querySelector('#' + l.target);
+              // if bidirectional, no need to store mirrored relations
+              if (direction == 2 && containsIdentical(relations[lastRelationId]['links'], {
+                's': target.getAttribute('data-i'),
+                't': source.getAttribute('data-i')
+              })) return;
+
+              relations[lastRelationId]['links'].push({
+                's': source.getAttribute('data-i'),
+                't': target.getAttribute('data-i')
+              })
+            });
+
+            if (currentRelationId == null)
+              currentRelationId = 1;
+            else
+              currentRelationId++;
+
+            if (!utils.isDefined(this.drawingType[rule]) || this.drawingType[rule] == 'g') {
+              this.drawNetwork({
+                'id': "n" + startId + "__" + (j - 1),
+                'nodes': Array.prototype.concat.apply([], Object.values(sketches[i].nodes)),
+                'links': [].concat(sketches[i].links) // necessary since d3 changes the structure of links
+              }, (from != null && to != null && direction != '2'))
+            } else if (this.drawingType[rule] == 'l') {
+              this.drawList({
+                'id': "n" + startId + "__" + (j - 1),
+                'nodes': Array.prototype.concat.apply([], Object.values(sketches[i].nodes))
+              })  
             }
-          };
 
-          links.forEach(function(l) {
-            var source = document.querySelector('#' + l.source),
-                target = document.querySelector('#' + l.target);
-            // if bidirectional, no need to store mirrored relations
-            if (direction == 2 && containsIdentical(relations[lastRelationId]['links'], {
-              's': target.getAttribute('data-i'),
-              't': source.getAttribute('data-i')
-            })) return;
-
-            relations[lastRelationId]['links'].push({
-              's': source.getAttribute('data-i'),
-              't': target.getAttribute('data-i')
-            })
-          });
-
-          if (currentRelationId == null)
-            currentRelationId = 1;
-          else
-            currentRelationId++;
-
-          if (!utils.isDefined(this.drawingType[rule]) || this.drawingType[rule] == 'g') {
-            this.drawNetwork({
-              'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
-              'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
-              'links': [].concat(links) // necessary since d3 changes the structure of links
-            }, (from != null && to != null && direction != '2'))
-          } else if (this.drawingType[rule] == 'l') {
-            this.drawList({
-              'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
-              'nodes': Array.prototype.concat.apply([], Object.values(nodes))
-            })  
+            sketches[i].nodes.forEach(function(x) { x.dom.classList.remove('active') });
+            sketches[i].nodes.forEach(function(x) {
+              var relSpan = document.createElement('span');
+              relSpan.setAttribute('data-m', 'r');
+              relSpan.className = "rel";
+              relSpan.textContent = lastRelationId;
+              x.dom.appendChild(relSpan);
+            });
+            lastRelationId++;
+            startId = j;
           }
-
-          $parts.removeClass('active');
-          $parts.append($('<span data-m="r" class="rel">' + lastRelationId + '</span>'));
-          lastRelationId++;
 
           const event = new Event(RELATION_CHANGE_EVENT);
           // Dispatch the event.
           document.dispatchEvent(event);
+          this.updateMarkAllCheckboxes()
           resizeSVG();
         }
       },
@@ -1270,6 +1301,11 @@
             toRel = relations[toId],
             // a relation map, which is initially identity, but might become smth else if anything is deleted
             map = {[fromId]: fromId, [toId]: toId}; 
+
+        if (fromRel.between != toRel.between) {
+          alert("Cannot move between different kind of relations")
+          return;
+        }
 
         if (utils.isDefined(fromRel)) {
           var newNodes = fromRel.d3.nodes[short].filter(function(x) { return x.id == objId });
@@ -1291,7 +1327,7 @@
               })
             }
           } else {
-            document.querySelector('#' + fromRel.d3.nodes[short][0].dom).querySelector('span[data-m="r"]').remove();
+            document.querySelector('#' + fromRel.d3.nodes[short][0].id).querySelector('span[data-m="r"]').remove();
             map = this.removeRelation(fromId);
             this.showRelationGraph(null);
           }
@@ -1313,7 +1349,7 @@
             {
               'id': obj.id,
               'name': obj.textContent,
-              'dom': obj.id,
+              'dom': obj,
               'color': getComputedStyle(obj)["background-color"]
             }
           ];
@@ -1375,7 +1411,6 @@
             })
           }
           
-
           obj.querySelector('[data-m="r"]').textContent = map[toId];
 
           this.showRelationGraph(map[toId]);
@@ -1485,6 +1520,7 @@
         resetText = this.selectorArea.textContent;
 
         this.initPreMarkers();
+        this.updateMarkAllCheckboxes();
       },
       undo: function(batches) {
         var control = this;
@@ -1498,7 +1534,9 @@
       },
       updateMarkAllCheckboxes() {
         var cnt = countChunksByType();
+        console.log(cnt)
         $('[data-s] input[type="checkbox"]').prop("disabled", true);
+        $('[data-s] input[type="checkbox"]').prop("checked", false);
         for (var i in cnt) {
           if (cnt[i] > 0) {
             $('[data-s="' + i + '"] input[type="checkbox"]').prop("disabled", false);
@@ -1777,7 +1815,6 @@
               $('#undoLast').attr('disabled', true);
               $button.attr('disabled', false);
             }
-            labelerModule.updateMarkAllCheckboxes();
             el.removeClass('is-loading');
           },
           error: function() {
