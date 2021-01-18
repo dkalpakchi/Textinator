@@ -169,6 +169,10 @@ class Project(CommonModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    @property
+    def relations(self):
+        return Relation.objects.filter(models.Q(for_task_type=self.task_type) | models.Q(project=self)).all()
+
     def data(self, user):
         dp_taboo = defaultdict(set)
         if not self.sampling_with_replacement:
@@ -312,7 +316,8 @@ class Relation(CommonModel):
         ('2', 'Bi-directional')
     ])
     shortcut = models.CharField(max_length=15, help_text="Keyboard shortcut for marking a piece of text with this label", null=True, blank=True)
-    # representation = models.CharField(max_length=1, choices=[('g', 'Graph'), ('c', 'Chain')], default='g')
+    representation = models.CharField(max_length=1, choices=[('g', 'Graph'), ('l', 'List')], default='g',
+                                      help_text="How the relation should be visualized?")
 
     @property
     def between(self):

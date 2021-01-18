@@ -311,6 +311,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         tmpl = get_template(os.path.join(proj.task_type, 'display.html'))
         data['task_type_template'] = tmpl.render(ctx, self.request)
         data['marker_actions'] = menu_items
+        data['relation_repr'] = {r.pk: r.representation for r in proj.relations}
 
         # with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
         #     tmpl = Template(f.read().replace('\n', ''))

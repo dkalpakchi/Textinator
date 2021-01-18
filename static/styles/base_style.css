@@ -230,6 +230,10 @@ textarea {
   cursor: pointer;
 }
 
+.marker.tags input[type="checkbox"] {
+  margin-top: 0.25em;
+}
+
 .tt-level {
   text-align: center;
 }
@@ -301,6 +305,7 @@ textarea {
 
 #relations {
   max-height: 400px;
+  overflow-y: scroll;
 }
 
 .small.container {

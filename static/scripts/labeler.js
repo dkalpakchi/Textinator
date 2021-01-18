@@ -131,11 +131,21 @@
     }
 
     function isDeleteButton(node) {
-      return node.nodeName == "BUTTON" && node.classList.contains('delete');
+      return utils.isDefined(node) && node.nodeName == "BUTTON" && node.classList.contains('delete');
     }
 
     function isLabel(node) {
-      return node.nodeName == "SPAN" && node.classList.contains("tag");
+      return utils.isDefined(node) && node.nodeName == "SPAN" && node.classList.contains("tag");
+    }
+
+    function isMarker(node) {
+      return utils.isDefined(node) && node.nodeName == "DIV" && node.hasAttribute('data-s') && node.hasAttribute('data-color') &&
+        node.hasAttribute('data-res') && node.hasAttribute('data-shortcut') && node.hasAttribute('data-submittable');
+    }
+
+    function isRelation(node) {
+      return utils.isDefined(node) && node.nodeName == "DIV" && node.hasAttribute('data-b') && node.hasAttribute('data-d') &&
+        node.hasAttribute('data-r') && node.hasAttribute('data-shortcut');
     }
 
     function getEnclosingLabel(node) {
@@ -143,6 +153,20 @@
         node = node.parentNode;
       }
       return isLabel(node) ? node : null;
+    }
+
+    function getClosestMarker(node) {
+      while (!isMarker(node)) {
+        node = node.parentNode;
+      }
+      return isMarker(node) ? node : null;
+    }
+
+    function getClosestRelation(node) {
+      while (!isRelation(node)) {
+        node = node.parentNode;
+      }
+      return isRelation(node) ? node : null;
     }
 
     function getEnclosingParagraph(node) {
@@ -347,13 +371,37 @@
       return document.querySelector('div.marker.tags[data-s="' + c['label'] + '"]');
     }
 
+    function countChunksByType() {
+      var cnt = {};
+      for (var c in chunks) {
+        if (!c.hasOwnProperty('batch') && !c.submittable) {
+          if (cnt.hasOwnProperty(chunks[c].label))
+            cnt[chunks[c].label]++;
+          else
+            cnt[chunks[c].label] = 1;
+        }
+      }
+      return cnt;
+    }
+
+    function resizeSVG() {
+      var  svg = document.getElementById("relations").querySelector('svg');
+      // Get the bounds of the SVG content
+      var  bbox = svg.getBBox();
+      // Update the width and height using the size of the contents
+      svg.setAttribute("width", bbox.x + bbox.width + bbox.x);
+      svg.setAttribute("height", bbox.y + bbox.height + bbox.y);
+    }
+
     return {
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
-      drawingType: 'network',
+      drawingType: {},
       markersArea: null,
       selectorArea: null,   // the area where the article is
       contextMenuPlugins: {},
+      isMarker: isMarker,
+      isLabel: isLabel,
       init: function() {
         contextSize = $('#taskArea').data('context');
         this.markersArea = document.querySelector('.markers');
@@ -369,21 +417,27 @@
         nonRelationMarkers = this.relationsArea == null ? [] :
           Array.from(this.markersArea.querySelectorAll('div.marker.tags')).map(
           x => x.getAttribute('data-s')).filter(x => !markersInRelations.includes(x));
+        var repr = document.querySelector('#relationRepr');
+        if (utils.isDefined(repr)) this.drawingType = JSON.parse(repr.textContent);
         this.initSvg();
         this.initEvents();
+        this.updateMarkAllCheckboxes();
       },
       initEvents: function() {
         // event delegation
         if (this.selectorArea != null) {
+          var control = this;
           this.selectorArea.addEventListener('click', function(e) {
+            e.stopPropagation();
             var target = e.target;
             if (isDeleteButton(target)) {
-              labelerModule.labelDeleteHandler(e);
+              control.labelDeleteHandler(e);
+              control.updateMarkAllCheckboxes();
             } else if (isLabel(target)) {
-              if (labelerModule.allowSelectingLabels) {
+              if (control.allowSelectingLabels) {
                 var $target = $(target);
                 if ($target.prop('in_relation')) {
-                  labelerModule.showRelationGraph(
+                  control.showRelationGraph(
                     parseInt(target.querySelector('[data-m="r"]').textContent)
                   );
                 } else if (!window.getSelection().toString()) {
@@ -445,19 +499,20 @@
           }, false);
 
           // adding chunk if a piece of text was selected with a keyboard
-          document.addEventListener("keyup", function(e) {
+          document.addEventListener("keypress", function(e) {
             var selection = window.getSelection();
             if (selection && (selection.anchorNode != null)) {
               var isArticleParent = selection.anchorNode.parentNode == document.querySelector('.selector');
               if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
                 labelerModule.updateChunkFromSelection();
               } else {
+                var s = String.fromCharCode(e.which).toUpperCase();
                 if (e.shiftKey) {
-                  var shortcut = document.querySelector('[data-shortcut="SHIFT + ' + String.fromCharCode(e.which) + '"]');
+                  var shortcut = document.querySelector('[data-shortcut="SHIFT + ' + s + '"]');
                 } else if (e.ctrlKey) {
-                  var shortcut = document.querySelector('[data-shortcut="CTRL + ' + String.fromCharCode(e.which) + '"]');
+                  var shortcut = document.querySelector('[data-shortcut="CTRL + ' + s + '"]');
                 } else {
-                  var shortcut = document.querySelector('[data-shortcut="' + String.fromCharCode(e.which) + '"]');
+                  var shortcut = document.querySelector('[data-shortcut="' + s + '"]');
                 }
                 
                 if (shortcut != null) {
@@ -465,6 +520,39 @@
                 }
               }
             }
+          }, false);
+
+          this.markersArea.addEventListener('click', function(e) {
+            var target = e.target;
+            if (target.nodeName != 'INPUT') {
+              var mmpi = control.markersArea.getAttribute('data-mmpi');
+              control.mark(getClosestMarker(target), mmpi);
+              control.updateMarkAllCheckboxes();
+            }
+          }, false);
+
+          this.markersArea.addEventListener('change', function(e) {
+            e.stopPropagation();
+            var target = e.target;
+            if (target.getAttribute('type') == 'checkbox') {
+              var marker = getClosestMarker(target);
+              control.selectorArea.querySelectorAll('[data-s="' + marker.getAttribute('data-s') + '"]').forEach(function(x) {
+                var $x = $(x);
+                if (!$x.prop('in_relation') && !$x.prop('disabled')) {
+                  if (!target.checked && x.classList.contains('active') && $x.prop('selected')) {
+                    x.classList.remove('active');
+                    $x.prop('selected', false);
+                  } else if (target.checked) {
+                    x.classList.add('active');
+                    $x.prop('selected', true);
+                  }
+                }
+              })
+            }
+          }, false);
+
+          this.relationsArea.addEventListener('click', function(e) {
+            control.markRelation(getClosestRelation(e.target));
           }, false);
         }
       },
@@ -487,6 +575,7 @@
 
         if (pluginsToRegister <= 0) {
           this.initPreMarkers();
+          this.updateMarkAllCheckboxes();
         }
       },
       expectToRegister: function() {
@@ -495,6 +584,7 @@
       disableChunk: function(c) {
         var $el = $('span.tag[data-i="' + c['id'] + '"]');
         $el.addClass('is-disabled');
+        $el.prop('disabled', true);
         $el.find('span[data-m="r"]').remove();
         c['submittable'] = false;
       },
@@ -502,6 +592,7 @@
         var $el = $('span.tag[data-i="' + c['id'] + '"]');
         $el.removeClass('is-disabled');
         $el.prop('in_relation', false);
+        $el.prop('disabled', false);
         c['submittable'] = true;
       },
       disableChunks: function(chunksList) {
@@ -791,21 +882,9 @@
           /* Relations */
           var svg = d3.select("#relations")
             .append("svg")
+              // .attr('viewBox', '0,0,300,400')
               .attr("width", "100%")
               .attr("height", "100%");
-
-          // TODO: this marker should be visible w.r.t. the target node
-          svg.append("svg:defs").append("svg:marker")
-            .attr("id", "triangle")
-            .attr("refX", 6)
-            .attr("refY", 6)
-            .attr("markerWidth", 20)
-            .attr("markerHeight", 20)
-            .attr("markerUnits","userSpaceOnUse")
-            .attr("orient", "auto")
-            .append("path")
-            .attr("d", "M 0 0 12 6 0 12 3 6")
-            .style("fill", "black");
         }
       },
       drawNetwork: function(data, arrows) {
@@ -1054,6 +1133,7 @@
             .attr('class', '');
 
           $('#relationId').text(id);
+          resizeSVG();
         }
         currentRelationId = id;
       },
@@ -1118,6 +1198,14 @@
             }
           }
 
+          if (links.length == 0) {
+            alert("No relations could be formed among the selected labels");
+            $parts.removeClass('active');
+            $parts.prop('selected', false);
+            $parts.prop('in_relation', false);
+            return;
+          }
+
           relations[lastRelationId] = {
             'graphId': "n" + startId + "__" + (lastNodeInRelationId - 1),
             'rule': rule,
@@ -1135,10 +1223,6 @@
             var source = document.querySelector('#' + l.source),
                 target = document.querySelector('#' + l.target);
             // if bidirectional, no need to store mirrored relations
-            console.log(containsIdentical(relations[lastRelationId]['links'], {
-              's': target.getAttribute('data-i'),
-              't': source.getAttribute('data-i')
-            }))
             if (direction == 2 && containsIdentical(relations[lastRelationId]['links'], {
               's': target.getAttribute('data-i'),
               't': source.getAttribute('data-i')
@@ -1155,13 +1239,13 @@
           else
             currentRelationId++;
 
-          if (this.drawingType == 'network') {
+          if (!utils.isDefined(this.drawingType[rule]) || this.drawingType[rule] == 'g') {
             this.drawNetwork({
               'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
               'nodes': Array.prototype.concat.apply([], Object.values(nodes)),
               'links': [].concat(links) // necessary since d3 changes the structure of links
             }, (from != null && to != null && direction != '2'))
-          } else if (this.drawingType == 'list') {
+          } else if (this.drawingType[rule] == 'l') {
             this.drawList({
               'id': "n" + startId + "__" + (lastNodeInRelationId - 1),
               'nodes': Array.prototype.concat.apply([], Object.values(nodes))
@@ -1175,6 +1259,7 @@
           const event = new Event(RELATION_CHANGE_EVENT);
           // Dispatch the event.
           document.dispatchEvent(event);
+          resizeSVG();
         }
       },
       changeRelation: function(obj, fromId, toId) {
@@ -1193,13 +1278,13 @@
           d3.select('g#' + fromRel.graphId).remove();
           if (fromRel.links.length > 0) {
             fromRel.d3.links = fromRel.d3.links.filter(function(x) { return x.source.id != objId && x.target.id != objId});       
-            if (this.drawingType == 'network') {
+            if (!utils.isDefined(this.drawingType[fromRel.rule]) || this.drawingType[fromRel.rule] == 'g') {
               this.drawNetwork({
                 'id': fromRel.graphId,
                 'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes)),
                 'links': [].concat(fromRel.d3.links)
               }, (fromRel.d3.from != null && fromRel.d3.to != null && fromRel.d3.direction != '2'))
-            } else if (this.drawingType == 'list') {
+            } else if (this.drawingType[fromRel.rule] == 'l') {
               this.drawList({
                 'id': fromRel.graphId,
                 'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes))
@@ -1277,13 +1362,13 @@
           toRel.d3.links = toRel.d3.links.concat(newLinks);
 
           d3.select('g#' + toRel.graphId).remove();
-          if (this.drawingType == 'network') {
+          if (!utils.isDefined(this.drawingType[toRel.rule]) || this.drawingType[toRel.rule] == 'g') {
             this.drawNetwork({
               'id': toRel.graphId,
               'nodes': Array.prototype.concat.apply([], Object.values(toRel.d3.nodes)),
               'links': [].concat(toRel.d3.links)
             }, (toRel.d3.from != null && toRel.d3.to != null && toRel.d3.direction != '2'))
-          } else if (this.drawingType == 'list') {
+          } else if (this.drawingType[toRel.rule] == 'l') {
             this.drawList({
               'id': toRel.graphId,
               'nodes': Array.prototype.concat.apply([], Object.values(toRel.d3.nodes))
@@ -1299,6 +1384,7 @@
         const event = new Event(RELATION_CHANGE_EVENT);
         // Dispatch the event.
         document.dispatchEvent(event);
+        resizeSVG();
       },
       labelDeleteHandler: function(e) {
         // when a delete button on any label is clicked
@@ -1409,6 +1495,15 @@
             }
           }
         });
+      },
+      updateMarkAllCheckboxes() {
+        var cnt = countChunksByType();
+        $('[data-s] input[type="checkbox"]').prop("disabled", true);
+        for (var i in cnt) {
+          if (cnt[i] > 0) {
+            $('[data-s="' + i + '"] input[type="checkbox"]').prop("disabled", false);
+          }
+        }
       }
     }
   })();
@@ -1471,17 +1566,6 @@
 
     // disable the undo button, since we haven't submitted anything
     $('#undoLast').attr('disabled', true);  
-
-    // labeling piece of text with a given marker if the marker is clicked
-    $('.marker.tags').on('click', function(e) {
-      var mmpi = $('article.markers').attr('data-mmpi');
-      labelerModule.mark(this, mmpi);
-    });
-
-    // putting the activated labels in a relationship
-    $('.relation.tags').on('click', function(e) {
-      labelerModule.markRelation(this);
-    })
 
     // undo last relation/label if the button is clicked
     $('#undoLast').on('click', function(e) {
@@ -1693,6 +1777,7 @@
               $('#undoLast').attr('disabled', true);
               $button.attr('disabled', false);
             }
+            labelerModule.updateMarkAllCheckboxes();
             el.removeClass('is-loading');
           },
           error: function() {

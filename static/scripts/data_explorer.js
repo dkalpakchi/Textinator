@@ -21,9 +21,25 @@
 
       var markedSpan = document.createElement('span');
       markedSpan.className = "tag is-" + labels[i]['marker']['color'] + " is-medium";
+      markers[labels[i]['marker']['color']] = labels[i]['marker'];
+
+      var extra = "";
+      for (var k in labels[i]['extra']) {
+        if (labels[i]['extra'][k] != "")
+          extra += k + ": " + labels[i]['extra'][k] + "<br>";
+      }
+
+      if (extra != "") {
+        var extraSpan = document.createElement('span')
+        extraSpan.innerHTML = extra;
+
+        tippy(markedSpan, {
+          content: extraSpan,
+        });
+      }
       range.surroundContents(markedSpan);
-      markers[labels[i]['marker']['color']] = labels[i]['marker']
     }
+
     var legend = document.createElement('legend'),
         label = document.createElement('label');
     label.className = "label"

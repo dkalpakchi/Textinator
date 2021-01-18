@@ -4,6 +4,9 @@
 <script id="labelerPlugins" data-url="{{ static('scripts/labeler_plugins/') }}" type="application/json">
   {{ marker_actions|tojson|safe }}
 </script>
+<script id="relationRepr" type="application/json">
+  {{ relation_repr|tojson|safe}}
+</script>
 <script type="text/javascript" src="{{ static('scripts/labeler.js') }}"></script>
 {% endblock %}
 

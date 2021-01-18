@@ -26,3 +26,7 @@ div.alternative.tags span.tags {
 .context.message {
     margin-bottom: 2em;
 }
+
+span.tag:hover {
+    cursor: default;
+}
