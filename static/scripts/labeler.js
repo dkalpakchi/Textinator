@@ -1043,10 +1043,10 @@
               .attr('data-id', function(d) { return d.id })
               .style("fill", function(d) { return d.color })
               .on("mouseover", function(d, i) {
-                $('#' + d.dom).addClass('active');
+                $(d.dom).addClass('active');
               })
               .on("mouseout", function(d, i) {
-                $('#' + d.dom).removeClass('active');
+                $(d.dom).removeClass('active');
               });
 
           var text = svg.selectAll("text")
