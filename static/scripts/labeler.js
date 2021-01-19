@@ -1192,14 +1192,18 @@
           var sketches = [];
           for (var i = 0, len = between.length; i < len; i++) {
             var sketch = {
-              'nodes': [],
+              'nodes': {},
               'links': [],
               'between': between[i]
             }
             if (utils.isDefined(nodes[between[i][from]]) && utils.isDefined(nodes[between[i][to]])) {
-              sketch.nodes.push.apply(sketch.nodes, nodes[between[i][from]]);
+              if (!sketch.nodes.hasOwnProperty(between[i][from]))
+                sketch.nodes[between[i][from]] = [];
+              sketch.nodes[between[i][from]].push.apply(sketch.nodes[between[i][from]], nodes[between[i][from]]);
               if (nodes[between[i][from]] != nodes[between[i][to]]) {
-                sketch.nodes.push.apply(sketch.nodes, nodes[between[i][to]]);
+                if (!sketch.nodes.hasOwnProperty(between[i][to]))
+                  sketch.nodes[between[i][to]] = [];
+                sketch.nodes[between[i][to]].push.apply(sketch.nodes[between[i][to]], nodes[between[i][to]]);
               }
               nodes[between[i][from]].forEach(function(f) {
                 nodes[between[i][to]].forEach(function(t) {
@@ -1233,15 +1237,15 @@
               'between': sketches[i].between,
               'links': [],
               'd3': {
-                'nodes': sketch.nodes,
-                'links': sketch.links,
+                'nodes': sketches[i].nodes,
+                'links': sketches[i].links,
                 'from': from,
                 'to': to,
                 'direction': direction
               }
             };
 
-            sketch.links.forEach(function(l) {
+            sketches[i].links.forEach(function(l) {
               var source = document.querySelector('#' + l.source),
                   target = document.querySelector('#' + l.target);
               // if bidirectional, no need to store mirrored relations
@@ -1274,14 +1278,18 @@
               })  
             }
 
-            sketches[i].nodes.forEach(function(x) { x.dom.classList.remove('active') });
-            sketches[i].nodes.forEach(function(x) {
-              var relSpan = document.createElement('span');
-              relSpan.setAttribute('data-m', 'r');
-              relSpan.className = "rel";
-              relSpan.textContent = lastRelationId;
-              x.dom.appendChild(relSpan);
-            });
+            for (var s in sketches[i].nodes) {
+              var snodes = sketches[i].nodes[s];
+              snodes.forEach(function(x) { x.dom.classList.remove('active') });
+              snodes.forEach(function(x) {
+                var relSpan = document.createElement('span');
+                relSpan.setAttribute('data-m', 'r');
+                relSpan.className = "rel";
+                relSpan.textContent = lastRelationId;
+                x.dom.appendChild(relSpan);
+              });
+            }
+
             lastRelationId++;
             startId = j;
           }
@@ -1302,7 +1310,7 @@
             // a relation map, which is initially identity, but might become smth else if anything is deleted
             map = {[fromId]: fromId, [toId]: toId}; 
 
-        if (fromRel.between != toRel.between) {
+        if (utils.isDefined(fromRel) && utils.isDefined(toRel) && fromRel.between.sort().join(',') != toRel.between.sort().join(',')) {
           alert("Cannot move between different kind of relations")
           return;
         }
