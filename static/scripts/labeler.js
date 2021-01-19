@@ -437,6 +437,7 @@
             } else if (isLabel(target)) {
               if (control.allowSelectingLabels) {
                 var $target = $(target);
+                console.log($target.prop('in_relation'))
                 if ($target.prop('in_relation')) {
                   control.showRelationGraph(
                     parseInt(target.querySelector('[data-m="r"]').textContent)
@@ -1087,6 +1088,7 @@
       removeRelation: function(idx) {
         $('g#' + relations[idx]['graphId']).find('circle[data-id]').each(function(i, d) { 
           var $el = $('#' + d.getAttribute('data-id'));
+          console.log($el.length > 0)
           if ($el.length > 0) {
             $el.prop('in_relation', false);
             $el.attr('id', '');
@@ -1230,7 +1232,9 @@
 
           var j = startId;
           for (var i = 0, len = sketches.length; i < len; i++) {
-            j += sketches[i].length;
+            for (var key in sketches[i].nodes) {
+              j += sketches[i].nodes[key].length;
+            }
             relations[lastRelationId] = {
               'graphId': "n" + startId + "__" + (j - 1),
               'rule': rule,
@@ -1299,6 +1303,8 @@
           document.dispatchEvent(event);
           this.updateMarkAllCheckboxes()
           resizeSVG();
+
+          console.log(relations);
         }
       },
       changeRelation: function(obj, fromId, toId) {
@@ -1319,9 +1325,9 @@
           var newNodes = fromRel.d3.nodes[short].filter(function(x) { return x.id == objId });
           fromRel.links = fromRel.links.filter(function(x) { return x.s != il && x.t != il });
           fromRel.d3.nodes[short] = fromRel.d3.nodes[short].filter(function(x) { return x.id != objId });
-          d3.select('g#' + fromRel.graphId).remove();
           if (fromRel.links.length > 0) {
-            fromRel.d3.links = fromRel.d3.links.filter(function(x) { return x.source.id != objId && x.target.id != objId});       
+            fromRel.d3.links = fromRel.d3.links.filter(function(x) { return x.source.id != objId && x.target.id != objId});
+            d3.select('g#' + fromRel.graphId).remove();
             if (!utils.isDefined(this.drawingType[fromRel.rule]) || this.drawingType[fromRel.rule] == 'g') {
               this.drawNetwork({
                 'id': fromRel.graphId,
@@ -1335,7 +1341,6 @@
               })
             }
           } else {
-            document.querySelector('#' + fromRel.d3.nodes[short][0].id).querySelector('span[data-m="r"]').remove();
             map = this.removeRelation(fromId);
             this.showRelationGraph(null);
           }
@@ -1365,8 +1370,8 @@
 
         if (utils.isDefined(toRel)) {
           var newLinks = [];
-          if (toRel.d3.to == short) {
-            toRel.d3.nodes[toRel.d3.from].forEach(function(f) {
+          if (toRel.between[toRel.d3.to] == short) {
+            toRel.d3.nodes[toRel.between[toRel.d3.from]].forEach(function(f) {
               newNodes.forEach(function(t) {
                 if (f.id != t.id) {
                   // prevent loops
@@ -1379,9 +1384,9 @@
             });
           }
           
-          if (toRel.d3.from == short) {
+          if (toRel.between[toRel.d3.from] == short) {
             newNodes.forEach(function(f) {
-              toRel.d3.nodes[toRel.d3.to].forEach(function(t) {
+              toRel.d3.nodes[toRel.between[toRel.d3.to]].forEach(function(t) {
                 if (f.id != t.id) {
                   // prevent loops
                   newLinks.push({
@@ -1397,6 +1402,10 @@
           newLinks.forEach(function(l) {
             var source = document.querySelector('#' + l.source),
                 target = document.querySelector('#' + l.target);
+            if (toRel.d3.direction == 2 && containsIdentical(toRel.links, {
+              's': target.getAttribute('data-i'),
+              't': source.getAttribute('data-i')
+            })) return;
             toRel.links.push({
               's': source.getAttribute('data-i'),
               't': target.getAttribute('data-i')
@@ -1424,6 +1433,10 @@
           this.showRelationGraph(map[toId]);
         }
 
+        console.log("AFTER -->")
+        console.log("FROM:", fromRel);
+        console.log("TO:", toRel);
+
         const event = new Event(RELATION_CHANGE_EVENT);
         // Dispatch the event.
         document.dispatchEvent(event);
@@ -1439,8 +1452,9 @@
             chunk2del = chunks.filter(function(x) { return x.id == chunkId}); // the span with a relation number (if any)
 
         var rel = isInRelations(chunk2del[0]);
-        if (rel)
+        if (rel) {
           this.changeRelation(parent, rel, null);
+        }
 
         target.remove();
         if (sibling != null)
@@ -1542,7 +1556,6 @@
       },
       updateMarkAllCheckboxes() {
         var cnt = countChunksByType();
-        console.log(cnt)
         $('[data-s] input[type="checkbox"]').prop("disabled", true);
         $('[data-s] input[type="checkbox"]').prop("checked", false);
         for (var i in cnt) {

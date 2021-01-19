@@ -590,7 +590,6 @@ def data_explorer(request, proj):
             rel_dict["{}_{}".format(str(r.first_label.batch), r.rule)].add(r.first_label)
             rel_dict["{}_{}".format(str(r.second_label.batch), r.rule)].add(r.second_label)
 
-        print(relations)
         return {
             'data': context.content,
             'bounded_labels': [{
