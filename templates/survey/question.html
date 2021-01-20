@@ -2,7 +2,7 @@
     <table class="survey-table table">
         <tbody>
             <tr>
-                <th>{{ question }}</th>
+                <th>{{ question|safe }}</th>
             </tr>
             {% for form in fields %}
                 {% if form.field.widget.attrs.category == category.name or not form.field.widget.attrs.category %}
