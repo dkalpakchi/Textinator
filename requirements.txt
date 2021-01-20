@@ -21,4 +21,4 @@ mysql_connector_repackaged==0.3.1
 python-dotenv==0.15.0
 PyYAML==5.3.1
 django-registration==3.1.1
-git+git://github.com/dkalpakchi/django-survey@ceb5fe2a3b0957da4a495d929b93ca80e4b9110f
+git+git://github.com/dkalpakchi/django-survey@e0893a7c35c83b5a03a74dfdbdece2087156c28f

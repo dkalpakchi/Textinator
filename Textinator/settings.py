@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'rangefilter',
     # 'surveys'
     # 'django_extensions',
+    'nested_admin',
     'survey',
     'users'
 ]

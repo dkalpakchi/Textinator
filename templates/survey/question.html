@@ -1,34 +1,33 @@
-<table class="survey-table table">
-    <!--<thead>
-      <tr>
-        <th> Question  </th>
-        <th> Answers </th>
-      </tr>
-    </thead> -->
-    <tbody>
-{% for form in response_form %}
-	{% if form.field.widget.attrs.category == category.name or not form.field.widget.attrs.category %}
-        <tr class="{% if form.errors%} danger {% endif %}">
-            <td>
-	            {{ form.label|safe }}
-	            {% if form.field.required %}
-	                <span class="glyphicon glyphicon-asterisk" style="color:red"> </span>
-	            {% endif %}
-	            <span class="help-inline" style="color:red">
-	                <strong> {% for error in  form.errors %}{{ error }}{% endfor %} </strong>
-	            </span> <br>
-                {% if form.field.widget.input_type == 'select' %}
-                <select name="{{form.name}}"{% if form.field.widget.attrs.disabled %} disabled{% endif %}>
+{% for question, fields in response_form.groups_by_question %}
+    <table class="survey-table table">
+        <tbody>
+            <tr>
+                <th>{{ question }}</th>
+            </tr>
+            {% for form in fields %}
+                {% if form.field.widget.attrs.category == category.name or not form.field.widget.attrs.category %}
+                    <tr class="{% if form.errors%} danger {% endif %}">
+                        <td>
+                            {{ form.label|safe }}
+                            {% if form.field.required %}
+                                <span class="glyphicon glyphicon-asterisk" style="color:red"> </span>
+                            {% endif %}
+                            <span class="help-inline" style="color:red">
+                                <strong> {% for error in  form.errors %}{{ error }}{% endfor %} </strong>
+                            </span> <br>
+                            {% if form.field.widget.input_type == 'select' %}
+                            <select name="{{form.name}}"{% if form.field.widget.attrs.disabled %} disabled{% endif %}>
+                            {% endif %}
+                            {% for field in form %}
+                                {{ field }}
+                            {% endfor%}
+                            {% if form.field.widget.input_type == 'select' %}
+                            </select>
+                            {% endif %}
+                        </td>
+                    </tr>
                 {% endif %}
-	            {% for field in form %}
-                    {{ field }}
-                {% endfor%}
-                {% if form.field.widget.input_type == 'select' %}
-                </select>
-                {% endif %}
-            </td>
-        </tr>
-	{% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
 {% endfor %}
-    </tbody>
-</table>
