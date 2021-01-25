@@ -104,7 +104,8 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         if timings:
             min_time, max_time = int(min(timings)), int(round(max(timings)))
             self.x_axis = list(range(min_time, max_time, 1))
-            self.x_axis.append(self.x_axis[-1] + 1)
+            if self.x_axis:
+                self.x_axis.append(self.x_axis[-1] + 1)
 
             self.project = Project.objects.get(pk=self.pk)
             self.participants = self.project.participants.all()
@@ -585,18 +586,13 @@ def data_explorer(request, proj):
         inputs = Input.objects.filter(context=context, pk__in=labels.values_list('input', flat=True))
         labels = labels.filter(context=context)
 
-        rel_dict = defaultdict(set)
-        for r in relations:
-            rel_dict["{}_{}".format(str(r.first_label.batch), r.rule)].add(r.first_label)
-            rel_dict["{}_{}".format(str(r.second_label.batch), r.rule)].add(r.second_label)
-
         return {
             'data': context.content,
             'bounded_labels': [{
                 'input': i.content,
                 'labels': [l.to_json() for l in i.get_labels()]
             } for i in inputs],
-            'relations': {k: [s.to_json() for s in v] for k, v in rel_dict.items()},
+            'relations': [r.to_json(dt_format="%b %d %Y %H:%M:%S") for r in relations],
             'free_labels': [l.to_json() for l in labels],
             'is_static': project.context_size != 't'
         }
@@ -627,13 +623,25 @@ def data_explorer(request, proj):
             labels.values_list('context', flat=True).distinct()
         ))
 
+        actions = {}
+        for l in labels:
+            for a in l.marker.actions.all():
+                if a.admin_filter:
+                    for cm_item in MarkerContextMenuItem.objects.filter(action=a, marker=l.marker):
+                        if cm_item.field:
+                            actions[cm_item.verbose_admin or cm_item.verbose] = {
+                                'marker': l.marker,
+                                'filter': a.admin_filter
+                            }
+
         ctx = {
             'project': project,
             'contexts': Context.objects.filter(pk__in=context_ids),
             'total_labels': labels.count(),
             'total_relations': relations.count(),
             'total_inputs': inputs.count(),
-            'flagged_datapoints': flagged_datapoints
+            'flagged_datapoints': flagged_datapoints,
+            'action_filters': list(actions.items())
         }
         if context_ids:
             ctx.update(get_json_for_context(context_ids[0]))

@@ -30,6 +30,8 @@ class Command(BaseCommand):
             try:
                 m, created = MarkerAction.objects.get_or_create(name=p['name'], file=p['file'])
                 m.description = p['description']
+                if 'admin_filter' in p:
+                    m.admin_filter = p['admin_filter']
                 m.save()
                 self.stdout.write(self.style.SUCCESS('Successfully registered plugin "%s"' % p['name']))
             except KeyError:

@@ -1,6 +1,7 @@
 /**
  * name: slider
  * description: A plugin adding a slider to a marker's context menu
+ * admin_filter: range
  * author: Dmytro Kalpakchi
  */
 

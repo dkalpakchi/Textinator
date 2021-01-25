@@ -95,6 +95,44 @@
   {% endif %}
 
   <div class="explorer container is-fluid">
+    <div id="explorerFilters" class="field">
+      <div class="message-header">
+        <span class="icon is-small">
+          <i class="fas fa-filter"></i>
+        </span>
+        &nbsp;&nbsp;Filters (not functional yet)
+      </div>
+      <div class="message-body">
+        <form action="">
+          {% for name, action in action_filters %}
+            <div class="field">
+              <span class="tags has-addons">
+                <span class='tag is-{{action.marker.color}} is-medium'>{{action.marker.name}}</span>
+                <span class="tag is-dark is-medium">
+                  {{name}}
+                </span>
+                <span class="tag is-medium">
+                  {% if action.filter == 'boolean' %}
+                    <input type="checkbox">
+                  {% elif action.filter == 'range' %}
+                    <div class="range-wrap">
+                      <input type="range" class="range" min="0" max="10">
+                      <span class="bubble"></span>  
+                    </div>
+                  {% endif %}
+                  </span>
+              </span>
+            </div>
+          {% endfor %}
+          <div class="field">
+            <div class="control">
+              <input type="submit" class="button is-link is-outlined is-rounded" value="Filter">
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
     {% if contexts %}
       <div class="field">
         <label class="label">Context</label>
@@ -109,6 +147,7 @@
         </div>
       </div>
     {% endif %}
+
     {% if project.context_size == 't' %}
       {% if bounded_labels %}
         <div class="field">

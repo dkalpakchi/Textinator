@@ -15,9 +15,14 @@
           text = cnodes[cnodes.length-1];
 
       const range = new Range();
-      range.setStart(text, labels[i]['start'] - acc);
-      range.setEnd(text, labels[i]['end'] - acc);
-      acc = labels[i]['end'];
+      try {
+        range.setStart(text, labels[i]['start'] - acc);
+        range.setEnd(text, labels[i]['end'] - acc);
+        acc = labels[i]['end'];  
+      } catch (e) {
+        // some labels might be repeated in which case we'll have a DOMException caught here
+        continue;
+      }
 
       var markedSpan = document.createElement('span');
       markedSpan.className = "tag is-" + labels[i]['marker']['color'] + " is-medium";
@@ -96,13 +101,20 @@
           }
 
           var j = 1,
+              cr = {},
               relations = $("#contextRelations");
           relations.empty();
           relations.append($('<option value="-1">Choose a relation</option>'))
-          for (var key in contextRelations) {
-            relations.append($('<option value="' + key + '">Relation ' + j + ": " + key.split("_")[1] + "</option>"))
+          for (var i = 0, len = contextRelations.length; i < len; i++) {
+            relations.append($('<option value="' + contextRelations[i].batch + '">Relation ' + j + ": " + contextRelations[i].rule.name +
+              " (created by " + contextRelations[i]['user'] + " on " + contextRelations[i]['created'] + ")</option>"))
+            if (!(contextRelations[i].batch in cr))
+              cr[contextRelations[i].batch] = [];
+            cr[contextRelations[i].batch].push(contextRelations[i]['first']);
+            cr[contextRelations[i].batch].push(contextRelations[i]['second']);
             j++;
           }
+          contextRelations = cr;
         }
         $("#exploreText").removeClass('element is-loading');
       },
@@ -123,6 +135,12 @@
     });
 
     $("#flaggedCollapse").accordion({
+      collapsible: true,
+      active: false,
+      icons: false,
+    });
+
+    $("#explorerFilters").accordion({
       collapsible: true,
       active: false,
       icons: false,

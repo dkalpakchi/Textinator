@@ -394,6 +394,21 @@
       svg.setAttribute("height", bbox.y + bbox.height + bbox.y);
     }
 
+    function getLabelText(obj) {
+      var relLabels = {};
+      var relIds = obj.querySelectorAll('span[data-m="r"]');
+      for (var i = 0, len = relIds.length; i < len; i++) {
+        var relSpan = relIds[i];
+        relLabels[relSpan.parentNode.id] = relSpan.textContent;
+        relSpan.textContent = "";
+      }
+      var text = obj.textContent;
+      for (var i = 0, len = relIds.length; i < len; i++) {
+        relSpan.textContent = relLabels[relIds[i].parentNode.id];
+      }
+      return text;
+    }
+
     return {
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
@@ -437,7 +452,6 @@
             } else if (isLabel(target)) {
               if (control.allowSelectingLabels) {
                 var $target = $(target);
-                console.log($target.prop('in_relation'))
                 if ($target.prop('in_relation')) {
                   control.showRelationGraph(
                     parseInt(target.querySelector('[data-m="r"]').textContent)
@@ -500,6 +514,7 @@
             }
           }, false);
 
+          // TODO: might be potentially rewritten?
           // adding chunk if a piece of text was selected with a keyboard
           document.addEventListener("keydown", function(e) {
             var selection = window.getSelection();
@@ -530,38 +545,42 @@
             }
           }, false);
 
-          this.markersArea.addEventListener('click', function(e) {
-            var target = e.target;
-            if (target.nodeName != 'INPUT') {
-              var mmpi = control.markersArea.getAttribute('data-mmpi');
-              control.mark(getClosestMarker(target), mmpi);
-              control.updateMarkAllCheckboxes();
-            }
-          }, false);
+          if (utils.isDefined(this.markersArea)) {
+            this.markersArea.addEventListener('click', function(e) {
+              var target = e.target;
+              if (target.nodeName != 'INPUT') {
+                var mmpi = control.markersArea.getAttribute('data-mmpi');
+                control.mark(getClosestMarker(target), mmpi);
+                control.updateMarkAllCheckboxes();
+              }
+            }, false);
 
-          this.markersArea.addEventListener('change', function(e) {
-            e.stopPropagation();
-            var target = e.target;
-            if (target.getAttribute('type') == 'checkbox') {
-              var marker = getClosestMarker(target);
-              control.selectorArea.querySelectorAll('[data-s="' + marker.getAttribute('data-s') + '"]').forEach(function(x) {
-                var $x = $(x);
-                if (!$x.prop('in_relation') && !$x.prop('disabled')) {
-                  if (!target.checked && x.classList.contains('active') && $x.prop('selected')) {
-                    x.classList.remove('active');
-                    $x.prop('selected', false);
-                  } else if (target.checked) {
-                    x.classList.add('active');
-                    $x.prop('selected', true);
+            this.markersArea.addEventListener('change', function(e) {
+              e.stopPropagation();
+              var target = e.target;
+              if (target.getAttribute('type') == 'checkbox') {
+                var marker = getClosestMarker(target);
+                control.selectorArea.querySelectorAll('[data-s="' + marker.getAttribute('data-s') + '"]').forEach(function(x) {
+                  var $x = $(x);
+                  if (!$x.prop('in_relation') && !$x.prop('disabled')) {
+                    if (!target.checked && x.classList.contains('active') && $x.prop('selected')) {
+                      x.classList.remove('active');
+                      $x.prop('selected', false);
+                    } else if (target.checked) {
+                      x.classList.add('active');
+                      $x.prop('selected', true);
+                    }
                   }
-                }
-              })
-            }
-          }, false);
+                })
+              }
+            }, false);
+          }
 
-          this.relationsArea.addEventListener('click', function(e) {
-            control.markRelation(getClosestRelation(e.target));
-          }, false);
+          if (utils.isDefined(this.relationsArea)) {
+            this.relationsArea.addEventListener('click', function(e) {
+              control.markRelation(getClosestRelation(e.target));
+            }, false);
+          }
         }
       },
       register: function(plugin, label) {
@@ -1085,10 +1104,10 @@
         }
         return currentRelationId;
       },
-      removeRelation: function(idx) {
+      removeRelation: function(idx, exception) {
         $('g#' + relations[idx]['graphId']).find('circle[data-id]').each(function(i, d) { 
           var $el = $('#' + d.getAttribute('data-id'));
-          console.log($el.length > 0)
+          if (utils.isDefined(exception) && $el.attr('id') == $(exception).attr('id')) return;
           if ($el.length > 0) {
             $el.prop('in_relation', false);
             $el.attr('id', '');
@@ -1115,7 +1134,7 @@
             map[keys[k]] = keys[k];
           }
         }
-        lastRelationId = keys[k];
+        lastRelationId = utils.isDefined(keys[k]) ? keys[k] : 1;
 
         const event = new Event(RELATION_CHANGE_EVENT);
         // Dispatch the event.
@@ -1147,8 +1166,6 @@
         currentRelationId = id;
       },
       markRelation: function(obj) {
-        // TODO(dmytro):
-        // - chain vs graph representation
         if (!this.checkRestrictions(true)) return;
 
         var $parts = $('.selector span.tag.active'),
@@ -1173,7 +1190,7 @@
             }
             nodes[s].push({
               'id': $parts[i].id,
-              'name': $parts[i].textContent,
+              'name': getLabelText($parts[i]),
               'dom': $parts[i],
               'color': getComputedStyle($parts[i])["background-color"]
             });
@@ -1284,13 +1301,14 @@
 
             for (var s in sketches[i].nodes) {
               var snodes = sketches[i].nodes[s];
-              snodes.forEach(function(x) { x.dom.classList.remove('active') });
               snodes.forEach(function(x) {
                 var relSpan = document.createElement('span');
                 relSpan.setAttribute('data-m', 'r');
                 relSpan.className = "rel";
                 relSpan.textContent = lastRelationId;
                 x.dom.appendChild(relSpan);
+                x.dom.classList.remove('active')
+                $(x.dom).prop('selected', false);
               });
             }
 
@@ -1303,8 +1321,6 @@
           document.dispatchEvent(event);
           this.updateMarkAllCheckboxes()
           resizeSVG();
-
-          console.log(relations);
         }
       },
       changeRelation: function(obj, fromId, toId) {
@@ -1341,7 +1357,7 @@
               })
             }
           } else {
-            map = this.removeRelation(fromId);
+            map = (utils.isDefined(toId) && toId != -1) ? this.removeRelation(fromId, obj) : this.removeRelation(fromId);
             this.showRelationGraph(null);
           }
         } else {
@@ -1354,14 +1370,14 @@
             relSpan.setAttribute('data-m', 'r');
             relSpan.classList.add('rel');
             relSpan.textContent = "";
-            obj.appendChild(relSpan);  
+            obj.appendChild(relSpan);
           }
           
           $(obj).prop('in_relation', true);
           var newNodes = [
             {
               'id': obj.id,
-              'name': obj.textContent,
+              'name': getLabelText(obj),
               'dom': obj,
               'color': getComputedStyle(obj)["background-color"]
             }
@@ -1433,9 +1449,9 @@
           this.showRelationGraph(map[toId]);
         }
 
-        console.log("AFTER -->")
-        console.log("FROM:", fromRel);
-        console.log("TO:", toRel);
+        // deselect if somone accidentally left clicked on the label
+        obj.classList.remove('active')
+        $(obj).prop('selected', false);
 
         const event = new Event(RELATION_CHANGE_EVENT);
         // Dispatch the event.
@@ -1469,7 +1485,6 @@
         if (Object.values(relations).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
           // if there are any relations, submit only those chunks that have to do with the relations
           submittableChunks = chunks.filter(isInRelations)
-          console.log(submittableChunks)
           
           var nonRelationChunks = chunks.filter(x => !submittableChunks.includes(x));
           for (var i = 0, len = nonRelationChunks.length; i < len; i++) {
@@ -1570,7 +1585,7 @@
   $(document).ready(function() {
     labelerModule.init();
     
-    window.lm = labelerModule;
+    // window.lm = labelerModule;
 
     /**
      * Labeler plugins

@@ -269,6 +269,7 @@ class PreMarkerAdmin(CommonModelAdmin): pass
 admin.site.register(Permission)
 admin.site.register(ProjectData)
 admin.site.register(MarkerPair)
+admin.site.register(MarkerAction)
 
 
 admin.site.site_header = 'Textinator admin'

@@ -437,3 +437,22 @@ label.error {
   text-decoration: none !important;
 }
 
+.range-wrap {
+  position: relative;
+}
+
+.range {
+  width: 100%;
+}
+
+.bubble {
+  background: rgb(50, 152, 220, 0.7);
+  color: white;
+  padding: 4px 8px;
+  position: absolute;
+  border-radius: 4px;
+  left: 50%;
+  top: 80%;
+  font-size: 0.9em;
+  transform: translateX(-50%);
+}

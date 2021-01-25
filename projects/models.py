@@ -23,6 +23,11 @@ class CommonModel(models.Model):
     class Meta:
         abstract = True
 
+    def to_json(self, dt_format=None):
+        return {
+            'created': self.dt_created.strftime(dt_format) if dt_format else self.dt_created
+        }
+
 
 class PostProcessingMethod(CommonModel):
     class Meta:
@@ -78,9 +83,18 @@ class MarkerAction(CommonModel):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(null=False)
     file = models.CharField(max_length=100)
+    admin_filter = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return self.name
+
+    def to_json(self, dt_format=None):
+        res = super(MarkerAction, self).to_json(dt_format=dt_format)
+        res.update({
+            'name': self.name,
+            'admin_filter': self.admin_filter
+        })
+        return res
 
 
 class Marker(CommonModel):
@@ -109,17 +123,20 @@ class Marker(CommonModel):
     def __str__(self):
         return str(self.name)
 
-    def to_json(self):
-        return {
+    def to_json(self, dt_format=None):
+        res = super(Marker, self).to_json(dt_format=dt_format)
+        res.update({
             'name': self.name,
             'color': self.color
-        }
+        })
+        return res
 
 
 class MarkerContextMenuItem(CommonModel):
     action = models.ForeignKey(MarkerAction, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     verbose = models.CharField(max_length=50)
+    verbose_admin = models.CharField(max_length=50, null=True, blank=True)
     field = models.CharField(max_length=50, null=True, blank=True)
     config = models.JSONField(null=True, blank=True)
 
@@ -127,7 +144,8 @@ class MarkerContextMenuItem(CommonModel):
         data =  {
             'verboseName': self.verbose,
             'name': self.field or "{}_{}".format(self.action.name, self.pk),
-            'file': self.action.file
+            'file': self.action.file,
+            'admin_filter': self.action.admin_filter
         }
         if self.config:
             data.update(self.config)
@@ -326,12 +344,14 @@ class Relation(CommonModel):
     def __str__(self):
         return str(self.name)
 
-    def to_json(self):
-        return {
+    def to_json(self, dt_format=None):
+        res = super(Relation, self).to_json(dt_format=dt_format)
+        res.update({
             'name': self.name,
-            'pairs': [str(p) for p in pairs],
+            'pairs': [str(p) for p in self.pairs.all()],
             'direction': self.direction
-        }
+        })
+        return res
 
 
 class Context(CommonModel):
@@ -386,18 +406,19 @@ class Label(CommonModel):
     def text(self):
         return self.context.content[self.start:self.end] if self.context else self.input.content[self.start:self.end]
 
-    def to_json(self):
-        return {
+    def to_json(self, dt_format=None):
+        res = super(Label, self).to_json(dt_format=dt_format)
+        res.update({
             'input': self.input.content if self.input else None,
-            'marker': self.marker.to_json(),
+            'marker': self.marker.to_json(dt_format=dt_format),
             'extra': self.extra,
             'start': self.start,
             'end': self.end,
             'text': self.text,
             'pk': self.pk,
             'user': self.user.username,
-            'created': self.dt_created
-        }
+        })
+        return res
 
 
 class LabelReview(CommonModel):
@@ -448,15 +469,16 @@ class LabelRelation(CommonModel):
         else:
             return "{} --- {}".format(self.first_label.text, self.second_label.text)
 
-    def to_json(self):
-        return {
+    def to_json(self, dt_format=None):
+        res = super(LabelRelation, self).to_json(dt_format=dt_format)
+        res.update({
             'rule': self.rule.to_json(),
             'first': self.first_label.to_json(),
             'second': self.second_label.to_json(),
             'user': self.user.username,
-            'created': self.dt_created,
             'batch': self.batch
-        }
+        })
+        return res
 
 
 

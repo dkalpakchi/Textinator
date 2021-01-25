@@ -1,6 +1,7 @@
 /**
  * name: comments
  * description: A plugin adding a text field to a marker's context menu
+ * admin_filter: boolean
  * author: Dmytro Kalpakchi
  */
 
