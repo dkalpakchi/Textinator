@@ -621,7 +621,7 @@ def data_explorer(request, proj):
         context_ids = sorted(chain(
             inputs.exclude(context=None).values_list('context', flat=True).distinct(),
             labels.exclude(context=None).values_list('context', flat=True).distinct()
-        ))
+        )) if relations.count() > 0 else sorted(inputs.exclude(context=None).values_list('context', flat=True).distinct())
 
         actions = {}
         for l in labels:
