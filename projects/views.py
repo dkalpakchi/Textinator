@@ -619,8 +619,8 @@ def data_explorer(request, proj):
         if not is_admin:
             relations = relations.filter(user=request.user)
         context_ids = sorted(chain(
-            inputs.values_list('context', flat=True).distinct(),
-            labels.values_list('context', flat=True).distinct()
+            inputs.exclude(context=None).values_list('context', flat=True).distinct(),
+            labels.exclude(context=None).values_list('context', flat=True).distinct()
         ))
 
         actions = {}
