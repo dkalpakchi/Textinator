@@ -127,7 +127,8 @@ class Marker(CommonModel):
         res = super(Marker, self).to_json(dt_format=dt_format)
         res.update({
             'name': self.name,
-            'color': self.color
+            'color': self.color,
+            'short': self.short
         })
         return res
 

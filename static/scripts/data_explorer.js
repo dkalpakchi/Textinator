@@ -3,7 +3,8 @@
       contextFree = [],
       contextRelations = {},
       textArea = null,
-      resetText = "";
+      resetText = "",
+      activeFilters = {};
 
   function markStatic(area, labels) {
     area.innerHTML = resetText;
@@ -125,6 +126,27 @@
     })
   }
 
+  function hideByFilters() {
+    $('#contextRelations option').show();
+    for (var batch in contextRelations) {
+      var cr = contextRelations[batch];
+      for (var i = 0, len = cr.length; i < len; i++) {
+        for (var l in activeFilters) {
+          if (cr[i].marker.short == l) {
+            for (var key in activeFilters[l]) {
+              var extra = cr[i].extra,
+                  filterValue = activeFilters[l][key];
+              if ((key in extra && typeof filterValue !== "boolean" && extra.hasOwnProperty(key) && extra[key] != filterValue) || 
+                (!(key in extra) && typeof filterValue === "boolean")) {
+                $('#contextRelations option[value="' + batch + '"]').hide();
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   $(document).ready(function() {
     textArea = document.querySelector('#exploreText');
     resetText = textArea.textContent;
@@ -172,6 +194,20 @@
         markStatic(textArea, contextRelations[selected]);
       else 
         textArea.innerHTML = resetText;
+    });
+
+    $("#filterForm").on('submit', function(e) {
+      e.preventDefault();
+      var target = e.target;
+      var res = $(target).serializeObject();
+      for (var k in res) {
+        var parts = k.split("__");
+        if (!(parts[0] in activeFilters)) {
+          activeFilters[parts[0]] = {}
+        }
+        activeFilters[parts[0]][parts[1]] = res[k] == 'on' ? true : res[k];
+      }
+      hideByFilters();
     });
   })
 })();

@@ -1120,21 +1120,27 @@
         var keys = Object.keys(relations);
         keys.sort();
         for (var k in keys) {
-          if (keys[k] > idx) {
+          var kk = parseInt(keys[k]);
+          if (kk > idx) {
             $('g#' + relations[keys[k]]['graphId']).find('circle[data-id]').each(function(i, d) { 
               var $el = $('#' + d.getAttribute('data-id'));
               if ($el.length > 0) {
-                $el.find('[data-m="r"]').text(keys[k]-1);
+                $el.find('[data-m="r"]').text(kk-1);
               }
             });
-            relations[keys[k]-1] = relations[keys[k]];
-            map[keys[k]] = keys[k] - 1;
-            delete relations[keys[k]];
+            relations[kk-1] = relations[kk];
+            map[kk] = kk - 1;
+            delete relations[kk];
           } else {
-            map[keys[k]] = keys[k];
+            map[kk] = kk;
           }
         }
-        lastRelationId = utils.isDefined(keys[k]) ? keys[k] : 1;
+
+        if (utils.isDefined(keys[k])) {
+          lastRelationId = kk > idx ? kk : kk + 1;
+        } else {
+          lastRelationId = 1;
+        }
 
         const event = new Event(RELATION_CHANGE_EVENT);
         // Dispatch the event.

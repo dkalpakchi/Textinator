@@ -100,10 +100,10 @@
         <span class="icon is-small">
           <i class="fas fa-filter"></i>
         </span>
-        &nbsp;&nbsp;Filters (not functional yet)
+        &nbsp;&nbsp;Filters
       </div>
       <div class="message-body">
-        <form action="">
+        <form id="filterForm" action="">
           {% for name, action in action_filters %}
             <div class="field">
               <span class="tags has-addons">
@@ -113,10 +113,10 @@
                 </span>
                 <span class="tag is-medium">
                   {% if action.filter == 'boolean' %}
-                    <input type="checkbox">
+                    <input name="{{action.marker.short}}__{{action.cm.field}}" type="checkbox">
                   {% elif action.filter == 'range' %}
                     <div class="range-wrap">
-                      <input type="range" class="range" min="0" max="10">
+                      <input name="{{action.marker.short}}__{{action.cm.field}}" type="range" class="range" min="0" max="10">
                       <span class="bubble"></span>  
                     </div>
                   {% endif %}
@@ -126,7 +126,7 @@
           {% endfor %}
           <div class="field">
             <div class="control">
-              <input type="submit" class="button is-link is-outlined is-rounded" value="Filter">
+              <input type="submit" class="button is-link is-outlined is-rounded" value="Filter for current context">
             </div>
           </div>
         </form>

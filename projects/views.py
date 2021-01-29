@@ -631,7 +631,8 @@ def data_explorer(request, proj):
                         if cm_item.field:
                             actions[cm_item.verbose_admin or cm_item.verbose] = {
                                 'marker': l.marker,
-                                'filter': a.admin_filter
+                                'filter': a.admin_filter,
+                                'cm': cm_item
                             }
 
         ctx = {
