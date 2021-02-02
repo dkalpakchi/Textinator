@@ -8,6 +8,7 @@
 
   var labelerModule = (function() {
     const RELATION_CHANGE_EVENT = 'labeler_relationschange';
+    const LINE_ENDING_TAGS = ["P", "UL", "BLOCKQUOTE", "H1", "H2", "H3", "H4", "H5", "H6"];
 
     var chunks = [], // the array of all chunk of text marked with a label, but not submitted yet
         relations = {}, // a map from relationId to the list of relations constituting it
@@ -78,25 +79,28 @@
         }
       }
 
-      function getPrevLength(prev) {
+      function getPrevLength(prev, onlyElements) {
+        if (onlyElements === undefined) onlyElements = false;
         var len = 0;
         while (prev != null) {
           if (prev.nodeType == 1) {
             if (prev.tagName == "BR") {
               // if newline
               len += 1
-            } else if (prev.tagName == "SPAN" && prev.classList.contains("tag")) {
+            } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || LINE_ENDING_TAGS.includes(prev.tagName)) {
               // if there is a label, need to remove the possible relation label before calculating textContent
               var res = removeRelationIds(prev);
               len += prev.textContent.length;
+              if (LINE_ENDING_TAGS.includes(prev.tagName))
+                len += 1; // +1 because P is replaced by '\n'
               addRelationIds(res);
-            } else if (prev.tagName == "A") {
+            } else {
               len += prev.textContent.length;
             }
           } else if (prev.nodeType == 3) {
             len += prev.length
           }
-          prev = prev.previousSibling
+          prev = onlyElements ? prev.previousElementSibling : prev.previousSibling
         }
         return len;
       }
@@ -111,20 +115,21 @@
       if (enclosingLabel != null && enclosingLabel != node)
         textLength += getPrevLength(enclosingLabel.previousSibling);
 
+      // Find previous <p> or <ul>
+      var parent = getEnclosingParagraph(node);
+
+      if (parent != null && parent.tagName == "UL")
+        textLength += 1 // because <ul> adds a newline character to the beginning of the string
+
       if (inParagraph) return textLength;
 
       // all text scope
-      // Find previous <p>
-      var parent = getEnclosingParagraph(node);
       if (parent != null) {
-        var parentSibling = parent.previousElementSibling;
-        while (parentSibling != null) {
-          if (parentSibling.tagName == "P") {
-            var res = removeRelationIds(parentSibling);
-            textLength += parentSibling.textContent.length + 1; // +2 because P
-            addRelationIds(res);
-          }
-          parentSibling = parentSibling.previousElementSibling;
+        textLength += getPrevLength(parent.previousElementSibling, true);
+
+        if (parent.parentNode.tagName == "BLOCKQUOTE") {
+          // +1 because <blockquote> adds a newline char to the beginning of the string
+          textLength += getPrevLength(parent.parentNode.previousElementSibling, true) + 1;
         }
       }
       return textLength;
@@ -170,9 +175,9 @@
     }
 
     function getEnclosingParagraph(node) {
-      while (node.tagName != "P" && node.tagName != "BODY") 
+      while (!["UL", "BODY", "P"].includes(node.tagName))
         node = node.parentNode;
-      return node.tagName == "P" ? node : null;
+      return (["P", "UL"].includes(node.tagName)) ? node : null;
     }
 
     function mergeWithNeighbors(node) {
@@ -740,6 +745,8 @@
 
             chunk['marked'] = false;
             chunk['label'] = null;
+
+            console.log(chunk)
 
             var N = chunks.length;
             chunk['id'] = labelId;

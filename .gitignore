@@ -10,3 +10,4 @@ scrapers/example*
 .env
 log/*
 static_cdn/*
+data/*/raw/
