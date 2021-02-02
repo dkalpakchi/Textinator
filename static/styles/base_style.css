@@ -125,6 +125,11 @@ pre {
   padding: 0px 1em;
 }
 
+.guidelines.modal .modal-content {
+  max-width: 1200px;
+  width: 80%;
+}
+
 .guidelines.card {
   height: 100%;
 }
