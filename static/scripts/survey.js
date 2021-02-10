@@ -1,7 +1,7 @@
 $(document).ready(function() {
   $(".survey-description").accordion({
     collapsible: true,
-    active: false
+    active: parseInt($('progress').val()) == 0 ? 0 : false
   });
 
   $('form').validate({
