@@ -325,7 +325,7 @@ class MarkerPair(CommonModel):
 
 
 class Relation(CommonModel):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
     for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
     pairs = models.ManyToManyField(MarkerPair)
