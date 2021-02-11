@@ -101,21 +101,28 @@
             annotations.append($('<option value="' + i + '">Input:' + inp + "</option>"))
           }
 
-          var j = 1,
-              cr = {},
+          var cr = {},
               relations = $("#contextRelations");
           relations.empty();
           relations.append($('<option value="-1">Choose a relation</option>'))
           for (var i = 0, len = contextRelations.length; i < len; i++) {
-            relations.append($('<option value="' + contextRelations[i].batch + '">Relation ' + j + ": " + contextRelations[i].rule.name +
-              " (created by " + contextRelations[i]['user'] + " on " + contextRelations[i]['created'] + ")</option>"))
             if (!(contextRelations[i].batch in cr))
-              cr[contextRelations[i].batch] = [];
-            cr[contextRelations[i].batch].push(contextRelations[i]['first']);
-            cr[contextRelations[i].batch].push(contextRelations[i]['second']);
-            j++;
+              cr[contextRelations[i].batch] = {
+                'obj': contextRelations[i],
+                'labels': []
+              };
+            cr[contextRelations[i].batch]['labels'].push(contextRelations[i]['first']);
+            cr[contextRelations[i].batch]['labels'].push(contextRelations[i]['second']);
           }
           contextRelations = cr;
+          
+          var j = 1;
+          for (var key in contextRelations) {
+            var obj = contextRelations[key]['obj'];
+            relations.append($('<option value="' + key + '">Relation ' + j + ": " + obj.rule.name +
+                " (created by " + obj['user'] + " on " + obj['created'] + ")</option>"));
+            j++;
+          }
         }
         $("#exploreText").removeClass('element is-loading');
       },
@@ -129,7 +136,7 @@
   function hideByFilters() {
     $('#contextRelations option').show();
     for (var batch in contextRelations) {
-      var cr = contextRelations[batch];
+      var cr = contextRelations[batch]['labels'];
       for (var i = 0, len = cr.length; i < len; i++) {
         for (var l in activeFilters) {
           if (cr[i].marker.short == l) {
@@ -191,7 +198,7 @@
       var target = e.target,
           selected = target.value;
       if (selected != -1)
-        markStatic(textArea, contextRelations[selected]);
+        markStatic(textArea, contextRelations[selected]['labels']);
       else 
         textArea.innerHTML = resetText;
     });
