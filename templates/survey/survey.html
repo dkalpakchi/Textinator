@@ -45,6 +45,7 @@
 	{% endif %}
 	    {% csrf_token %}
       <input type="hidden" name="seed" value="{{response_form.random_seed}}">
+      <input type="hidden" name="extra" value="{{response_form.extra}}">
 	    {% include "survey/question.html" %}
 		  {% if survey.editable_answers or response_form.response is None %}
 	      <input
