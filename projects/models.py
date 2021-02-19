@@ -165,7 +165,9 @@ class Project(CommonModel):
     sampling_with_replacement = models.BooleanField(default=True)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
-    context_size = models.CharField(max_length=2, choices=[('no', 'No context'), ('t', 'Text'), ('p', 'Paragraph')])
+    # context size affects only labels, not inputs
+    context_size = models.CharField(max_length=2, choices=[('no', 'No context'), ('t', 'Text'), ('p', 'Paragraph')],
+        help_text="Context size for storing labels")
     task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES)
     dt_publish = models.DateTimeField(verbose_name="To be published at") # TODO: implement this functionality
     dt_finish = models.DateTimeField(verbose_name="To be finished at")   # TODO: implement this functionality
@@ -384,6 +386,12 @@ class Input(CommonModel):
     def __str__(self):
         return truncate(self.content, 50)
 
+    def to_json(self):
+        return {
+            'content': self.content,
+            'context': self.context.content if self.context else None
+        }
+
 
 class Label(CommonModel):
     start = models.PositiveIntegerField(null=True)
@@ -407,18 +415,34 @@ class Label(CommonModel):
     def text(self):
         return self.context.content[self.start:self.end] if self.context else self.input.content[self.start:self.end]
 
-    def to_json(self, dt_format=None):
+    def to_short_rel_json(self, dt_format=None):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update({
-            'input': self.input.content if self.input else None,
-            'marker': self.marker.to_json(dt_format=dt_format),
+            'marker': self.marker.to_json(),
             'extra': self.extra,
             'start': self.start,
             'end': self.end,
             'text': self.text,
-            'pk': self.pk,
-            'user': self.user.username,
+            'user': self.user.username
         })
+        return res
+
+    def to_rel_json(self, dt_format=None):
+        res = super(Label, self).to_json(dt_format=dt_format)
+        res.update(self.to_short_rel_json())
+        res['context'] = self.context.content
+        return res
+
+    def to_short_json(self, dt_format=None):
+        res = super(Label, self).to_json(dt_format=dt_format)
+        res.update(self.to_short_rel_json())
+        res['input'] = self.input.to_json() if self.input else None
+        return res
+
+    def to_json(self, dt_format=None):
+        res = super(Label, self).to_json(dt_format=dt_format)
+        res.update(self.to_short_json())
+        res['context'] = self.context.content
         return res
 
 
@@ -470,12 +494,23 @@ class LabelRelation(CommonModel):
         else:
             return "{} --- {}".format(self.first_label.text, self.second_label.text)
 
+    def to_short_json(self, dt_format=None):
+        res = super(LabelRelation, self).to_json(dt_format=dt_format)
+        res.update({
+            'rule': self.rule.to_json(),
+            'first': self.first_label.to_short_rel_json(),
+            'second': self.second_label.to_short_rel_json(),
+            'user': self.user.username,
+            'batch': self.batch
+        })
+        return res
+
     def to_json(self, dt_format=None):
         res = super(LabelRelation, self).to_json(dt_format=dt_format)
         res.update({
             'rule': self.rule.to_json(),
-            'first': self.first_label.to_json(),
-            'second': self.second_label.to_json(),
+            'first': self.first_label.to_rel_json(),
+            'second': self.second_label.to_rel_json(),
             'user': self.user.username,
             'batch': self.batch
         })

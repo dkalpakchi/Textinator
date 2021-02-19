@@ -69,7 +69,6 @@
         'context': selectedId
       },
       success: function(d) {
-        console.log(d)
         $("#exploreText").text(d.data);
         resetText = d.data;
         contextBounded = d.bounded_labels;
@@ -100,6 +99,14 @@
             var inp = contextBounded[i]['input'];
             annotations.append($('<option value="' + i + '">Input:' + inp + "</option>"))
           }
+          var annotationsDiv = annotations.parent();
+          annotationsDiv.parent().find('.loading').remove();
+          if (contextBounded.length <= 0) {
+            annotationsDiv.removeClass('select');
+            annotationsDiv.empty();
+            annotationsDiv.text("No annotations found");
+          }
+          annotationsDiv.show();
 
           var cr = {},
               relations = $("#contextRelations");
@@ -123,6 +130,14 @@
                 " (created by " + obj['user'] + " on " + obj['created'] + ")</option>"));
             j++;
           }
+          var relationsDiv = relations.parent();
+          relationsDiv.parent().find('.loading').remove();
+          if (j <= 1) {
+            relationsDiv.removeClass('select');
+            relationsDiv.empty();
+            relationsDiv.text("No relations found");
+          }
+          relationsDiv.show();
         }
         $("#exploreText").removeClass('element is-loading');
       },
@@ -203,6 +218,9 @@
         textArea.innerHTML = resetText;
     });
 
+    $('#contextAnnotations').parent().hide();
+    $('#contextRelations').parent().hide();
+
     $("#filterForm").on('submit', function(e) {
       e.preventDefault();
       var target = e.target;
@@ -215,6 +233,40 @@
         activeFilters[parts[0]][parts[1]] = res[k] == 'on' ? true : res[k];
       }
       hideByFilters();
+    });
+
+    $('a[download]').on('click', function() {
+      var $btn = $(this);
+      $btn.addClass('is-loading');
+      $.ajax({
+        method: "GET",
+        url: $btn.attr('data-url'),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        success: function(data) {
+          const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'export.json';
+          
+          a.addEventListener('click', function(e) {
+            setTimeout(function() {
+              URL.revokeObjectURL(url);
+              a.removeEventListener('click', clickHandler);
+              a.remove();
+              URL.revokeObjectURL(url);
+            }, 150);
+          }, false);
+
+          a.click();          
+          $btn.removeClass('is-loading');
+        },
+        error: function() {
+          alert("Error while exporting a file!");
+          $btn.removeClass('is-loading');
+        }
+      });
     });
   })
 })();

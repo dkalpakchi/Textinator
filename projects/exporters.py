@@ -4,47 +4,45 @@ from .models import *
 
 
 def export_corr(project):
-    label_relations = LabelRelation.objects.filter(project=project, undone=False).order_by('-dt_created')
+    # The problem is that the context exists in every label and if this is the whole text, then it's a problem
+    # So if the context is the whole text, we need to group by batches and send over contexts only once
+    # Otherwise we'll need to have contexts for every label
+    # We also skip non-relation labels for corr even if they exist
+    is_paragraph_context = project.context_size == 'p'
+    json_exporter = 'to_rel_json' if is_paragraph_context else 'to_short_rel_json'
+    relations = LabelRelation.objects.filter(project=project, undone=False).order_by('first_label__context_id', 'batch')
 
-    relations, label_ids = OrderedDict(), set()
-    for lr in label_relations:
-        fst, snd = lr.first_label, lr.second_label
-        if fst.context.pk in relations:
-            relations[fst.context.pk].append((fst, snd))
-        else:
-            relations[fst.context.pk] = [(fst, snd)]
-        label_ids.add(fst.pk)
-        label_ids.add(snd.pk)
+    grouped_relations = {} if is_paragraph_context else []
+    group, context, context_id, batch = [], None, None, None
+    for r in relations.prefetch_related('first_label', 'second_label', 'rule'):
+        if batch is None or r.batch != batch:
+            if group:
+                if is_paragraph_context:
+                    grouped_relations[str(batch)] = {
+                        'context': context,
+                        'relations': group
+                    }
+                else:
+                    grouped_relations[-1]["relations"][str(batch)] = group
+            group = []
 
-    other_labels = Label.objects.filter(project=project, undone=False).exclude(pk__in=label_ids).order_by('-dt_created')
-    non_relation_labels = defaultdict(list)
-    for l in other_labels:
-        if l.context:
-            non_relation_labels[l.context.pk].append(l)
-
-    resp = []
-    for cpk, rels in relations.items():
-        obj = {}
-        context = Context.objects.get(pk=cpk)
-        obj["context"] = context.content
-        obj["coref"] = []
-        for fst, snd in rels:
-            obj["coref"].append({
-                "pronoun": { "text": fst.text, "start": fst.start, "end": fst.end },
-                "antecedent": { "text": snd.text, "start": snd.start, "end": snd.end }
-            })
-        
-        for lb in non_relation_labels[cpk]:
-            k = lb.marker.name.lower().replace(' ', '_')
-            if k not in obj:
-                obj[k] = []
-            obj[k].append({
-                "text": lb.text, "start": lb.start, "end": lb.end
-            })
-
-        resp.append(obj)
-    
-    return resp
+        if context_id is None or context_id != r.first_label.context_id:
+            if context is None: context = r.first_label.context.content
+            if not is_paragraph_context:
+                grouped_relations.append({
+                    'context': context,
+                    "relations": {}
+                })
+                context = r.first_label.context.content
+                
+        group.append({
+            'type': r.rule.name,
+            'first': getattr(r.first_label, json_exporter)(),
+            'second': getattr(r.second_label, json_exporter)()
+        })
+        batch = r.batch
+        context_id = r.first_label.context_id
+    return grouped_relations
 
 
 def export_qa(project):

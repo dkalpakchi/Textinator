@@ -7,7 +7,7 @@ import uuid
 from collections import defaultdict, OrderedDict
 from itertools import chain
 
-from django.http import JsonResponse, Http404, FileResponse
+from django.http import JsonResponse, Http404, HttpResponse, FileResponse, StreamingHttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
@@ -355,6 +355,7 @@ def record_datapoint(request, proj):
         data_source = None
 
     # First create a chunk for an input context (if available), which is always all text
+    # input_context is always a full text
     if 'input_context' in data and type(data['input_context']) == str:
         ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
         if not ctx:
@@ -569,33 +570,32 @@ def undo_last(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def data_explorer(request, proj):
-    def get_json_for_context(idc):
-        context = Context.objects.get(pk=idc)
-        relations = LabelRelation.objects.filter(project=project, undone=False).filter(
-            Q(first_label__context=context) | Q(second_label__context=context)
-        )
-        if not is_admin:
-            relations = relations.filter(user=request.user)
-        labels_in_relations_first = relations.values_list('first_label__pk', flat=True)
-        labels_in_relations_second = relations.values_list('second_label__pk', flat=True)
-        labels = Label.objects.filter(project=project, undone=False)\
-            .exclude(pk__in=labels_in_relations_first)\
-            .exclude(pk__in=labels_in_relations_second)
-        if not is_admin:
-            labels = labels.filter(user=request.user)
-        inputs = Input.objects.filter(context=context, pk__in=labels.values_list('input', flat=True))
-        labels = labels.filter(context=context)
+    def get_json_for_context(context, relations=None, labels=None):
+        context_id = context.pk
+        if relations is None:
+            relations = LabelRelation.objects.filter(project_id=proj, undone=False)
+            if not is_admin:
+                relations = relations.filter(user=request.user)
+        relations = relations.filter(Q(first_label__context_id=context_id) | Q(second_label__context_id=context_id))
+        batches = relations.values_list('batch', flat=True).distinct()
+        if labels is None:
+            labels = Label.objects.filter(project_id=proj, undone=False, context_id=context_id)
+            if not is_admin:
+                labels = labels.filter(user=request.user)
+        relation_labels = labels.filter(batch__in=batches)
+        non_relation_labels = labels.exclude(batch__in=batches)
+        bounded_labels = non_relation_labels.exclude(input=None)
+        free_labels = non_relation_labels.filter(input=None)
 
-        return {
+        res = {
             'data': context.content,
-            'bounded_labels': [{
-                'input': i.content,
-                'labels': [l.to_json() for l in i.get_labels()]
-            } for i in inputs],
-            'relations': [r.to_json(dt_format="%b %d %Y %H:%M:%S") for r in relations],
-            'free_labels': [l.to_json() for l in labels],
+            'bounded_labels': [l.to_short_json() for l in bounded_labels],
+            'relations': [r.to_short_json(dt_format="%b %d %Y %H:%M:%S") for r in relations
+                if r.first_label.context_id == context_id or r.second_label.context_id == context_id],
+            'free_labels': [l.to_short_json() for l in free_labels],
             'is_static': project.context_size != 't'
         }
+        return res
 
     project = Project.objects.filter(pk=proj).get()
 
@@ -604,48 +604,49 @@ def data_explorer(request, proj):
         is_admin = is_author or is_shared
         context_id = request.GET.get('context')
         if context_id:
-            return JsonResponse(get_json_for_context(context_id))
+            return JsonResponse(get_json_for_context(Context.objects.get(pk=context_id)))
     
         project_data = ProjectData.objects.filter(project=project).all()
         flagged_datapoints = DataAccessLog.objects.filter(project_data__in=project_data).exclude(flags="")
         if not is_admin:
             flagged_datapoints = flagged_datapoints.filter(user=request.user)
 
+        relations = LabelRelation.objects.filter(project=project, undone=False)
         labels = Label.objects.filter(project=project, undone=False)
         if not is_admin:
             labels = labels.filter(user=request.user)
-        inputs = Input.objects.filter(pk__in=labels.values_list('input', flat=True).distinct())
-        relations = LabelRelation.objects.filter(project=project, undone=False)
-        if not is_admin:
             relations = relations.filter(user=request.user)
-        context_ids = sorted(chain(
-            inputs.exclude(context=None).values_list('context', flat=True).distinct(),
-            labels.exclude(context=None).values_list('context', flat=True).distinct()
-        )) if relations.count() > 0 else sorted(inputs.exclude(context=None).values_list('context', flat=True).distinct())
+        batches = relations.values_list('batch', flat=True).distinct()
+        relation_labels = labels.filter(batch__in=batches)
+        non_relation_labels = labels.exclude(batch__in=batches)
+        inputs = Input.objects.filter(pk__in=non_relation_labels.values_list('input', flat=True).distinct())
 
-        actions = {}
-        for l in labels:
-            for a in l.marker.actions.all():
+        total_relations = relations.count()
+        context_ids = list(inputs.exclude(context=None).values_list('context', flat=True).distinct())
+        if total_relations > 0:
+            context_ids += list(relation_labels.exclude(context=None).values_list('context', flat=True).distinct())
+
+        actions = defaultdict(list)
+        for m in project.markers.all():
+            for a in m.actions.all():
                 if a.admin_filter:
-                    for cm_item in MarkerContextMenuItem.objects.filter(action=a, marker=l.marker):
+                    for cm_item in MarkerContextMenuItem.objects.filter(marker=m, action=a):
                         if cm_item.field:
-                            actions[cm_item.verbose_admin or cm_item.verbose] = {
-                                'marker': l.marker,
+                            actions[cm_item.verbose_admin or cm_item.verbose].append({
+                                'marker': m,
                                 'filter': a.admin_filter,
                                 'cm': cm_item
-                            }
+                            })
 
         ctx = {
             'project': project,
             'contexts': Context.objects.filter(pk__in=context_ids),
             'total_labels': labels.count(),
-            'total_relations': relations.count(),
+            'total_relations': total_relations,
             'total_inputs': inputs.count(),
             'flagged_datapoints': flagged_datapoints,
             'action_filters': list(actions.items())
         }
-        if context_ids:
-            ctx.update(get_json_for_context(context_ids[0]))
         return render(request, 'projects/data_explorer.html', ctx)
     else:
         raise Http404
