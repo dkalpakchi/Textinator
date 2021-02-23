@@ -4,7 +4,7 @@ import json
 import string
 
 if __name__ == '__main__':
-    data_file = open(os.path.join("raw", "sv_talbanken-ud-train.conllu"), "r", encoding="utf-8")
+    data_file = open(os.path.join("raw", "sv_talbanken-ud-test.conllu"), "r", encoding="utf-8")
     # parse_incr is recommended for large files (more than 1 MB)
     # since it returns a generator, which is why a conversion to list
     docs, doc = [], {}
@@ -32,5 +32,5 @@ if __name__ == '__main__':
     if doc and doc['paragraphs']:
         doc['raw'] = "\n\n".join([" ".join(p['sentences']) for p in doc['paragraphs']])
         docs.append(doc)
-    json.dump(docs, open('sv_talbanken-ud-train.json', 'w'))
+    json.dump(docs, open('sv_talbanken-ud-test.json', 'w'))
         

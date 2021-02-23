@@ -25,8 +25,8 @@ class CommonModel(models.Model):
 
     def to_json(self, dt_format=None):
         return {
-            'created': self.dt_created.strftime(dt_format) if dt_format else self.dt_created
-        }
+            'created': self.dt_created.strftime(dt_format)
+        } if dt_format else {}
 
 
 class PostProcessingMethod(CommonModel):
@@ -418,7 +418,7 @@ class Label(CommonModel):
     def to_short_rel_json(self, dt_format=None):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update({
-            'marker': self.marker.to_json(),
+            'marker': self.marker.name,
             'extra': self.extra,
             'start': self.start,
             'end': self.end,
@@ -436,6 +436,7 @@ class Label(CommonModel):
     def to_short_json(self, dt_format=None):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update(self.to_short_rel_json())
+        res['marker'] = self.marker.to_json()
         res['input'] = self.input.to_json() if self.input else None
         return res
 
