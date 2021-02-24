@@ -16,6 +16,16 @@ def merge2cluster(group):
         'nodes': list(nodes.values())
     }
 
+def group2hash(group):
+    if type(group) == list:
+        group = sorted(group, key=lambda x: x['first']['start'])
+        return ";".join(["{}:{}:{}:{}:{}:{}".format(
+            x['type'], x['first']['start'], x['first']['end'],
+            x['second']['start'], x['second']['end'], x['first']['user']
+        ) for x in group])
+    elif type(group) == dict:
+        nodes = sorted(group['nodes'], key=lambda x: x['start'])
+        return "{}:{}".format(group['type'], ";".join(["{},{}".format(x['start'], x['end']) for x in nodes]))
 
 def export_corr(project):
     # The problem is that the context exists in every label and if this is the whole text, then it's a problem
@@ -27,32 +37,39 @@ def export_corr(project):
     relations = LabelRelation.objects.filter(project=project, undone=False).order_by('first_label__context_id', 'batch')
 
     grouped_relations = {} if is_paragraph_context else []
-    is_bidirectional = {}
-    group, context, context_id, batch = [], None, None, None
+    is_bidirectional, hashes = {}, set()
+    group, context, context_id, batch = [], None, -1, -1
     for r in relations.prefetch_related('first_label', 'second_label', 'rule'):
-        if batch is None or r.batch != batch:
+        if batch == -1 or r.batch != batch:
             if group:
                 if have_the_same_relation(group) and is_bidirectional.get(group[0]['type'], False):
                     group = merge2cluster(group)
+                ghash = group2hash(group)
 
-                if is_paragraph_context:
-                    grouped_relations[str(batch)] = {
-                        'context': context,
-                        'relations': group
-                    }
-                else:
-                    grouped_relations[-1]["relations"][str(batch)] = group
+                if ghash not in hashes:
+                    hashes.add(ghash)
+
+                    if is_paragraph_context:
+                        grouped_relations[str(batch)] = {
+                            'context': context,
+                            'relations': group
+                        }
+                    else:
+                        if group not in grouped_relations[-1]["relations"].values():
+                            grouped_relations[-1]["relations"][str(batch)] = group
             group = []
 
-        if context_id is None or context_id != r.first_label.context_id:
-            if context is None: context = r.first_label.context.content
+        if context_id == -1 or context_id != r.first_label.context_id:
+            if context_id == -1:
+                context_id = r.first_label.context_id
+                context = r.first_label.context.content
             if not is_paragraph_context:
+                context = r.first_label.context.content
                 grouped_relations.append({
                     'context': context,
                     "relations": {}
                 })
-                context = r.first_label.context.content
-                
+
         group.append({
             'type': r.rule.name,
             'first': getattr(r.first_label, json_exporter)(),
