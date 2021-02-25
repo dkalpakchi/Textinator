@@ -153,6 +153,10 @@
         node.hasAttribute('data-r') && node.hasAttribute('data-shortcut');
     }
 
+    function isRelationIdentifier(node) {
+      return utils.isDefined(node) && node.nodeName == "SPAN" && node.hasAttribute('data-m') && node.getAttribute('data-m') == 'r';
+    }
+
     function getEnclosingLabel(node) {
       while (isLabel(node.parentNode)) {
         node = node.parentNode;
@@ -800,6 +804,10 @@
                 }
                 if (start != chunk['range'].startContainer)
                   chunk['range'].setStartBefore(start);
+              }
+
+              if (isRelationIdentifier(chunk['range'].startContainer)) {
+                chunk['range'].setStartBefore(chunk['range'].startContainer.parentNode);
               }
               
               markedSpan.appendChild(chunk['range'].extractContents());
