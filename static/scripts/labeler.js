@@ -154,6 +154,10 @@
     }
 
     function isRelationIdentifier(node) {
+      if (node.nodeType == 3) {
+        node = node.parentNode;
+      }
+      console.log(node);
       return utils.isDefined(node) && node.nodeName == "SPAN" && node.hasAttribute('data-m') && node.getAttribute('data-m') == 'r';
     }
 
@@ -806,8 +810,11 @@
                   chunk['range'].setStartBefore(start);
               }
 
-              if (isRelationIdentifier(chunk['range'].startContainer)) {
-                chunk['range'].setStartBefore(chunk['range'].startContainer.parentNode);
+              start = chunk['range'].startContainer;
+              if (isRelationIdentifier(start)) {
+                if (start.nodeType == 3)
+                  start = start.parentNode;
+                chunk['range'].setStartBefore(start.parentNode);
               }
               
               markedSpan.appendChild(chunk['range'].extractContents());
