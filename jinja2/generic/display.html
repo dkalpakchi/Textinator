@@ -1,0 +1,19 @@
+{% if project.dt_finish >= now %}
+  <div class="columns">
+    <div class="column is-three-quarters">
+      {% include 'partials/components/areas/text.html' %}
+      {% if source_id != -1 %}
+        {% include 'partials/components/areas/markers.html' %}
+      {% endif %}
+    </div>
+    <div class="column">
+      {% include 'partials/components/areas/reminders.html' %}
+    </div>
+  </div>
+
+  {% include 'partials/components/modals/guidelines.html' %}
+  {% include 'partials/components/modals/flag.html' %}
+{% else %}
+  <!-- Project expired -->
+  <div>Project expired</div>
+{% endif %}
