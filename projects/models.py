@@ -499,8 +499,8 @@ class LabelRelation(CommonModel):
         res = super(LabelRelation, self).to_json(dt_format=dt_format)
         res.update({
             'rule': self.rule.to_json(),
-            'first': self.first_label.to_short_rel_json(),
-            'second': self.second_label.to_short_rel_json(),
+            'first': self.first_label.to_short_json(),
+            'second': self.second_label.to_short_json(),
             'user': self.user.username,
             'batch': self.batch
         })
@@ -510,8 +510,8 @@ class LabelRelation(CommonModel):
         res = super(LabelRelation, self).to_json(dt_format=dt_format)
         res.update({
             'rule': self.rule.to_json(),
-            'first': self.first_label.to_rel_json(),
-            'second': self.second_label.to_rel_json(),
+            'first': self.first_label.to_json(),
+            'second': self.second_label.to_json(),
             'user': self.user.username,
             'batch': self.batch
         })

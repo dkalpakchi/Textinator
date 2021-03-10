@@ -138,6 +138,7 @@
             relationsDiv.text("No relations found");
           }
           relationsDiv.show();
+          console.log(contextRelations)
         }
         $("#exploreText").removeClass('element is-loading');
       },

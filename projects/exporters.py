@@ -78,6 +78,23 @@ def export_corr(project):
         batch = r.batch
         context_id = r.first_label.context_id
         is_bidirectional[r.rule.name] = r.rule.direction == '2'
+    else:
+        if group:
+            if have_the_same_relation(group) and is_bidirectional.get(group[0]['type'], False):
+                group = merge2cluster(group)
+            ghash = group2hash(group)
+
+            if ghash not in hashes:
+                hashes.add(ghash)
+
+                if is_paragraph_context:
+                    grouped_relations[str(batch)] = {
+                        'context': context,
+                        'relations': group
+                    }
+                else:
+                    if group not in grouped_relations[-1]["relations"].values():
+                        grouped_relations[-1]["relations"][str(batch)] = group
     return grouped_relations
 
 
