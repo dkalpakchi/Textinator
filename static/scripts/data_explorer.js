@@ -47,17 +47,20 @@
     }
 
     var legend = document.createElement('legend'),
-        label = document.createElement('label');
+        label = document.createElement('label'),
+        tagsDiv = document.createElement('div');
     label.className = "label"
     label.textContent = "Legend";
     legend.appendChild(document.createElement('hr'));
     legend.appendChild(label);
+    tagsDiv.className = "tags";
     for (var k in markers) {
       var marker = document.createElement('span');
       marker.className = 'tag is-' + k + " is-normal";
       marker.textContent = markers[k]['name'];
-      legend.appendChild(marker);
+      tagsDiv.appendChild(marker);
     }
+    legend.appendChild(tagsDiv);
     area.appendChild(legend);
   }
 
@@ -93,8 +96,32 @@
             annotations.append($li);
           }
         } else {
+          var freeAnnotations = $("#contextFreeAnnotations");
+          freeAnnotations.empty();
+          var cf = {};
+          for (var i = 0, len = contextFree.length; i < len; i++) {
+            if (!(contextFree[i].batch in cf))
+              cf[contextFree[i].batch] = [];
+            cf[contextFree[i].batch].push(contextFree[i]);
+          }
+          contextFree = cf;
+
+          freeAnnotations.append($('<option value="-1">Choose an annotation</option>'))
+          for (var batch in contextFree) {
+            freeAnnotations.append($('<option value="' + batch + '">' + batch + "</option>"))
+          }
+          var annotationsDiv = freeAnnotations.parent();
+          annotationsDiv.parent().find('.loading').remove();
+          if (contextFree.length <= 0) {
+            annotationsDiv.removeClass('select');
+            annotationsDiv.empty();
+            annotationsDiv.text("No annotations found");
+          }
+          annotationsDiv.show();
+
           var annotations = $("#contextAnnotations");
           annotations.empty();
+          annotations.append($('<option value="-1">Choose an annotation</option>'))
           for (var i = 0; i < contextBounded.length; i++) {
             var inp = contextBounded[i]['input'];
             annotations.append($('<option value="' + i + '">Input:' + inp + "</option>"))
@@ -138,7 +165,6 @@
             relationsDiv.text("No relations found");
           }
           relationsDiv.show();
-          console.log(contextRelations)
         }
         $("#exploreText").removeClass('element is-loading');
       },
@@ -201,11 +227,20 @@
       getAnnotations(target, selectedId);
     });
 
+    $('#contextFreeAnnotations').on('change', function(e) {
+      var target = e.target,
+          selected = target.value;
+      if (selected != -1)
+        markStatic(textArea, contextFree[selected]);
+      else
+        textArea.innerHTML = resetText;
+    });
+
     $('#contextAnnotations').on('change', function(e) {
       var target = e.target,
           selected = target.value;
       if (selected != -1)
-        markStatic(textArea, contextBounded[selected]['labels']);
+        markStatic(textArea, contextBounded[selected]);
       else
         textArea.innerHTML = resetText;
     });
@@ -219,6 +254,7 @@
         textArea.innerHTML = resetText;
     });
 
+    $('#contextFreeAnnotations').parent().hide();
     $('#contextAnnotations').parent().hide();
     $('#contextRelations').parent().hide();
 

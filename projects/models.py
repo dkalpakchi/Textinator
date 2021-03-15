@@ -425,7 +425,8 @@ class Label(CommonModel):
             'start': self.start,
             'end': self.end,
             'text': self.text,
-            'user': self.user.username
+            'user': self.user.username,
+            'batch': str(self.batch)
         })
         return res
 

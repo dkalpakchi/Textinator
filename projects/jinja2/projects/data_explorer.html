@@ -158,6 +158,18 @@
         <div class="control">
           {% include 'partials/_loader.html' %}
           <div class="select">
+            <select id="contextFreeAnnotations">
+              <option value="-1">Annotations are loading...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Annotations with input</label>
+        <div class="control">
+          {% include 'partials/_loader.html' %}
+          <div class="select">
             <select id="contextAnnotations">
               <option value="-1">Annotations are loading...</option>
             </select>
@@ -177,6 +189,7 @@
         </div>
       </div>
     {% else %}
+      {# TODO: this should be changed #}
       <ol id="contextAnnotations">
         {% for b in bounded_labels %}
           <li>Input: {{b['input']}}

@@ -624,6 +624,7 @@ def data_explorer(request, proj):
 
         total_relations = relations.count()
         context_ids = list(inputs.exclude(context=None).values_list('context', flat=True).distinct())
+        context_ids += list(labels.exclude(context=None).values_list('context', flat=True).distinct())
         if total_relations > 0:
             context_ids += list(relation_labels.exclude(context=None).values_list('context', flat=True).distinct())
 
