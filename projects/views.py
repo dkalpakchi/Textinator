@@ -272,7 +272,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
         u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 
-        dp, dp_id, source_size, source_id = proj.data(u)
+        dp, dp_id, dp_source_name, source_size, source_id = proj.data(u)
 
         logs = None
         if source_id != -1:
@@ -302,6 +302,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             'source_id': source_id,
             'source_size':  source_size,
             'dp_id': dp_id,
+            'dp_source_name': dp_source_name,
             'source_finished': logs + 1 >= source_size if logs else False,
             'project': proj,
             'task_markers': task_markers,

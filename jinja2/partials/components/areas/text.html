@@ -1,6 +1,6 @@
 <article class="{% if source_id != -1 %}text {% endif %}message">
   <div class="message-header">
-    <p>Text</p>
+    <p>Text{% if project.show_dataset_identifiers and dp_source_name %} ({{dp_source_name}}){% endif %}</p>
     <a id="flagTextButton" class="no-decoration is-pulled-right">
       <span class="icon is-small">
         <i class="fas fa-flag"></i>

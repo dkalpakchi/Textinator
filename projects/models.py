@@ -163,6 +163,7 @@ class Project(CommonModel):
     temporary_message = HTMLField(null=True, blank=True)
     video_summary = FileBrowseField(max_length=1000, null=True, blank=True)
     sampling_with_replacement = models.BooleanField(default=True)
+    show_dataset_identifiers = models.BooleanField(default=False)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
     # context size affects only labels, not inputs
@@ -255,9 +256,10 @@ class Project(CommonModel):
             # -> the point's id in the datasource
             # -> datasource size 
             # -> datasource id
-            return postprocess(dp).strip(), dp_id, ds.size(), idx
+            dp_source_name = ds.mapping[dp_id] if type(ds) == TextFileSource else False
+            return postprocess(dp).strip(), dp_id, dp_source_name, ds.size(), idx
         else:
-            return "NAN", -1, -1, -1
+            return "NAN", -1, False, -1, -1
         
     def get_profile_for(self, user):
         try:
