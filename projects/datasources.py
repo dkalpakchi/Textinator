@@ -92,7 +92,7 @@ class TextFileSource(DataSource):
             # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
             with open(fname, encoding='utf-8-sig') as f:
                 self._add_datapoint(f.read())
-                self.mapping.append(fname)
+                self.mapping.append(os.path.basename(fname))
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)
