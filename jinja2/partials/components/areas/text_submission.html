@@ -13,10 +13,10 @@
       </div>
       <div class="field is-grouped is-grouped-multiline">
         <div class="control">
-          <button class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></button>
+          <a class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></a>
         </div>
         <div class="control">
-          <button id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last submission</span></button>
+          <a id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last submission</span></a>
         </div>
         {% if not project.round_length or project.round_length > 1 %}
           <div class='control'>
