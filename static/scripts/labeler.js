@@ -1826,20 +1826,22 @@
       $button.attr('disabled', true);
 
       if (confirmation) {
-        var el = $('.selector.element');
-        el.addClass('is-loading');
+        var $el = $('.selector.element');
+        $el.addClass('is-loading');
 
         $.ajax({
           type: "POST",
           url: $button.attr('href'),
           dataType: "json",
           data: {
-            "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val()
+            "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val(),
+            "sId": $el.attr('data-s'),
+            "dpId": $el.attr('data-dp')
           },
           success: function(d) {
             // update text, source id and datapoint id
-            el.attr('data-s', d.source_id);
-            el.attr('data-dp', d.dp_id);
+            $el.attr('data-s', d.source_id);
+            $el.attr('data-dp', d.dp_id);
             var dpName = $('#dpName');
             if (dpName.text()) {
               dpName.text("(" + d.dp_source_name + ")")
@@ -1881,7 +1883,7 @@
               $('#undoLast').attr('disabled', true);
               $button.attr('disabled', false);
             }
-            el.removeClass('is-loading');
+            $el.removeClass('is-loading');
           },
           error: function() {
             console.log("ERROR!")

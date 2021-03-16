@@ -481,6 +481,16 @@ def profile(request, username):
 @require_http_methods("POST")
 def new_article(request, proj):
     project = Project.objects.get(pk=proj)
+
+    if not project.sampling_with_replacement:
+        ds_id = request.POST.get('sId')
+        if ds_id:
+            data_source = DataSource.objects.get(pk=ds_id)
+            project_data = ProjectData.objects.get(project=project, datasource=data_source)
+            dp_id = request.POST.get('dpId')
+            if dp_id:
+                DataAccessLog.objects.create(user=request.user, project_data=project_data, datapoint=str(dp_id))
+
     dp, dp_id, dp_source_name, source_size, source_id = project.data(request.user)
     return JsonResponse({
         'text': prettify(apply_premarkers(project, dp)),
