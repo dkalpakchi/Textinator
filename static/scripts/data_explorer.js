@@ -1,4 +1,10 @@
 ;(function() {
+  var utils = {
+    isDefined: function(x) {
+      return x != null && x !== undefined;
+    }
+  };
+  
   var contextBounded = [],
       contextFree = [],
       contextRelations = {},
@@ -9,20 +15,41 @@
   function markStatic(area, labels) {
     area.innerHTML = resetText;
     var acc = 0;
+    var bounded = null;
     labels.sort(function(x, y) { return x['start'] - y['start']});
     var markers = {};
     for (var i = 0, len = labels.length; i < len; i++) {
       var cnodes = area.childNodes,
           text = cnodes[cnodes.length-1];
 
+      console.log(labels[i], acc)
       const range = new Range();
       try {
         range.setStart(text, labels[i]['start'] - acc);
         range.setEnd(text, labels[i]['end'] - acc);
-        acc = labels[i]['end'];  
+        acc = labels[i]['end'];
+        bounded = null;
       } catch (e) {
-        // some labels might be repeated in which case we'll have a DOMException caught here
-        continue;
+        if (labels[i]['end'] <= acc) {
+          // Nested labels
+          if (bounded == null) {
+            bounded = {
+              'span': markedSpan,
+              'text': markedSpan.childNodes[0],
+              'start': labels[i-1]['start'],
+              'end': labels[i-1]['end'],
+              'acc': 0
+            }
+          }
+          console.log(bounded)
+          range.setStart(bounded['text'], labels[i]['start'] - bounded['start'] - bounded['acc']);
+          range.setEnd(bounded['text'], labels[i]['end'] - bounded['start'] - bounded['acc']);
+          bounded['acc'] = labels[i]['end'] - bounded['start'];
+        } else {
+          // some labels might be repeated in which case we'll have a DOMException caught here
+          bounded = null;
+          continue;
+        }
       }
 
       var markedSpan = document.createElement('span');
@@ -44,6 +71,8 @@
         });
       }
       range.surroundContents(markedSpan);
+      if (bounded != null)
+        bounded['text'] = bounded['span'].childNodes[bounded['span'].childNodes.length-1]
     }
 
     var legend = document.createElement('legend'),
@@ -62,6 +91,29 @@
     }
     legend.appendChild(tagsDiv);
     area.appendChild(legend);
+
+    var marked = area.querySelectorAll('span.tag');
+    for (var i = 0; i < marked.length; i++) {
+      var checker = marked[i],
+          elements = [];
+      while (checker.classList.contains('tag')) {
+        elements.push(checker);
+        checker = checker.parentNode;
+      }
+
+      for (var j = 0, len = elements.length; j < len; j++) {
+        var pTopStr = elements[j].style.paddingTop,
+            pBotStr = elements[j].style.paddingBottom,
+            pTop = parseFloat(pTopStr.slice(0, -2)),
+            pBot = parseFloat(pBotStr.slice(0, -2)),
+            npTop = 10 + 10 * j,
+            npBot = 10 + 10 * j;
+        if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
+          elements[j].style.paddingTop = npTop + "px";
+        if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
+          elements[j].style.paddingBottom = npBot + "px";
+      }
+    }
   }
 
   function getAnnotations(target, selectedId) {

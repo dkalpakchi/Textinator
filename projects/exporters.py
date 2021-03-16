@@ -123,3 +123,36 @@ def export_qa(project):
             })
         resp.append(obj)
     return resp
+
+
+def export_generic(project):
+    labels = Label.objects.filter(project=project, undone=False).order_by('context_id').distinct()
+    resp = []
+    groups, group, batch, context_id, context = {}, [], None, -1, None
+    for l in labels:
+        if batch is None or batch != l.batch:
+            if group:
+                groups[str(batch)] = group
+                group = []
+            batch = l.batch
+        if context_id == -1 or context_id != l.context_id:
+            if groups:
+                resp.append({
+                    'context': context.content,
+                    'labels': groups
+                })
+                groups = {}
+            context_id = l.context_id
+            context = l.context
+        dct = l.to_short_rel_json()
+        del dct['batch']
+        group.append(dct)
+    else:
+        if group:
+            groups[str(batch)] = group
+        if groups:
+            resp.append({
+                'context': context.content,
+                'labels': groups
+            })
+    return resp

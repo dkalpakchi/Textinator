@@ -754,8 +754,6 @@
             chunk['marked'] = false;
             chunk['label'] = null;
 
-            console.log(chunk)
-
             var N = chunks.length;
             chunk['id'] = labelId;
             if (N == 0 || (N > 0 && chunks[N-1] !== undefined && chunks[N-1]['marked'])) {
