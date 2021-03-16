@@ -481,12 +481,13 @@ def profile(request, username):
 @require_http_methods("POST")
 def new_article(request, proj):
     project = Project.objects.get(pk=proj)
-    dp, dp_id, source_size, source_id = project.data(request.user)
+    dp, dp_id, dp_source_name, source_size, source_id = project.data(request.user)
     return JsonResponse({
         'text': prettify(apply_premarkers(project, dp)),
         'source_id': source_id,
         'source_size':  source_size,
-        'dp_id': dp_id
+        'dp_id': dp_id,
+        'dp_source_name': dp_source_name
     })
 
 

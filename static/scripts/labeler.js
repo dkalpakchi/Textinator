@@ -1840,6 +1840,10 @@
             // update text, source id and datapoint id
             el.attr('data-s', d.source_id);
             el.attr('data-dp', d.dp_id);
+            var dpName = $('#dpName');
+            if (dpName.text()) {
+              dpName.text("(" + d.dp_source_name + ")")
+            }
 
             var $selector = $(labelerModule.selectorArea);
 
