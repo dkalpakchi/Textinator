@@ -126,6 +126,7 @@ class ProjectAdmin(CommonModelAdmin):
     ]
     form = ProjectForm
     inlines = [MarkerCountRestrictionInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
+    save_as = True
 
     def save_model(self, request, obj, form, change):
         if not obj.author:
