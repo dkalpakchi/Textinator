@@ -465,7 +465,7 @@ label.error {
 /**
  * Bulma extensions
  */
-.tag.is-warning-dark {
+.tag.is-warndark {
   background-color: #946c00;
   color: #fff;
 }
