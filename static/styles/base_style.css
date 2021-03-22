@@ -461,3 +461,21 @@ label.error {
   font-size: 0.9em;
   transform: translateX(-50%);
 }
+
+/**
+ * Bulma extensions
+ */
+.tag.is-warning-dark {
+  background-color: #946c00;
+  color: #fff;
+}
+
+.tag.is-pink {
+  background-color: #ff7373;
+  color: #fff;
+}
+
+.tag.is-orange {
+  background-color: #E9A72F;
+  color: #fff;
+}

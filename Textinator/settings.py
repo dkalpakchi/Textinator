@@ -245,7 +245,10 @@ MARKER_COLORS = [
     ('info', 'Light Blue'),
     ('primary', 'Teal'),
     ('black', 'Black'),
-    ('grey', 'Grey')
+    ('grey', 'Grey'),
+    ('warndark', 'Dark Yellow'),
+    ('pink', 'Pink'),
+    ('orange', 'Orange')
 ]
 
 LOGIN_URL = '/textinator/accounts/login/'
