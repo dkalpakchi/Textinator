@@ -15,39 +15,41 @@
   function markStatic(area, labels) {
     area.innerHTML = resetText;
     var acc = 0;
-    var bounded = null;
+    var bounded = [];
     labels.sort(function(x, y) { return x['start'] - y['start']});
     var markers = {};
     for (var i = 0, len = labels.length; i < len; i++) {
       var cnodes = area.childNodes,
           text = cnodes[cnodes.length-1];
 
-      console.log(labels[i], acc)
       const range = new Range();
       try {
         range.setStart(text, labels[i]['start'] - acc);
         range.setEnd(text, labels[i]['end'] - acc);
         acc = labels[i]['end'];
-        bounded = null;
+        bounded = [];
       } catch (e) {
         if (labels[i]['end'] <= acc) {
           // Nested labels
-          if (bounded == null) {
-            bounded = {
-              'span': markedSpan,
-              'text': markedSpan.childNodes[0],
-              'start': labels[i-1]['start'],
-              'end': labels[i-1]['end'],
-              'acc': 0
-            }
+          if (bounded.length > 0 && labels[i]['end'] > bounded[bounded.length-1]['end']) {
+            bounded.pop();
           }
-          console.log(bounded)
-          range.setStart(bounded['text'], labels[i]['start'] - bounded['start'] - bounded['acc']);
-          range.setEnd(bounded['text'], labels[i]['end'] - bounded['start'] - bounded['acc']);
-          bounded['acc'] = labels[i]['end'] - bounded['start'];
+          bounded.push({
+            'span': markedSpan,
+            'text': markedSpan.childNodes[0],
+            'start': labels[i-1]['start'],
+            'end': labels[i-1]['end'],
+            'acc': 0
+          });
+          var l = bounded.length;
+          var s = labels[i]['start'] - bounded[l-1]['start'] - bounded[l-1]['acc'];
+          var e = labels[i]['end'] - bounded[l-1]['start'] - bounded[l-1]['acc'];
+          range.setStart(bounded[l-1]['text'], s);
+          range.setEnd(bounded[l-1]['text'], e);
+          bounded[l-1]['acc'] = labels[i]['end'] - bounded[l-1]['start'];
         } else {
           // some labels might be repeated in which case we'll have a DOMException caught here
-          bounded = null;
+          bounded = [];
           continue;
         }
       }
@@ -71,8 +73,10 @@
         });
       }
       range.surroundContents(markedSpan);
-      if (bounded != null)
-        bounded['text'] = bounded['span'].childNodes[bounded['span'].childNodes.length-1]
+      if (bounded.length > 0) {
+        var l = bounded.length;
+        bounded[l-1]['text'] = bounded[l-1]['span'].childNodes[bounded[l-1]['span'].childNodes.length-1]
+      }
     }
 
     var legend = document.createElement('legend'),

@@ -115,6 +115,12 @@
       if (enclosingLabel != null && enclosingLabel != node)
         textLength += getPrevLength(enclosingLabel.previousSibling);
 
+      // account for nesting
+      while (isLabel(node.parentNode) && node.parentNode != enclosingLabel) {
+        node = node.parentNode;
+        textLength += getPrevLength(node.previousSibling);
+      }
+
       // Find previous <p> or <ul>
       var parent = getEnclosingParagraph(node);
 
@@ -157,7 +163,6 @@
       if (node.nodeType == 3) {
         node = node.parentNode;
       }
-      console.log(node);
       return utils.isDefined(node) && node.nodeName == "SPAN" && node.hasAttribute('data-m') && node.getAttribute('data-m') == 'r';
     }
 
@@ -761,6 +766,7 @@
             } else {
               chunks[N-1] = chunk;
             }
+            console.log(chunk)
           } 
         }
       },
