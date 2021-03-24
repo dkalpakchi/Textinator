@@ -67,7 +67,7 @@
             <span>Settings</span>
           </a> #}
           {% if user.is_staff %}
-            {% if project %}
+            {% if project and user.has_perm('projects.can_view_project') %}
             <a href="{{ url('admin:projects_project_change', kwargs={'object_id': project.id}) }}" class='admin navbar-item'>
             {% else %}
             <a href="{{ url('admin:index') }}" class='admin navbar-item'>

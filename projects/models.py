@@ -450,6 +450,9 @@ class Label(CommonModel):
         res['context'] = self.context.content
         return res
 
+    def __str__(self):
+        return self.text
+
 
 class LabelReview(CommonModel):
     original = models.ForeignKey(Label, on_delete=models.CASCADE)

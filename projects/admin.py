@@ -12,6 +12,14 @@ from .models import *
 
 class CommonModelAdmin(admin.ModelAdmin):
     readonly_fields = ['dt_created']
+    _list_filter = []
+
+    def changelist_view(self, request, extra_context=None):    
+        if not request.user.is_superuser:
+            self.list_filter = []
+        else:
+            self.list_filter = self._list_filter
+        return super(CommonModelAdmin, self).changelist_view(request, extra_context)
 
 
 # TODO: fix name 'ModelValidationError' is not defined
@@ -119,7 +127,7 @@ class ProjectForm(forms.ModelForm):
 
 @admin.register(Project)
 class ProjectAdmin(CommonModelAdmin):
-    list_filter = [
+    _list_filter = [
         'institution',
         'task_type',
         'is_open'
@@ -137,9 +145,10 @@ class ProjectAdmin(CommonModelAdmin):
         super(ProjectAdmin, self).save_related(request, form, formsets, change)
 
 
+
 @admin.register(Context)
 class ContextAdmin(CommonModelAdmin):
-    list_filter = [
+    _list_filter = [
         'datasource'
     ]
     list_display = ['id', 'content']
@@ -159,7 +168,7 @@ class InputAdmin(CommonModelAdmin):
 
 @admin.register(Label)
 class LabelAdmin(CommonModelAdmin):
-    list_filter = (
+    _list_filter = (
        'marker',
        'user',
        'project',
@@ -190,7 +199,7 @@ class LabelReviewAdmin(CommonModelAdmin):
 
 @admin.register(LabelRelation)
 class LabelRelationAdmin(CommonModelAdmin):
-    list_filter = [
+    _list_filter = [
         'project',
         'user'
     ]
@@ -240,7 +249,7 @@ class DataSourceAdmin(CommonModelAdmin):
 
 @admin.register(DataAccessLog)
 class DataAccessLogAdmin(admin.ModelAdmin):
-    list_filter = [
+    _list_filter = [
         'user'
     ]
 
