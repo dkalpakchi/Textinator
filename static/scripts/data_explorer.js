@@ -153,12 +153,11 @@
         if (Object.keys(contextFree).length <= 0) {
           $annotationsDiv.removeClass('select');
           $freeAnnotations.hide();
-          $annotationsDiv.append(document.createTextNode("No annotations found"));
+          $annotationsDiv.find('.placeholder').text("No annotations found");
         } else {
           $annotationsDiv.addClass('select');
           $freeAnnotations.show();
-          if ($annotationsDiv.children().last()[0].nodeType == 3)
-            $annotationsDiv.children().last().remove();
+          $annotationsDiv.find('.placeholder').text("");
         }
         $annotationsDiv.show();
 
@@ -174,12 +173,11 @@
         if (Object.keys(contextBounded).length <= 0) {
           $annotationsDiv.removeClass('select');
           $annotations.hide();
-          $annotationsDiv.append(document.createTextNode("No annotations found"));
+          $annotationsDiv.find('.placeholder').text("No annotations found");
         } else {
           $annotationsDiv.addClass('select');
           $annotations.show();
-          if ($annotationsDiv.children().last()[0].nodeType == 3)
-            annotationsDiv.children().last().remove();
+          $annotationsDiv.find('.placeholder').text("");
         }
         $annotationsDiv.show();
 
@@ -210,12 +208,11 @@
         if (j <= 1) {
           $relationsDiv.removeClass('select');
           $relations.hide();
-          $relationsDiv.append(document.createTextNode("No relations found"));
+          $relationsDiv.find('.placeholder').text("No relations found");
         } else {
           $relationsDiv.addClass('select');
           $relations.show();
-          if ($relationsDiv.children().last()[0].nodeType == 3)
-            $relationsDiv.children().last().remove();
+          $relationsDiv.find('.placeholder').text("");
         }
         $relationsDiv.show();
         $("#exploreText").removeClass('element is-loading');
