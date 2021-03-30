@@ -599,13 +599,22 @@ def data_explorer(request, proj):
         bounded_labels = non_relation_labels.exclude(input=None)
         free_labels = non_relation_labels.filter(input=None)
 
+        bounded = {}
+        for l in bounded_labels:
+            if l.input_id not in bounded:
+                bounded[l.input_id] = {
+                    'input': l.input.content,
+                    'labels': []
+                }
+            bounded[l.input_id]['labels'].append(l.to_short_json())
+
         res = {
             'data': context.content,
-            'bounded_labels': [l.to_short_json() for l in bounded_labels],
+            'bounded_labels': bounded,
             'relations': [r.to_short_json(dt_format="%b %d %Y %H:%M:%S") for r in relations
                 if r.first_label.context_id == context_id or r.second_label.context_id == context_id],
-            'free_labels': [l.to_short_json() for l in free_labels],
-            'is_static': project.context_size != 't'
+            'free_labels': [l.to_short_json() for l in free_labels]
+            # 'is_static': project.context_size != 't'
         }
         return res
 
@@ -650,7 +659,6 @@ def data_explorer(request, proj):
                                 'filter': a.admin_filter,
                                 'cm': cm_item
                             })
-
         ctx = {
             'project': project,
             'contexts': Context.objects.filter(pk__in=context_ids),

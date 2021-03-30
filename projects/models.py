@@ -441,13 +441,13 @@ class Label(CommonModel):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update(self.to_short_rel_json())
         res['marker'] = self.marker.to_json()
-        res['input'] = self.input.to_json() if self.input else None
         return res
 
     def to_json(self, dt_format=None):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update(self.to_short_json())
         res['context'] = self.context.content
+        res['input'] = self.input.to_json() if self.input else None
         return res
 
     def __str__(self):

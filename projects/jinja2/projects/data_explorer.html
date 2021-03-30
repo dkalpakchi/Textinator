@@ -152,60 +152,41 @@
       </div>
     {% endif %}
 
-    {% if project.context_size == 't' %}
-      <div class="field">
-        <label class="label">Annotations</label>
-        <div class="control">
-          {% include 'partials/_loader.html' %}
-          <div class="select">
-            <select id="contextFreeAnnotations">
-              <option value="-1">Annotations are loading...</option>
-            </select>
-          </div>
+    <div class="field">
+      <label class="label">Annotations without input</label>
+      <div class="control">
+        {% include 'partials/_loader.html' %}
+        <div class="select">
+          <select id="contextFreeAnnotations">
+            <option value="-1">Annotations are loading...</option>
+          </select>
         </div>
       </div>
+    </div>
 
-      <div class="field">
-        <label class="label">Annotations with input</label>
-        <div class="control">
-          {% include 'partials/_loader.html' %}
-          <div class="select">
-            <select id="contextAnnotations">
-              <option value="-1">Annotations are loading...</option>
-            </select>
-          </div>
+    <div class="field">
+      <label class="label">Annotations with input</label>
+      <div class="control">
+        {% include 'partials/_loader.html' %}
+        <div class="select">
+          <select id="contextAnnotations">
+            <option value="-1">Annotations are loading...</option>
+          </select>
         </div>
       </div>
-      
-      <div class="field">
-        <label class="label">Relations</label>
-        <div class="control">
-          {% include 'partials/_loader.html' %}
-          <div class="select">
-            <select id="contextRelations">
-              <option value="-1">Relations are loading...</option>
-            </select>
-          </div>
+    </div>
+    
+    <div class="field">
+      <label class="label">Relations</label>
+      <div class="control">
+        {% include 'partials/_loader.html' %}
+        <div class="select">
+          <select id="contextRelations">
+            <option value="-1">Relations are loading...</option>
+          </select>
         </div>
       </div>
-    {% else %}
-      {# TODO: this should be changed #}
-      <ol id="contextAnnotations">
-        {% for b in bounded_labels %}
-          <li>Input: {{b['input']}}
-            <div class="alternative tags are-medium">
-              {% for l in b['labels'] %}
-                <span class="tags has-addons">
-                  <span class='tag is-{{l['marker']['color']}} is-medium'>{{l['marker']['name']}}</span>
-                  <span class="tag is-medium">{{l['text']}}</span>
-                  <span class="tag is-dark is-medium">{{l['user']}}, {{l['created']}}</span>
-                </span>
-              {% endfor %}
-            </div>
-          </li>
-        {% endfor %}
-      </ol>
-    {% endif %}
+    </div>
     {% if contexts %}
       <article id="exploreText" class="context message is-dark">
         {{contexts[0].content}}

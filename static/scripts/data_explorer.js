@@ -131,97 +131,78 @@
         $("#exploreText").text(d.data);
         resetText = d.data;
         contextBounded = d.bounded_labels;
+        console.log(contextBounded);
         contextFree = d.free_labels;
         contextRelations = d.relations;
-        if (d.is_static) {
-          var annotations = $("#contextAnnotations");
-          annotations.empty();
-          for (var i = 0; i < contextBounded.length; i++) {
-            var labels = contextBounded[i]['labels'],
-                $li = $('<li>Input:' + contextBounded[i]['input'] + "</li>"),
-                $div = $('<div class="alternative tags"></div>');
-            for (var j = 0, len = labels.length; j < len; j++) {
-              $div.append($(`
-                <span class="tags has-addons">
-                  <span class='tag is-${labels[j]['marker']['color']} is-medium'>${labels[j]['marker']['name']}</span>
-                  <span class="tag is-medium">${labels[j]['text']}</span>
-                  <span class="tag is-dark is-medium">${labels[j]['user']}, ${labels[j]['created']}</span>
-                </span>`));
-            }
-            $li.append($div);
-            annotations.append($li);
-          }
-        } else {
-          var freeAnnotations = $("#contextFreeAnnotations");
-          freeAnnotations.empty();
-          var cf = {};
-          for (var i = 0, len = contextFree.length; i < len; i++) {
-            if (!(contextFree[i].batch in cf))
-              cf[contextFree[i].batch] = [];
-            cf[contextFree[i].batch].push(contextFree[i]);
-          }
-          contextFree = cf;
-
-          freeAnnotations.append($('<option value="-1">Choose an annotation</option>'))
-          for (var batch in contextFree) {
-            freeAnnotations.append($('<option value="' + batch + '">' + batch + "</option>"))
-          }
-          var annotationsDiv = freeAnnotations.parent();
-          annotationsDiv.parent().find('.loading').remove();
-          if (contextFree.length <= 0) {
-            annotationsDiv.removeClass('select');
-            annotationsDiv.empty();
-            annotationsDiv.text("No annotations found");
-          }
-          annotationsDiv.show();
-
-          var annotations = $("#contextAnnotations");
-          annotations.empty();
-          annotations.append($('<option value="-1">Choose an annotation</option>'))
-          for (var i = 0; i < contextBounded.length; i++) {
-            var inp = contextBounded[i]['input'];
-            annotations.append($('<option value="' + i + '">Input:' + inp + "</option>"))
-          }
-          var annotationsDiv = annotations.parent();
-          annotationsDiv.parent().find('.loading').remove();
-          if (contextBounded.length <= 0) {
-            annotationsDiv.removeClass('select');
-            annotationsDiv.empty();
-            annotationsDiv.text("No annotations found");
-          }
-          annotationsDiv.show();
-
-          var cr = {},
-              relations = $("#contextRelations");
-          relations.empty();
-          relations.append($('<option value="-1">Choose a relation</option>'))
-          for (var i = 0, len = contextRelations.length; i < len; i++) {
-            if (!(contextRelations[i].batch in cr))
-              cr[contextRelations[i].batch] = {
-                'obj': contextRelations[i],
-                'labels': []
-              };
-            cr[contextRelations[i].batch]['labels'].push(contextRelations[i]['first']);
-            cr[contextRelations[i].batch]['labels'].push(contextRelations[i]['second']);
-          }
-          contextRelations = cr;
-          
-          var j = 1;
-          for (var key in contextRelations) {
-            var obj = contextRelations[key]['obj'];
-            relations.append($('<option value="' + key + '">Relation ' + j + ": " + obj.rule.name +
-                " (created by " + obj['user'] + " on " + obj['created'] + ")</option>"));
-            j++;
-          }
-          var relationsDiv = relations.parent();
-          relationsDiv.parent().find('.loading').remove();
-          if (j <= 1) {
-            relationsDiv.removeClass('select');
-            relationsDiv.empty();
-            relationsDiv.text("No relations found");
-          }
-          relationsDiv.show();
+        var freeAnnotations = $("#contextFreeAnnotations");
+        freeAnnotations.empty();
+        var cf = {};
+        for (var i = 0, len = contextFree.length; i < len; i++) {
+          if (!(contextFree[i].batch in cf))
+            cf[contextFree[i].batch] = [];
+          cf[contextFree[i].batch].push(contextFree[i]);
         }
+        contextFree = cf;
+
+        freeAnnotations.append($('<option value="-1">Choose an annotation</option>'))
+        for (var batch in contextFree) {
+          freeAnnotations.append($('<option value="' + batch + '">' + batch + "</option>"))
+        }
+        var annotationsDiv = freeAnnotations.parent();
+        annotationsDiv.parent().find('.loading').remove();
+        if (Object.keys(contextFree).length <= 0) {
+          annotationsDiv.removeClass('select');
+          annotationsDiv.empty();
+          annotationsDiv.text("No annotations found");
+        }
+        annotationsDiv.show();
+
+        var annotations = $("#contextAnnotations");
+        annotations.empty();
+        annotations.append($('<option value="-1">Choose an annotation</option>'))
+        for (var key in contextBounded) {
+          var inp = contextBounded[key]['input'];
+          annotations.append($('<option value="' + key + '">Input: ' + inp + "</option>"))
+        }
+        var annotationsDiv = annotations.parent();
+        annotationsDiv.parent().find('.loading').remove();
+        if (Object.keys(contextBounded).length <= 0) {
+          annotationsDiv.removeClass('select');
+          annotationsDiv.empty();
+          annotationsDiv.text("No annotations found");
+        }
+        annotationsDiv.show();
+
+        var cr = {},
+            relations = $("#contextRelations");
+        relations.empty();
+        relations.append($('<option value="-1">Choose a relation</option>'))
+        for (var i = 0, len = contextRelations.length; i < len; i++) {
+          if (!(contextRelations[i].batch in cr))
+            cr[contextRelations[i].batch] = {
+              'obj': contextRelations[i],
+              'labels': []
+            };
+          cr[contextRelations[i].batch]['labels'].push(contextRelations[i]['first']);
+          cr[contextRelations[i].batch]['labels'].push(contextRelations[i]['second']);
+        }
+        contextRelations = cr;
+        
+        var j = 1;
+        for (var key in contextRelations) {
+          var obj = contextRelations[key]['obj'];
+          relations.append($('<option value="' + key + '">Relation ' + j + ": " + obj.rule.name +
+              " (created by " + obj['user'] + " on " + obj['created'] + ")</option>"));
+          j++;
+        }
+        var relationsDiv = relations.parent();
+        relationsDiv.parent().find('.loading').remove();
+        if (j <= 1) {
+          relationsDiv.removeClass('select');
+          relationsDiv.empty();
+          relationsDiv.text("No relations found");
+        }
+        relationsDiv.show();
         $("#exploreText").removeClass('element is-loading');
       },
       errors: function() {
@@ -255,6 +236,10 @@
   $(document).ready(function() {
     textArea = document.querySelector('#exploreText');
     resetText = textArea.textContent;
+
+    $('#contextFreeAnnotations').parent().hide();
+    $('#contextAnnotations').parent().hide();
+    $('#contextRelations').parent().hide();
 
     $("[id^=item-context-]").accordion({
       collapsible: true,
@@ -296,7 +281,7 @@
       var target = e.target,
           selected = target.value;
       if (selected != -1)
-        markStatic(textArea, contextBounded[selected]);
+        markStatic(textArea, contextBounded[selected]['labels']);
       else
         textArea.innerHTML = resetText;
     });
@@ -309,10 +294,6 @@
       else 
         textArea.innerHTML = resetText;
     });
-
-    $('#contextFreeAnnotations').parent().hide();
-    $('#contextAnnotations').parent().hide();
-    $('#contextRelations').parent().hide();
 
     $("#filterForm").on('submit', function(e) {
       e.preventDefault();
