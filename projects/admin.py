@@ -248,9 +248,10 @@ class DataSourceAdmin(CommonModelAdmin):
 
 
 @admin.register(DataAccessLog)
-class DataAccessLogAdmin(admin.ModelAdmin):
+class DataAccessLogAdmin(CommonModelAdmin):
     _list_filter = [
-        'user'
+        'user',
+        'project_data__project'
     ]
 
 
