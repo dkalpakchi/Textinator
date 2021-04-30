@@ -162,7 +162,8 @@ class Project(CommonModel):
     reminders = HTMLField(null=True, blank=True)
     temporary_message = HTMLField(null=True, blank=True)
     video_summary = FileBrowseField(max_length=1000, null=True, blank=True)
-    sampling_with_replacement = models.BooleanField(default=True)
+    sampling_with_replacement = models.BooleanField(default=False)
+    disjoint_annotation = models.BooleanField(default=False)
     show_dataset_identifiers = models.BooleanField(default=False)
     # TODO: implement a context of a sentence
     # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
@@ -199,7 +200,12 @@ class Project(CommonModel):
         dp_taboo = defaultdict(set)
         if not self.sampling_with_replacement:
             pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
-            logs = DataAccessLog.objects.filter(project_data__pk__in=pdata, user=user).all()
+            if self.disjoint_annotation:
+                # meaning each user annotates whatever is not annotated
+                logs = DataAccessLog.objects.filter(project_data__pk__in=pdata).all()
+            else:
+                # meaning each user annotates all texts
+                logs = DataAccessLog.objects.filter(project_data__pk__in=pdata, user=user).all()
             for log in logs:
                 dp_taboo[log.project_data.datasource.pk].add(log.datapoint)
 

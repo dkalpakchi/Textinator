@@ -89,7 +89,7 @@ class ProjectForm(forms.ModelForm):
         model = Project
         fields = [
             'title', 'short_description', 'institution', 'supported_by', 'temporary_message', 'guidelines', 'reminders',
-            'video_summary', 'sampling_with_replacement', 'context_size', 'task_type', 'dt_publish',
+            'video_summary', 'sampling_with_replacement', 'disjoint_annotation', 'context_size', 'task_type', 'dt_publish',
             'dt_finish', 'collaborators', 'author', 'datasources', 'is_open', 'is_peer_reviewed',
             'allow_selecting_labels', 'disable_submitted_labels', 'show_dataset_identifiers', 'max_markers_per_input',
             'round_length', 'points_scope', 'points_unit'
