@@ -23,7 +23,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
-
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800 # 50 MB
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
