@@ -82,6 +82,14 @@ class RelationInline(admin.StackedInline):
     verbose_name_plural = "Project-specific relations"
 
 
+class InputInline(admin.StackedInline):
+    model = Input
+    extra = 0
+    classes = ['collapse']
+    verbose_name = "Input with this context"
+    verbose_name_plural = "Inputs with this context"
+
+
 class ProjectForm(forms.ModelForm):
     datasources = forms.ModelMultipleChoiceField(queryset=DataSource.objects.all())
 
@@ -153,6 +161,7 @@ class ContextAdmin(CommonModelAdmin):
     ]
     list_display = ['id', 'content']
     search_fields = ['content']
+    inlines = [InputInline]
     readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash', 'id']
 
 

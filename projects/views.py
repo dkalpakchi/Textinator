@@ -367,6 +367,7 @@ def record_datapoint(request, proj):
 
     # Next create an input for that context if available
     # We will have one input, no matter what, but can have many labels for it
+    # FIXME: What if the input is the same, but context is different?
     if data.get('input'):
         inp = retrieve_by_hash(data['input'], Input, inp_cache)
         if not inp:

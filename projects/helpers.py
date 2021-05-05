@@ -9,6 +9,7 @@ import hashlib
 import requests
 
 
+# TODO: fix collisions sometimes
 def hash_text(text):
     m = hashlib.sha256()
     if isinstance(text, str):
