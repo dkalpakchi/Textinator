@@ -25,8 +25,13 @@ $(document).ready(function() {
   });
 
   $('input[type!="hidden"]').each(function() {
-    $(this).rules('add', {
-      required: true
-    });
+    var isRequired = $(this).siblings('.criterion').attr('data-required') == "true" || 
+                     $(this).parent().siblings('.criterion').attr('data-required') == "true";
+
+    if (isRequired) {
+      $(this).rules('add', {
+        required: true
+      });
+    }
   });
 });

@@ -290,3 +290,5 @@ pdfmetrics.registerFont(TTFont('Terminator',
 CSV_DIRECTORY = Path("csv") # Define the directory where csv are exported
 TEX_DIRECTORY = Path("tex") # Define the directory where tex files and pdf are exported
 
+
+CHOICES_SEPARATOR = "|"

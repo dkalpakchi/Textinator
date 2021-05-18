@@ -8,10 +8,10 @@
                 {% if form.field.widget.attrs.category == category.name or not form.field.widget.attrs.category %}
                     <tr class="{% if form.errors%} danger {% endif %}">
                         <td>
-                            <div class="criterion">
+                            <div class="criterion" data-required="{{form.field.required|yesno:"true,false"}}">
                                 {{ form.label|safe }}
-                                {% if form.field.required %}
-                                    <span class="glyphicon glyphicon-asterisk" style="color:red"> </span>
+                                {% if form.field.required and form.label %}
+                                    <span style="color:red">&#42;</span>
                                 {% endif %}
                             </div>
                             <span class="help-inline" style="color:red">
