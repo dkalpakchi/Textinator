@@ -1,22 +1,65 @@
-<article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
-  <div class="message-header">
-    <p>Markers</p>
-  </div>
-  <div class="message-body">
-    <div class="field is-grouped is-grouped-multiline">
-      {% set project_markers=project.markers.distinct() %}
-      {% for marker in task_markers %}
-        {% if marker not in project_markers %}
-          <div class="control">
-            {{marker|display_marker}}
-          </div>
-        {% endif %}
-      {% endfor %}
-      {% for marker in project_markers %}
-        <div class="control">
-          {{marker|display_marker}}
-        </div>
+{% set all_text_markers=project.markervariant_set.values_list('is_free_text', flat=True)|all %}
+{% set any_text_markers=project.markervariant_set.values_list('is_free_text', flat=True)|any %}
+{% if not all_text_markers %}
+  <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
+    <div class="message-header">
+      <p>Markers</p>
+    </div>
+    <div class="message-body">
+      <div class="field is-grouped is-grouped-multiline">
+        {% set project_markers_variants=project.markervariant_set.all() %}
+        {% set project_markers=project.markers.all() %}
+        {% for marker in task_markers %}
+          {% if marker not in project_markers %}
+            <div class="control">
+              {{marker|display_marker}}
+            </div>
+          {% endif %}
+        {% endfor %}
+        {% for marker_variant in project_markers_variants %}
+          {% if not marker_variant.is_free_text %}
+            <div class="control">
+              {{marker_variant.marker|display_marker}}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+{% endif %}
+{% if any_text_markers %}
+  <article class="marker groups message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
+    <div class="message-header">
+      <p>Marker groups</p>
+    </div>
+    <div class="message-body">
+      {% set project_markers_variants=project.markervariant_set.all() %}
+      {% set project_markers=project.markers.all() %}
+      {% for unit, marker_variants in project_markers_variants|groupby("unit") %}
+        <ul id="sortable">
+          {% for i in range(unit.size) %}
+            <li class="ui-state-default notification has-background-grey-lighter">
+              <span class="fa fa-sort"></span>
+              <div class="field">
+                {% for marker_variant in marker_variants|sort(attribute="order_in_unit") %}
+                  {% for _ in range(marker_variant.restriction_value) %}
+                    {% if marker_variant.is_free_text %}
+                      <div class="control has-tag-left">
+                        {% if marker_variant.restriction_value > 1 %}
+                          <input class='input' type="text" name="{{marker_variant.marker.short}}_{{i}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}} {{loop.index}}">
+                        {% else %}
+                          <input class='input' type="text" name="{{marker_variant.marker.short}}_{{i}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}">
+                        {% endif %}
+                        <span class="tag is-{{marker_variant.marker.color}}">{{marker_variant.marker.name}}</span>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
       {% endfor %}
     </div>
-  </div>
-</article>
+  </article>
+{% endif %}

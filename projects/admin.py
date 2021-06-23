@@ -24,8 +24,8 @@ class CommonModelAdmin(admin.ModelAdmin):
 
 # TODO: fix name 'ModelValidationError' is not defined
 #       happens when trying to assign marker to be both task and project specific
-class MarkerCountRestrictionInline(admin.StackedInline):
-    model = MarkerCountRestriction
+class MarkerVariantInline(admin.StackedInline):
+    model = MarkerVariant
     extra = 0
     classes = ['collapse']
     verbose_name = "Project marker"
@@ -141,7 +141,7 @@ class ProjectAdmin(CommonModelAdmin):
         'is_open'
     ]
     form = ProjectForm
-    inlines = [MarkerCountRestrictionInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
+    inlines = [MarkerVariantInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
     save_as = True
 
     def save_model(self, request, obj, form, change):
@@ -290,6 +290,7 @@ admin.site.register(Permission)
 admin.site.register(ProjectData)
 admin.site.register(MarkerPair)
 admin.site.register(MarkerAction)
+admin.site.register(MarkerUnit)
 
 
 admin.site.site_header = 'Textinator admin'

@@ -216,9 +216,14 @@ textarea {
 }
 
 .text .message-body {
-  height: 475px;
+  max-height: 500px;
   overflow-y: scroll;
   text-align: justify;
+}
+
+.text .message-body.broad {
+  height: 820px !important;
+  max-height: 820px;
 }
 
 .achievements {
@@ -462,6 +467,26 @@ label.error {
   transform: translateX(-50%);
 }
 
+#sortable {
+  list-style-type: none;
+}
+#sortable li {
+  margin: 0 3px 3px 3px;
+  padding: 0.4em;
+  padding-left: 1.5em;
+}
+
+#sortable li span:not(.tag) {
+  position: absolute;
+  top: 45%;
+  left: 7px;
+}
+
+.marker.groups.message .message-body {
+  max-height: 650px;
+  overflow-y: scroll;
+}
+
 /**
  * Bulma extensions
  */
@@ -478,4 +503,17 @@ label.error {
 .tag.is-orange {
   background-color: #E9A72F;
   color: #fff;
+}
+
+.control.has-tag-left .input, .control.has-tag-left .select select {
+    padding-left: 7em;
+}
+
+.control.has-tag-left .tag, .control.has-tag-right .tag {
+    pointer-events: none;
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    width: 7.5em;
+    z-index: 4;
 }

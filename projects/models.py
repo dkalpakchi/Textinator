@@ -110,10 +110,11 @@ class Marker(CommonModel):
             self.short = self.name[:3].upper()
         super(Marker, self).save(*args, **kwargs)
 
+    # TODO: should be count restrictions per project!
     def get_count_restrictions(self, stringify=True):
         try:
             restrictions = list(Marker.project_set.through.objects.filter(marker=self).all())
-        except MarkerCountRestriction.DoesNotExist:
+        except MarkerVariant.DoesNotExist:
             return ''
         return '&'.join([str(r) for r in restrictions]) if stringify else restrictions
 
@@ -176,7 +177,7 @@ class Project(CommonModel):
     dt_updated = models.DateTimeField(auto_now=True)
     collaborators = models.ManyToManyField(User, related_name='shared_projects', blank=True)
     participants = models.ManyToManyField(User, related_name='participations', through='UserProfile', blank=True)
-    markers = models.ManyToManyField(Marker, through='MarkerCountRestriction', blank=True)
+    markers = models.ManyToManyField(Marker, through='MarkerVariant', blank=True)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     datasources = models.ManyToManyField(DataSource, through='ProjectData')
     is_open = models.BooleanField(default=False)
@@ -286,14 +287,29 @@ class Project(CommonModel):
         return self.title
 
 
-class MarkerCountRestriction(CommonModel):
+class MarkerUnit(CommonModel):
+    size = models.IntegerField(default=1)
+    is_rankable = models.BooleanField(default=False)
+    name = models.CharField(max_length=10, help_text="Internal name for the unit (max 10 characters)")
+
+    def __str__(self):
+        return self.name
+
+    def __lt__(self, other):
+        return self.pk < other.pk
+
+
+class MarkerVariant(CommonModel):
     class Meta:
-        unique_together = (('project', 'marker', 'restriction_type'),)
+        unique_together = (('project', 'marker', 'restriction_type', 'unit'),)
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     restriction_type = models.CharField(max_length=2, choices=[('no', '-'), ('ls', '<'), ('le', '<='), ('gs', '>'), ('ge', '>='), ('eq', '=')], default='no')
     restriction_value = models.PositiveIntegerField(default=0)
+    is_free_text = models.BooleanField(default=False)
+    unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True)
+    order_in_unit = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.restriction_type + str(self.restriction_value)

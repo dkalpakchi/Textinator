@@ -70,6 +70,8 @@ def environment(**options):
     env.filters['display_relation'] = display_relation
     env.filters['prettify'] = prettify
     env.filters['bool2str'] = lambda x: str(x).lower()
+    env.filters['any'] = any
+    env.filters['all'] = all
     # i18n template functions
     env.install_gettext_callables(gettext=gettext, ngettext=ngettext,
         newstyle=True)

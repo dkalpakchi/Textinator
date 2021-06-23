@@ -7,7 +7,8 @@
       </span>
     </a>
   </div>
-  <div class="selector element content message-body" data-s="{{source_id}}" data-dp="{{dp_id}}" data-f="{{source_finished}}">
+  {% set all_text_markers=project.markervariant_set.values_list('is_free_text', flat=True)|all %}
+  <div class="selector element content message-body{% if all_text_markers %} broad{% endif %}" data-s="{{source_id}}" data-dp="{{dp_id}}" data-f="{{source_finished}}">
     {% if source_id != -1 %}
       {{text|prettify}}
     {% else %}
