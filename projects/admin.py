@@ -7,6 +7,8 @@ from django_admin_json_editor import JSONEditorWidget
 from django.contrib.admin import SimpleListFilter, DateFieldListFilter
 from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 
+import nested_admin
+
 from .models import *
 
 
@@ -22,34 +24,39 @@ class CommonModelAdmin(admin.ModelAdmin):
         return super(CommonModelAdmin, self).changelist_view(request, extra_context)
 
 
+class MarkerRestrictionInline(nested_admin.NestedStackedInline):
+    model = MarkerRestriction
+    extra = 0
+    # classes = ['collapse']
+    verbose_name = "Restriction"
+    verbose_name_plural = "Restrictions"
+
+
 # TODO: fix name 'ModelValidationError' is not defined
 #       happens when trying to assign marker to be both task and project specific
-class MarkerVariantInline(admin.StackedInline):
+class MarkerVariantInline(nested_admin.NestedStackedInline):
     model = MarkerVariant
     extra = 0
-    classes = ['collapse']
+    inlines = [MarkerRestrictionInline]
     verbose_name = "Project marker"
     verbose_name_plural = "Project markers"
 
 
-class LevelInline(admin.StackedInline):
+class LevelInline(nested_admin.NestedStackedInline):
     model = Level
     extra = 0
-    classes = ['collapse']
 
 
-class PreMarkerInline(admin.StackedInline):
+class PreMarkerInline(nested_admin.NestedStackedInline):
     model = PreMarker
     extra = 0
-    classes = ['collapse']
 
 
-class UserProfileInline(admin.StackedInline):
+class UserProfileInline(nested_admin.NestedStackedInline):
     model = UserProfile
     verbose_name = "Participant"
     verbose_name_plural = "Participants"
     extra = 0
-    classes = ['collapse']
 
 
 class MarkerContextMenuItemInline(admin.StackedInline):
@@ -57,27 +64,23 @@ class MarkerContextMenuItemInline(admin.StackedInline):
     verbose_name = "Context menu item"
     verbose_name_plural = "Context menu items"
     extra = 0
-    classes = ['collapse']
 
 
 class LabelInline(admin.StackedInline):
     readonly_fields = ('text',)
     model = Label
     extra = 0
-    classes = ['collapse']
 
 
 class LabelReviewInline(admin.StackedInline):
     readonly_fields = ('text',)
     model = LabelReview
     extra = 0
-    classes = ['collapse']
 
 
-class RelationInline(admin.StackedInline):
+class RelationInline(nested_admin.NestedStackedInline):
     model = Relation
     extra = 0
-    classes = ['collapse']
     verbose_name = "Project-specific relation"
     verbose_name_plural = "Project-specific relations"
 
@@ -85,7 +88,6 @@ class RelationInline(admin.StackedInline):
 class InputInline(admin.StackedInline):
     model = Input
     extra = 0
-    classes = ['collapse']
     verbose_name = "Input with this context"
     verbose_name_plural = "Inputs with this context"
 
@@ -134,12 +136,13 @@ class ProjectForm(forms.ModelForm):
 
 
 @admin.register(Project)
-class ProjectAdmin(CommonModelAdmin):
+class ProjectAdmin(nested_admin.NestedModelAdmin):
     _list_filter = [
         'institution',
         'task_type',
         'is_open'
     ]
+    readonly_fields = ['dt_created']
     form = ProjectForm
     inlines = [MarkerVariantInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
     save_as = True
@@ -152,6 +155,12 @@ class ProjectAdmin(CommonModelAdmin):
     def save_related(self, request, form, formsets, change):
         super(ProjectAdmin, self).save_related(request, form, formsets, change)
 
+    def changelist_view(self, request, extra_context=None):    
+        if not request.user.is_superuser:
+            self.list_filter = []
+        else:
+            self.list_filter = self._list_filter
+        return super(ProjectAdmin, self).changelist_view(request, extra_context)
 
 
 @admin.register(Context)
@@ -291,6 +300,7 @@ admin.site.register(ProjectData)
 admin.site.register(MarkerPair)
 admin.site.register(MarkerAction)
 admin.site.register(MarkerUnit)
+admin.site.register(MarkerRestriction)
 
 
 admin.site.site_header = 'Textinator admin'

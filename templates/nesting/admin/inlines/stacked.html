@@ -1,0 +1,103 @@
+{% load i18n nested_admin admin_urls static %}
+{% with inline_admin_formset.formset.is_nested as is_nested %}
+
+{% with inline_admin_formset.opts as inline_opts %}
+
+<div class="inline-group group djn-group djn-stacked{% if is_nested %} djn-group-nested{% else %} djn-group-root{% endif %}"
+    id="{{ inline_admin_formset.formset.prefix }}-group"
+    data-inline-type="stacked"
+    data-inline-formset="{{ inline_admin_formset.inline_formset_data }}"
+    data-inline-model="{{ inline_admin_formset.inline_model_id }}">
+    {% if is_nested %}
+    <div id="accordion-{{inline_admin_formset.formset.prefix}}">
+        <fieldset class="module {{ inline_admin_formset.classes }} card card-secondary card-outline">
+        <div class="nested card-header" id="heading-{{inline_admin_formset.inline_model_id}}">
+          <h5 class="mb-0">
+            <a class="btn btn-link collapsed" data-toggle="collapse" data-target="#{{inline_admin_formset.formset.prefix}}" aria-expanded="true" aria-controls="{{inline_admin_formset.formset.prefix}}">
+              {% if inline_admin_formset.opts.title %}{{ inline_admin_formset.opts.title }}{% else %}{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}{% endif %}
+            </a>
+          </h5>
+        </div>
+        <div id="{{inline_admin_formset.formset.prefix}}" class="collapse" aria-labelledby="heading-{{inline_admin_formset.formset.prefix}}" data-parent="#accordion-{{inline_admin_formset.formset.prefix}}">
+            <div class="nested card-body">
+    {% else %}
+    <fieldset class="module {{ inline_admin_formset.classes }} card card-outline">
+        <div class="card-body">
+    {% endif %}
+            {{ inline_admin_formset.formset.management_form }}
+            {{ inline_admin_formset.formset.non_form_errors }}
+
+            {% for inline_admin_form in inline_admin_formset %}
+                <div class="panel inline-related{% if inline_admin_form.original or inline_admin_form.show_url %} has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form last-related{% endif %}"
+                     id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+                    <div class="card card-outline {% if not inline_admin_form.original %}new-stacked card-success{% else %}card-secondary{% endif %}">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <span class="card-tools text-sm">
+                                {% if inline_admin_form.original %}
+                                    {% if inline_admin_form.model_admin.show_change_link and inline_admin_form.model_admin.has_registered_model %}
+                                        <a
+                                            href="{% url inline_admin_form.model_admin.opts|admin_urlname:'change' inline_admin_form.original.pk|admin_urlquote %}" 
+                                            class="{% if inline_admin_formset.has_change_permission %}inlinechangelink{% else %}inlineviewlink{% endif %}">
+                                        {% if inline_admin_formset.has_change_permission %}
+                                            <i class="fas fa-pencil-alt fa-sm"> </i>
+                                        {% else %}
+                                            <i class="fas fa-eye fa-sm"> </i>
+                                        {% endif %}
+                                        </a>
+                                    {% endif %}
+                                {{ inline_admin_form.original }}
+                                {% else %}
+                                    <i class="fas fa-plus fa-sm text-success"> </i>
+                                    {% trans "New" %} {{ inline_admin_formset.opts.verbose_name|capfirst }}
+                                {% endif %}
+                                </span>
+                                {% if inline_admin_form.show_url %}
+                                    <a href="{{ inline_admin_form.absolute_url }}" title="{% trans "View on site" %}">
+                                        <i class="fas fa-eye fa-sm"> </i>
+                                    </a>
+                                {% endif %}
+                            </h3>
+                            {% if inline_admin_formset.formset.can_delete and inline_admin_form.original %}
+                                <span class="card-tools delete">
+                                  {{ inline_admin_form.deletion_field.field }} {{ inline_admin_form.deletion_field.label_tag }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% if inline_admin_form.form.non_field_errors %}{{ inline_admin_form.form.non_field_errors }}{% endif %}
+                            {% for fieldset in inline_admin_form %}
+                                {% include "admin/includes/fieldset.html" %}
+                            {% endfor %}
+                            {% if inline_admin_form.needs_explicit_pk_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
+                            {% if inline_admin_form.fk_field %}{{ inline_admin_form.fk_field.field }}{% endif %}
+                            {% if inline_admin_form.form.inlines %}
+                                {% for nested in inline_admin_form.form.inlines %}
+                                    {% include nested.opts.template with inline_admin_formset=nested %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        {% if inline_admin_formset.formset.can_delete and not inline_admin_form.original %}
+                            <span><a class="inline-deletelink djn-remove-handler {{ inline_admin_formset.handler_classes|join:" " }}" href="javascript:void(0)">Remove</a></span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="djn-module djn-add-item add-item add-row">
+            <a href="javascript://" class="add-handler djn-add-handler {{ inline_admin_formset.handler_classes|join:" " }}">
+                {% blocktrans with inline_admin_formset.opts.verbose_name|strip_parent_name:inline_opts.verbose_name|title as verbose_name %}Add another {{ verbose_name }}{% endblocktrans %}
+            </a>
+        </div>
+        </div>
+    {% if is_nested %}
+        </div>
+    {% endif %}
+    </fieldset>
+    {% if is_nested %}
+        </div>
+    {% endif %}
+</div>
+
+{% endwith %}{# ends with inline_admin_formset.opts as inline_opts #}
+
+{% endwith %}{# ends {% with inline_admin_formset.formset.is_nested as is_nested %} #}

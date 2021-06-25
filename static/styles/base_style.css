@@ -216,14 +216,13 @@ textarea {
 }
 
 .text .message-body {
-  max-height: 500px;
+  height: 50vh;
   overflow-y: scroll;
   text-align: justify;
 }
 
 .text .message-body.broad {
-  height: 820px !important;
-  max-height: 820px;
+  height: 85vh;
 }
 
 .achievements {
@@ -302,7 +301,7 @@ textarea {
 }
 
 .marked.relations {
-  max-height: 600px;
+  height: 50vh;
 }
 
 .marked.relations .message-body {
@@ -483,7 +482,7 @@ label.error {
 }
 
 .marker.groups.message .message-body {
-  max-height: 650px;
+  height: 50vh;
   overflow-y: scroll;
 }
 
@@ -516,4 +515,10 @@ label.error {
     top: 7px;
     width: 7.5em;
     z-index: 4;
+}
+
+
+/* Fix integration of django-nested-admin with jazzmin */
+.nested.card-header, .nested.card-body {
+  border: 1px solid rgba(0,0,0,.125)
 }

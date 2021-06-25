@@ -301,18 +301,41 @@ class MarkerUnit(CommonModel):
 
 class MarkerVariant(CommonModel):
     class Meta:
-        unique_together = (('project', 'marker', 'restriction_type', 'unit'),)
+        unique_together = (('project', 'marker', 'unit'),)
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    restriction_type = models.CharField(max_length=2, choices=[('no', '-'), ('ls', '<'), ('le', '<='), ('gs', '>'), ('ge', '>='), ('eq', '=')], default='no')
-    restriction_value = models.PositiveIntegerField(default=0)
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)    
     is_free_text = models.BooleanField(default=False)
     unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True)
     order_in_unit = models.IntegerField(blank=True, null=True)
 
+    def min(self):
+        for r in self.markerrestriction_set.all():
+            if r.kind == 'ge' or r.kind == 'eq':
+                return r.value
+            elif r.kind == 'gs':
+                return r.value + 1
+        return -1
+
+    def max(self):
+        for r in self.markerrestriction_set.all():
+            if r.kind == 'le' or r.kind == 'eq':
+                return r.value
+            elif r.kind == 'ls':
+                return r.value - 1
+        return -1
+
+class MarkerRestriction(CommonModel):
+    variant = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE)
+    kind = models.CharField(max_length=2, choices=[
+        ('no', '-'), ('ls', '<'),
+        ('le', '<='), ('gs', '>'),
+        ('ge', '>='), ('eq', '=')
+    ])
+    value = models.PositiveIntegerField()
+
     def __str__(self):
-        return self.restriction_type + str(self.restriction_value)
+        return self.kind + str(self.value)
 
 
 class ProjectData(CommonModel):

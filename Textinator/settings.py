@@ -43,6 +43,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'filebrowser',
     'django.contrib.admin',
     'django.contrib.auth',

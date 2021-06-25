@@ -1729,7 +1729,8 @@
       $inputTextField.prop("disabled", false);
 
       var inputFormData = $inputForm.serializeObject(),
-          underReview = $inputBlock.prop('review') || false;
+          underReview = $inputBlock.prop('review') || false,
+          $markerGroups = $("#markerGroups");
 
       // if there's an input form field, then create input_context
       if (inputFormData.hasOwnProperty('input'))
@@ -1742,9 +1743,11 @@
       inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
       inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
 
-      if (inputFormData['chunks'].length > 0 || inputFormData['relations'].length > 0) {
+      if (inputFormData['chunks'].length > 0 || inputFormData['relations'].length > 0 || $markerGroups.length > 0) {
         inputFormData['chunks'] = JSON.stringify(inputFormData['chunks']);
         inputFormData['relations'] = JSON.stringify(inputFormData['relations']);
+        inputFormData["marker_groups"] = JSON.stringify($markerGroups.length > 0 ? $markerGroups.serializeObject() : {});
+        
         $.ajax({
           method: "POST",
           url: inputForm.action,
@@ -1753,6 +1756,10 @@
           success: function(data) {
             if (data['error'] == false) {
               var $title = $inputBlock.find('.message-header p');
+
+              // $("#markerGroups input").each(function(x) {
+              //   $(x).val('');
+              // });
 
               if (data['next_task'] == 'regular') {
                 // no review task

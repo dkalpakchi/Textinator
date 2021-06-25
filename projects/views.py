@@ -332,9 +332,12 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 @require_http_methods(["POST"])
 def record_datapoint(request, proj):
     data = request.POST
+    print(data)
     chunks = json.loads(data['chunks'])
     relations = json.loads(data['relations'])
     ctx_cache, inp_cache = caches['context'], caches['input']
+
+    marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
 
     is_review = data.get('is_review', 'f') == 'true'
     is_resolution = data.get('is_resolution', 'f') == 'true'
@@ -354,6 +357,16 @@ def record_datapoint(request, proj):
         return JsonResponse({'error': True})
     except DataSource.DoesNotExist:
         data_source = None
+
+    if marker_groups:
+        dct = OrderedDict()
+        for k, v in marker_groups.items():
+            unit, marker, _ = k.split("_")
+            if unit not in dct:
+                dct[unit] = defaultdict(list)
+            dct[unit][marker].append(v)
+        marker_groups = dct
+    print(marker_groups)
 
     # First create a chunk for an input context (if available), which is always all text
     # input_context is always a full text
