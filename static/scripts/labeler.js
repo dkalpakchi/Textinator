@@ -1718,23 +1718,20 @@
       if (!labelerModule.checkRestrictions()) return;
 
       var $inputForm = $('#inputForm'),
-          $inputTextField = $inputForm.find('input[name="input"]'),
           $inputBlock = $inputForm.closest('article');
-
-      if ($inputTextField.length > 0 && $inputTextField.val().trim() == 0) {
-        alert("Please write a question first.");
-        return;
-      }
-
-      $inputTextField.prop("disabled", false);
 
       var inputFormData = $inputForm.serializeObject(),
           underReview = $inputBlock.prop('review') || false,
           $markerGroups = $("#markerGroups");
 
       // if there's an input form field, then create input_context
-      if (inputFormData.hasOwnProperty('input'))
-        inputFormData['input_context'] = labelerModule.selectorArea.textContent;
+      if ($markerGroups.length > 0) {
+        if ($markerGroups.valid()) {
+          inputFormData['input_context'] = labelerModule.selectorArea.textContent;
+        } else {
+          return;
+        }
+      }
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());
 
@@ -1777,12 +1774,6 @@
                 // TODO: get title for a review task from the server
                 //       make it a configurable project setting
                 $title.html("Your question");
-
-                if ($inputTextField.length > 0) {
-                  $inputTextField.prop("disabled", false);
-                  $inputTextField.val('');
-                  $inputTextField.focus();  
-                }
               } else {
                 // FIXME: review task
                 labelerModule.resetArticle();
@@ -1792,11 +1783,6 @@
                 $questionBlock.prop('review', true);
 
                 $title.html("Review question");
-
-                if ($inputTextField.length > 0) {
-                  $inputTextField.val(data['input']['content']);
-                  $inputTextField.prop("disabled", true);
-                }
               }
             }
 
@@ -1820,12 +1806,6 @@
           },
           error: function() {
             console.log("ERROR!");
-            if (underReview)
-              $inputTextField.prop("disabled", true)
-            else {
-              $inputTextField.val('');
-              $inputTextField.prop('disabled', false);
-            }
             $('#undoLast').attr('disabled', true);
             sessionStart = new Date();
             $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');

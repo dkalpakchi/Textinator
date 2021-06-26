@@ -1,7 +1,7 @@
 from .models import *
 
 
-def process_chunk(chunk, batch, inp, project, data_source, user, caches, booleans):
+def process_chunk(chunk, batch, project, data_source, user, caches, booleans):
     saved_labels = 0
     if chunk.get('marked', False):
         ctx_cache, inp_cache, label_cache = caches
@@ -33,11 +33,7 @@ def process_chunk(chunk, batch, inp, project, data_source, user, caches, boolean
                 # resolution case
                 pass
             elif is_review:
-                # check if matches original answer
-                if inp:
-                    original = Label.objects.filter(input=inp, context=ctx).get()
-                else:
-                    original = Label.objects.filter(context=ctx).get()
+                original = Label.objects.filter(context=ctx).get()
 
                 if original:
                     ambiguity_status, is_match = 'no', False
@@ -57,7 +53,7 @@ def process_chunk(chunk, batch, inp, project, data_source, user, caches, boolean
             else:
                 # it's fine if input is blank
                 new_label = Label.objects.create(
-                    input=inp, context=ctx, start=new_start, end=new_end, marker=marker,
+                    context=ctx, start=new_start, end=new_end, marker=marker,
                     user=user, project=project, batch=batch, extra={k: v for k, v in chunk['extra'].items() if v}
                 )
                 label_cache[chunk['id']] = new_label.id

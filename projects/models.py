@@ -288,7 +288,8 @@ class Project(CommonModel):
 
 
 class MarkerUnit(CommonModel):
-    size = models.IntegerField(default=1)
+    size = models.PositiveIntegerField(default=1)
+    minimum_required = models.PositiveIntegerField(default=1)
     is_rankable = models.BooleanField(default=False)
     name = models.CharField(max_length=10, help_text="Internal name for the unit (max 10 characters)")
 
@@ -307,7 +308,7 @@ class MarkerVariant(CommonModel):
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)    
     is_free_text = models.BooleanField(default=False)
     unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True)
-    order_in_unit = models.IntegerField(blank=True, null=True)
+    order_in_unit = models.PositiveIntegerField(blank=True, null=True)
 
     def min(self):
         for r in self.markerrestriction_set.all():
@@ -324,6 +325,9 @@ class MarkerVariant(CommonModel):
             elif r.kind == 'ls':
                 return r.value - 1
         return -1
+
+    def __str__(self):
+        return str(self.marker) + "<{}>".format(self.project.title)
 
 class MarkerRestriction(CommonModel):
     variant = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE)
@@ -420,16 +424,27 @@ class Context(CommonModel):
         return truncate(self.content)
 
 
+class Batch(CommonModel):
+    class Meta:
+        verbose_name_plural = "Batches"
+
+    uuid = models.UUIDField()
+
+    def __str__(self):
+        return str(self.uuid)
+
+
 class Input(CommonModel):
     content = models.TextField()
+    marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
+    unit = models.PositiveIntegerField(default=1)
 
     @property
     def content_hash(self):
         return hash_text(self.content)
-
-    def get_labels(self):
-        return Label.objects.filter(input=self)
 
     def __str__(self):
         return truncate(self.content, 50)
@@ -444,24 +459,17 @@ class Input(CommonModel):
 class Label(CommonModel):
     start = models.PositiveIntegerField(null=True)
     end = models.PositiveIntegerField(null=True)
-    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, null=True) # null is allowed for backward compatibility reason
     extra = models.JSONField(null=True, blank=True)
-    input = models.ForeignKey(Input, on_delete=models.CASCADE, null=True, blank=True)     # if input is there, input should be not NULL
     context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True, blank=True) # if there is no input, there must be context
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    impossible = models.BooleanField(default=False)
     undone = models.BooleanField(default=False)
-    batch = models.UUIDField(null=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['project'])
-        ]
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
+    unit = models.PositiveIntegerField(default=1)
 
     @property
     def text(self):
-        return self.context.content[self.start:self.end] if self.context else self.input.content[self.start:self.end]
+        return self.context.content[self.start:self.end] if self.context else ""
 
     def to_short_rel_json(self, dt_format=None):
         res = super(Label, self).to_json(dt_format=dt_format)
@@ -522,14 +530,9 @@ class LabelRelation(CommonModel):
     first_label = models.ForeignKey(Label, related_name='first_label', on_delete=models.CASCADE)
     second_label = models.ForeignKey(Label, related_name='second_label', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     undone = models.BooleanField(default=False)
-    batch = models.UUIDField(null=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['project'])
-        ]
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
+    unit = models.PositiveIntegerField(default=1)
 
     @property
     def graph(self):
@@ -568,8 +571,6 @@ class LabelRelation(CommonModel):
             'batch': self.batch
         })
         return res
-
-
 
 class UserProfile(CommonModel):
     points = models.FloatField(default=0.0)

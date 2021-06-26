@@ -517,6 +517,14 @@ label.error {
     z-index: 4;
 }
 
+input.help.is-danger {
+  font-size: 1rem;
+}
+
+label.help.is-danger {
+  margin-top: 0;
+  margin-bottom: 0.4rem;
+}
 
 /* Fix integration of django-nested-admin with jazzmin */
 .nested.card-header, .nested.card-body {

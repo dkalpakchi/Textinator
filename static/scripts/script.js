@@ -184,4 +184,17 @@ $(document).ready(function() {
 
   $( "#sortable" ).sortable();
   $( "#sortable" ).disableSelection();
+
+  $('form').validate({
+    errorClass: "help is-danger"
+  });
+
+  $('input[type!="hidden"]').each(function() {
+    console.log($(this).attr('data-required') == "true")
+    if ($(this).attr('data-required') == "true") {
+      $(this).rules('add', {
+        required: true
+      });
+    }
+  });
 });

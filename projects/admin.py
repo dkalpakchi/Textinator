@@ -71,7 +71,6 @@ class LabelInline(admin.StackedInline):
     model = Label
     extra = 0
 
-
 class LabelReviewInline(admin.StackedInline):
     readonly_fields = ('text',)
     model = LabelReview
@@ -88,8 +87,13 @@ class RelationInline(nested_admin.NestedStackedInline):
 class InputInline(admin.StackedInline):
     model = Input
     extra = 0
-    verbose_name = "Input with this context"
-    verbose_name_plural = "Inputs with this context"
+
+
+class LabelRelationInline(admin.StackedInline):
+    raw_id_fields = ('first_label', 'second_label')
+    model = LabelRelation
+    extra = 0
+
 
 
 class ProjectForm(forms.ModelForm):
@@ -177,9 +181,16 @@ class ContextAdmin(CommonModelAdmin):
 @admin.register(Input)
 class InputAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
-    inlines = [LabelInline]
+    # inlines = [LabelInline]
     list_display = ['content', 'context']
     search_fields = ['context__content', 'content']
+
+
+@admin.register(Batch)
+class BatchAdmin(CommonModelAdmin):
+    inlines = [InputInline, LabelInline, LabelRelationInline]
+    search_fields = ['input__content', 'uuid']
+
 
 # TODO: translation?
 # from django.utils.translation import ugettext_lazy as _
@@ -189,13 +200,13 @@ class LabelAdmin(CommonModelAdmin):
     _list_filter = (
        'marker',
        'user',
-       'project',
+       'marker__project',
        ('dt_created', DateTimeRangeFilter),
        'undone'
     )
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
     inlines = [LabelReviewInline]
-    search_fields = ['context__content', 'input__content', 'batch']
+    search_fields = ['context__content', 'batch']
 
     def get_queryset(self, request):
         qs = super(LabelAdmin, self).get_queryset(request)
@@ -222,6 +233,7 @@ class LabelRelationAdmin(CommonModelAdmin):
         'user'
     ]
     readonly_fields = CommonModelAdmin.readonly_fields + ['graph', 'batch']
+    raw_id_fields = ('first_label', 'second_label')
 
     def get_queryset(self, request):
         qs = super(LabelRelationAdmin, self).get_queryset(request)

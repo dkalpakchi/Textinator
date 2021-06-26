@@ -18,7 +18,8 @@ from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Value
+from django.db.models.functions import Replace
 
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
@@ -332,10 +333,9 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 @require_http_methods(["POST"])
 def record_datapoint(request, proj):
     data = request.POST
-    print(data)
     chunks = json.loads(data['chunks'])
     relations = json.loads(data['relations'])
-    ctx_cache, inp_cache = caches['context'], caches['input']
+    ctx_cache = caches['context']
 
     marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
 
@@ -358,50 +358,62 @@ def record_datapoint(request, proj):
     except DataSource.DoesNotExist:
         data_source = None
 
+    batch = Batch.objects.create(uuid=uuid.uuid4())
+
     if marker_groups:
         dct = OrderedDict()
         for k, v in marker_groups.items():
-            unit, marker, _ = k.split("_")
-            if unit not in dct:
-                dct[unit] = defaultdict(list)
-            dct[unit][marker].append(v)
+            unit, i, marker, _ = k.split("_")
+            prefix = "{}_{}".format(unit, i)
+            if prefix not in dct:
+                dct[prefix] = defaultdict(list)
+            if v:
+                dct[prefix][marker].append(v)
         marker_groups = dct
-    print(marker_groups)
 
-    # First create a chunk for an input context (if available), which is always all text
-    # input_context is always a full text
-    if 'input_context' in data and type(data['input_context']) == str:
-        ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
-        if not ctx:
-            ctx = Context.objects.create(datasource=data_source, content=data['input_context'])
-            ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
-    else:
-        ctx = None
+        if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
+            ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
+            if not ctx:
+                ctx = Context.objects.create(datasource=data_source, content=data['input_context'])
+                ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
+            print(data['input_context'])
 
-    # Next create an input for that context if available
-    # We will have one input, no matter what, but can have many labels for it
-    # FIXME: What if the input is the same, but context is different?
-    if data.get('input'):
-        inp = retrieve_by_hash(data['input'], Input, inp_cache)
-        if not inp:
-            inp = Input.objects.create(context=ctx, content=data['input'])
-            inp_cache.set(inp.content_hash, inp.pk, 600)
-    else:
-        inp = None
+            for i, (unit, v) in enumerate(marker_groups.items()):
+                unit_cache = []
+                for short, values in v.items():
+                    marker = project.markers.filter(short=short).first()
+                    mv = MarkerVariant.objects.filter(project=project, marker=marker).annotate(
+                        filtered_unit=Replace('unit__name', Value('_'), Value(''))
+                    ).filter(filtered_unit=unit.split("_")[0]).first()
+
+                    N = len(values)
+                    if N >= mv.min() and N <= mv.max():
+                        for val in values:
+                            if val:
+                                unit_cache.append({
+                                    'content': val,
+                                    'marker': mv,
+                                    'unit': i + 1
+                                })
+                    else:
+                        unit_cache = []
+                        break
+
+                for dct in unit_cache:
+                    if dct['marker'].is_free_text:
+                        Input.objects.create(context=ctx, user=user, batch=batch, **dct)
 
     saved_labels = 0
     label_cache = {}
-    batch = uuid.uuid4()
     for chunk in chunks:
         # inp is typically the same for all chunks
-        res_chunk = process_chunk(chunk, batch, inp, project, data_source, user, (ctx_cache, inp_cache, label_cache), (is_resolution, is_review))
+        res_chunk = process_chunk(chunk, batch, project, data_source, user, (ctx_cache, label_cache), (is_resolution, is_review))
         if res_chunk:
-            ret_caches, inp, just_saved = res_chunk
-            ctx_cache, inp_cache, label_cache = ret_caches
+            ret_caches, just_saved = res_chunk
+            ctx_cache, label_cache = ret_caches
             saved_labels += just_saved
 
-    for rel in relations:
-        batch = uuid.uuid4()
+    for i, rel in enumerate(relations):
         for link in rel['links']:
             source_id, target_id = int(link['s']), int(link['t'])
 
@@ -416,11 +428,9 @@ def record_datapoint(request, proj):
             except Relation.DoesNotExist:
                 continue
 
-            source_label.batch = batch
-            source_label.save()
-            target_label.batch = batch
-            target_label.save()
-            LabelRelation.objects.create(rule=rule, first_label=source_label, second_label=target_label, user=user, project=project, batch=batch)
+            LabelRelation.objects.create(
+                rule=rule, first_label=source_label, second_label=target_label, user=user, batch=batch, unit=i+1
+            )
 
     # Peer review task
     # if project.is_peer_reviewed:
@@ -435,10 +445,6 @@ def record_datapoint(request, proj):
 
     return JsonResponse({
         'error': False,
-        'input': {
-            'content': inp.content,
-            'context': inp.context.content
-        } if inp else None,
         'submitted': u_profile.submitted(),
         'submitted_today': u_profile.submitted_today(),
         'next_task': 'regular',
