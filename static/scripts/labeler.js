@@ -1797,6 +1797,8 @@
             
             sessionStart = new Date();
 
+            $("#markerGroups input").each(function(i, x) { $(x).val('') });
+
             // TODO; trigger iff .countdown is present
             $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
 

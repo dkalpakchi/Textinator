@@ -190,10 +190,25 @@
         </div>
       </div>
     </div>
+
+    <div class="field">
+      <label class="label">Marker groups</label>
+      <div class="control">
+        {% include 'partials/_loader.html' %}
+        <div class="select">
+          <select id="freeText">
+            <option value="-1">Loading...</option>
+          </select>
+          <span class="placeholder"></span>
+        </div>
+      </div>
+    </div>
+
     {% if contexts %}
       <article id="exploreText" class="context message is-dark">
         {{contexts[0].content}}
       </article>
+      <div id="freeTextResult" class="mb-5"></div>
     {% else %}
       <p>Nothing to show yet</p>
     {% endif %}

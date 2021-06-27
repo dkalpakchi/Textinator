@@ -190,6 +190,7 @@ class InputAdmin(CommonModelAdmin):
 class BatchAdmin(CommonModelAdmin):
     inlines = [InputInline, LabelInline, LabelRelationInline]
     search_fields = ['input__content', 'uuid']
+    list_display = ['uuid', 'user']
 
 
 # TODO: translation?

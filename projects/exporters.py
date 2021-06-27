@@ -34,12 +34,12 @@ def export_corr(project):
     # We also skip non-relation labels for corr even if they exist
     is_paragraph_context = project.context_size == 'p'
     json_exporter = 'to_rel_json' if is_paragraph_context else 'to_short_rel_json'
-    relations = LabelRelation.objects.filter(project=project, undone=False).order_by('first_label__context_id', 'batch')
+    relations = LabelRelation.objects.filter(marker__project=project, undone=False).order_by('first_label__context_id', 'batch')
 
     grouped_relations = {} if is_paragraph_context else []
     is_bidirectional, hashes = {}, set()
     group, context, context_id, batch = [], None, -1, -1
-    for r in relations.prefetch_related('first_label', 'second_label', 'rule'):
+    for r in relations.prefetch_related('first_label', 'second_label', 'rule', 'batch'):
         if batch == -1 or r.batch != batch:
             if group:
                 if have_the_same_relation(group) and is_bidirectional.get(group[0]['type'], False):

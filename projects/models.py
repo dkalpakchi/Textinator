@@ -329,6 +329,13 @@ class MarkerVariant(CommonModel):
     def __str__(self):
         return str(self.marker) + "<{}>".format(self.project.title)
 
+
+    def to_json(self):
+        res = self.marker.to_json()
+        res['order'] = self.order_in_unit
+        return res
+
+
 class MarkerRestriction(CommonModel):
     variant = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE)
     kind = models.CharField(max_length=2, choices=[
@@ -429,6 +436,7 @@ class Batch(CommonModel):
         verbose_name_plural = "Batches"
 
     uuid = models.UUIDField()
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return str(self.uuid)
@@ -438,7 +446,6 @@ class Input(CommonModel):
     content = models.TextField()
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
     unit = models.PositiveIntegerField(default=1)
 
@@ -449,11 +456,16 @@ class Input(CommonModel):
     def __str__(self):
         return truncate(self.content, 50)
 
-    def to_json(self):
-        return {
-            'content': self.content,
-            'context': self.context.content if self.context else None
-        }
+    def to_short_json(self, dt_format=None):
+        res = super(Input, self).to_json(dt_format=dt_format)
+        res['content'] = self.content,
+        res['marker'] = self.marker.to_json()
+        return res
+
+    def to_json(self, dt_format=None):
+        res = self.to_short_json()
+        res['context'] = self.context.content if self.context else None
+        return res
 
 
 class Label(CommonModel):
@@ -462,7 +474,6 @@ class Label(CommonModel):
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, null=True) # null is allowed for backward compatibility reason
     extra = models.JSONField(null=True, blank=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True, blank=True) # if there is no input, there must be context
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     undone = models.BooleanField(default=False)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
     unit = models.PositiveIntegerField(default=1)
@@ -474,12 +485,12 @@ class Label(CommonModel):
     def to_short_rel_json(self, dt_format=None):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update({
-            'marker': self.marker.name,
+            'marker': self.marker.marker.name,
             'extra': self.extra,
             'start': self.start,
             'end': self.end,
             'text': self.text,
-            'user': self.user.username,
+            'user': self.batch.user.username,
             'batch': str(self.batch)
         })
         return res
@@ -500,7 +511,6 @@ class Label(CommonModel):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update(self.to_short_json())
         res['context'] = self.context.content
-        res['input'] = self.input.to_json() if self.input else None
         return res
 
     def __str__(self):
@@ -529,7 +539,6 @@ class LabelRelation(CommonModel):
     rule = models.ForeignKey(Relation, on_delete=models.CASCADE)
     first_label = models.ForeignKey(Label, related_name='first_label', on_delete=models.CASCADE)
     second_label = models.ForeignKey(Label, related_name='second_label', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     undone = models.BooleanField(default=False)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
     unit = models.PositiveIntegerField(default=1)
@@ -556,8 +565,8 @@ class LabelRelation(CommonModel):
             'rule': self.rule.to_json(),
             'first': self.first_label.to_short_json(),
             'second': self.second_label.to_short_json(),
-            'user': self.user.username,
-            'batch': self.batch
+            'user': self.batch.user.username,
+            'batch': str(self.batch)
         })
         return res
 
@@ -567,8 +576,8 @@ class LabelRelation(CommonModel):
             'rule': self.rule.to_json(),
             'first': self.first_label.to_json(),
             'second': self.second_label.to_json(),
-            'user': self.user.username,
-            'batch': self.batch
+            'user': self.batch.user.username,
+            'batch': str(self.batch)
         })
         return res
 
@@ -596,39 +605,6 @@ class UserProfile(CommonModel):
     @property
     def peer_points(self):
         return self.accepted / 2
-
-    def submitted(self):
-        k = self.project.points_unit
-        if self.project.points_scope == 'i':
-            return k * Label.objects.filter(user=self.user, project=self.project, undone=False).values_list('input_id').distinct().count()
-        elif self.project.points_scope == 'l':
-            return k * Label.objects.filter(user=self.user, project=self.project, undone=False).count()
-        else:
-            return -1
-
-    def submitted_today(self):
-        k, now = self.project.points_unit, datetime.now()
-        if self.project.points_scope == 'i':
-            return k * Label.objects.filter(
-                user=self.user,
-                project=self.project,
-                dt_created__day=now.day,
-                dt_created__month=now.month,
-                dt_created__year=now.year,
-                undone=False
-            ).values_list('input_id').distinct().count()
-        elif self.project.points_scope == 'l':
-            return k * Label.objects.filter(
-                user=self.user,
-                project=self.project,
-                dt_created__day=now.day,
-                dt_created__month=now.month,
-                dt_created__year=now.year,
-                undone=False
-            ).count()
-        else:
-            return -1
-        
 
     def reviewed(self):
         return LabelReview.objects.filter(user=self.user).count()

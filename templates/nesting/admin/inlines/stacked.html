@@ -84,10 +84,16 @@
                 </div>
             {% endfor %}
             <div class="djn-module djn-add-item add-item add-row">
-            <a href="javascript://" class="add-handler djn-add-handler {{ inline_admin_formset.handler_classes|join:" " }}">
-                {% blocktrans with inline_admin_formset.opts.verbose_name|strip_parent_name:inline_opts.verbose_name|title as verbose_name %}Add another {{ verbose_name }}{% endblocktrans %}
-            </a>
-        </div>
+                {% if "-empty-" in inline_admin_formset.formset.prefix %}
+                    <div class="alert alert-danger" role="alert">
+                        Save the parent element first before adding {{ inline_admin_formset.opts.verbose_name_plural }}.
+                    </div>
+                {% else %}
+                    <a href="javascript://" class="add-handler djn-add-handler {{ inline_admin_formset.handler_classes|join:" " }}">
+                        {% blocktrans with inline_admin_formset.opts.verbose_name|strip_parent_name:inline_opts.verbose_name|title as verbose_name %}Add another {{ verbose_name }}{% endblocktrans %}
+                    </a>
+                {% endif %}
+            </div>
         </div>
     {% if is_nested %}
         </div>

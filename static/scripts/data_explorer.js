@@ -12,6 +12,26 @@
       resetText = "",
       activeFilters = {};
 
+  function appendGroup(area, groups) {
+    area.empty();
+    for (var g in groups) {
+      var group = groups[g],
+          $ul = $('<ul class="block">');
+      for (var i = 0; i < group.length; i++) {
+        var $tag = $('<div class="tags has-addons">'),
+            $marker = $('<span class="tag is-' + group[i]['marker']['color'] + '">' + group[i]['marker']['name'] + '</span>'),
+            $context = $('<span class="tag is-light">' + group[i]['content'] + "</span>"),
+            $li = $('<li>');
+        $tag.append($marker);
+        $tag.append($context);
+        $li.append($tag);
+        $ul.append($li);
+      }
+      area.append($ul);
+    }
+    
+  }
+
   function markStatic(area, labels) {
     area.innerHTML = resetText;
     var acc = 0;
@@ -131,9 +151,31 @@
         $("#exploreText").text(d.data);
         resetText = d.data;
         contextBounded = d.bounded_labels;
-        console.log(contextBounded);
         contextFree = d.free_labels;
         contextRelations = d.relations;
+        freeText = d.free_text_labels;
+
+        var $freeTextInput = $("#freeText");
+        $freeTextInput.empty();
+        $freeTextInput.append($('<option value="-1">Choose an annotation</option>'))
+        for (var k in freeText) {
+          var obj = freeText[k];
+          $freeTextInput.append($('<option value="' + k + '">' + k + " (" + obj[Object.keys(obj)[0]][0]['created'] + ")</option>"))
+        }
+
+        var $freeTextDiv = $freeTextInput.parent();
+        $freeTextDiv.parent().find('.loading').remove();
+        if (Object.keys(freeText).length <= 0) {
+          $freeTextDiv.removeClass('select');
+          $freeTextInput.hide();
+          $freeTextDiv.find('.placeholder').text("No annotations found");
+        } else {
+          $freeTextDiv.addClass('select');
+          $freeTextInput.show();
+          $freeTextDiv.find('.placeholder').text("");
+        }
+        $freeTextDiv.show();
+
         var $freeAnnotations = $("#contextFreeAnnotations");
         $freeAnnotations.empty();
         var cf = {};
@@ -252,6 +294,7 @@
     $('#contextFreeAnnotations').parent().hide();
     $('#contextAnnotations').parent().hide();
     $('#contextRelations').parent().hide();
+    $('#freeText').parent().hide();
 
     $("[id^=item-context-]").accordion({
       collapsible: true,
@@ -305,6 +348,15 @@
         markStatic(textArea, contextRelations[selected]['labels']);
       else 
         textArea.innerHTML = resetText;
+    });
+
+    $('#freeText').on('change', function(e) {
+      var target = e.target,
+          selected = target.value;
+      if (selected != -1)
+        appendGroup($("#freeTextResult"), freeText[selected]);
+      else 
+        $("#freeTextResult").empty();
     });
 
     $("#filterForm").on('submit', function(e) {

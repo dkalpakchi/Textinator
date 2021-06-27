@@ -4,7 +4,7 @@ from .models import *
 def process_chunk(chunk, batch, project, data_source, user, caches, booleans):
     saved_labels = 0
     if chunk.get('marked', False):
-        ctx_cache, inp_cache, label_cache = caches
+        ctx_cache, label_cache = caches
         is_resolution, is_review = booleans
 
         # First check for the "context", there may be 2 cases:
@@ -20,10 +20,12 @@ def process_chunk(chunk, batch, project, data_source, user, caches, booleans):
 
         try:
             if (not 'label' in chunk) or (type(chunk['label']) != str):
-                return (ctx_cache, inp_cache, label_cache), saved_labels
-            marker = Marker.objects.get(short=chunk['label'].strip())
+                return (ctx_cache, label_cache), saved_labels
+            marker_obj = Marker.objects.get(short=chunk['label'].strip())
+            # TODO: check interaction with MarkerUnits
+            marker = MarkerVariant.objects.filter(project=project, marker=marker_obj).first()
         except Marker.DoesNotExist:
-            return (ctx_cache, inp_cache, label_cache), saved_labels
+            return (ctx_cache, label_cache), saved_labels
 
         if 'lengthBefore' in chunk and 'start' in chunk and 'end' in chunk:
             new_start = chunk['lengthBefore'] + chunk['start']
@@ -54,8 +56,8 @@ def process_chunk(chunk, batch, project, data_source, user, caches, booleans):
                 # it's fine if input is blank
                 new_label = Label.objects.create(
                     context=ctx, start=new_start, end=new_end, marker=marker,
-                    user=user, project=project, batch=batch, extra={k: v for k, v in chunk['extra'].items() if v}
+                    batch=batch, extra={k: v for k, v in chunk['extra'].items() if v}
                 )
                 label_cache[chunk['id']] = new_label.id
                 saved_labels += 1
-        return (ctx_cache, inp_cache, label_cache), inp, saved_labels
+        return (ctx_cache, label_cache), saved_labels

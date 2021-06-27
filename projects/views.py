@@ -51,7 +51,7 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        self.labels = Label.objects.filter(project__id=self.pk, undone=False).all()
+        self.labels = Label.objects.filter(marker__project__id=self.pk, undone=False).all()
         self.x_axis = sorted(set([len(l.text.split()) for l in self.labels]))
         self.project = Project.objects.get(pk=self.pk)
         self.participants = self.project.participants.all()
@@ -69,7 +69,7 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
 
         for l in self.labels:
             try:
-                data[self.p2i[l.marker.name]][self.l2i[len(l.text.split())]] += 1
+                data[self.p2i[l.marker.marker.name]][self.l2i[len(l.text.split())]] += 1
             except:
                 pass
         return data
@@ -88,10 +88,10 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        labels = Label.objects.filter(project__id=self.pk, undone=False).order_by('dt_created').all()
+        labels = Label.objects.filter(marker__project__id=self.pk, undone=False).order_by('dt_created').all()
         self.labels_by_user = defaultdict(list)
         for l in labels:
-            self.labels_by_user[l.user.username].append(l)
+            self.labels_by_user[l.batch.user.username].append(l)
 
         timings = []
         for u in self.labels_by_user:
@@ -358,7 +358,7 @@ def record_datapoint(request, proj):
     except DataSource.DoesNotExist:
         data_source = None
 
-    batch = Batch.objects.create(uuid=uuid.uuid4())
+    batch = Batch.objects.create(uuid=uuid.uuid4(), user=user)
 
     if marker_groups:
         dct = OrderedDict()
@@ -376,7 +376,6 @@ def record_datapoint(request, proj):
             if not ctx:
                 ctx = Context.objects.create(datasource=data_source, content=data['input_context'])
                 ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
-            print(data['input_context'])
 
             for i, (unit, v) in enumerate(marker_groups.items()):
                 unit_cache = []
@@ -401,7 +400,7 @@ def record_datapoint(request, proj):
 
                 for dct in unit_cache:
                     if dct['marker'].is_free_text:
-                        Input.objects.create(context=ctx, user=user, batch=batch, **dct)
+                        Input.objects.create(context=ctx, batch=batch, **dct)
 
     saved_labels = 0
     label_cache = {}
@@ -429,7 +428,7 @@ def record_datapoint(request, proj):
                 continue
 
             LabelRelation.objects.create(
-                rule=rule, first_label=source_label, second_label=target_label, user=user, batch=batch, unit=i+1
+                rule=rule, first_label=source_label, second_label=target_label, batch=batch, unit=i+1
             )
 
     # Peer review task
@@ -445,8 +444,6 @@ def record_datapoint(request, proj):
 
     return JsonResponse({
         'error': False,
-        'submitted': u_profile.submitted(),
-        'submitted_today': u_profile.submitted_today(),
         'next_task': 'regular',
         'batch': str(batch)
     })
@@ -551,10 +548,11 @@ def undo_last(request, proj):
         u_profile = None
 
     # find a last relation submitted if any
-    rel_batch = LabelRelation.objects.filter(user=user, project=project).order_by('-dt_created').all()[:1].values('batch')
+    rel_batch = LabelRelation.objects.filter(
+        batch__user=user, first_label__marker__project=project).order_by('-dt_created').all()[:1].values('batch')
     last_rels = LabelRelation.objects.filter(batch__in=rel_batch).all()
     
-    label_batch = Label.objects.filter(user=user, project=project).order_by('-dt_created').all()[:1].values('batch')
+    label_batch = Label.objects.filter(batch__user=user, marker__project=project).order_by('-dt_created').all()[:1].values('batch')
     last_labels = Label.objects.filter(batch__in=label_batch).all()
     
     last_input = ''
@@ -605,35 +603,49 @@ def data_explorer(request, proj):
     def get_json_for_context(context, relations=None, labels=None):
         context_id = context.pk
         if relations is None:
-            relations = LabelRelation.objects.filter(project_id=proj, undone=False)
+            relations = LabelRelation.objects.filter(first_label__marker__project_id=proj, undone=False)
             if not is_admin:
-                relations = relations.filter(user=request.user)
+                relations = relations.filter(batch__user=request.user)
         relations = relations.filter(Q(first_label__context_id=context_id) | Q(second_label__context_id=context_id))
         batches = relations.values_list('batch', flat=True).distinct()
         if labels is None:
-            labels = Label.objects.filter(project_id=proj, undone=False, context_id=context_id)
+            labels = Label.objects.filter(marker__project_id=proj, undone=False, context_id=context_id)
             if not is_admin:
-                labels = labels.filter(user=request.user)
+                labels = labels.filter(batch__user=request.user)
         relation_labels = labels.filter(batch__in=batches)
         non_relation_labels = labels.exclude(batch__in=batches)
-        bounded_labels = non_relation_labels.exclude(input=None)
-        free_labels = non_relation_labels.filter(input=None)
+        bounded_labels = non_relation_labels.exclude(start=None)
+        free_labels = non_relation_labels.filter(start=None)
+        free_text_labels = Input.objects.filter(marker__project_id=proj, context_id=context_id)
 
         bounded = {}
         for l in bounded_labels:
-            if l.input_id not in bounded:
-                bounded[l.input_id] = {
-                    'input': l.input.content,
+            if l.batch.uuid not in bounded:
+                bounded[l.batch.uuid] = {
+                    'input': Input.objects.filter(batch=l.batch).first().content,
                     'labels': []
                 }
-            bounded[l.input_id]['labels'].append(l.to_short_json())
+            bounded[l.batch.uuid]['labels'].append(l.to_short_json())
+
+        free_text = {}
+        for inp in free_text_labels:
+            uid = str(inp.batch.uuid)
+            if uid not in free_text:
+                free_text[uid] = {}
+            if inp.unit not in free_text[uid]:
+                free_text[uid][inp.unit] = []
+            free_text[uid][inp.unit].append(inp.to_short_json(dt_format="%b %d %Y %H:%M:%S, %Z"))
+
+        for key in free_text:
+            free_text[key] = [sorted(it[1], key=lambda a: int(a['marker']['order'])) for it in sorted(free_text[key].items(), key=lambda x: x[0])]
 
         res = {
             'data': context.content,
             'bounded_labels': bounded,
-            'relations': [r.to_short_json(dt_format="%b %d %Y %H:%M:%S") for r in relations
+            'relations': [r.to_short_json(dt_format="%b %d %Y %H:%M:%S, %Z") for r in relations
                 if r.first_label.context_id == context_id or r.second_label.context_id == context_id],
-            'free_labels': [l.to_short_json() for l in free_labels]
+            'free_labels': [l.to_short_json() for l in free_labels],
+            'free_text_labels': free_text
             # 'is_static': project.context_size != 't'
         }
         return res
@@ -652,15 +664,16 @@ def data_explorer(request, proj):
         if not is_admin:
             flagged_datapoints = flagged_datapoints.filter(user=request.user)
 
-        relations = LabelRelation.objects.filter(project=project, undone=False)
-        labels = Label.objects.filter(project=project, undone=False)
+        relations = LabelRelation.objects.filter(first_label__marker__project=project, undone=False)
+        labels = Label.objects.filter(marker__project=project, undone=False)
         if not is_admin:
-            labels = labels.filter(user=request.user)
-            relations = relations.filter(user=request.user)
+            labels = labels.filter(batch__user=request.user)
+            relations = relations.filter(batch__user=request.user)
         batches = relations.values_list('batch', flat=True).distinct()
         relation_labels = labels.filter(batch__in=batches)
         non_relation_labels = labels.exclude(batch__in=batches)
-        inputs = Input.objects.filter(pk__in=non_relation_labels.values_list('input', flat=True).distinct())
+
+        inputs = Input.objects.filter(marker__project=project)
 
         total_relations = relations.count()
         context_ids = list(inputs.exclude(context=None).values_list('context', flat=True).distinct())
@@ -754,7 +767,7 @@ def time_report(request, proj):
     labels = Label.objects.filter(project__id=proj, undone=False).order_by('dt_created').all()
     labels_by_user = defaultdict(list)
     for l in labels:
-        labels_by_user[l.user.username].append(l)
+        labels_by_user[l.marker.user.username].append(l)
 
     time_spent = defaultdict(lambda: defaultdict(int))
     datapoints_created = defaultdict(lambda: defaultdict(int))
