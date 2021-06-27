@@ -209,6 +209,7 @@ STATICFILES_DIRS = [
 ]
 STATIC_URL = '/textinator/static/'
 MEDIA_URL = '/textinator/media/'
+STATIC_ROOT = 'static_cdn'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
