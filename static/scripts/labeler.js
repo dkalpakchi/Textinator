@@ -1878,6 +1878,7 @@
               $('#undoLast').attr('disabled', true);
               $button.attr('disabled', false);
             }
+            $("#markerGroups input").each(function(i, x) { $(x).val('') });
             $el.removeClass('is-loading');
           },
           error: function() {
