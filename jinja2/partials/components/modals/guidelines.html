@@ -9,12 +9,13 @@
       </header>
       <div class="card-content">
         <div class="button-scrolling content">
-          <p class='has-text-weight-bold'>Guidelines</p>
           <p class='has-text-justified'>{{project.guidelines|safe}}</p>
         </div>
-        <div class="content">
-          <div id="followIntroTour" class='ui button'>Follow the UI intro tour</div>
-        </div>
+        {% if project.has_intro_tour %}
+          <div class="content">
+            <div id="followIntroTour" class='ui button'>Follow the UI intro tour</div>
+          </div>
+        {% endif %}
         <div class='content'>
           <p class='has-text-weight-bold'>Contact information</p>
           <!-- TODO: make this table responsive -->

@@ -189,6 +189,7 @@ class Project(CommonModel):
     points_scope = models.CharField(max_length=2, choices=[('n', 'No points'), ('i', 'Per input'), ('l', 'Per label')],
         help_text="The scope of the submitted task")
     points_unit = models.PositiveIntegerField(default=1, help_text="Number of points per submitted task")
+    has_intro_tour = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
