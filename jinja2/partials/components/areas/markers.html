@@ -36,33 +36,33 @@
       {% set project_markers_variants=project.markervariant_set.all() %}
       {% set project_markers=project.markers.all() %}
       <form id="markerGroups">
-        {% for unit, marker_variants in project_markers_variants|groupby("unit") %}
-          <ul id="sortable">
-            {% for i in range(unit.size) %}
-              <li class="ui-state-default notification has-background-grey-lighter">
-                <span class="fa fa-sort"></span>
-                <div class="field">
-                  {% for marker_variant in marker_variants|sort(attribute="order_in_unit") %}
-                    {% set mv_min = marker_variant.min() %}
-                    {% set mv_max = marker_variant.max() %}
-                    {% for k in range(mv_max) %}
-                      {% if marker_variant.is_free_text %}
-                        <div class="control has-tag-left">
-                          {% if mv_max > 1 %}
-                            <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","") }}_{{i}}_{{marker_variant.marker.short}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}} {{loop.index}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
-                          {% else %}
-                            <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","")}}_{{i}}_{{marker_variant.marker.short}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
-                          {% endif %}
-                          <span class="tag is-{{marker_variant.marker.color}}">{{marker_variant.marker.name}}</span>
-                        </div>
-                      {% endif %}
+        <ul id="sortable">
+          {% for unit, marker_variants in project_markers_variants|groupby("unit") %}
+              {% for i in range(unit.size) %}
+                <li class="ui-state-default notification has-background-grey-lighter">
+                  <span class="fa fa-sort"></span>
+                  <div class="field">
+                    {% for marker_variant in marker_variants|sort(attribute="order_in_unit") %}
+                      {% set mv_min = marker_variant.min() %}
+                      {% set mv_max = marker_variant.max() %}
+                      {% for k in range(mv_max) %}
+                        {% if marker_variant.is_free_text %}
+                          <div class="control has-tag-left">
+                            {% if mv_max > 1 %}
+                              <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","") }}_{{i}}_{{marker_variant.marker.short}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}} {{loop.index}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
+                            {% else %}
+                              <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","")}}_{{i}}_{{marker_variant.marker.short}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
+                            {% endif %}
+                            <span class="tag is-{{marker_variant.marker.color}}">{{marker_variant.marker.name}}</span>
+                          </div>
+                        {% endif %}
+                      {% endfor %}
                     {% endfor %}
-                  {% endfor %}
-                </div>
-              </li>
-            {% endfor %}
-          </ul>
-        {% endfor %}
+                  </div>
+                </li>
+              {% endfor %}
+          {% endfor %}
+        </ul>
       </form>
     </div>
   </article>

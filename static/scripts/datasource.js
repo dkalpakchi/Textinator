@@ -67,7 +67,7 @@
     }
 
 
-    $('#id_source_type').on('change', function(e) {
+    $('#id_source_type').on('select2:select', function(e) {
       var $target = $(e.target),
           option = $target.find("option:selected").val();
 
