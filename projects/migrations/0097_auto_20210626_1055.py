@@ -7,13 +7,28 @@ def set_missing_fields_for_inputs(apps, schema_editor):
     Input = apps.get_model('projects', 'Input')
     Label = apps.get_model('projects', 'Label')
     for inp in Input.objects.all().iterator():
-        label = Label.objects.filter(input=inp).first()
-        if not label: continue
-        if label.batch:
-            inp.batch = label.batch
-        inp.project = label.project
-        inp.user = label.user
-        inp.save()
+        labels = Label.objects.filter(input=inp)
+        if not labels: continue
+        batch2label = {}
+        for label in labels:
+            batch2label[label.batch] = label
+
+        for i, (batch, label) in enumerate(batch2label.items()):
+            if i < 1:
+                if label.batch:
+                    inp.batch = label.batch
+                inp.project = label.project
+                inp.user = label.user
+                inp.save()
+            else:
+                inp2 = inp
+                inp2.pk = None
+                if label.batch:
+                    inp2.batch = label.batch
+                inp2.project = label.project
+                inp2.user = label.user
+                inp2.save()
+
 
 class Migration(migrations.Migration):
 

@@ -99,29 +99,36 @@ def export_corr(project):
 
 
 def export_qa(project):
-    inputs_pks = Label.objects.filter(project=project, undone=False).values_list('input', flat=True).distinct()
-    inputs = Input.objects.filter(pk__in=inputs_pks).order_by('-dt_created').all()
-    labeled_inputs = [
-        (inp, Label.objects.filter(input=inp, undone=False).all())
-        for inp in inputs
-    ]
+    labels = Label.objects.filter(marker__project=project, undone=False).order_by('batch')
+    N = labels.count()
+    batches = labels.values_list('batch').distinct()
+    inputs = Input.objects.filter(batch__in=batches).order_by('batch')
+    labels = list(labels.all())
 
+    lab_id = 0
     resp = []
-    for inp, labels in labeled_inputs:
+    for inp in inputs.all():
         obj = {}
         obj["context"] = inp.context.content
-        obj["question"] = inp.content
-        obj["choices"] = []
-        for label in labels:
-            obj["choices"].append({
-                "text": label.text,
-                "start": label.start,
-                "end": label.end,
-                "type": label.marker.name,
-                "extra": label.extra,
-                "context": label.context.content
-            })
-        resp.append(obj)
+        obj[inp.marker.name if inp.marker else "question"] = inp.content
+        
+        inp_labels = []
+        while lab_id < N and labels[lab_id].batch == inp.batch:
+            inp_labels.append(labels[lab_id])
+            lab_id += 1
+
+        if inp_labels:
+            obj["choices"] = []
+            for label in inp_labels:
+                obj["choices"].append({
+                    "text": label.text,
+                    "start": label.start,
+                    "end": label.end,
+                    "type": label.marker.marker.name,
+                    "extra": label.extra,
+                    "context": label.context.content
+                })
+            resp.append(obj)
     return resp
 
 

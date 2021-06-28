@@ -184,6 +184,7 @@ class InputAdmin(CommonModelAdmin):
     # inlines = [LabelInline]
     list_display = ['content', 'context']
     search_fields = ['context__content', 'content']
+    readonly_fields = CommonModelAdmin.readonly_fields + ['batch']
 
 
 @admin.register(Batch)
@@ -207,7 +208,7 @@ class LabelAdmin(CommonModelAdmin):
     )
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
     inlines = [LabelReviewInline]
-    search_fields = ['context__content', 'batch']
+    search_fields = ['context__content', 'batch__uuid']
 
     def get_queryset(self, request):
         qs = super(LabelAdmin, self).get_queryset(request)
