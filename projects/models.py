@@ -492,7 +492,6 @@ class Label(CommonModel):
             'end': self.end,
             'text': self.text,
             'user': self.batch.user.username,
-            'batch': str(self.batch)
         })
         return res
 
@@ -506,6 +505,7 @@ class Label(CommonModel):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update(self.to_short_rel_json())
         res['marker'] = self.marker.to_json()
+        res['batch'] = str(self.batch)
         return res
 
     def to_json(self, dt_format=None):
