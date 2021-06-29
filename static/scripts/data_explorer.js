@@ -159,8 +159,10 @@
         $freeTextInput.empty();
         $freeTextInput.append($('<option value="-1">Choose an annotation</option>'))
         for (var k in freeText) {
-          var obj = freeText[k];
-          $freeTextInput.append($('<option value="' + k + '">' + k + " (" + obj[Object.keys(obj)[0]][0]['created'] + ")</option>"))
+          var obj = freeText[k],
+              sample = obj[Object.keys(obj)[0]][0];
+          console.log(sample)
+          $freeTextInput.append($('<option value="' + k + '">' + k + " (created by " + sample['user'] + " on " + sample['created'] + ")</option>"))
         }
 
         var $freeTextDiv = $freeTextInput.parent();

@@ -461,6 +461,8 @@ class Input(CommonModel):
         res = super(Input, self).to_json(dt_format=dt_format)
         res['content'] = self.content,
         res['marker'] = self.marker.to_json()
+        res['user'] = self.batch.user.username
+        res['batch'] = str(self.batch)
         return res
 
     def to_json(self, dt_format=None):
@@ -506,6 +508,7 @@ class Label(CommonModel):
         res.update(self.to_short_rel_json())
         res['marker'] = self.marker.to_json()
         res['batch'] = str(self.batch)
+        res['user'] = self.batch.user.username
         return res
 
     def to_json(self, dt_format=None):
