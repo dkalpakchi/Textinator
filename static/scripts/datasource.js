@@ -1,74 +1,74 @@
 ;(function($) {
-  $(document).ready(function() {
-    var templates = {
-      'TextFile': {
-        'files': [],
-        'folders': [],
-        'remote': []
-      },
-      'Db': {
-        'db_type': '', 
-        'user': '',
-        'password': '',
-        'database': '' 
-      },
-      'Json': {
-        'files': [],
-        'folders': [],
-        'remote': [],
-        'key': ''
-      },
-      'PlainText': {
-        'texts': []
-      }
+  var templates = {
+    'TextFile': {
+      'files': [],
+      'folders': [],
+      'remote': []
+    },
+    'Db': {
+      'db_type': '', 
+      'user': '',
+      'password': '',
+      'database': '' 
+    },
+    'Json': {
+      'files': [],
+      'folders': [],
+      'remote': [],
+      'key': ''
+    },
+    'PlainText': {
+      'texts': []
     }
+  }
 
-    var schemas = {
-      "PlainText": {
-        'type': 'object',
-        "properties": {
-          "texts": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "textarea"
-            }
+  var schemas = {
+    "PlainText": {
+      'type': 'object',
+      "properties": {
+        "texts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "textarea"
           }
         }
       }
     }
+  }
 
-    function updateSchema(option) {
-      // NOTE: `spec` everywhere is just the name of the field in the model
-      //       if the name changes djang-admin-json-editor, changes the name of JS variable as well
-      if (schemas.hasOwnProperty(option)) {
-        var schema = schemas[option],
-            element = spec_editor.element;
-        spec_editor.destroy();
-        schema['title'] = ' ';
-        spec_editor = new JSONEditor(element, {
-          'theme': 'bootstrap3',
-          'iconlib': 'fontawesome4',
-          'schema': schema
-        })
+  function updateSchema(option) {
+    // NOTE: `spec` everywhere is just the name of the field in the model
+    //       if the name changes djang-admin-json-editor, changes the name of JS variable as well
+    if (schemas.hasOwnProperty(option)) {
+      var schema = schemas[option],
+          element = spec_editor.element;
+      spec_editor.destroy();
+      schema['title'] = ' ';
+      spec_editor = new JSONEditor(element, {
+        'theme': 'bootstrap4',
+        'iconlib': 'fontawesome4',
+        'schema': schema
+      })
 
-        spec_editor.on('change', function () {
-          var errors = spec_editor.validate();
-          if (errors.length) {
-              console.log(errors);
-          }
-          else {
-              var json = spec_editor.getValue();
-              document.getElementById("id_spec").value = JSON.stringify(json);
-          }
-        });
-      }
-      return spec_editor
+      spec_editor.on('change', function () {
+        var errors = spec_editor.validate();
+        if (errors.length) {
+            console.log(errors);
+        }
+        else {
+            var json = spec_editor.getValue();
+            document.getElementById("id_spec").value = JSON.stringify(json);
+        }
+      });
     }
+    return spec_editor
+  }
 
-
-    $('#id_source_type').on('select2:select', function(e) {
-      var $target = $(e.target),
+  $(document).ready(function() {
+    $("#id_source_type").on('select2:select', function(e) {
+      console.log("HERE")
+      var $target = $(e.target);
           option = $target.find("option:selected").val();
 
       spec_editor = updateSchema(option);    
@@ -94,4 +94,4 @@
       })
     })
   });
-})(django.jQuery);
+})(jQuery);

@@ -244,6 +244,25 @@ class LabelRelationAdmin(CommonModelAdmin):
         return qs.filter(user=request.user)
 
 
+class TextinatorJSONEditorWidget(JSONEditorWidget):
+    @property
+    def media(self):
+        css = {
+            'all': [
+                'django_admin_json_editor/fontawesome/css/font-awesome.min.css',
+                'django_admin_json_editor/style.css',
+            ]
+        }
+        js = [
+            'django_admin_json_editor/jsoneditor/jsoneditor.min.js',
+        ]
+
+        if self._sceditor:
+            css['all'].append('django_admin_json_editor/sceditor/themes/default.min.css')
+            js.append('django_admin_json_editor/sceditor/jquery.sceditor.bbcode.min.js')
+        return forms.Media(css=css, js=js)
+
+
 # TODO: add autocomplete for data source specs
 class DataSourceForm(forms.ModelForm):
     class Meta:
@@ -263,7 +282,7 @@ class DataSourceForm(forms.ModelForm):
             }
         }
         widgets = {
-            'spec': JSONEditorWidget(DATA_SCHEMA, collapsed=False),
+            'spec': TextinatorJSONEditorWidget(DATA_SCHEMA, collapsed=False),
         }
 
 
@@ -272,7 +291,6 @@ class DataSourceAdmin(CommonModelAdmin):
     class Media:
         js = (
             'admin/js/vendor/jquery/jquery{}.js'.format('' if settings.DEBUG else '.min'),
-            'scripts/datasource.js'
         )
     
     form = DataSourceForm

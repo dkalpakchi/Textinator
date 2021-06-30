@@ -35,7 +35,7 @@
     <div class="message-body">
       {% set project_markers_variants=project.markervariant_set.all() %}
       {% set project_markers=project.markers.all() %}
-      <form id="markerGroups">
+      <form id="markerGroups" data-toggle="formcache">
         <ul id="sortable">
           {% for unit, marker_variants in project_markers_variants|groupby("unit") %}
               {% for i in range(unit.size) %}
