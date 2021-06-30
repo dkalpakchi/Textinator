@@ -279,7 +279,11 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         if source_id != -1:
             try:
                 p_data = ProjectData.objects.get(project=proj, datasource=DataSource.objects.get(pk=source_id))
-                logs = DataAccessLog.objects.filter(user=u, project_data=p_data).count()
+                DataAccessLog.objects.get_or_create(
+                    user=u, project_data=p_data, datapoint=str(dp_id),
+                    is_submitted=False, is_skipped=False
+                )
+                logs = DataAccessLog.objects.filter(user=u, project_data=p_data, is_submitted=True).count()
             except DataSource.DoesNotExist:
                 print("DataSource does not exist")
                 pass
@@ -350,7 +354,9 @@ def record_datapoint(request, proj):
 
         if not project.sampling_with_replacement:
             project_data = ProjectData.objects.get(project=project, datasource=data_source)
-            DataAccessLog.objects.create(user=user, project_data=project_data, datapoint=str(data['datapoint']))
+            dal = DataAccessLog.objects.get(user=user, project_data=project_data, datapoint=str(data['datapoint']))
+            dal.is_submitted = True
+            dal.save()
     except Project.DoesNotExist:
         raise Http404
     except UserProfile.DoesNotExist:
@@ -506,9 +512,26 @@ def new_article(request, proj):
             project_data = ProjectData.objects.get(project=project, datasource=data_source)
             dp_id = request.POST.get('dpId')
             if dp_id:
-                DataAccessLog.objects.create(user=request.user, project_data=project_data, datapoint=str(dp_id))
+                try:
+                    log = DataAccessLog.objects.get(user=request.user, project_data=project_data, datapoint=str(dp_id))
+                    if not log.is_submitted:
+                        log.is_skipped = True
+                        log.save()
+                except DataAccessLog.DoesNotExist:
+                    DataAccessLog.objects.create(
+                        user=request.user, project_data=project_data, datapoint=str(dp_id), 
+                        is_submitted=False, is_skipped=True
+                    )
 
     dp, dp_id, dp_source_name, source_size, source_id = project.data(request.user)
+
+    data_source = DataSource.objects.get(pk=source_id)
+    project_data, _ = ProjectData.objects.get_or_create(project=project, datasource=data_source)
+    DataAccessLog.objects.create(
+        user=request.user, project_data=project_data, datapoint=str(dp_id), 
+        is_submitted=False, is_skipped=False
+    )
+
     return JsonResponse({
         'text': prettify(apply_premarkers(project, dp)),
         'source_id': source_id,

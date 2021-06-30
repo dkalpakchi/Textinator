@@ -199,6 +199,14 @@ class Project(CommonModel):
         return Relation.objects.filter(models.Q(for_task_type=self.task_type) | models.Q(project=self)).all()
 
     def data(self, user):
+        pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
+        log = DataAccessLog.objects.filter(user=user, project_data__pk__in=pdata, is_submitted=False, is_skipped=False).first()
+        print(log)
+        if log:
+            ds = log.project_data.datasource
+            dp_id = log.datapoint
+            return ds.postprocess(ds.get(dp_id)).strip(), dp_id, ds.name, ds.size(), ds.pk
+
         dp_taboo = defaultdict(set)
         if not self.sampling_with_replacement:
             pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
@@ -363,6 +371,8 @@ class DataAccessLog(CommonModel):
     project_data = models.ForeignKey(ProjectData, on_delete=models.CASCADE)
     datapoint = models.CharField(max_length=64)
     flags = models.TextField(default="")
+    is_submitted = models.BooleanField()
+    is_skipped = models.BooleanField()
 
 
 # TODO: put constraints on the markers - only markers belonging to project or task_type can be put!
