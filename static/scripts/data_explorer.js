@@ -291,89 +291,97 @@
 
   $(document).ready(function() {
     textArea = document.querySelector('#exploreText');
-    resetText = textArea.textContent;
 
-    $('#contextFreeAnnotations').parent().hide();
-    $('#contextAnnotations').parent().hide();
-    $('#contextRelations').parent().hide();
-    $('#freeText').parent().hide();
+    if (textArea == null) {
+      $('#contextFreeAnnotations').closest(".field").hide();
+      $('#contextAnnotations').closest(".field").hide();
+      $('#contextRelations').closest(".field").hide();
+      $('#freeText').closest(".field").hide();
+    } else {
+      resetText = textArea.textContent;
 
-    $("[id^=item-context-]").accordion({
-      collapsible: true,
-      active: false
-    });
+      $('#contextFreeAnnotations').parent().hide();
+      $('#contextAnnotations').parent().hide();
+      $('#contextRelations').parent().hide();
+      $('#freeText').parent().hide();
 
-    $("#flaggedCollapse").accordion({
-      collapsible: true,
-      active: false,
-      icons: false,
-    });
+      $("[id^=item-context-]").accordion({
+        collapsible: true,
+        active: false
+      });
 
-    $("#explorerFilters").accordion({
-      collapsible: true,
-      active: false,
-      icons: false,
-    });
+      $("#flaggedCollapse").accordion({
+        collapsible: true,
+        active: false,
+        icons: false,
+      });
 
-    var select = document.querySelector('#exploreContexts');
-    getAnnotations(select, select.value);
+      $("#explorerFilters").accordion({
+        collapsible: true,
+        active: false,
+        icons: false,
+      });
 
-    $('#exploreContexts').on('change', function(e) {
-      var target = e.target,
-          selectedId = target.value;
-      $("#exploreText").addClass('element is-loading');
-      getAnnotations(target, selectedId);
-    });
+      var select = document.querySelector('#exploreContexts');
+      getAnnotations(select, select.value);
 
-    $('#contextFreeAnnotations').on('change', function(e) {
-      var target = e.target,
-          selected = target.value;
-      if (selected != -1)
-        markStatic(textArea, contextFree[selected]);
-      else
-        textArea.innerHTML = resetText;
-    });
+      $('#exploreContexts').on('change', function(e) {
+        var target = e.target,
+            selectedId = target.value;
+        $("#exploreText").addClass('element is-loading');
+        getAnnotations(target, selectedId);
+      });
 
-    $('#contextAnnotations').on('change', function(e) {
-      var target = e.target,
-          selected = target.value;
-      if (selected != -1)
-        markStatic(textArea, contextBounded[selected]['labels']);
-      else
-        textArea.innerHTML = resetText;
-    });
+      $('#contextFreeAnnotations').on('change', function(e) {
+        var target = e.target,
+            selected = target.value;
+        if (selected != -1)
+          markStatic(textArea, contextFree[selected]);
+        else
+          textArea.innerHTML = resetText;
+      });
 
-    $('#contextRelations').on('change', function(e) {
-      var target = e.target,
-          selected = target.value;
-      if (selected != -1)
-        markStatic(textArea, contextRelations[selected]['labels']);
-      else 
-        textArea.innerHTML = resetText;
-    });
+      $('#contextAnnotations').on('change', function(e) {
+        var target = e.target,
+            selected = target.value;
+        if (selected != -1)
+          markStatic(textArea, contextBounded[selected]['labels']);
+        else
+          textArea.innerHTML = resetText;
+      });
 
-    $('#freeText').on('change', function(e) {
-      var target = e.target,
-          selected = target.value;
-      if (selected != -1)
-        appendGroup($("#freeTextResult"), freeText[selected]);
-      else 
-        $("#freeTextResult").empty();
-    });
+      $('#contextRelations').on('change', function(e) {
+        var target = e.target,
+            selected = target.value;
+        if (selected != -1)
+          markStatic(textArea, contextRelations[selected]['labels']);
+        else 
+          textArea.innerHTML = resetText;
+      });
 
-    $("#filterForm").on('submit', function(e) {
-      e.preventDefault();
-      var target = e.target;
-      var res = $(target).serializeObject();
-      for (var k in res) {
-        var parts = k.split("__");
-        if (!(parts[0] in activeFilters)) {
-          activeFilters[parts[0]] = {}
+      $('#freeText').on('change', function(e) {
+        var target = e.target,
+            selected = target.value;
+        if (selected != -1)
+          appendGroup($("#freeTextResult"), freeText[selected]);
+        else 
+          $("#freeTextResult").empty();
+      });
+
+      $("#filterForm").on('submit', function(e) {
+        e.preventDefault();
+        var target = e.target;
+        var res = $(target).serializeObject();
+        for (var k in res) {
+          var parts = k.split("__");
+          if (!(parts[0] in activeFilters)) {
+            activeFilters[parts[0]] = {}
+          }
+          activeFilters[parts[0]][parts[1]] = res[k] == 'on' ? true : res[k];
         }
-        activeFilters[parts[0]][parts[1]] = res[k] == 'on' ? true : res[k];
-      }
-      hideByFilters();
-    });
+        hideByFilters();
+      });
+    }
 
     $('a[download]').on('click', function() {
       var $btn = $(this);

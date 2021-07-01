@@ -201,7 +201,6 @@ class Project(CommonModel):
     def data(self, user):
         pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
         log = DataAccessLog.objects.filter(user=user, project_data__pk__in=pdata, is_submitted=False, is_skipped=False).first()
-        print(log)
         if log:
             ds = log.project_data.datasource
             dp_id = log.datapoint
