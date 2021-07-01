@@ -204,14 +204,14 @@
       </div>
     </div>
 
-    {% if contexts %}
-      <article id="exploreText" class="context message is-dark">
+    <article id="exploreText" clas="context message is-dark">
+      {% if contexts %}
         {{contexts[0].content}}
-      </article>
-      <div id="freeTextResult" class="mb-5"></div>
-    {% else %}
-      <p>Nothing to show yet</p>
-    {% endif %}
+        <div id="freeTextResult" class="mb-5"></div>
+      {% else %}
+        <p>Nothing to show yet</p>
+      {% endif %}
+    </article>
   </div>
 </div>
 {% endblock %}
