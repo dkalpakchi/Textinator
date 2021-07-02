@@ -513,7 +513,7 @@ def new_article(request, proj):
             dp_id = request.POST.get('dpId')
             if dp_id:
                 try:
-                    log = DataAccessLog.objects.get(user=request.user, project_data=project_data, datapoint=str(dp_id))
+                    log = DataAccessLog.objects.get(user=request.user, project_data=project_data, datapoint=str(dp_id), is_skipped=False)
                     if not log.is_submitted:
                         log.is_skipped = True
                         log.save()
@@ -763,7 +763,9 @@ def flag_text(request, proj):
 
     project_data = ProjectData.objects.get(project=project, datasource=data_source)
     DataAccessLog.objects.create(
-        user=request.user, project_data=project_data, datapoint=str(dp_id), flags=feedback)
+        user=request.user, project_data=project_data, datapoint=str(dp_id),
+        is_submitted=False, is_skipped=True, flags=feedback
+    )
     return JsonResponse({})
 
 
