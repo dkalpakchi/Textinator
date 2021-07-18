@@ -201,7 +201,7 @@ class BatchAdmin(CommonModelAdmin):
 class LabelAdmin(CommonModelAdmin):
     _list_filter = (
        'marker',
-       'user',
+       'batch__user',
        'marker__project',
        ('dt_created', DateTimeRangeFilter),
        'undone'

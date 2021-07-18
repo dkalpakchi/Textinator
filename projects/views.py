@@ -279,19 +279,30 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         if source_id != -1:
             try:
                 p_data = ProjectData.objects.get(project=proj, datasource=DataSource.objects.get(pk=source_id))
+            except DataSource.DoesNotExist:
+                print("DataSource does not exist")
+                pass
+            except ProjectData.DoesNotExist:
+                print("ProjectData does not exist")
+                pass
+
+            try:
                 DataAccessLog.objects.get_or_create(
                     user=u, project_data=p_data, datapoint=str(dp_id),
                     is_submitted=False, is_skipped=False
                 )
+            except DataAccessLog.MultipleObjectsReturned:
+                alogs = DataAccessLog.objects.filter(
+                    user=u, project_data=p_data, datapoint=str(dp_id),
+                    is_submitted=False, is_skipped=False
+                ).order_by('-dt_created').all()
+                for al in alogs[1:]:
+                    al.delete()
+
+            try:
                 logs = DataAccessLog.objects.filter(user=u, project_data=p_data, is_submitted=True).count()
-            except DataSource.DoesNotExist:
-                print("DataSource does not exist")
-                pass
             except DataAccessLog.DoesNotExist:
                 print("DataAccessLog does not exist")
-                pass
-            except ProjectData.DoesNotExist:
-                print("ProjectData does not exist")
                 pass
 
         menu_items, project_markers = {}, proj.markers.distinct()
