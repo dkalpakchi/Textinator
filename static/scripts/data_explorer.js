@@ -2,6 +2,16 @@
   var utils = {
     isDefined: function(x) {
       return x != null && x !== undefined;
+    },
+    unique: function(arr) {
+      const seen = new Set();
+      return arr.filter(function(elem) {
+        const key = elem['start'] + " -- " + elem['end'];
+        var isDuplicate = seen.has(key);
+        if (!isDuplicate)
+          seen.add(key);
+        return !isDuplicate;
+      });
     }
   };
   
@@ -37,6 +47,8 @@
     var acc = 0;
     var bounded = [];
     labels.sort(function(x, y) { return x['start'] - y['start']});
+    labels = utils.unique(labels);
+    console.log(labels);
     var markers = {};
     for (var i = 0, len = labels.length; i < len; i++) {
       var cnodes = area.childNodes,
