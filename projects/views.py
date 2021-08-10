@@ -782,6 +782,18 @@ def flag_text(request, proj):
 
 @login_required
 def time_report(request, proj):
+    def calc_time(ll, dp_created):
+        for l1, l2 in zip(ll[:len(ll)], ll[1:]):
+            try:
+                if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
+                    l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
+                    timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60. / 60, 2)
+                    if timing <= 1:
+                        time_spent[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += timing                    
+                    dp_created[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += 1
+            except:
+                pass
+
     project = Project.objects.filter(pk=proj).get()
 
     # Create a file-like buffer to receive PDF data.
@@ -800,34 +812,33 @@ def time_report(request, proj):
     report_name = f'Time report for project "{project.title}"'
     p.drawString(A4[0] / 2 - (14 * PT2MM * len(report_name) / 2), 0.92 * A4[1], report_name)
 
-    labels = Label.objects.filter(project__id=proj, undone=False).order_by('dt_created').all()
-    labels_by_user = defaultdict(list)
+    inputs = Input.objects.filter(marker__project__id=proj).order_by('dt_created').all()
+    labels = Label.objects.filter(marker__project__id=proj, undone=False).order_by('dt_created').all()
+    inputs_by_user, labels_by_user = defaultdict(list), defaultdict(list)
+    for i in inputs:
+        inputs_by_user[i.batch.user.username].append(i)
     for l in labels:
-        labels_by_user[l.marker.user.username].append(l)
+        labels_by_user[l.batch.user.username].append(l)
 
     time_spent = defaultdict(lambda: defaultdict(int))
-    datapoints_created = defaultdict(lambda: defaultdict(int))
-    data = [['User', 'Month', 'Time (in hours)', 'Number of datapoints']]
+    inputs_created = defaultdict(lambda: defaultdict(int))
+    labels_created = defaultdict(lambda: defaultdict(int))
+    data = [['User', 'Month', 'Time (h)', '# of inputs', '# of labels']]
     for u in labels_by_user:
         ll = labels_by_user[u]
-        for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-            try:
-                if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
-                    l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
-                    timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60. / 60, 2)
-                    if timing <= 1:
-                        time_spent[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += timing                    
-                    datapoints_created[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += 1
-            except:
-                pass
+        calc_time(ll, labels_created)
+
+    for u in inputs_by_user:
+        ll = inputs_by_user[u]
+        calc_time(ll, inputs_created)
     
     for u, td in time_spent.items():
         keys = sorted(td.keys())
         year, month = keys[0].split('/')
-        data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2), datapoints_created[u][keys[0]]])
+        data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2), inputs_created[u][keys[0]], labels_created[u][keys[0]]])
         for k in keys[1:]:
             year, month = k.split('/')
-            data.append(['', f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[k], 2), datapoints_created[u][k]])
+            data.append(['', f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[k], 2), inputs_created[u][keys[0]], labels_created[u][k]])
 
     LIST_STYLE = TableStyle([
         ('LINEABOVE', (0,0), (-1,0), 2, colors.black),
@@ -836,7 +847,7 @@ def time_report(request, proj):
         ('ALIGN', (1,1), (-1,-1), 'RIGHT')]
     )
 
-    t = Table(data, colWidths=[110, 110, 110, 110])
+    t = Table(data, colWidths=[110, 110, 70, 70, 70])
     t.setStyle(LIST_STYLE)
     w, h = t.wrapOn(p, 540, 720)
     t.drawOn(p, A4[0] / 8, 0.8 * A4[1] - h)
