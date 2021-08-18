@@ -19,7 +19,7 @@
     {% if project.author == user or project.shared_with(user) %}
       <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-warning">Generate a PDF time report</a>
     {% endif %}
-    <div class="is-pulled-right">In total: {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_datapoints.count()}} flagged text(s) </div>
+    <div class="is-pulled-right">In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_datapoints.count()}} flagged text(s) </div>
   </div>
 
   <script type="text/javascript" src="{{ static('js/highcharts/highcharts.js') }}"></script>

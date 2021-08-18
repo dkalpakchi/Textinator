@@ -46,13 +46,14 @@ MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
 ##
 
 class LabelLengthJSONView(BaseColumnsHighChartsView):
-    title = "Label lengths (words)"
-    yUnit = "labels"
+    title = "Label/input lengths (words)"
+    yUnit = "labels/inputs"
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
         self.labels = Label.objects.filter(marker__project__id=self.pk, undone=False).all()
-        self.x_axis = sorted(set([len(l.text.split()) for l in self.labels]))
+        self.inputs = Input.objects.filter(marker__project__id=self.pk).all()
+        self.x_axis = sorted(set([len(l.text.split()) for l in self.labels]) | set([len(i.content.split()) for i in self.inputs]))
         self.project = Project.objects.get(pk=self.pk)
         self.participants = self.project.participants.all()
         return self.x_axis
@@ -67,11 +68,15 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
         self.l2i = {v: k for k, v in enumerate(self.x_axis)}
         self.p2i = {v.name: k for k, v in enumerate(self.project.markers.all())}
 
-        for l in self.labels:
-            try:
-                data[self.p2i[l.marker.marker.name]][self.l2i[len(l.text.split())]] += 1
-            except:
-                pass
+        for source in [self.labels, self.inputs]:
+            for l in source:
+                try:
+                    data[self.p2i[l.marker.marker.name]][self.l2i[len(l.text.split())]] += 1
+                except:
+                    try:
+                        data[self.p2i[l.marker.marker.name]][self.l2i[len(l.content.split())]] += 1
+                    except:
+                        pass
         return data
 
     def get_context_data(self, **kwargs):
@@ -84,24 +89,33 @@ label_lengths_chart_json = LabelLengthJSONView.as_view()
 
 class UserTimingJSONView(BaseColumnsHighChartsView):
     title = "User timing (minutes)"
-    yUnit = "labels"
+    yUnit = "batches"
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
+        inputs = Input.objects.filter(marker__project__id=self.pk).order_by('dt_created').all()
         labels = Label.objects.filter(marker__project__id=self.pk, undone=False).order_by('dt_created').all()
-        self.labels_by_user = defaultdict(list)
+        self.inputs_by_user = defaultdict(lambda: defaultdict(list))
+        self.labels_by_user = defaultdict(lambda: defaultdict(list))
+        for i in inputs:
+            self.inputs_by_user[i.batch.user.username][str(i.batch)].append(i)
         for l in labels:
-            self.labels_by_user[l.batch.user.username].append(l)
+            self.labels_by_user[l.batch.user.username][str(l.batch)].append(l)
 
         timings = []
-        for u in self.labels_by_user:
-            ll = self.labels_by_user[u]
-            for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-                if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
-                    l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
-                    timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
-                    if timing < 60:
-                        timings.append(timing)
+        for arr in [self.inputs_by_user, self.labels_by_user]:
+            for u in arr:
+                ll = list(arr[u].items())
+                for b1, b2 in zip(ll[:len(ll)], ll[1:]):
+                    l1, l2 = b1[1][0], b2[1][0]
+                    if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
+                        l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
+                        timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
+                        if timing > 0 and timing < 120:
+                            # if timing is 0, means they were simply a part of the same batch
+                            # timing < 60 is simply a precaution
+                            timings.append(timing)
+
         if timings:
             min_time, max_time = int(min(timings)), int(round(max(timings)))
             self.x_axis = list(range(min_time, max_time, 1))
@@ -122,22 +136,23 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
             return []
 
     def get_data(self):
-        """Return 3 datasets to plot."""
         if hasattr(self, 'participants'):
             data = [[0] * len(self.x_axis) for _ in range(len(self.participants))]
             self.p2i = {v.username: k for k, v in enumerate(self.participants)}
 
-            for u in self.labels_by_user:
-                ll = self.labels_by_user[u]
-                for l1, l2 in zip(ll[:len(ll)], ll[1:]):
-                    try:
-                        if l1 and l2 and l1.dt_created and l2.dt_created:
-                            timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
-                            if timing < 60:
-                                pos = bisect.bisect(self.x_axis, timing)
-                                data[self.p2i[u]][pos - 1] += 1
-                    except:
-                        pass
+            for arr in [self.inputs_by_user, self.labels_by_user]:
+                for u in arr:
+                    ll = list(arr[u].items())
+                    for b1, b2 in zip(ll[:len(ll)], ll[1:]):                            
+                        try:
+                            l1, l2 = b1[1][0], b2[1][0]
+                            if l1 and l2 and l1.dt_created and l2.dt_created:
+                                timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
+                                if timing > 0 and timing < 120:
+                                    pos = bisect.bisect(self.x_axis, timing)
+                                    data[self.p2i[u]][pos - 1] += 1
+                        except:
+                            pass
             return data
         else:
             return []
@@ -158,26 +173,42 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
         """Return 7 labels for the x-axis."""
         project_data = ProjectData.objects.filter(project__id=self.pk).values('pk')
         logs = DataAccessLog.objects.filter(project_data__id__in=project_data)
+        submitted_logs = logs.filter(is_submitted=True)
+        skipped_logs = logs.filter(is_skipped=True)
         
-        self.logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        self.submitted_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        self.skipped_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
         self.dataset_info = {}
         self.l2i, i = {}, 0
-        for l in logs:
-            ds = l.project_data.datasource
-            self.logs_by_ds_and_user[ds.pk][l.user.pk][l.datapoint].append(l)
-            self.dataset_info[ds.pk] = {
-                'size': ds.size(),
-                'name': ds.name
-            }
-            if ds.pk not in self.l2i:
-                self.l2i[ds.pk] = i
-                i += 1
-        self.x_axis = [self.dataset_info[k]['name'] for k in self.logs_by_ds_and_user.keys()]
+        for logs_data, logs_storage in zip(
+            [submitted_logs, skipped_logs], 
+            [self.submitted_logs_by_ds_and_user, self.skipped_logs_by_ds_and_user]):
+            for l in logs_data:
+                ds = l.project_data.datasource
+                logs_storage[ds.pk][l.user.pk][l.datapoint].append(l)
+                self.dataset_info[ds.pk] = {
+                    'size': ds.size(),
+                    'name': ds.name
+                }
+                if ds.pk not in self.l2i:
+                    self.l2i[ds.pk] = i
+                    i += 1
+        self.x_axis = [self.dataset_info[k]['name'] for k in self.dataset_info]
 
         self.project = Project.objects.get(pk=self.pk)
         self.participants = self.project.participants.all()
         
         return self.x_axis
+
+    def get_series(self):
+        """Generate HighCharts series from providers and data."""
+        series = []
+        data = self.get_data()
+        providers = self.get_providers()
+        for i, d in enumerate(data):
+            series.append({"name": providers[i] + '_submitted', "data": d[0], 'stack': providers[i]})
+            series.append({"name": providers[i] + '_skipped', "data": d[1], 'stack': providers[i]})
+        return series
 
     def get_providers(self):
         """Return names of datasets."""
@@ -189,13 +220,17 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
     def get_data(self):
         """Return 3 datasets to plot."""
         if hasattr(self, 'participants'):
-            data = [[0] * len(self.x_axis) for _ in range(len(self.participants))]
+            data = [[[0] * len(self.x_axis), [0] * len(self.x_axis)] for _ in range(len(self.participants))]
             self.p2i = {v.pk: k for k, v in enumerate(self.participants)}
 
-            for ds in self.logs_by_ds_and_user:
-                ds_logs = self.logs_by_ds_and_user[ds]
-                for u in ds_logs:
-                    data[self.p2i[u]][self.l2i[ds]] = round(len(ds_logs[u].keys()) * 100 / self.dataset_info[ds]['size'], 2)
+            for logs_data, stack in zip([self.submitted_logs_by_ds_and_user, self.skipped_logs_by_ds_and_user], ['submitted', 'skipped']):
+                for ds in logs_data:
+                    ds_logs = logs_data[ds]
+                    for u in ds_logs:
+                        if stack == 'submitted':
+                            data[self.p2i[u]][0][self.l2i[ds]] = round(len(ds_logs[u].keys()) * 100 / self.dataset_info[ds]['size'], 2)
+                        else:
+                            data[self.p2i[u]][1][self.l2i[ds]] = round(len(ds_logs[u].keys()) * 100 / self.dataset_info[ds]['size'], 2)
             return data
         else:
             return []
@@ -205,8 +240,11 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
         data = super(UserProgressJSONView, self).get_context_data(**kwargs)
         y = self.get_yAxis()
         y["max"] = 100
+        opt = self.get_plotOptions()
+        opt["column"]["stacking"] = "normal"
         data.update({
-            "yAxis": y
+            "yAxis": y,
+            "plotOptions": opt
         })
         return data
 
@@ -709,6 +747,8 @@ def data_explorer(request, proj):
 
         inputs = Input.objects.filter(marker__project=project)
 
+        batches = set(list(inputs.values_list('batch', flat=True).distinct())) | set(list(labels.values_list('batch', flat=True).distinct()))
+
         total_relations = relations.count()
         context_ids = list(inputs.exclude(context=None).values_list('context', flat=True).distinct())
         context_ids += list(labels.exclude(context=None).values_list('context', flat=True).distinct())
@@ -732,6 +772,7 @@ def data_explorer(request, proj):
             'total_labels': labels.count(),
             'total_relations': total_relations,
             'total_inputs': inputs.count(),
+            'total_batches': len(batches),
             'flagged_datapoints': flagged_datapoints,
             'action_filters': list(actions.items())
         }
@@ -783,14 +824,15 @@ def flag_text(request, proj):
 @login_required
 def time_report(request, proj):
     def calc_time(ll, dp_created):
-        for l1, l2 in zip(ll[:len(ll)], ll[1:]):
+        for b1, b2 in zip(ll[:len(ll)], ll[1:]):
+            l1, l2 = b1[1][0], b2[1][0]
             try:
                 if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
                     l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
                     timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60. / 60, 2)
-                    if timing <= 1:
-                        time_spent[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += timing                    
-                    dp_created[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += 1
+                    if timing <= 2:
+                        time_spent[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += timing
+                    dp_created[u][f"{l1.dt_created.year}/{l1.dt_created.month}"] += len(b2[1])
             except:
                 pass
 
@@ -814,22 +856,22 @@ def time_report(request, proj):
 
     inputs = Input.objects.filter(marker__project__id=proj).order_by('dt_created').all()
     labels = Label.objects.filter(marker__project__id=proj, undone=False).order_by('dt_created').all()
-    inputs_by_user, labels_by_user = defaultdict(list), defaultdict(list)
+    inputs_by_user, labels_by_user = defaultdict(lambda: defaultdict(list)), defaultdict(lambda: defaultdict(list))
     for i in inputs:
-        inputs_by_user[i.batch.user.username].append(i)
+        inputs_by_user[i.batch.user.username][str(i.batch)].append(i)
     for l in labels:
-        labels_by_user[l.batch.user.username].append(l)
+        labels_by_user[l.batch.user.username][str(l.batch)].append(l)
 
     time_spent = defaultdict(lambda: defaultdict(int))
     inputs_created = defaultdict(lambda: defaultdict(int))
     labels_created = defaultdict(lambda: defaultdict(int))
     data = [['User', 'Month', 'Time (h)', '# of inputs', '# of labels']]
     for u in labels_by_user:
-        ll = labels_by_user[u]
+        ll = list(labels_by_user[u].items())
         calc_time(ll, labels_created)
 
     for u in inputs_by_user:
-        ll = inputs_by_user[u]
+        ll = list(inputs_by_user[u].items())
         calc_time(ll, inputs_created)
     
     for u, td in time_spent.items():
