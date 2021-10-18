@@ -133,7 +133,7 @@ def export_qa(project):
 
 
 def export_generic(project):
-    labels = Label.objects.filter(project=project, undone=False).order_by('context_id').distinct()
+    labels = Label.objects.filter(marker__project=project, undone=False).order_by('context_id').distinct()
     resp = []
     groups, group, batch, context_id, context = {}, [], None, -1, None
     for l in labels:
