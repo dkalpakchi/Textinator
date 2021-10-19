@@ -137,9 +137,10 @@ def export_generic(project):
     input_batches = Input.objects.filter(marker__project=project).values_list('batch', flat=True)
     resp = []
     
-    for batch in (set(label_batches) | set(input_batches)):
-        labels = Label.objects.filter(batch_id=batch, undone=False)
-        inputs = Input.objects.filter(batch_id=batch)
+    batches = Batch.objects.filter(pk__in=set(label_batches) | set(input_batches)).prefetch_related('label_set', 'input_set')
+    for batch in batches:
+        labels = batch.label_set.all()
+        inputs = batch.input_set.all()
         resp.append({
             "context": inputs[0].context.content if inputs else labels[0].context.content,
             "labels": [l.to_minimal_json() for l in labels],
