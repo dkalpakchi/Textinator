@@ -12,3 +12,4 @@ log/*
 static_cdn/*
 data/*
 aftonbladet*
+.venv

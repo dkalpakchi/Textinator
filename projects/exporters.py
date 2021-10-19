@@ -133,33 +133,17 @@ def export_qa(project):
 
 
 def export_generic(project):
-    labels = Label.objects.filter(marker__project=project, undone=False).order_by('context_id').distinct()
+    label_batches = Label.objects.filter(marker__project=project, undone=False).values_list('batch', flat=True)
+    input_batches = Input.objects.filter(marker__project=project).values_list('batch', flat=True)
     resp = []
-    groups, group, batch, context_id, context = {}, [], None, -1, None
-    for l in labels:
-        if batch is None or batch != l.batch:
-            if group:
-                groups[str(batch)] = group
-                group = []
-            batch = l.batch
-        if context_id == -1 or context_id != l.context_id:
-            if groups:
-                resp.append({
-                    'context': context.content,
-                    'labels': groups
-                })
-                groups = {}
-            context_id = l.context_id
-            context = l.context
-        dct = l.to_short_rel_json()
-        del dct['batch']
-        group.append(dct)
-    else:
-        if group:
-            groups[str(batch)] = group
-        if groups:
-            resp.append({
-                'context': context.content,
-                'labels': groups
-            })
+    
+    for batch in (set(label_batches) | set(input_batches)):
+        labels = Label.objects.filter(batch_id=batch, undone=False)
+        inputs = Input.objects.filter(batch_id=batch)
+        resp.append({
+            "context": inputs[0].context.content if inputs else labels[0].context.content,
+            "labels": [l.to_minimal_json() for l in labels],
+            "inputs": [i.to_minimal_json() for i in inputs]
+        })
+
     return resp

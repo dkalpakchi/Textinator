@@ -124,6 +124,14 @@ class Marker(CommonModel):
     def __str__(self):
         return str(self.name)
 
+
+    def to_minimal_json(self, dt_format=None):
+        res = super(Marker, self).to_json(dt_format=dt_format)
+        res.update({
+            'name': self.name
+        })
+        return res
+
     def to_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
         res.update({
@@ -337,6 +345,10 @@ class MarkerVariant(CommonModel):
     def __str__(self):
         return str(self.marker) + "<{}>".format(self.project.title)
 
+    def to_minimal_json(self):
+        res = self.marker.to_minimal_json()
+        res['order'] = self.order_in_unit
+        return res
 
     def to_json(self):
         res = self.marker.to_json()
@@ -466,12 +478,20 @@ class Input(CommonModel):
     def __str__(self):
         return truncate(self.content, 50)
 
+    def to_minimal_json(self, dt_format=None):
+        res = super(Input, self).to_json(dt_format=dt_format)
+        res['content'] = self.content
+        res['marker'] = self.marker.to_minimal_json()
+        res['unit'] = self.unit
+        return res
+
     def to_short_json(self, dt_format=None):
         res = super(Input, self).to_json(dt_format=dt_format)
-        res['content'] = self.content,
+        res['content'] = self.content
         res['marker'] = self.marker.to_json()
         res['user'] = self.batch.user.username
         res['batch'] = str(self.batch)
+        res['unit'] = self.unit
         return res
 
     def to_json(self, dt_format=None):
@@ -507,22 +527,26 @@ class Label(CommonModel):
         return res
 
     def to_rel_json(self, dt_format=None):
-        res = super(Label, self).to_json(dt_format=dt_format)
-        res.update(self.to_short_rel_json())
+        res = self.to_short_rel_json()
         res['context'] = self.context.content
         return res
 
+    def to_minimal_json(self, dt_format=None):
+        res = self.to_short_rel_json()
+        res['marker'] = self.marker.to_minimal_json()
+        res['batch'] = str(self.batch)
+        res['user'] = self.batch.user.username
+        return res
+
     def to_short_json(self, dt_format=None):
-        res = super(Label, self).to_json(dt_format=dt_format)
-        res.update(self.to_short_rel_json())
+        res = self.to_short_rel_json()
         res['marker'] = self.marker.to_json()
         res['batch'] = str(self.batch)
         res['user'] = self.batch.user.username
         return res
 
     def to_json(self, dt_format=None):
-        res = super(Label, self).to_json(dt_format=dt_format)
-        res.update(self.to_short_json())
+        res = self.to_short_json()
         res['context'] = self.context.content
         return res
 
