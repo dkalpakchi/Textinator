@@ -5,12 +5,6 @@
       'folders': [],
       'remote': []
     },
-    'Db': {
-      'db_type': '', 
-      'user': '',
-      'password': '',
-      'database': '' 
-    },
     'Json': {
       'files': [],
       'folders': [],
@@ -19,6 +13,9 @@
     },
     'PlainText': {
       'texts': []
+    },
+    'TextsAPI': {
+      'endpoint': ''
     }
   }
 

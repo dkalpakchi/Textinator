@@ -127,7 +127,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ['TT_DB_NAME'],
         'USER': os.environ['TT_DB_USER'],
         'PASSWORD': os.environ['TT_DB_PASSWORD'],
@@ -226,8 +226,8 @@ TASK_TYPES = list(yaml.load(open(os.path.join(BASE_DIR, 'task_types.yaml')), Loa
 DATASOURCE_TYPES = [
     ('PlainText', 'Plain text'),
     ('TextFile', 'Plain text file(s)'),
-    ('Db', 'Database'),
-    ('Json', 'JSON file(s)')
+    ('Json', 'JSON file(s)'),
+    ('TextsAPI', 'API')
 ]
 
 MARKER_TYPES = [

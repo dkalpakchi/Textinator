@@ -2,8 +2,10 @@ version: '3.8'
 
 services:
   web:
-    build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: python /usr/src/app/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/usr/src/app/
     ports:
@@ -12,12 +14,17 @@ services:
       - ./.env.dev
     depends_on:
       - db
+
   db:
-    image: postgres:13.0-alpine
+    image: postgres:13.4-alpine
+    expose:
+      - 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=hello_django
-      - POSTGRES_PASSWORD=hello_django
-      - POSTGRES_DB=hello_django_dev
+      - POSTGRES_USER=textinator
+      - POSTGRES_PASSWORD=qwerty123
+      - POSTGRES_DB=textinator
 
+volumes:
+  postgres_data:

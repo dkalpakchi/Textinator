@@ -15,3 +15,13 @@ If you want TinyMCE uploads to work, don't forget to run
 ```
 python manage.py collectstatic
 ```
+
+## Docker
+Create and run container
+1. Build and run container in the background mode: `docker-compose up -d --build`
+2. Apply migrations: `docker-compose exec web python /usr/src/app/manage.py migrate --noinput`
+3. Create superuse: `docker-compose exec web python /usr/src/app/manage.py createsuperuser`
+4. Go to `http://localhost:8000/textinator` in the browser of your choice
+
+Take down container and DB:
+`docker-compose down -v`

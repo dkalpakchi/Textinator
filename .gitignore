@@ -13,3 +13,5 @@ static_cdn/*
 data/*
 aftonbladet*
 .venv
+example_texts_api/.tvenv
+example_texts_api/__pycache__

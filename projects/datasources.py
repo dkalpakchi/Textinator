@@ -3,9 +3,6 @@ import requests
 import glob
 import json
 import random
-import pymysql
-import pymongo
-
 
 class AbsentSpecError(Exception):
     pass
@@ -99,80 +96,6 @@ class TextFileSource(DataSource):
         return idx, self[idx]
 
 
-class DbSource(DataSource):
-    def __init__(self, spec_data):
-        super().__init__(spec_data)
-        self._required_keys = ['db_type', 'user', 'password', 'database']
-        self._aux_keys = [('collection', 'field'), ('rand_dp_query', 'size_query')]
-        self.check_constraints()
-
-        self.__db_type = self.get_spec('db_type')
-        self.__user = self.get_spec('user')
-        self.__database = self.get_spec('database')
-        self.__collection = self.get_spec('collection')
-        self.__field = self.get_spec('field')
-        self.__rand_dp_query = self.get_spec('rand_dp_query')
-        self.__size_query = self.get_spec('size_query')
-        # TODO: make safer
-        self.__password = self.get_spec('password')
-        self.__conn = self.__connect()
-        self.__ids = None
-        self.__N = None
-
-    def __connect(self):
-        try:
-            return {
-                'mysql': self.__connect_mysql,
-                'mongodb': self.__connect_mongo
-            }[self.__db_type]()
-        except AttributeError:
-            raise NotImplementedError('{} is not supported'.format(self.__db_type)) from None
-
-    def __connect_mysql(self):
-        return pymysql.connect(user=self.__user, database=self.__database, password=self.__password)
-
-    def __connect_mongo(self):
-        # TODO: add authentication
-        return pymongo.MongoClient("mongodb://localhost:27017/")
-
-    def get_random_datapoint(self):
-        # self.cache_datapoint_ids()
-        if self.__rand_dp_query:
-            cur = self.__conn.cursor()
-            cur.execute(self.__rand_dp_query)
-            idx, text = cur.fetchone()
-            cur.close()
-            return idx, text.decode('utf8')
-        elif self.__db_type == 'mongodb':
-            # TODO add id
-            db = self.__conn[self.__database]
-            collection = db[self.__collection]
-            cursor = collection.aggregate([{ "$sample": { "size": 1 } }])
-            return list(cursor)[0][self.__field]
-        else:
-            raise NotImplementedError('Please set `rand_dp_query` in your settings')
-
-    def size(self):
-        if self.__size_query:
-            cur = self.__conn.cursor()
-            cur.execute(self.__size_query)
-            count = cur.fetchone()[0]
-            cur.close()
-            return count
-        elif self.__db_type == 'mongodb':
-            db = self.__conn[self.__database]
-            collection = db[self.__collection]
-            return collection.count()
-
-    def get_datapoints(self, query):
-        texts = []
-        with self.__conn.cursor() as cur:
-            cur.execute(query)
-            for text in cur:
-                texts.append(text)
-        return texts
-
-
 class JsonSource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
@@ -209,3 +132,32 @@ class JsonSource(DataSource):
         idx = random.randint(0, self.size() - 1)
         return idx, self[idx]
 
+
+class TextsAPISource(DataSource):
+    def __init__(self, spec_data):
+        super().__init__(spec_data)
+        self.__endpoint = self.get_spec('endpoint')
+
+    def __getitem__(self, key):
+        r = requests.get("{}/get_datapoint?key={}".format(self.__endpoint, key))
+        if r.status_code == 200:
+            data = r.json()
+            return data['text']
+        else:
+            return ""
+
+    def get_random_datapoint(self):
+        r = requests.get("{}/get_random_datapoint".format(self.__endpoint))
+        if r.status_code == 200:
+            data = r.json()
+            return data['id'], data['text']
+        else:
+            return -1, ""
+
+    def size(self):
+        r = requests.get("{}/size".format(self.__endpoint))
+        if r.status_code == 200:
+            data = r.json()
+            return data['size']
+        else:
+            return 0

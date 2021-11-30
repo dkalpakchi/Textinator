@@ -1,7 +1,9 @@
 # pull official base image
 FROM python:3.9.6-alpine
 
-RUN apk add git
+# install psycopg2 dependencies and other dependencies
+RUN apk update \
+    && apk add postgresql-dev gcc python3-dev musl-dev git jpeg-dev zlib-dev
 
 RUN adduser -D textinator
 USER textinator
@@ -19,4 +21,6 @@ COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
 # copy project
-COPY . .
+# COPY . .
+
+CMD ["export", 'PATH="$PATH:/home/textinator/.local/bin"']
