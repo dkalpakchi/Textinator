@@ -776,11 +776,13 @@
 
           if (!chunk.marked) {
             var color = obj.getAttribute('data-color'),
+                textColor = obj.getAttribute('data-text-color'),
                 markedSpan = document.createElement('span'),
                 deleteMarkedBtn = document.createElement('button');
-            markedSpan.className = "tag is-" + color + " is-medium";
+            markedSpan.className = "tag is-medium";
             markedSpan.setAttribute('data-s', obj.getAttribute('data-s'));
             markedSpan.setAttribute('data-i', chunk['id']);
+            markedSpan.setAttribute('style', 'background-color:' + color + '; color:' + textColor + ";");
             $(markedSpan).prop('in_relation', false);
             deleteMarkedBtn.className = 'delete is-small';
 

@@ -3,7 +3,7 @@ FROM python:3.9.6-alpine
 
 # install psycopg2 dependencies and other dependencies
 RUN apk update \
-    && apk add postgresql-dev gcc python3-dev musl-dev git jpeg-dev zlib-dev
+    && apk add postgresql-dev gcc python3-dev musl-dev git jpeg-dev zlib-dev gettext
 
 RUN adduser -D textinator
 USER textinator

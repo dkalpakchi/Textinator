@@ -310,6 +310,20 @@ class MarkerAdmin(CommonModelAdmin):
     list_display = ['name', 'short', 'color']
     inlines = [MarkerContextMenuItemInline]
 
+    regular_user_fields = ['name', 'short', 'color', 'shortcut']
+    admin_user_fields = ['for_task_type']
+
+    def get_fields(self, request, obj=None):
+        """
+        Hook for specifying fields.
+        """
+        self.fields = self.regular_user_fields
+        if request.user.is_superuser:
+            # INVESTIGATE: if using += on self.fields, the fields are accumulated for some reason
+            self.fields = self.regular_user_fields + self.admin_user_fields
+        return self.fields
+
+
 @admin.register(Relation)
 class RelationAdmin(CommonModelAdmin):
     class Media:

@@ -1,0 +1,329 @@
+
+
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Views &mdash; Textinator 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Models" href="models.html" /> 
+
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <a class="site-nav-toggle hidden-lg-up"><i class="icon-menu"></i></a>
+            <a class="site-title" href="../index.html">
+                Textinator
+            </a>
+        </div>
+    </header>
+
+
+<div class="breadcrumbs-outer hidden-xs-down">
+    <div class="container">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a></li>
+        
+          <li><a href="../api.html">API</a></li>
+        
+      <li>Views</li>
+    
+    
+      <li class="breadcrumbs-aside">
+        
+            
+            <a href="../_sources/modules/views.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+</div>
+    </div>
+</div>
+    <div class="main-outer">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-3 site-nav">
+                    
+<div role="search">
+    <form class="search" action="../search.html" method="get">
+        <div class="icon-input">
+            <input type="text" name="q" placeholder="Search" />
+            <span class="icon-search"></span>
+        </div>
+        <input type="submit" value="Go" class="d-hidden" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+                    <div class="site-nav-tree">
+                        
+                            
+                            
+                                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/markers_and_labels.html">Markers &amp; Labels</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="models.html">Models</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Views</a></li>
+</ul>
+</li>
+</ul>
+
+                            
+                        
+                    </div>
+                </div>
+                <div class="col-12 col-lg-9">
+                    <div class="document">
+                        
+                            
+  <section id="module-projects.views">
+<span id="views"></span><h1>Views<a class="headerlink" href="#module-projects.views" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.views.DataSourceSizeJSONView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.views.</span></span><span class="sig-name descname"><span class="pre">DataSourceSizeJSONView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.DataSourceSizeJSONView" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="projects.views.DataSourceSizeJSONView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.DataSourceSizeJSONView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return graph configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.DataSourceSizeJSONView.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.DataSourceSizeJSONView.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 3 datasets to plot.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.DataSourceSizeJSONView.get_labels">
+<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.DataSourceSizeJSONView.get_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 7 labels for the x-axis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.DataSourceSizeJSONView.get_providers">
+<span class="sig-name descname"><span class="pre">get_providers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.DataSourceSizeJSONView.get_providers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of data series names.</p>
+<p>Providers numbers should be equal to series numbers.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.views.DetailView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.views.</span></span><span class="sig-name descname"><span class="pre">DetailView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.DetailView" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="projects.views.DetailView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.DetailView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert the single object into the context dict.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="projects.views.DetailView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#projects.views.DetailView.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="models.html#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">projects.models.Project</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.views.IndexView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.views.</span></span><span class="sig-name descname"><span class="pre">IndexView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.IndexView" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="projects.views.IndexView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.IndexView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the context for this view.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="projects.views.IndexView.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#projects.views.IndexView.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="models.html#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">projects.models.Project</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.views.LabelLengthJSONView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.views.</span></span><span class="sig-name descname"><span class="pre">LabelLengthJSONView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.LabelLengthJSONView" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="projects.views.LabelLengthJSONView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.LabelLengthJSONView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return graph configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.LabelLengthJSONView.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.LabelLengthJSONView.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 3 datasets to plot.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.LabelLengthJSONView.get_labels">
+<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.LabelLengthJSONView.get_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 7 labels for the x-axis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.LabelLengthJSONView.get_providers">
+<span class="sig-name descname"><span class="pre">get_providers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.LabelLengthJSONView.get_providers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return names of datasets.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.views.UserProgressJSONView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.views.</span></span><span class="sig-name descname"><span class="pre">UserProgressJSONView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserProgressJSONView" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserProgressJSONView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserProgressJSONView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return graph configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserProgressJSONView.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserProgressJSONView.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 3 datasets to plot.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserProgressJSONView.get_labels">
+<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserProgressJSONView.get_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 7 labels for the x-axis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserProgressJSONView.get_providers">
+<span class="sig-name descname"><span class="pre">get_providers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserProgressJSONView.get_providers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return names of datasets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserProgressJSONView.get_series">
+<span class="sig-name descname"><span class="pre">get_series</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserProgressJSONView.get_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate HighCharts series from providers and data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.views.UserTimingJSONView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.views.</span></span><span class="sig-name descname"><span class="pre">UserTimingJSONView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserTimingJSONView" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserTimingJSONView.get_context_data">
+<span class="sig-name descname"><span class="pre">get_context_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserTimingJSONView.get_context_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return graph configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserTimingJSONView.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserTimingJSONView.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of series [[25, 34, 0, 1, 50], …]).</p>
+<p>In the same order as providers and with the same serie length
+of xAxis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserTimingJSONView.get_labels">
+<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserTimingJSONView.get_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 7 labels for the x-axis.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.views.UserTimingJSONView.get_providers">
+<span class="sig-name descname"><span class="pre">get_providers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.views.UserTimingJSONView.get_providers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return names of datasets.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+    <div class="footer" role="contentinfo">
+        <div class="container">
+            &#169; Copyright 2021, Dmytro Kalpakchi.
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.
+        </div>
+    </div>  
+
+</body>
+</html>

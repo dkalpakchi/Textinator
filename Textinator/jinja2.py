@@ -15,19 +15,27 @@ def get_path(url):
 
 
 def display_marker(marker):
+    h = marker.color.lstrip('#')
+    rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+    # https://www.w3.org/TR/AERT/#color-contrast
+    # https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color
+    brightness = 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2]
+    text_color = 'black' if brightness > 125 else 'white'
+
     template = Template("""
-    <div class="marker tags has-addons" data-s="{{marker.short}}" data-color="{{marker.color}}" data-res="{{marker.get_count_restrictions()}}"
+    <div class="marker tags has-addons" data-s="{{marker.short}}" data-color="{{marker.color}}" data-text-color="{{text_color}}" data-res="{{marker.get_count_restrictions()}}"
         data-shortcut="{{marker.shortcut|upper}}" data-submittable="{% if not marker.is_part_of_relation() %}true{% else %}false{% endif %}">
       {% if marker.is_part_of_relation() %}
         <span class="tag arrow is-grey"><input type="checkbox"></span>
       {% endif %}
-      <span class="tag is-{{marker.color}}">{{marker.name}}</span>
+      <span class="tag" style="background-color: {{marker.color}}; color: {{text_color}};">{{marker.name}}</span>
       {% if marker.shortcut %}
         <span class="tag is-dark">{{marker.shortcut|upper}}</span>
       {% endif %}
     </div>
     """)
-    return Markup(template.render(marker=marker))
+    return Markup(template.render(marker=marker, text_color=text_color))
 
 
 def display_relation(rel):

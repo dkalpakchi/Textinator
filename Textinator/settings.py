@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import yaml
+import uuid
+import random
 
 from pathlib import Path
 
@@ -28,13 +30,13 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600 # 100 MB
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get("SECRET_KEY", uuid.uuid4().hex[:random.randint(8, 36)])
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
 # 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
 # For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 
 # Application definition
 
@@ -59,7 +61,8 @@ INSTALLED_APPS = [
     # 'django_extensions',
     'nested_admin',
     'survey',
-    'users'
+    'users',
+    'colorfield'
 ]
 
 MIDDLEWARE = [
@@ -128,11 +131,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ['TT_DB_NAME'],
-        'USER': os.environ['TT_DB_USER'],
-        'PASSWORD': os.environ['TT_DB_PASSWORD'],
-        'HOST': os.environ['TT_DB_HOST'],
-        'PORT': os.environ['TT_DB_PORT'],
+        'NAME': os.environ.get('TT_DB_NAME'),
+        'USER': os.environ.get('TT_DB_USER'),
+        'PASSWORD': os.environ.get('TT_DB_PASSWORD'),
+        'HOST': os.environ.get('TT_DB_HOST'),
+        'PORT': os.environ.get('TT_DB_PORT'),
     }
 }
 

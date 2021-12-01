@@ -1,0 +1,859 @@
+
+
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Models &mdash; Textinator 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Views" href="views.html" />
+    <link rel="prev" title="API" href="../api.html" /> 
+
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <a class="site-nav-toggle hidden-lg-up"><i class="icon-menu"></i></a>
+            <a class="site-title" href="../index.html">
+                Textinator
+            </a>
+        </div>
+    </header>
+
+
+<div class="breadcrumbs-outer hidden-xs-down">
+    <div class="container">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a></li>
+        
+          <li><a href="../api.html">API</a></li>
+        
+      <li>Models</li>
+    
+    
+      <li class="breadcrumbs-aside">
+        
+            
+            <a href="../_sources/modules/models.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+</div>
+    </div>
+</div>
+    <div class="main-outer">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-3 site-nav">
+                    
+<div role="search">
+    <form class="search" action="../search.html" method="get">
+        <div class="icon-input">
+            <input type="text" name="q" placeholder="Search" />
+            <span class="icon-search"></span>
+        </div>
+        <input type="submit" value="Go" class="d-hidden" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+                    <div class="site-nav-tree">
+                        
+                            
+                            
+                                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/markers_and_labels.html">Markers &amp; Labels</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="views.html">Views</a></li>
+</ul>
+</li>
+</ul>
+
+                            
+                        
+                    </div>
+                </div>
+                <div class="col-12 col-lg-9">
+                    <div class="document">
+                        
+                            
+  <section id="module-projects.models">
+<span id="models"></span><h1>Models<a class="headerlink" href="#module-projects.models" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.Batch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Batch" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>uuid</strong> (<em>UUIDField</em>) – Uuid</p></li>
+<li><p><strong>user_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – User</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Batch.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Batch.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Batch.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Batch.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.Context">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Context" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>datasource_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.DataSource" title="projects.models.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSource</span></code></a>) – Datasource</p></li>
+<li><p><strong>content</strong> (<em>TextField</em>) – Content</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Context.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Context.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Context.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Context.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.Context.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Context.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.DataAccessLog">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">DataAccessLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datapoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_submitted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_skipped</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.DataAccessLog" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>user_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – User</p></li>
+<li><p><strong>project_data_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.ProjectData" title="projects.models.ProjectData"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectData</span></code></a>) – Project data</p></li>
+<li><p><strong>datapoint</strong> (<em>CharField</em>) – Datapoint</p></li>
+<li><p><strong>flags</strong> (<em>TextField</em>) – Flags</p></li>
+<li><p><strong>is_submitted</strong> (<em>BooleanField</em>) – Is submitted</p></li>
+<li><p><strong>is_skipped</strong> (<em>BooleanField</em>) – Is skipped</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.DataAccessLog.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.DataAccessLog.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.DataAccessLog.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.DataAccessLog.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.DataSource">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">DataSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.DataSource" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>name</strong> (<em>CharField</em>) – Name</p></li>
+<li><p><strong>source_type</strong> (<em>CharField</em>) – Source type</p></li>
+<li><p><strong>spec</strong> (<em>TextField</em>) – Spec</p></li>
+<li><p><strong>post_processing_methods</strong> (<em>ManyToManyField</em>) – Post processing methods</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.DataSource.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.DataSource.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.DataSource.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.DataSource.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.Input">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Input" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>content</strong> (<em>TextField</em>) – Content</p></li>
+<li><p><strong>marker_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.MarkerVariant" title="projects.models.MarkerVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkerVariant</span></code></a>) – Marker</p></li>
+<li><p><strong>context_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Context" title="projects.models.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>) – Context</p></li>
+<li><p><strong>batch_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Batch" title="projects.models.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a>) – Batch</p></li>
+<li><p><strong>unit</strong> (<em>PositiveIntegerField</em>) – Unit</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Input.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Input.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Input.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Input.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.Label">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">undone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Label" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>start</strong> (<em>PositiveIntegerField</em>) – Start</p></li>
+<li><p><strong>end</strong> (<em>PositiveIntegerField</em>) – End</p></li>
+<li><p><strong>marker_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.MarkerVariant" title="projects.models.MarkerVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkerVariant</span></code></a>) – Marker</p></li>
+<li><p><strong>extra</strong> (<em>JSONField</em>) – Extra</p></li>
+<li><p><strong>context_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Context" title="projects.models.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>) – Context</p></li>
+<li><p><strong>undone</strong> (<em>BooleanField</em>) – Undone</p></li>
+<li><p><strong>batch_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Batch" title="projects.models.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a>) – Batch</p></li>
+<li><p><strong>unit</strong> (<em>PositiveIntegerField</em>) – Unit</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Label.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Label.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Label.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Label.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.LabelRelation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">LabelRelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">undone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.LabelRelation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>rule_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Relation" title="projects.models.Relation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Relation</span></code></a>) – Rule</p></li>
+<li><p><strong>first_label_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Label" title="projects.models.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a>) – First label</p></li>
+<li><p><strong>second_label_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Label" title="projects.models.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a>) – Second label</p></li>
+<li><p><strong>undone</strong> (<em>BooleanField</em>) – Undone</p></li>
+<li><p><strong>batch_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Batch" title="projects.models.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a>) – Batch</p></li>
+<li><p><strong>unit</strong> (<em>PositiveIntegerField</em>) – Unit</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.LabelRelation.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.LabelRelation.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.LabelRelation.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.LabelRelation.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.LabelReview">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">LabelReview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_match</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ambiguity_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolved_by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impossible</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.LabelReview" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>original_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Label" title="projects.models.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a>) – Original</p></li>
+<li><p><strong>is_match</strong> (<em>BooleanField</em>) – Is match</p></li>
+<li><p><strong>user_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – User</p></li>
+<li><p><strong>ambiguity_status</strong> (<em>CharField</em>) – Ambiguity status</p></li>
+<li><p><strong>resolved_by_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – Resolved by</p></li>
+<li><p><strong>start</strong> (<em>PositiveIntegerField</em>) – Start</p></li>
+<li><p><strong>end</strong> (<em>PositiveIntegerField</em>) – End</p></li>
+<li><p><strong>marker_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Marker" title="projects.models.Marker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Marker</span></code></a>) – Marker</p></li>
+<li><p><strong>impossible</strong> (<em>BooleanField</em>) – Impossible</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.LabelReview.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.LabelReview.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.LabelReview.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.LabelReview.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.Level">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Level" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>number</strong> (<em>IntegerField</em>) – Number</p></li>
+<li><p><strong>title</strong> (<em>CharField</em>) – Title</p></li>
+<li><p><strong>points</strong> (<em>IntegerField</em>) – Points</p></li>
+<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Level.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Level.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Level.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Level.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.Marker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Marker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Marker" title="Permalink to this definition">¶</a></dt>
+<dd><p>This model holds the <strong>definition</strong> for each unit of annotation in Textinator, called <cite>Marker</cite>.
+We create each <cite>Marker</cite> only when creating a new project and can re-use <cite>Markers</cite> between the projects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>name</strong> (<em>CharField</em>) – The display name of the marker (max 50 characters, must be unique)</p></li>
+<li><p><strong>short</strong> (<em>CharField</em>) – Marker’s nickname used internally (max 10 characters, must be unique,
+                     by default the capitalized first three character of the label)</p></li>
+<li><p><strong>color</strong> (<em>ColorField</em>) – Marker’s color used when annotating the text</p></li>
+<li><p><strong>for_task_type</strong> (<em>CharField</em>) – Specify task types (if any) for which this marker must be present (avaiable only to admins)</p></li>
+<li><p><strong>shortcut</strong> (<em>CharField</em>) – Keyboard shortcut for annotating a piece of text with this marker</p></li>
+<li><p><strong>actions</strong> (<em>ManyToManyField</em>) – Actions associated with each marker [EXPAND]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Marker.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Marker.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Marker.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Marker.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.Marker.get_count_restrictions">
+<span class="sig-name descname"><span class="pre">get_count_restrictions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stringify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Marker.get_count_restrictions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the restrictions (if any) on the number of markers per submitted instance</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>stringify (bool, optional): Whether to return the restrictions in a string format</p>
+</dd>
+<dt>Returns:</dt><dd><p>(str or list): Restrictions on the number of markers per submitted instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.Marker.is_part_of_relation">
+<span class="sig-name descname"><span class="pre">is_part_of_relation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Marker.is_part_of_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether a given marker is part of definition for any <cite>Relation</cite></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.Marker.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Marker.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.MarkerAction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerAction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">admin_filter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerAction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>name</strong> (<em>CharField</em>) – Name</p></li>
+<li><p><strong>description</strong> (<em>TextField</em>) – Description</p></li>
+<li><p><strong>file</strong> (<em>CharField</em>) – File</p></li>
+<li><p><strong>admin_filter</strong> (<em>CharField</em>) – Admin filter</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerAction.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.MarkerAction.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerAction.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.MarkerAction.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.MarkerContextMenuItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerContextMenuItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose_admin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerContextMenuItem" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>action_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.MarkerAction" title="projects.models.MarkerAction"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkerAction</span></code></a>) – Action</p></li>
+<li><p><strong>marker_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Marker" title="projects.models.Marker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Marker</span></code></a>) – Marker</p></li>
+<li><p><strong>verbose</strong> (<em>CharField</em>) – Verbose</p></li>
+<li><p><strong>verbose_admin</strong> (<em>CharField</em>) – Verbose admin</p></li>
+<li><p><strong>field</strong> (<em>CharField</em>) – Field</p></li>
+<li><p><strong>config</strong> (<em>JSONField</em>) – Config</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerContextMenuItem.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.MarkerContextMenuItem.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerContextMenuItem.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.MarkerContextMenuItem.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.MarkerPair">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerPair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerPair" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>first_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Marker" title="projects.models.Marker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Marker</span></code></a>) – First</p></li>
+<li><p><strong>second_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Marker" title="projects.models.Marker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Marker</span></code></a>) – Second</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerPair.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.MarkerPair.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerPair.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.MarkerPair.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.MarkerRestriction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerRestriction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerRestriction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>variant_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.MarkerVariant" title="projects.models.MarkerVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkerVariant</span></code></a>) – Variant</p></li>
+<li><p><strong>kind</strong> (<em>CharField</em>) – Kind</p></li>
+<li><p><strong>value</strong> (<em>PositiveIntegerField</em>) – Value</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerRestriction.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.MarkerRestriction.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerRestriction.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.MarkerRestriction.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.MarkerUnit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerUnit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_required</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_rankable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerUnit" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>size</strong> (<em>PositiveIntegerField</em>) – Size</p></li>
+<li><p><strong>minimum_required</strong> (<em>PositiveIntegerField</em>) – Minimum required</p></li>
+<li><p><strong>is_rankable</strong> (<em>BooleanField</em>) – Is rankable</p></li>
+<li><p><strong>name</strong> (<em>CharField</em>) – Internal name for the unit (max 10 characters)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerUnit.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.MarkerUnit.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerUnit.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.MarkerUnit.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.MarkerVariant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_free_text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_in_unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerVariant" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
+<li><p><strong>marker_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Marker" title="projects.models.Marker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Marker</span></code></a>) – Marker</p></li>
+<li><p><strong>is_free_text</strong> (<em>BooleanField</em>) – Is free text</p></li>
+<li><p><strong>unit_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.MarkerUnit" title="projects.models.MarkerUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkerUnit</span></code></a>) – Unit</p></li>
+<li><p><strong>order_in_unit</strong> (<em>PositiveIntegerField</em>) – Order in unit</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerVariant.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.MarkerVariant.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.MarkerVariant.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.MarkerVariant.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.PostProcessingMethod">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">PostProcessingMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.PostProcessingMethod" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>name</strong> (<em>CharField</em>) – Name</p></li>
+<li><p><strong>helper</strong> (<em>CharField</em>) – Helper</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.PostProcessingMethod.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.PostProcessingMethod.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.PostProcessingMethod.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.PostProcessingMethod.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.PreMarker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">PreMarker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.PreMarker" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
+<li><p><strong>marker_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Marker" title="projects.models.Marker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Marker</span></code></a>) – Marker</p></li>
+<li><p><strong>tokens</strong> (<em>TextField</em>) – Comma-separated tokens that should be highlighted with a marker</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.PreMarker.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.PreMarker.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.PreMarker.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.PreMarker.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.Project">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">short_description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">institution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supported_by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guidelines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reminders</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temporary_message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_summary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_with_replacement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disjoint_annotation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_dataset_identifiers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_publish</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_finish</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_open</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_peer_reviewed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_selecting_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_submitted_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_markers_per_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">round_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_intro_tour</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Project" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>title</strong> (<em>CharField</em>) – Title</p></li>
+<li><p><strong>short_description</strong> (<em>TextField</em>) – Short description</p></li>
+<li><p><strong>institution</strong> (<em>CharField</em>) – Institution</p></li>
+<li><p><strong>supported_by</strong> (<em>CharField</em>) – Supported by</p></li>
+<li><p><strong>guidelines</strong> (<em>HTMLField</em>) – Guidelines</p></li>
+<li><p><strong>reminders</strong> (<em>HTMLField</em>) – Reminders</p></li>
+<li><p><strong>temporary_message</strong> (<em>HTMLField</em>) – Temporary message</p></li>
+<li><p><strong>video_summary</strong> (<em>FileBrowseField</em>) – Video summary</p></li>
+<li><p><strong>sampling_with_replacement</strong> (<em>BooleanField</em>) – Sampling with replacement</p></li>
+<li><p><strong>disjoint_annotation</strong> (<em>BooleanField</em>) – Disjoint annotation</p></li>
+<li><p><strong>show_dataset_identifiers</strong> (<em>BooleanField</em>) – Show dataset identifiers</p></li>
+<li><p><strong>context_size</strong> (<em>CharField</em>) – Context size for storing labels</p></li>
+<li><p><strong>task_type</strong> (<em>CharField</em>) – Task type</p></li>
+<li><p><strong>dt_publish</strong> (<em>DateTimeField</em>) – To be published at</p></li>
+<li><p><strong>dt_finish</strong> (<em>DateTimeField</em>) – To be finished at</p></li>
+<li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Dt updated</p></li>
+<li><p><strong>author_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – Author</p></li>
+<li><p><strong>is_open</strong> (<em>BooleanField</em>) – Is open</p></li>
+<li><p><strong>is_peer_reviewed</strong> (<em>BooleanField</em>) – Is peer reviewed</p></li>
+<li><p><strong>allow_selecting_labels</strong> (<em>BooleanField</em>) – Allow selecting labels</p></li>
+<li><p><strong>disable_submitted_labels</strong> (<em>BooleanField</em>) – Disable submitted labels</p></li>
+<li><p><strong>max_markers_per_input</strong> (<em>PositiveIntegerField</em>) – Max markers per input</p></li>
+<li><p><strong>round_length</strong> (<em>PositiveIntegerField</em>) – The number of text snippets consituting one round of the game</p></li>
+<li><p><strong>points_scope</strong> (<em>CharField</em>) – The scope of the submitted task</p></li>
+<li><p><strong>points_unit</strong> (<em>PositiveIntegerField</em>) – Number of points per submitted task</p></li>
+<li><p><strong>has_intro_tour</strong> (<em>BooleanField</em>) – Has intro tour</p></li>
+<li><p><strong>collaborators</strong> (<em>ManyToManyField</em>) – Collaborators</p></li>
+<li><p><strong>participants</strong> (<em>ManyToManyField</em>) – Participants</p></li>
+<li><p><strong>markers</strong> (<em>ManyToManyField</em>) – Markers</p></li>
+<li><p><strong>datasources</strong> (<em>ManyToManyField</em>) – Datasources</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Project.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Project.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Project.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Project.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.Project.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Project.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.ProjectData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">ProjectData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasource</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.ProjectData" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
+<li><p><strong>datasource_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.DataSource" title="projects.models.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSource</span></code></a>) – Datasource</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.ProjectData.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.ProjectData.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.ProjectData.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.ProjectData.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.Relation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Relation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">for_task_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shortcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">representation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Relation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>name</strong> (<em>CharField</em>) – Name</p></li>
+<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
+<li><p><strong>for_task_type</strong> (<em>CharField</em>) – For task type</p></li>
+<li><p><strong>direction</strong> (<em>CharField</em>) – Direction</p></li>
+<li><p><strong>shortcut</strong> (<em>CharField</em>) – Keyboard shortcut for marking a piece of text with this label</p></li>
+<li><p><strong>representation</strong> (<em>CharField</em>) – How the relation should be visualized?</p></li>
+<li><p><strong>pairs</strong> (<em>ManyToManyField</em>) – Pairs</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Relation.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Relation.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.Relation.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Relation.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.UserProfile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">UserProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asking_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timed_questions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.UserProfile" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
+<li><p><strong>points</strong> (<em>FloatField</em>) – Points</p></li>
+<li><p><strong>asking_time</strong> (<em>IntegerField</em>) – Asking time</p></li>
+<li><p><strong>timed_questions</strong> (<em>IntegerField</em>) – Timed questions</p></li>
+<li><p><strong>user_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – User</p></li>
+<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.UserProfile.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.UserProfile.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.UserProfile.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.UserProfile.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="projects.models.UserProfile.aat">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aat</span></span><a class="headerlink" href="#projects.models.UserProfile.aat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Average asking time</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+    <div class="footer" role="contentinfo">
+        <div class="container">
+            &#169; Copyright 2021, Dmytro Kalpakchi.
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.
+        </div>
+    </div>  
+
+</body>
+</html>

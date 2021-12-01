@@ -23,7 +23,7 @@ def get_datapoint():
 
 @app.route("/get_random_datapoint", methods=['GET'])
 def get_random_datapoint():
-    idx = random.randint(0, len(texts))
+    idx = random.randint(0, len(texts)-1)
     return jsonify({
         'id': idx,
         'text': texts[idx]

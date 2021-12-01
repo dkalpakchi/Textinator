@@ -12,13 +12,15 @@ from django.utils import timezone
 
 from tinymce import HTMLField
 from filebrowser.fields import FileBrowseField
+from colorfield.fields import ColorField
 
 from .datasources import *
 from .helpers import *
 
 
 class CommonModel(models.Model):
-    dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name="creation date")
+    dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name="creation date",
+        help_text="Creation date, autofilled")
 
     class Meta:
         abstract = True
@@ -98,12 +100,22 @@ class MarkerAction(CommonModel):
 
 
 class Marker(CommonModel):
-    name = models.CharField(max_length=50, unique=True)
-    short = models.CharField(max_length=10, help_text='By default the capitalized first three character of the label', unique=True)
-    color = models.CharField(max_length=10, choices=settings.MARKER_COLORS)
-    for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
-    shortcut = models.CharField(max_length=10, help_text="Keyboard shortcut for marking a piece of text with this label", null=True, blank=True)
-    actions = models.ManyToManyField(MarkerAction, through='MarkerContextMenuItem', blank=True)
+    """
+    This model holds the **definition** for each unit of annotation in Textinator, called `Marker`.
+    We create each `Marker` only when creating a new project and can re-use `Markers` between the projects.
+    """
+    name = models.CharField(max_length=50, unique=True,
+        help_text="The display name of the marker (max 50 characters, must be unique)")
+    short = models.CharField(max_length=10, unique=True, blank=True,
+        help_text="""Marker's nickname used internally (max 10 characters, must be unique,
+                     by default the capitalized first three character of the label)""")
+    color = ColorField(help_text="Marker's color used when annotating the text")
+    for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True,
+        help_text="Specify task types (if any) for which this marker must be present (avaiable only to admins)")
+    shortcut = models.CharField(max_length=10, null=True, blank=True,
+        help_text="Keyboard shortcut for annotating a piece of text with this marker")
+    actions = models.ManyToManyField(MarkerAction, through='MarkerContextMenuItem', blank=True,
+        help_text="Actions associated with each marker [EXPAND]")
 
     def save(self, *args, **kwargs):
         if not self.short:
@@ -112,6 +124,16 @@ class Marker(CommonModel):
 
     # TODO: should be count restrictions per project!
     def get_count_restrictions(self, stringify=True):
+        """
+        Get the restrictions (if any) on the number of markers per submitted instance
+        
+        Args:
+            stringify (bool, optional): Whether to return the restrictions in a string format
+        
+        Returns:
+            (str or list): Restrictions on the number of markers per submitted instance
+        
+        """
         try:
             restrictions = list(Marker.project_set.through.objects.filter(marker=self).all())
         except MarkerVariant.DoesNotExist:
@@ -119,11 +141,13 @@ class Marker(CommonModel):
         return '&'.join([str(r) for r in restrictions]) if stringify else restrictions
 
     def is_part_of_relation(self):
+        """
+        Check whether a given marker is part of definition for any `Relation`
+        """
         return bool(Relation.objects.filter(models.Q(pairs__first=self) | models.Q(pairs__second=self)).all())
 
     def __str__(self):
         return str(self.name)
-
 
     def to_minimal_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
@@ -218,6 +242,7 @@ class Project(CommonModel):
         if not self.sampling_with_replacement:
             pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
             if self.disjoint_annotation:
+                # TODO: check for race conditions here, could 2 annotators still get the same text?
                 # meaning each user annotates whatever is not annotated
                 logs = DataAccessLog.objects.filter(project_data__pk__in=pdata).all()
             else:

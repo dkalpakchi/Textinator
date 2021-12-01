@@ -1,0 +1,9 @@
+Markers & Labels
+==================
+
+If you want to annotate a task currently unsupported by Textinator or simply customize a new task, you will have to define custom units of annotation. Textinator supports such customized definitions through `Markers`. You need just a couple of things to define a basic `Marker`:
+
+a) find a descriptive name that will be displayed for the annotators;
+b) choose a color;
+c) choose a shortcut for the marker __(optional)__;
+d) choose a short nickname for the marker __(even more optional)__.

@@ -20,3 +20,4 @@ django-jazzmin
 psycopg2-binary
 jinja2
 python-memcached
+django-colorfield==0.4.5

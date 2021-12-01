@@ -136,7 +136,7 @@ class JsonSource(DataSource):
 class TextsAPISource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
-        self.__endpoint = self.get_spec('endpoint')
+        self.__endpoint = self.get_spec('endpoint').rstrip('/')
 
     def __getitem__(self, key):
         r = requests.get("{}/get_datapoint?key={}".format(self.__endpoint, key))
