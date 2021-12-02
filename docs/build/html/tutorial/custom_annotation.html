@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Markers &amp; Labels &mdash; Textinator 0.1 documentation</title>
+  <title>Creating a custom annotation task &mdash; Textinator 0.1 documentation</title>
   
 
   
@@ -31,7 +31,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="API" href="../api.html" />
-    <link rel="prev" title="Tutorial" href="../tutorial.html" /> 
+    <link rel="prev" title="Markers, Inputs &amp; Labels: What’s the difference?" href="markers_inputs_and_labels.html" /> 
 
 </head>
 
@@ -72,13 +72,13 @@
         
           <li><a href="../tutorial.html">Tutorial</a></li>
         
-      <li>Markers &amp; Labels</li>
+      <li>Creating a custom annotation task</li>
     
     
       <li class="breadcrumbs-aside">
         
             
-            <a href="../_sources/tutorial/markers_and_labels.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/tutorial/custom_annotation.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -110,7 +110,8 @@
                                 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../tutorial.html">Tutorial</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Markers &amp; Labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="markers_inputs_and_labels.html">Markers, Inputs &amp; Labels: What’s the difference?</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Creating a custom annotation task</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API</a><ul>
@@ -128,21 +129,28 @@
                     <div class="document">
                         
                             
-  <section id="markers-labels">
-<h1>Markers &amp; Labels<a class="headerlink" href="#markers-labels" title="Permalink to this headline">¶</a></h1>
-<p>If you want to annotate a task currently unsupported by Textinator or simply customize a new task, you will have to define custom units of annotation. Textinator supports such customized definitions through <cite>Markers</cite>. You need just a couple of things to define a basic <cite>Marker</cite>:</p>
+  <section id="creating-a-custom-annotation-task">
+<span id="custom-annotation-task"></span><h1>Creating a custom annotation task<a class="headerlink" href="#creating-a-custom-annotation-task" title="Permalink to this headline">¶</a></h1>
+<p>If you want to annotate a task currently unsupported by Textinator or simply customize a new task, you will have to define custom units of annotation. Textinator supports such customized definitions through <cite>Markers</cite>. You need just a couple of things to define a basic <em>Marker</em>:</p>
 <ul class="simple">
 <li><p>find a descriptive name that will be displayed for the annotators;</p></li>
 <li><p>choose a color;</p></li>
 <li><p>choose a shortcut for the marker <em>(optional)</em>;</p></li>
 <li><p>choose a short nickname for the marker <em>(even more optional)</em>.</p></li>
 </ul>
-<p>Let’s say we want the annotators to find and mark the main message of the text, then filled-in <cite>Marker</cite> fields (corresponding to the properties listed above), would look like in the picture below.</p>
+<p>Let’s say we want the annotators to find and mark the main message of the text, then filled-in <em>Marker</em> fields (corresponding to the properties listed above), would look like in the picture below.</p>
 <a class="reference internal image-reference" href="../_images/marker_example.png"><img alt="The screenshot of the form for defining a marker" src="../_images/marker_example.png" style="width: 100%;" /></a>
-<p>Recall that <cite>Marker</cite> provides only annotation <strong>definition</strong>. For each particular project, we should instantiate the marker. In order to do that you either have to create a new project (see HERE) or use an already existing one. Open a project of your choice in an admin interface and choose the tab called “Project-specific markers” (should look like in the picture below, if you have just created a new project).</p>
+<p>Recall that <em>Marker</em> provides only annotation <strong>definition</strong>. For each particular project, we should create a separate variant. In order to do that you either have to create a new project (see HERE) or use an already existing one. Open a project of your choice in an admin interface and choose the tab called “Project-specific markers” (should look like in the picture below, if you have just created a new project).</p>
 <a class="reference internal image-reference" href="../_images/proj_markers_tab1.png"><img alt="The screenshot of the &quot;Project-specifc markers&quot; tab" src="../_images/proj_markers_tab1.png" style="width: 100%;" /></a>
 <p>Click on “Add another Project-Specific Marker”.</p>
 <a class="reference internal image-reference" href="../_images/proj_markers_tab2.png"><img alt="The screenshot of the &quot;Project-specifc markers&quot; tab after clicking &quot;Add project-specific marker&quot;" src="../_images/proj_markers_tab2.png" style="width: 100%;" /></a>
+<p>Choose a <em>Marker</em> that you have defined before and define variant-specific properties:</p>
+<ol class="arabic simple">
+<li><p>If you want your annotators to be able to input text freely for the concept, select the checkbox “Is free text”. If you require annotators to mark spans in the text, then do <strong>NOT</strong> select that checkbox (if you want them to mostly mark spans in the text and sometimes input text freely, e.g., enter paraphrases of the marked span, see [HERE]).</p></li>
+<li><p>If you want your marker to be a part of the unit, i.e. group of markers. For instance, when creating multiple choice questions, consisting of a question, a correct answer and 3 distractors, then all of them would be considered a unit. In which case you will need to create a unit first (by clicking on the green “+” button near the unit) and then choose one and same unit for all 3 markers (question, correct answer and distractor).</p></li>
+<li><p>If a marker belongs to a unit, then you need to define the display order for each marker in a unit. For instance, if you want question, correct answer and distractors to be shown in this order, you would need to select “Order in unit” to be 1, 2 and 3, respectively.</p></li>
+</ol>
+<p>In our example case, we want annotators to be able to enter main message as a free text and this is the only marker connected to it, so no units are required. Hence, the filled in form would look as below.</p>
 </section>
 
 

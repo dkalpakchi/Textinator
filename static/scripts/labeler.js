@@ -168,6 +168,7 @@
 
     function getEnclosingLabel(node) {
       while (isLabel(node.parentNode)) {
+        if (!utils.isDefined(node)) break;
         node = node.parentNode;
       }
       return isLabel(node) ? node : null;
@@ -175,6 +176,7 @@
 
     function getClosestMarker(node) {
       while (!isMarker(node)) {
+        if (!utils.isDefined(node)) break;
         node = node.parentNode;
       }
       return isMarker(node) ? node : null;
@@ -182,6 +184,7 @@
 
     function getClosestRelation(node) {
       while (!isRelation(node)) {
+        if (!utils.isDefined(node)) break;
         node = node.parentNode;
       }
       return isRelation(node) ? node : null;
@@ -650,6 +653,10 @@
       getActiveChunk: function() {
         return chunks[chunks.length-1];
       },
+      removeActiveChunk: function() {
+        if (!chunks[chunks.length-1]['marked'])
+          chunks.pop();
+      },
       // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
       initPreMarkers: function() {
         labelId = 0;
@@ -768,6 +775,10 @@
             }
             console.log(chunk)
           } 
+        } else {
+          var chunk = this.getActiveChunk();
+          if (utils.isDefined(chunk) && !chunk['marked'])
+            this.removeActiveChunk();
         }
       },
       mark: function(obj, max_markers) {

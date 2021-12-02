@@ -38,6 +38,21 @@ def display_marker(marker):
     return Markup(template.render(marker=marker, text_color=text_color))
 
 
+def display_marker_tag(marker):
+    h = marker.color.lstrip('#')
+    rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+    # https://www.w3.org/TR/AERT/#color-contrast
+    # https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color
+    brightness = 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2]
+    text_color = 'black' if brightness > 125 else 'white'
+
+    template = Template("""
+    <span class="tag" style="background-color: {{marker.color}}; color: {{text_color}};">{{marker.name}}</span>
+    """)
+    return Markup(template.render(marker=marker, text_color=text_color))    
+
+
 def display_relation(rel):
     template = Template("""
     <div class="relation tags has-addons" data-b="{{rel.between}}" data-d="{{rel.direction}}" data-r="{{rel.id}}"
@@ -76,6 +91,7 @@ def environment(**options):
     env.filters['url_path'] = get_path
     env.filters['display_marker'] = display_marker
     env.filters['display_relation'] = display_relation
+    env.filters['display_marker_tag'] = display_marker_tag
     env.filters['prettify'] = prettify
     env.filters['bool2str'] = lambda x: str(x).lower()
     env.filters['any'] = any

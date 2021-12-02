@@ -1,14 +1,14 @@
 {% if project.dt_finish >= now %}
   <div class="columns">
-    <div class="column is-three-quarters">
+    <div class="column is-half">
       {% include 'partials/components/areas/text.html' %}
+    </div>
+    <div class="column">
+      {% include 'partials/components/areas/reminders.html' %}
       {% if source_id != -1 %}
         {% include 'partials/components/areas/markers.html' %}
       {% endif %}
       {% include 'partials/components/areas/submission.html' %}
-    </div>
-    <div class="column">
-      {% include 'partials/components/areas/reminders.html' %}
     </div>
   </div>
 

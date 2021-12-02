@@ -5,4 +5,5 @@ Tutorial
    :maxdepth: 2
    :caption: Tutorial:
 
-   tutorial/markers_and_labels
+   tutorial/markers_inputs_and_labels
+   tutorial/custom_annotation

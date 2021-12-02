@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Markers &amp; Labels &mdash; Textinator 0.1 documentation</title>
+  <title>Markers, Inputs &amp; Labels: What’s the difference? &mdash; Textinator 0.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="API" href="../api.html" />
+    <link rel="next" title="Creating a custom annotation task" href="custom_annotation.html" />
     <link rel="prev" title="Tutorial" href="../tutorial.html" /> 
 
 </head>
@@ -72,13 +72,13 @@
         
           <li><a href="../tutorial.html">Tutorial</a></li>
         
-      <li>Markers &amp; Labels</li>
+      <li>Markers, Inputs &amp; Labels: What’s the difference?</li>
     
     
       <li class="breadcrumbs-aside">
         
             
-            <a href="../_sources/tutorial/markers_and_labels.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/tutorial/markers_inputs_and_labels.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -110,7 +110,8 @@
                                 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../tutorial.html">Tutorial</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Markers &amp; Labels</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Markers, Inputs &amp; Labels: What’s the difference?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_annotation.html">Creating a custom annotation task</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api.html">API</a><ul>
@@ -128,21 +129,10 @@
                     <div class="document">
                         
                             
-  <section id="markers-labels">
-<h1>Markers &amp; Labels<a class="headerlink" href="#markers-labels" title="Permalink to this headline">¶</a></h1>
-<p>If you want to annotate a task currently unsupported by Textinator or simply customize a new task, you will have to define custom units of annotation. Textinator supports such customized definitions through <cite>Markers</cite>. You need just a couple of things to define a basic <cite>Marker</cite>:</p>
-<ul class="simple">
-<li><p>find a descriptive name that will be displayed for the annotators;</p></li>
-<li><p>choose a color;</p></li>
-<li><p>choose a shortcut for the marker <em>(optional)</em>;</p></li>
-<li><p>choose a short nickname for the marker <em>(even more optional)</em>.</p></li>
-</ul>
-<p>Let’s say we want the annotators to find and mark the main message of the text, then filled-in <cite>Marker</cite> fields (corresponding to the properties listed above), would look like in the picture below.</p>
-<a class="reference internal image-reference" href="../_images/marker_example.png"><img alt="The screenshot of the form for defining a marker" src="../_images/marker_example.png" style="width: 100%;" /></a>
-<p>Recall that <cite>Marker</cite> provides only annotation <strong>definition</strong>. For each particular project, we should instantiate the marker. In order to do that you either have to create a new project (see HERE) or use an already existing one. Open a project of your choice in an admin interface and choose the tab called “Project-specific markers” (should look like in the picture below, if you have just created a new project).</p>
-<a class="reference internal image-reference" href="../_images/proj_markers_tab1.png"><img alt="The screenshot of the &quot;Project-specifc markers&quot; tab" src="../_images/proj_markers_tab1.png" style="width: 100%;" /></a>
-<p>Click on “Add another Project-Specific Marker”.</p>
-<a class="reference internal image-reference" href="../_images/proj_markers_tab2.png"><img alt="The screenshot of the &quot;Project-specifc markers&quot; tab after clicking &quot;Add project-specific marker&quot;" src="../_images/proj_markers_tab2.png" style="width: 100%;" /></a>
+  <section id="markers-inputs-labels-what-s-the-difference">
+<h1>Markers, Inputs &amp; Labels: What’s the difference?<a class="headerlink" href="#markers-inputs-labels-what-s-the-difference" title="Permalink to this headline">¶</a></h1>
+<p>Textinator allows annotating a span of text (or the whole text) with concepts (e.g., Named Entity, Question, Answer, etc.). In order to define a concept, one needs to <strong>define</strong> a <em>Marker</em> and specify a name of the concept, a color to be assigned to the span of text, etc. Markers for standard tasks [LINK] in Textinator are pre-defined, whereas if you want to add a custom task, you have to <a class="reference internal" href="custom_annotation.html#custom-annotation-task"><span class="std std-ref">define them by hand</span></a>.</p>
+<p>When an annotator actually annotates a span of text, then a <em>Marker</em> gets <strong>instantiated</strong> into either a <em>Label</em> or an <em>Input</em>. If a <em>Marker</em> has a switched-on flag “Is free text”, then it gets instantiated as an <em>Input</em>, meaning an annotator is free to write their own input, e.g. a question. If the flag is switched off, it means an annotator can only mark a span inside the text and such <em>Marker</em> gets instantiated as a <em>Label</em>.</p>
 </section>
 
 

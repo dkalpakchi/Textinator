@@ -38,8 +38,8 @@ class MarkerVariantInline(nested_admin.NestedStackedInline):
     model = MarkerVariant
     extra = 0
     inlines = [MarkerRestrictionInline]
-    verbose_name = "Project marker"
-    verbose_name_plural = "Project markers"
+    verbose_name = "Project-specific marker"
+    verbose_name_plural = "Project-specific markers"
 
 
 class LevelInline(nested_admin.NestedStackedInline):

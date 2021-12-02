@@ -529,3 +529,7 @@ label.help.is-danger {
 .nested.card-header, .nested.card-body {
   border: 1px solid rgba(0,0,0,.125)
 }
+
+.is-marker-fullwidth {
+  width: 100%;
+}
