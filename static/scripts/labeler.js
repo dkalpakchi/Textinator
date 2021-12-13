@@ -951,6 +951,19 @@
               // .attr('viewBox', '0,0,300,400')
               .attr("width", "100%")
               .attr("height", "100%");
+          
+          // TODO: this marker should be visible w.r.t. the target node
+          svg.append("svg:defs").append("svg:marker")
+            .attr("id", "triangle")
+            .attr("refX", 6)
+            .attr("refY", 6)
+            .attr("markerWidth", 20)
+            .attr("markerHeight", 20)
+            .attr("markerUnits","userSpaceOnUse")
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M 0 0 12 6 0 12 3 6")
+            .style("fill", "black");
         }
       },
       drawNetwork: function(data, arrows) {

@@ -34,7 +34,7 @@
           {% for marker_variant in project_markers_variants %}
             {% if marker_variant.is_free_text and marker_variant.unit is none %}
               <div class="control has-tag-left is-marker-fullwidth">
-                <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","") }}_{{i}}_{{marker_variant.marker.short}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}">
+                <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","") }}_{{i}}_{{marker_variant.marker.code}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}">
                 {{marker_variant.marker|display_marker_tag}}
               </div>
             {% endif %}
@@ -66,9 +66,9 @@
                         {% if marker_variant.is_free_text %}
                           <div class="control has-tag-left">
                             {% if mv_max > 1 %}
-                              <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","") }}_{{i}}_{{marker_variant.marker.short}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}} {{loop.index}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
+                              <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","") }}_{{i}}_{{marker_variant.marker.code}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}} {{loop.index}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
                             {% else %}
-                              <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","")}}_{{i}}_{{marker_variant.marker.short}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
+                              <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","")}}_{{i}}_{{marker_variant.marker.code}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
                             {% endif %}
                             {{marker_variant.marker|display_marker_tag}}
                           </div>

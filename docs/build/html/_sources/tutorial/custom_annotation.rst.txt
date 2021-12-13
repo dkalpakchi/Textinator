@@ -3,7 +3,10 @@
 Creating a custom annotation task
 ==================================
 
-If you want to annotate a task currently unsupported by Textinator or simply customize a new task, you will have to define custom units of annotation. Textinator supports such customized definitions through `Markers`. You need just a couple of things to define a basic *Marker*:
+Defining markers
+-------------------
+
+If you want to annotate a task currently unsupported by Textinator or simply customize an already existing task, you will have to define custom units of annotation. Textinator supports such customized definitions through `Markers`. You need just a couple of things to define a basic *Marker*:
 
 * find a descriptive name that will be displayed for the annotators;
 * choose a color;

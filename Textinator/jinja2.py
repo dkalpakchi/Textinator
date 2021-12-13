@@ -24,7 +24,7 @@ def display_marker(marker):
     text_color = 'black' if brightness > 125 else 'white'
 
     template = Template("""
-    <div class="marker tags has-addons" data-s="{{marker.short}}" data-color="{{marker.color}}" data-text-color="{{text_color}}" data-res="{{marker.get_count_restrictions()}}"
+    <div class="marker tags has-addons" data-s="{{marker.code}}" data-color="{{marker.color}}" data-text-color="{{text_color}}" data-res="{{marker.get_count_restrictions()}}"
         data-shortcut="{{marker.shortcut|upper}}" data-submittable="{% if not marker.is_part_of_relation() %}true{% else %}false{% endif %}">
       {% if marker.is_part_of_relation() %}
         <span class="tag arrow is-grey"><input type="checkbox"></span>

@@ -307,11 +307,13 @@ class DataAccessLogAdmin(CommonModelAdmin):
 
 @admin.register(Marker)
 class MarkerAdmin(CommonModelAdmin):
-    list_display = ['name', 'short', 'color']
+    list_display = ['name', 'color', 'code']
     inlines = [MarkerContextMenuItemInline]
 
-    regular_user_fields = ['name', 'short', 'color', 'shortcut']
-    admin_user_fields = ['for_task_type']
+    regular_user_fields = ['name', 'color', 'shortcut']
+    admin_user_fields = ['for_task_type', 'code']
+
+    readonly_fields = CommonModelAdmin.readonly_fields + ['code']
 
     def get_fields(self, request, obj=None):
         """

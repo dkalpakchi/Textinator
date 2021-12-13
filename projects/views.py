@@ -345,7 +345,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
         menu_items, project_markers = {}, proj.markers.distinct()
         for m in project_markers:
-            menu_items[m.short] = [item.to_json() for item in MarkerContextMenuItem.objects.filter(marker=m).all()]
+            menu_items[m.code] = [item.to_json() for item in MarkerContextMenuItem.objects.filter(marker=m).all()]
 
         for m in task_markers:
             if m not in project_markers:

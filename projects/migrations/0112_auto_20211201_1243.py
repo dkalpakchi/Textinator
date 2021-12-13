@@ -4,6 +4,28 @@ import colorfield.fields
 from django.db import migrations
 
 
+def change_color(apps, schema_editor):
+    Marker = apps.get_model('projects', 'Marker')
+
+    color2hex = {
+        'primary': '#00d1b2',
+        'link': '#485fc7',
+        'info': '#3e8ed0',
+        'success': '#48c78e',
+        'warning': '#ffe08a',
+        'danger': '#f14668',
+        'light': '#f5f5f5',
+        'white': '#ffffff',
+        'grey': '#696969',
+        'warndark': '#946c00',
+        'black': '#0a0a0a'
+    }
+
+    for m in Marker.objects.all().iterator():
+        m.color = color2hex[m.color]
+        m.save()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -16,4 +38,5 @@ class Migration(migrations.Migration):
             name='color',
             field=colorfield.fields.ColorField(default='#FFFFFF', help_text="Marker's color used when annotating the text", max_length=18),
         ),
+        migrations.RunPython(change_color, migrations.RunPython.noop),
     ]

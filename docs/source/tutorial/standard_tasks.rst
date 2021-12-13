@@ -1,0 +1,29 @@
+Annotation tasks supported out-of-the-box
+================================================
+Currently Textinator supports 6 annotation tasks out-of-the-box. However, you can also create a custom annotation task if you wish so, by following :ref:`this tutorial<custom_annotation_task>`.
+
+.. contents:: Table of Contents
+	:local:
+
+
+Question Answering
+-------------------
+
+
+Question Answering with Complexity Ranking
+--------------------------------------------
+
+Named Entity Recognition
+---------------------------
+
+Pronoun Resolution
+-------------------------------
+
+Co-reference Chain Resolution
+-------------------------------
+
+Machine Translation
+--------------------
+
+Text Classification
+--------------------

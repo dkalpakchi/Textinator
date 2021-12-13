@@ -11,7 +11,8 @@ Welcome to Textinator's documentation!
 * Question Answering
 * Question Answering with Complexity Ranking
 * Named Entity Recognition
-* Co-reference Resolution
+* Pronoun Resolution
+* Co-reference Chain Resolution
 * Machine Translation
 * Text Classification
 

@@ -20,7 +20,8 @@ python manage.py collectstatic
 Create and run container
 1. Build and run container in the background mode: `docker-compose up -d --build`
 2. Apply migrations: `docker-compose exec web python /usr/src/app/manage.py migrate --noinput`
-3. Create superuse: `docker-compose exec web python /usr/src/app/manage.py createsuperuser`
+3. Create superuser: `docker-compose exec web python /usr/src/app/manage.py createsuperuser`
+4. Collect static data: `docker-compose exec web python /usr/src/app/manage.py collectstatic`
 4. Go to `http://localhost:8000/textinator` in the browser of your choice
 
 Take down container and DB:

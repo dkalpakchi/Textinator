@@ -77,12 +77,19 @@ def apply_premarkers(proj, text):
     for c in list("\\$[]()*+/?-.\"\'|^"):
         punct = punct.replace(c, "\{}".format(c))
 
-    premarker_tmpl = "<span class='tag is-{} is-medium' data-s='{}' data-i='NA'>{}<button class='delete is-small'></button></span>"
+    premarker_tmpl = "<span class='tag is-medium' data-s='{}' data-i='NA' style='background-color:{}; color: {}'>{}<button class='delete is-small'></button></span>"
     for pm in proj.premarker_set.all():
         m, tokens = pm.marker, pm.tokens.split(',')
+        h = m.color.lstrip('#')
+        rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+        # https://www.w3.org/TR/AERT/#color-contrast
+        # https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color
+        brightness = 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2]
+        text_color = 'black' if brightness > 125 else 'white'
         for tok in tokens:
             for t in (tok.lower(), tok.capitalize()):
                 text = re.sub("(?<=[{0} ]){1}(?=[{0} ])".format(punct, t),
-                    premarker_tmpl.format(m.color, m.short, t),
+                    premarker_tmpl.format(m.code, m.color, text_color, t),
                     text)
     return text

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "compressor",
     'sass_processor',
     # 'prettyjson',
     'django_admin_json_editor',
@@ -236,20 +237,6 @@ DATASOURCE_TYPES = [
 MARKER_TYPES = [
     ('lb', 'Label'),
     ('rl', 'Relation')
-]
-
-MARKER_COLORS = [
-    ('danger', 'Red'),
-    ('success', 'Green'),
-    ('warning', 'Yellow'),
-    ('link', 'Dark Blue'),
-    ('info', 'Light Blue'),
-    ('primary', 'Teal'),
-    ('black', 'Black'),
-    ('grey', 'Grey'),
-    ('warndark', 'Dark Yellow'),
-    ('pink', 'Pink'),
-    ('orange', 'Orange')
 ]
 
 LOGIN_URL = '/textinator/accounts/login/'

@@ -286,7 +286,7 @@
       var cr = contextRelations[batch]['labels'];
       for (var i = 0, len = cr.length; i < len; i++) {
         for (var l in activeFilters) {
-          if (cr[i].marker.short == l) {
+          if (cr[i].marker.code == l) {
             for (var key in activeFilters[l]) {
               var extra = cr[i].extra,
                   filterValue = activeFilters[l][key];

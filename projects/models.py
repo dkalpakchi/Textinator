@@ -1,4 +1,5 @@
 import random
+import time
 import re
 import string
 from datetime import datetime
@@ -104,11 +105,9 @@ class Marker(CommonModel):
     This model holds the **definition** for each unit of annotation in Textinator, called `Marker`.
     We create each `Marker` only when creating a new project and can re-use `Markers` between the projects.
     """
-    name = models.CharField(max_length=50, unique=True,
-        help_text="The display name of the marker (max 50 characters, must be unique)")
-    short = models.CharField(max_length=10, unique=True, blank=True,
-        help_text="""Marker's nickname used internally (max 10 characters, must be unique,
-                     by default the capitalized first three character of the label)""")
+    name = models.CharField(max_length=50, help_text="The display name of the marker (max 50 characters, must be unique)")
+    code = models.CharField(max_length=25, unique=True, blank=True,
+        help_text="""Marker's nickname used internally""")
     color = ColorField(help_text="Marker's color used when annotating the text")
     for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True,
         help_text="Specify task types (if any) for which this marker must be present (avaiable only to admins)")
@@ -118,8 +117,8 @@ class Marker(CommonModel):
         help_text="Actions associated with each marker [EXPAND]")
 
     def save(self, *args, **kwargs):
-        if not self.short:
-            self.short = self.name[:3].upper()
+        if not self.code:
+            self.code = "{}_{}_{}".format(self.name[:3].upper(), str(int(time.time())), random.randint(0, 9999))
         super(Marker, self).save(*args, **kwargs)
 
     # TODO: should be count restrictions per project!
@@ -161,7 +160,7 @@ class Marker(CommonModel):
         res.update({
             'name': self.name,
             'color': self.color,
-            'short': self.short
+            'code': self.code
         })
         return res
 
@@ -428,7 +427,7 @@ class MarkerPair(CommonModel):
     second = models.ForeignKey(Marker, related_name='second', on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.first.short + '-:-' + self.second.short
+        return self.first.code + '-:-' + self.second.code
 
 
 class Relation(CommonModel):

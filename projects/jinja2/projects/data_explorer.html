@@ -116,10 +116,10 @@
                   </span>
                   <span class="tag is-medium">
                     {% if action.filter == 'boolean' %}
-                      <input name="{{action.marker.short}}__{{action.cm.field}}" type="checkbox">
+                      <input name="{{action.marker.code}}__{{action.cm.field}}" type="checkbox">
                     {% elif action.filter == 'range' %}
                       <div class="range-wrap">
-                        <input name="{{action.marker.short}}__{{action.cm.field}}" type="range" class="range" min="0" max="10">
+                        <input name="{{action.marker.code}}__{{action.cm.field}}" type="range" class="range" min="0" max="10">
                         <span class="bubble"></span>  
                       </div>
                     {% endif %}
