@@ -23,3 +23,4 @@ psycopg2-binary
 jinja2
 python-memcached
 django-colorfield==0.4.5
+django-nested-admin==3.3.3

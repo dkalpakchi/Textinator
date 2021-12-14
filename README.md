@@ -22,7 +22,10 @@ Create and run container
 2. Apply migrations: `docker-compose exec web python /usr/src/app/manage.py migrate --noinput`
 3. Create superuser: `docker-compose exec web python /usr/src/app/manage.py createsuperuser`
 4. Collect static data: `docker-compose exec web python /usr/src/app/manage.py collectstatic`
-4. Go to `http://localhost:8000/textinator` in the browser of your choice
+5. Go to `http://localhost:8000/textinator` in the browser of your choice
 
 Take down container and DB:
 `docker-compose down -v`
+
+To load the DB dump into the docker container:
+`cat <your-dump-file>.sql | docker exec -i textinator_db_1 psql -U textinator`

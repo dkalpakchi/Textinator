@@ -34,6 +34,8 @@ SECRET_KEY = os.environ.get("SECRET_KEY", uuid.uuid4().hex[:random.randint(8, 36
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
+COMPRESS_ENABLED = False
+
 # 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
 # For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")

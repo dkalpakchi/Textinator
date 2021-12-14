@@ -9,9 +9,14 @@ Currently Textinator supports 6 annotation tasks out-of-the-box. However, you ca
 Question Answering
 -------------------
 
+Question Answering with Ranking
+--------------------------------
 
-Question Answering with Complexity Ranking
---------------------------------------------
+Multiple Choice Question Answering
+-----------------------------------
+
+Multiple Choice Question Answering with Ranking
+-------------------------------------------------
 
 Named Entity Recognition
 ---------------------------

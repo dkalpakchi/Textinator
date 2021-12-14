@@ -10,7 +10,7 @@
     data-inline-model="{{ inline_admin_formset.inline_model_id }}">
     {% if is_nested %}
     <div id="accordion-{{inline_admin_formset.formset.prefix}}">
-        <fieldset class="module {{ inline_admin_formset.classes }} card card-secondary card-outline">
+        <fieldset class="djn-fieldset module {{ inline_admin_formset.classes }} card card-secondary card-outline">
         <div class="nested card-header" id="heading-{{inline_admin_formset.inline_model_id}}">
           <h5 class="mb-0">
             <a class="btn btn-link collapsed" data-toggle="collapse" data-target="#{{inline_admin_formset.formset.prefix}}" aria-expanded="true" aria-controls="{{inline_admin_formset.formset.prefix}}">
@@ -28,7 +28,11 @@
             {{ inline_admin_formset.formset.non_form_errors }}
 
             {% for inline_admin_form in inline_admin_formset %}
-                <div class="panel inline-related{% if inline_admin_form.original or inline_admin_form.show_url %} has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} empty-form last-related{% endif %}"
+                <div class="panel inline-related{% if inline_admin_form.original or inline_admin_form.show_url %} has_original{% endif %}{% if forloop.last and inline_admin_formset.has_add_permission %} djn-empty-form empty-form last-related{% endif %}"
+                     data-inline-model="{{ inline_admin_form.model_admin.opts.app_label }}-{{ inline_admin_form.model_admin.opts.model_name }}"
+                     {% if inline_admin_form.pk_field.field %}
+                     data-is-initial="{% if inline_admin_form.pk_field.field.value %}true{% else %}false{% endif %}"
+                     {% endif %}
                      id="{{ inline_admin_formset.formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
                     <div class="card card-outline {% if not inline_admin_form.original %}new-stacked card-success{% else %}card-secondary{% endif %}">
                         <div class="card-header">
@@ -59,7 +63,7 @@
                                 {% endif %}
                             </h3>
                             {% if inline_admin_formset.formset.can_delete and inline_admin_form.original %}
-                                <span class="card-tools delete">
+                                <span class='card-tools delete {{ inline_admin_formset.handler_classes|join:" " }}'>
                                   {{ inline_admin_form.deletion_field.field }} {{ inline_admin_form.deletion_field.label_tag }}
                                 </span>
                             {% endif %}
