@@ -110,7 +110,11 @@
                                 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../tutorial/markers_and_labels.html">Markers &amp; Labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/standard_tasks.html">[Part 1] Annotation tasks supported out-of-the-box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/creating_datasets.html">[Part 2] Creating a new dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/creating_project.html">[Part 3] Creating a new project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/markers_inputs_and_labels.html">Markers, Inputs &amp; Labels: What’s the difference?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/custom_annotation.html">Creating a custom annotation task</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
@@ -404,8 +408,7 @@ We create each <cite>Marker</cite> only when creating a new project and can re-u
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
 <li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Creation date, autofilled</p></li>
 <li><p><strong>name</strong> (<em>CharField</em>) – The display name of the marker (max 50 characters, must be unique)</p></li>
-<li><p><strong>short</strong> (<em>CharField</em>) – Marker’s nickname used internally (max 10 characters, must be unique,
-                     by default the capitalized first three character of the label)</p></li>
+<li><p><strong>code</strong> (<em>CharField</em>) – Marker’s nickname used internally</p></li>
 <li><p><strong>color</strong> (<em>ColorField</em>) – Marker’s color used when annotating the text</p></li>
 <li><p><strong>for_task_type</strong> (<em>CharField</em>) – Specify task types (if any) for which this marker must be present (avaiable only to admins)</p></li>
 <li><p><strong>shortcut</strong> (<em>CharField</em>) – Keyboard shortcut for annotating a piece of text with this marker</p></li>

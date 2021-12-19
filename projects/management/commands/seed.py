@@ -56,7 +56,8 @@ def create_markers():
             "color": "#f14668"
             "for_task_type": "qa",
             "shortcut": "D"
-        }
+        },
+        
     ]
 
     

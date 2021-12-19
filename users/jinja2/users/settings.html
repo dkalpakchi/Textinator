@@ -1,20 +1,23 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h1 class="title">Settings</h1>
-<h2 class="subtitle">Global Texinator settings for all included apps</h2>
-<form action="" class="form">
+<h1 class="title">{{ _("Settings") }}</h1>
+<form action="{{ url('set_language') }}" method="post">
+  {{ csrf_input }}
   <div class="field">
-    <label class="label">{{_("Language")}}</label>
+    <label for="language" class="label">{{ _("Language") }}</label>
     <div class="control">
       <div class="select">
-        <select>
-          {% for lang in languages %}
-            <option value="lang[0]">{{lang[1]}}</option>
+        <select name="language">
+          {% for language in languages %}
+            <option value="{{ language.code }}"{% if language.code == current_language %} selected{% endif %}>
+                {{ language.name_local }} ({{ language.code }})
+            </option>
           {% endfor %}
         </select>
       </div>
     </div>
   </div>
+  <input type="submit" value='{{ _("Save") }}'>
 </form>
 {% endblock %}

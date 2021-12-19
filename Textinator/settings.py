@@ -192,7 +192,11 @@ LANGUAGES = [
     ('uk', 'Ukrainian')
 ]
 
-LANGUAGE_CODE = 'en'
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale'),  # or your custom path
+)
+
+LANGUAGE_CODE = 'uk'
 
 TIME_ZONE = 'UTC'
 

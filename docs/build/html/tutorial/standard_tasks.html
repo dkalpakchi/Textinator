@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Annotation tasks supported out-of-the-box &mdash; Textinator 0.1 documentation</title>
+  <title>[Part 1] Annotation tasks supported out-of-the-box &mdash; Textinator 0.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Markers, Inputs &amp; Labels: What’s the difference?" href="markers_inputs_and_labels.html" />
+    <link rel="next" title="[Part 2] Creating a new dataset" href="creating_datasets.html" />
     <link rel="prev" title="Tutorial" href="../tutorial.html" /> 
 
 </head>
@@ -72,7 +72,7 @@
         
           <li><a href="../tutorial.html">Tutorial</a></li>
         
-      <li>Annotation tasks supported out-of-the-box</li>
+      <li>[Part 1] Annotation tasks supported out-of-the-box</li>
     
     
       <li class="breadcrumbs-aside">
@@ -110,7 +110,9 @@
                                 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../tutorial.html">Tutorial</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Annotation tasks supported out-of-the-box</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">[Part 1] Annotation tasks supported out-of-the-box</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating_datasets.html">[Part 2] Creating a new dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating_project.html">[Part 3] Creating a new project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="markers_inputs_and_labels.html">Markers, Inputs &amp; Labels: What’s the difference?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom_annotation.html">Creating a custom annotation task</a></li>
 </ul>
@@ -130,41 +132,54 @@
                     <div class="document">
                         
                             
-  <section id="annotation-tasks-supported-out-of-the-box">
-<h1>Annotation tasks supported out-of-the-box<a class="headerlink" href="#annotation-tasks-supported-out-of-the-box" title="Permalink to this headline">¶</a></h1>
-<p>Currently Textinator supports 6 annotation tasks out-of-the-box. However, you can also create a custom annotation task if you wish so, by following <a class="reference internal" href="custom_annotation.html#custom-annotation-task"><span class="std std-ref">this tutorial</span></a>.</p>
+  <section id="part-1-annotation-tasks-supported-out-of-the-box">
+<h1>[Part 1] Annotation tasks supported out-of-the-box<a class="headerlink" href="#part-1-annotation-tasks-supported-out-of-the-box" title="Permalink to this headline">¶</a></h1>
+<p>Currently Textinator supports 9 annotation tasks out-of-the-box. However, you can also create a custom annotation task if you wish so, by following <a class="reference internal" href="custom_annotation.html#custom-annotation-task"><span class="std std-ref">this tutorial</span></a>.</p>
 <div class="contents local topic" id="table-of-contents">
 <p class="topic-title">Table of Contents</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#question-answering" id="id1">Question Answering</a></p></li>
-<li><p><a class="reference internal" href="#question-answering-with-complexity-ranking" id="id2">Question Answering with Complexity Ranking</a></p></li>
-<li><p><a class="reference internal" href="#named-entity-recognition" id="id3">Named Entity Recognition</a></p></li>
-<li><p><a class="reference internal" href="#pronoun-resolution" id="id4">Pronoun Resolution</a></p></li>
-<li><p><a class="reference internal" href="#co-reference-chain-resolution" id="id5">Co-reference Chain Resolution</a></p></li>
-<li><p><a class="reference internal" href="#machine-translation" id="id6">Machine Translation</a></p></li>
-<li><p><a class="reference internal" href="#text-classification" id="id7">Text Classification</a></p></li>
+<li><p><a class="reference internal" href="#question-answering-with-ranking" id="id2">Question Answering with Ranking</a></p></li>
+<li><p><a class="reference internal" href="#multiple-choice-question-answering" id="id3">Multiple Choice Question Answering</a></p></li>
+<li><p><a class="reference internal" href="#multiple-choice-question-answering-with-ranking" id="id4">Multiple Choice Question Answering with Ranking</a></p></li>
+<li><p><a class="reference internal" href="#named-entity-recognition" id="id5">Named Entity Recognition</a></p></li>
+<li><p><a class="reference internal" href="#pronoun-resolution" id="id6">Pronoun Resolution</a></p></li>
+<li><p><a class="reference internal" href="#co-reference-chain-resolution" id="id7">Co-reference Chain Resolution</a></p></li>
+<li><p><a class="reference internal" href="#machine-translation" id="id8">Machine Translation</a></p></li>
+<li><p><a class="reference internal" href="#text-classification" id="id9">Text Classification</a></p></li>
 </ul>
 </div>
 <section id="question-answering">
 <h2><a class="toc-backref" href="#id1">Question Answering</a><a class="headerlink" href="#question-answering" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="../_images/ui_default_qa.png"><img alt="The screenshot of the UI for the Question Answering task" src="../_images/ui_default_qa.png" style="width: 100%;" /></a>
 </section>
-<section id="question-answering-with-complexity-ranking">
-<h2><a class="toc-backref" href="#id2">Question Answering with Complexity Ranking</a><a class="headerlink" href="#question-answering-with-complexity-ranking" title="Permalink to this headline">¶</a></h2>
+<section id="question-answering-with-ranking">
+<h2><a class="toc-backref" href="#id2">Question Answering with Ranking</a><a class="headerlink" href="#question-answering-with-ranking" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="../_images/ui_default_qa_ranking.png"><img alt="The screenshot of the UI for the task of Question Answering with Ranking" src="../_images/ui_default_qa_ranking.png" style="width: 100%;" /></a>
+</section>
+<section id="multiple-choice-question-answering">
+<h2><a class="toc-backref" href="#id3">Multiple Choice Question Answering</a><a class="headerlink" href="#multiple-choice-question-answering" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="../_images/ui_default_mcqa.png"><img alt="The screenshot of the UI for the Multiple Choice Question Answering task" src="../_images/ui_default_mcqa.png" style="width: 100%;" /></a>
+</section>
+<section id="multiple-choice-question-answering-with-ranking">
+<h2><a class="toc-backref" href="#id4">Multiple Choice Question Answering with Ranking</a><a class="headerlink" href="#multiple-choice-question-answering-with-ranking" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="../_images/ui_default_mcqa_ranking.png"><img alt="The screenshot of the UI for the task of Multiple Choice Question Answering with Ranking" src="../_images/ui_default_mcqa_ranking.png" style="width: 100%;" /></a>
 </section>
 <section id="named-entity-recognition">
-<h2><a class="toc-backref" href="#id3">Named Entity Recognition</a><a class="headerlink" href="#named-entity-recognition" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Named Entity Recognition</a><a class="headerlink" href="#named-entity-recognition" title="Permalink to this headline">¶</a></h2>
 </section>
 <section id="pronoun-resolution">
-<h2><a class="toc-backref" href="#id4">Pronoun Resolution</a><a class="headerlink" href="#pronoun-resolution" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Pronoun Resolution</a><a class="headerlink" href="#pronoun-resolution" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="../_images/ui_default_pronoun_resolution.png"><img alt="The screenshot of the UI for the Pronoun Resolution task" src="../_images/ui_default_pronoun_resolution.png" style="width: 100%;" /></a>
 </section>
 <section id="co-reference-chain-resolution">
-<h2><a class="toc-backref" href="#id5">Co-reference Chain Resolution</a><a class="headerlink" href="#co-reference-chain-resolution" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">Co-reference Chain Resolution</a><a class="headerlink" href="#co-reference-chain-resolution" title="Permalink to this headline">¶</a></h2>
 </section>
 <section id="machine-translation">
-<h2><a class="toc-backref" href="#id6">Machine Translation</a><a class="headerlink" href="#machine-translation" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id8">Machine Translation</a><a class="headerlink" href="#machine-translation" title="Permalink to this headline">¶</a></h2>
 </section>
 <section id="text-classification">
-<h2><a class="toc-backref" href="#id7">Text Classification</a><a class="headerlink" href="#text-classification" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id9">Text Classification</a><a class="headerlink" href="#text-classification" title="Permalink to this headline">¶</a></h2>
 </section>
 </section>
 

@@ -2,10 +2,13 @@ import re
 import pytz
 import markdown
 from datetime import datetime
+from urllib.parse import urlparse
+
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.utils.translation import gettext, ngettext
 from django.urls import reverse
-from urllib.parse import urlparse
+from django.utils import translation
+
 
 from jinja2 import Environment, Template, Markup
 
@@ -96,6 +99,9 @@ def environment(**options):
     env.filters['bool2str'] = lambda x: str(x).lower()
     env.filters['any'] = any
     env.filters['all'] = all
+
+    env.install_gettext_translations(translation)
+
     # i18n template functions
     env.install_gettext_callables(gettext=gettext, ngettext=ngettext,
         newstyle=True)

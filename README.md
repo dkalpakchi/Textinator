@@ -29,3 +29,7 @@ Take down container and DB:
 
 To load the DB dump into the docker container:
 `cat <your-dump-file>.sql | docker exec -i textinator_db_1 psql -U textinator`
+
+To update translations for any language run:
+`rm locale/<code>/LC_MESSAGES/*.mo`
+`docker-compose exec web python /usr/src/app/manage.py compilemessages -l <code>`
