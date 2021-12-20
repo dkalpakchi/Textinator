@@ -5,6 +5,7 @@ from django import forms
 from django.contrib.auth.models import User, Permission
 from django_admin_json_editor import JSONEditorWidget
 from django.contrib.admin import SimpleListFilter, DateFieldListFilter
+from django.utils.translation import gettext_lazy as _
 from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 
 import nested_admin
@@ -28,8 +29,8 @@ class MarkerRestrictionInline(nested_admin.NestedStackedInline):
     model = MarkerRestriction
     extra = 0
     # classes = ['collapse']
-    verbose_name = "Restriction"
-    verbose_name_plural = "Restrictions"
+    verbose_name = _("Restriction")
+    verbose_name_plural = _("Restrictions")
 
 
 # TODO: fix name 'ModelValidationError' is not defined
@@ -38,8 +39,8 @@ class MarkerVariantInline(nested_admin.NestedStackedInline):
     model = MarkerVariant
     extra = 0
     inlines = [MarkerRestrictionInline]
-    verbose_name = "Project-specific marker"
-    verbose_name_plural = "Project-specific markers"
+    verbose_name = _("Project-specific marker")
+    verbose_name_plural = _("Project-specific markers")
 
 
 class LevelInline(nested_admin.NestedStackedInline):
@@ -54,15 +55,16 @@ class PreMarkerInline(nested_admin.NestedStackedInline):
 
 class UserProfileInline(nested_admin.NestedStackedInline):
     model = UserProfile
-    verbose_name = "Participant"
-    verbose_name_plural = "Participants"
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
     extra = 0
+    exclude = ('points', 'asking_time', 'timed_questions')
 
 
 class MarkerContextMenuItemInline(admin.StackedInline):
     model = MarkerContextMenuItem
-    verbose_name = "Context menu item"
-    verbose_name_plural = "Context menu items"
+    verbose_name = _("Context menu item")
+    verbose_name_plural = _("Context menu items")
     extra = 0
 
 
@@ -80,8 +82,8 @@ class LabelReviewInline(admin.StackedInline):
 class RelationInline(nested_admin.NestedStackedInline):
     model = Relation
     extra = 0
-    verbose_name = "Project-specific relation"
-    verbose_name_plural = "Project-specific relations"
+    verbose_name = _("Project-specific relation")
+    verbose_name_plural = _("Project-specific relations")
 
 
 class InputInline(admin.StackedInline):
@@ -97,7 +99,9 @@ class LabelRelationInline(admin.StackedInline):
 
 
 class ProjectForm(forms.ModelForm):
-    datasources = forms.ModelMultipleChoiceField(queryset=DataSource.objects.all())
+    datasources = forms.ModelMultipleChoiceField(
+        queryset=DataSource.objects.all(),
+        label=DataSource._meta.verbose_name_plural)
 
     class Meta:
         model = Project
@@ -148,7 +152,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
     ]
     readonly_fields = ['dt_created']
     form = ProjectForm
-    inlines = [MarkerVariantInline, RelationInline, PreMarkerInline, LevelInline, UserProfileInline]
+    inlines = [MarkerVariantInline, RelationInline, PreMarkerInline, UserProfileInline] #LevelInline, UserProfileInline]
     save_as = True
 
     def save_model(self, request, obj, form, change):
@@ -334,8 +338,8 @@ class RelationAdmin(CommonModelAdmin):
             'scripts/shortcut_picker.js'
         )
 
-@admin.register(Level)
-class LevelAdmin(CommonModelAdmin): pass
+# @admin.register(Level)
+# class LevelAdmin(CommonModelAdmin): pass
 
 @admin.register(PostProcessingMethod)
 class PostProcessingMethodAdmin(CommonModelAdmin): pass
