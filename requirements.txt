@@ -20,7 +20,8 @@ django-registration==3.1.1
 git+git://github.com/dkalpakchi/django-survey@5cd1a42036cc12da27d769600f5ce41834bdbb44
 django-jazzmin
 psycopg2-binary
-jinja2
+jinja2==3.0.3
 python-memcached
 django-colorfield==0.4.5
 django-nested-admin==3.3.3
+Babel==2.9.1

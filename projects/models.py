@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.core.cache import caches
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from tinymce import HTMLField
 from filebrowser.fields import FileBrowseField
@@ -20,8 +21,8 @@ from .helpers import *
 
 
 class CommonModel(models.Model):
-    dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name="creation date",
-        help_text="Creation date, autofilled")
+    dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name=_("Creation date"),
+        help_text=_("Autofilled"))
 
     class Meta:
         abstract = True
@@ -46,9 +47,9 @@ class PostProcessingMethod(CommonModel):
 
 # Create your models here.
 class DataSource(CommonModel):
-    name = models.CharField(max_length=50)
-    source_type = models.CharField(max_length=10, choices=settings.DATASOURCE_TYPES)
-    spec = models.TextField(null=False) # json spec of the data source
+    name = models.CharField(_("Dataset name"), max_length=50)
+    source_type = models.CharField(_("Dataset type"), max_length=10, choices=settings.DATASOURCE_TYPES)
+    spec = models.TextField(_("Specification"), null=False) # json spec of the data source
     post_processing_methods = models.ManyToManyField(PostProcessingMethod, blank=True)
 
     @classmethod
@@ -83,10 +84,15 @@ class DataSource(CommonModel):
 
 
 class MarkerAction(CommonModel):
-    name = models.CharField(max_length=50, unique=True)
-    description = models.TextField(null=False)
-    file = models.CharField(max_length=100)
-    admin_filter = models.CharField(max_length=50, blank=True, null=True)
+    class Meta:
+        verbose_name = _('Marker Action')
+        verbose_name_plural = _('Marker Actions')
+
+    name = models.CharField(_("Action name"), max_length=50, unique=True)
+    description = models.TextField(_("Action description"), null=False)
+    file = models.CharField(_("File name"), max_length=100,
+        help_text=_("A name of the JS plugin file in the `/static/scripts/labeler_plugins` directory"))
+    admin_filter = models.CharField(max_length=50, blank=True, null=True) # What types? So far found: boolean, range
 
     def __str__(self):
         return self.name
