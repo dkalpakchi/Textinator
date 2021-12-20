@@ -4,22 +4,22 @@
     <div class="card">
       <div class="card-header">
         <p class="card-header-title">
-          Your feedback on this text
+          {{ _("Your feedback on this text") }}
         </p>
       </div>
       <div class="card-content">
         <form id="flagTextForm" action="{{ url('projects:flag_text', kwargs={'proj':project.pk}) }}" method="POST">
           {{ csrf_input }}
           <div class="field">
-            <label class="label">What is the problem with this text?</label>
+            <label class="label">{{ _("What is the problem with this text?") }}</label>
             <div class="control">
-              <textarea name="feedback" class="textarea" placeholder="Please describe any problems you experience, e.g. weird formatting, wrong sentence starts, empty text, etc."></textarea>
+              <textarea name="feedback" class="textarea" placeholder="{{ _('Please describe any problems you experience, e.g. weird formatting, wrong sentence starts, empty text, etc.') }}"></textarea>
             </div>
           </div>
 
           <div class="field">
             <div class="control">
-              <input type="submit" class="button is-link" value="Submit">
+              <input type="submit" class="button is-link" value="{{ _('submit')|capitalize }}">
             </div>
           </div>
         </form>

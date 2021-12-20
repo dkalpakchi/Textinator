@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h1 class="title">{{ _("Settings") }}</h1>
+<h1 class="title">{{ _("settings")|capitalize }}</h1>
 <form action="{{ url('set_language') }}" method="post">
   {{ csrf_input }}
   <div class="field">
-    <label for="language" class="label">{{ _("Language") }}</label>
+    <label for="language" class="label">{{ _("language")|capitalize }}</label>
     <div class="control">
       <div class="select">
         <select name="language">
@@ -18,6 +18,6 @@
       </div>
     </div>
   </div>
-  <input type="submit" value='{{ _("Save") }}'>
+  <input type="submit" value='{{ _("save")|capitalize }}'>
 </form>
 {% endblock %}

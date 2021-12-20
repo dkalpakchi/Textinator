@@ -4,7 +4,7 @@
 {% if not all_text_markers or any_free_text_markers %}
   <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
-      <p>Markers</p>
+      <p>{{ _("markers")|capitalize }}</p>
     </div>
     <div class="message-body">
       <div class="field is-grouped is-grouped-multiline">
@@ -47,7 +47,7 @@
 {% if any_text_marker_groups %}
   <article class="marker groups message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
-      <p>Marker groups</p>
+      <p>{{ _("marker groups")|capitalize }}</p>
     </div>
     <div class="message-body">
       {% set project_markers_variants=project.markervariant_set.exclude(unit=None).all() %}

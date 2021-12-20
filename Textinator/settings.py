@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import glob
 import yaml
 import uuid
 import random
@@ -192,9 +193,9 @@ LANGUAGES = [
     ('uk', 'Ukrainian')
 ]
 
-LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'locale'),  # or your custom path
-)
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+] + glob.glob(os.path.join(BASE_DIR, 'locale', 'custom', '*'))
 
 LANGUAGE_CODE = 'uk'
 

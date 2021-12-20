@@ -13,25 +13,25 @@
     <div class="navbar-start">
       <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'p' or 'n' not in request.GET %} is-active{% endif %}" href="{{ url('projects:index') }}?n=p">
         <span class="icon is-small"><i class="fas fa-medal" aria-hidden="true"></i></span>
-        <span>{{ _("My Tasks") }}</span>
+        <span>{{ _("my tasks")|capitalize }}</span>
       </a>
 
       <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'o' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=o">
         <span class="icon is-small"><i class="fas fa-trophy" aria-hidden="true"></i></span>
-        <span>{{ _("Open Tasks") }}</span>
+        <span>{{ _("open tasks")|capitalize }}</span>
       </a>
 
       {% if user_projects %}
         <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'mp' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=mp">
           <span class="icon is-small"><i class="fas fa-project-diagram" aria-hidden="true"></i></span>
-          <span>{{ _("My Projects") }}</span>
+          <span>{{ _("my projects")|capitalize }}</span>
         </a>
       {% endif %}
 
       {% if shared_projects %}
         <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'sp' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=sp">
           <span class="icon is-small"><i class="fas fa-users" aria-hidden="true"></i></span>
-          <span>{{ _("Shared Projects") }}</span>
+          <span>{{ _("shared projects")|capitalize }}</span>
 
           &nbsp;&nbsp;<span id="newShared" class="tag is-danger is-normal is-rounded {% if newly_shared|length <= 0 %}is-hidden{% endif %}">
             {{newly_shared|length}}
@@ -41,7 +41,7 @@
 
       <a class="navbar-item" href="{{ url('survey-list') }}">
         <span class="icon is-small"><i class="fas fa-list-alt" aria-hidden="true"></i></span>
-        <span>{{ _("Surveys") }}</span>
+        <span>{{ _("surveys")|capitalize }}</span>
       </a>
     </div>
       
@@ -52,18 +52,18 @@
           <span class="icon is-small">
             <i class="fas fa-user" aria-hidden="true"></i>
           </span>
-          <span>{{ _("My Profile") }}</span>
+          <span>{{ _("profile")|capitalize }}</span>
         </a>
 
         <div class="navbar-dropdown">
           <a href="{{ url('users:settings') }}" class='navbar-item'>
             <span class="icon is-small"><i class="fas fa-cog"></i></span>
-            <span>{{ _("Settings") }}</span>
+            <span>{{ _("settings")|capitalize }}</span>
           </a>
           {% if project and (project.author == user or project.shared_with(user) or project.has_participant(user)) %}
             <a href="{{ url('projects:data_explorer', kwargs={'proj': project.pk}) }}" class='admin navbar-item'>
               <span class="icon is-small"><i class="fas fa-chart-bar"></i></span>
-              <span>Data Explorer</span>
+              <span>{{ _("data explorer")|capitalize }}</span>
             </a>
           {% endif %}
           {% if user.is_staff %}
@@ -73,13 +73,13 @@
             <a href="{{ url('admin:index') }}" class='admin navbar-item'>
             {% endif %}
               <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
-              <span>Admin</span>
+              <span>{{ _("admin")|capitalize }}</span>
             </a>
           {% endif %}
           <hr class="navbar-divider">
           <a href="{{ url('logout') }}" class="navbar-item">
             <span class="icon is-small"><i class="fas fa-sign-out-alt"></i></span>
-            <span>{{ _("Logout") }}</span>
+            <span>{{ _("logout")|capitalize }}</span>
           </a>
         </div>
       </div>

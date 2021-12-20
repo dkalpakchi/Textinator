@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-12-20 15:13+0000\n"
+"POT-Creation-Date: 2021-12-20 16:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,35 +18,133 @@ msgstr ""
 "Generated-By: Babel 2.9.1\n"
 
 #: jinja2/partials/_navbar.html:16
-msgid "My Tasks"
+msgid "my tasks"
 msgstr ""
 
 #: jinja2/partials/_navbar.html:21
-msgid "Open Tasks"
+msgid "open tasks"
 msgstr ""
 
 #: jinja2/partials/_navbar.html:27
-msgid "My Projects"
+msgid "my projects"
 msgstr ""
 
 #: jinja2/partials/_navbar.html:34
-msgid "Shared Projects"
+msgid "shared projects"
 msgstr ""
 
 #: jinja2/partials/_navbar.html:44
-msgid "Surveys"
+msgid "surveys"
 msgstr ""
 
-#: jinja2/partials/_navbar.html:55
-msgid "My Profile"
+#: jinja2/partials/_navbar.html:55 users/models.py:9
+msgid "profile"
 msgstr ""
 
 #: jinja2/partials/_navbar.html:61 users/jinja2/users/settings.html:4
-msgid "Settings"
+msgid "settings"
+msgstr ""
+
+#: jinja2/partials/_navbar.html:66
+msgid "data explorer"
+msgstr ""
+
+#: jinja2/partials/_navbar.html:76
+msgid "admin"
 msgstr ""
 
 #: jinja2/partials/_navbar.html:82
-msgid "Logout"
+msgid "logout"
+msgstr ""
+
+#: jinja2/partials/components/areas/markers.html:7 projects/models.py:143
+msgid "markers"
+msgstr ""
+
+#: jinja2/partials/components/areas/markers.html:50
+msgid "marker groups"
+msgstr ""
+
+#: jinja2/partials/components/areas/relations.html:3 projects/models.py:518
+msgid "relations"
+msgstr ""
+
+#: jinja2/partials/components/areas/reminders.html:3 projects/models.py:233
+msgid "reminders"
+msgstr ""
+
+#: jinja2/partials/components/areas/reminders.html:4 projects/models.py:231
+msgid "guidelines"
+msgstr ""
+
+#: jinja2/partials/components/areas/reminders.html:10
+msgid "No reminders are set"
+msgstr ""
+
+#: jinja2/partials/components/areas/submission.html:3
+msgid "actions"
+msgstr ""
+
+#: jinja2/partials/components/areas/submission.html:10
+#: jinja2/partials/components/areas/text_submission.html:16
+#: jinja2/partials/components/modals/flag.html:22
+msgid "submit"
+msgstr ""
+
+#: jinja2/partials/components/areas/submission.html:13
+#: jinja2/partials/components/areas/text_submission.html:19
+msgid "undo last"
+msgstr ""
+
+#: jinja2/partials/components/areas/submission.html:16
+#: jinja2/partials/components/areas/text_submission.html:23
+msgid "get new text"
+msgstr ""
+
+#: jinja2/partials/components/areas/text.html:3
+msgid "text"
+msgstr ""
+
+#: jinja2/partials/components/areas/text_submission.html:28
+msgid "finish round"
+msgstr ""
+
+#: jinja2/partials/components/modals/flag.html:7
+msgid "Your feedback on this text"
+msgstr ""
+
+#: jinja2/partials/components/modals/flag.html:14
+msgid "What is the problem with this text?"
+msgstr ""
+
+#: jinja2/partials/components/modals/flag.html:16
+msgid ""
+"Please describe any problems you experience, e.g. weird formatting, wrong"
+" sentence starts, empty text, etc."
+msgstr ""
+
+#: jinja2/partials/components/modals/guidelines.html:16
+msgid "Follow the UI intro tour"
+msgstr ""
+
+#: jinja2/partials/components/modals/guidelines.html:20
+msgid "contact information"
+msgstr ""
+
+#: jinja2/partials/components/modals/guidelines.html:25
+msgid "responsible"
+msgstr ""
+
+#: jinja2/partials/components/modals/guidelines.html:29
+msgid "contact email"
+msgstr ""
+
+#: jinja2/partials/components/modals/guidelines.html:34
+msgid "published at"
+msgstr ""
+
+#: jinja2/partials/components/modals/guidelines.html:40 projects/models.py:250
+msgid "to be finished at"
 msgstr ""
 
 #: projects/admin.py:32
@@ -98,24 +196,24 @@ msgid "Autofilled"
 msgstr ""
 
 #: projects/models.py:38
-msgid "Post-processing method"
+msgid "post-processing method"
 msgstr ""
 
-#: projects/models.py:39
-msgid "Post-processing methods"
+#: projects/models.py:39 projects/models.py:61
+msgid "post-processing methods"
 msgstr ""
 
 #: projects/models.py:41 projects/models.py:99 projects/models.py:128
-#: projects/models.py:388 projects/models.py:512
-msgid "Name"
+#: projects/models.py:391 projects/models.py:520
+msgid "name"
 msgstr ""
 
-#: projects/models.py:42 projects/models.py:199
+#: projects/models.py:42
 msgid "Verbose name"
 msgstr ""
 
 #: projects/models.py:43
-msgid "Helper function name"
+msgid "helper function name"
 msgstr ""
 
 #: projects/models.py:44
@@ -123,57 +221,53 @@ msgid "Name as specified in `projects/helpers.py`"
 msgstr ""
 
 #: projects/models.py:53
-msgid "Data source"
+msgid "data source"
 msgstr ""
 
-#: projects/models.py:54
-msgid "Data sources"
+#: projects/models.py:54 projects/models.py:259
+msgid "data sources"
 msgstr ""
 
 #: projects/models.py:56
-msgid "Dataset name"
+msgid "dataset name"
 msgstr ""
 
 #: projects/models.py:57
-msgid "Dataset type"
+msgid "dataset type"
 msgstr ""
 
 #: projects/models.py:58
-msgid "Specification"
+msgid "specification"
 msgstr ""
 
-#: projects/models.py:59 projects/models.py:625
-msgid "In a JSON format"
+#: projects/models.py:59 projects/models.py:636
+msgid "in a JSON format"
 msgstr ""
 
-#: projects/models.py:61
-msgid "post-processing methods"
+#: projects/models.py:96 projects/models.py:199
+msgid "marker action"
 msgstr ""
 
-#: projects/models.py:96
-msgid "Marker action"
-msgstr ""
-
-#: projects/models.py:97
-msgid "Marker actions"
+#: projects/models.py:97 projects/models.py:138
+msgid "marker actions"
 msgstr ""
 
 #: projects/models.py:100
-msgid "Description"
+msgid "description"
 msgstr ""
 
 #: projects/models.py:101
-msgid "File name"
+msgid "file name"
 msgstr ""
 
 #: projects/models.py:102
 msgid ""
-"A name of the JS plugin file in the `/static/scripts/labeler_plugins` "
+"a name of the JS plugin file in the `/static/scripts/labeler_plugins` "
 "directory"
 msgstr ""
 
 #: projects/models.py:103
-msgid "Type of admin filter"
+msgid "type of admin filter"
 msgstr ""
 
 #: projects/models.py:104
@@ -191,7 +285,7 @@ msgid "The display name of the marker (max 50 characters)"
 msgstr ""
 
 #: projects/models.py:130
-msgid "Code"
+msgid "code"
 msgstr ""
 
 #: projects/models.py:131
@@ -199,7 +293,7 @@ msgid "Marker's nickname used internally"
 msgstr ""
 
 #: projects/models.py:132
-msgid "Color"
+msgid "color"
 msgstr ""
 
 #: projects/models.py:134
@@ -208,549 +302,563 @@ msgid ""
 "(avaiable only to admins)"
 msgstr ""
 
-#: projects/models.py:135 projects/models.py:521
-msgid "Keyboard shortcut"
+#: projects/models.py:135 projects/models.py:529
+msgid "keyboard shortcut"
 msgstr ""
 
 #: projects/models.py:136
 msgid "Keyboard shortcut for annotating a piece of text with this marker"
 msgstr ""
 
-#: projects/models.py:138
-msgid "marker actions"
-msgstr ""
-
-#: projects/models.py:142
-msgid "Marker"
-msgstr ""
-
-#: projects/models.py:195
-msgid "Marker context menu item"
-msgstr ""
-
-#: projects/models.py:197
-msgid "marker action"
-msgstr ""
-
-#: projects/models.py:198 projects/models.py:404
+#: projects/models.py:142 projects/models.py:200 projects/models.py:407
 msgid "marker"
 msgstr ""
 
-#: projects/models.py:200
-msgid "Verbose name in data explorer"
+#: projects/models.py:196
+msgid "marker context menu item"
+msgstr ""
+
+#: projects/models.py:197
+msgid "marker context menu items"
 msgstr ""
 
 #: projects/models.py:201
-msgid "Field name in logs"
+msgid "verbose name"
 msgstr ""
 
-#: projects/models.py:202 projects/models.py:692 projects/models.py:694
-msgid "If applicable"
+#: projects/models.py:202
+msgid "verbose name in data explorer"
 msgstr ""
 
 #: projects/models.py:203
+msgid "field name in logs"
+msgstr ""
+
+#: projects/models.py:204 projects/models.py:704 projects/models.py:706
+msgid "If applicable"
+msgstr ""
+
+#: projects/models.py:205
 msgid "JSON configuration"
 msgstr ""
 
-#: projects/models.py:219
-msgid "Project"
-msgstr ""
-
-#: projects/models.py:220
-msgid "Projects"
+#: projects/models.py:221
+msgid "project"
 msgstr ""
 
 #: projects/models.py:222
-msgid "Title"
-msgstr ""
-
-#: projects/models.py:223
-msgid "Short description"
+msgid "projects"
 msgstr ""
 
 #: projects/models.py:224
-msgid "Will be displayed on the project card"
+msgid "title"
 msgstr ""
 
 #: projects/models.py:225
-msgid "Institution"
+msgid "short description"
 msgstr ""
 
 #: projects/models.py:226
-msgid "Institution responsible for the project"
+msgid "Will be displayed on the project card"
 msgstr ""
 
 #: projects/models.py:227
-msgid "Supported by"
+msgid "institution"
 msgstr ""
 
 #: projects/models.py:228
+msgid "Institution responsible for the project"
+msgstr ""
+
+#: projects/models.py:229
+msgid "supported by"
+msgstr ""
+
+#: projects/models.py:230
 msgid ""
 "The name of the organization supporting the project financially (if "
 "applicable)"
 msgstr ""
 
-#: projects/models.py:229
-msgid "Guidelines"
-msgstr ""
-
-#: projects/models.py:230
+#: projects/models.py:232
 msgid "Guidelines for the annotation task"
 msgstr ""
 
-#: projects/models.py:231
-msgid "Reminders"
-msgstr ""
-
-#: projects/models.py:232
+#: projects/models.py:234
 msgid "Reminders for essential parts of guidelines (keep them short and on point)"
 msgstr ""
 
-#: projects/models.py:233
-msgid "Temporary message"
+#: projects/models.py:235
+msgid "temporary message"
 msgstr ""
 
-#: projects/models.py:234
+#: projects/models.py:236
 msgid ""
 "A temporary message for urgent communication with annotators (e.g., about"
 " maintenance work)"
 msgstr ""
 
-#: projects/models.py:235
-msgid "Summary video"
-msgstr ""
-
-#: projects/models.py:236
-msgid "Video introducing people to the annotation task at hand (if applicable)"
-msgstr ""
-
 #: projects/models.py:237
-msgid "Should data be sampled with replacement?"
+msgid "summary video"
 msgstr ""
 
 #: projects/models.py:238
-msgid "Should disjoint annotation be allowed?"
+msgid "Video introducing people to the annotation task at hand (if applicable)"
 msgstr ""
 
 #: projects/models.py:239
-msgid "Should dataset identifiers be shown?"
+msgid "should data be sampled with replacement?"
 msgstr ""
 
-#: projects/models.py:243
-msgid "Size of the textual context"
+#: projects/models.py:240
+msgid "should disjoint annotation be allowed?"
 msgstr ""
 
-#: projects/models.py:244
-msgid "No context"
-msgstr ""
-
-#: projects/models.py:244
-msgid "Text"
-msgstr ""
-
-#: projects/models.py:244
-msgid "Paragraph"
+#: projects/models.py:241
+msgid "should dataset identifiers be shown?"
 msgstr ""
 
 #: projects/models.py:245
-msgid "Context size for storing labels"
+msgid "size of the textual context"
 msgstr ""
 
 #: projects/models.py:246
-msgid "Type of the annotation task"
+msgid "No context"
+msgstr ""
+
+#: projects/models.py:246
+msgid "Text"
+msgstr ""
+
+#: projects/models.py:246
+msgid "Paragraph"
 msgstr ""
 
 #: projects/models.py:247
-msgid "To be published at"
+msgid "Context size for storing labels"
 msgstr ""
 
 #: projects/models.py:248
-msgid "To be finished at"
+msgid "type of the annotation task"
 msgstr ""
 
 #: projects/models.py:249
-msgid "Updated at"
+msgid "to be published at"
 msgstr ""
 
 #: projects/models.py:251
-msgid "collaborators"
+msgid "updated at"
 msgstr ""
 
 #: projects/models.py:253
-msgid "participants"
+msgid "collaborators"
 msgstr ""
 
 #: projects/models.py:255
-msgid "project-specific markers"
-msgstr ""
-
-#: projects/models.py:256
-msgid "author"
+msgid "participants"
 msgstr ""
 
 #: projects/models.py:257
-msgid "data sources"
+msgid "project-specific markers"
 msgstr ""
 
 #: projects/models.py:258
-msgid "Should the project be public?"
-msgstr ""
-
-#: projects/models.py:259
-msgid "Should the annotations be peer reviewed?"
+msgid "author"
 msgstr ""
 
 #: projects/models.py:260
-msgid "Should selecting the labels be allowed?"
+msgid "should the project be public?"
 msgstr ""
 
 #: projects/models.py:261
-msgid "Should submitted labels be disabled?"
+msgid "should the annotations be peer reviewed?"
 msgstr ""
 
 #: projects/models.py:262
-msgid "Maximal number of markers per input"
+msgid "should selecting the labels be allowed?"
 msgstr ""
 
 #: projects/models.py:263
-msgid "Round length"
+msgid "should submitted labels be disabled?"
 msgstr ""
 
 #: projects/models.py:264
-msgid "The number of text snippets consituting one round of the game"
+msgid "maximal number of markers per input"
 msgstr ""
 
 #: projects/models.py:265
-msgid "Points scope"
+msgid "round length"
+msgstr ""
+
+#: projects/models.py:266
+msgid "The number of text snippets consituting one round of the game"
 msgstr ""
 
 #: projects/models.py:267
-msgid "The scope of the submitted task"
-msgstr ""
-
-#: projects/models.py:268
-msgid "Points' unit"
+msgid "points scope"
 msgstr ""
 
 #: projects/models.py:269
-msgid "Number of points per submitted task"
+msgid "The scope of the submitted task"
 msgstr ""
 
 #: projects/models.py:270
-msgid "Should the project include intro tour?"
+msgid "points' unit"
 msgstr ""
 
 #: projects/models.py:271
+msgid "Number of points per submitted task"
+msgstr ""
+
+#: projects/models.py:272
+msgid "should the project include intro tour?"
+msgstr ""
+
+#: projects/models.py:273
 msgid "WARNING: Intro tours are currently in beta"
 msgstr ""
 
-#: projects/models.py:380
-msgid "Marker unit"
-msgstr ""
-
-#: projects/models.py:382
-msgid "Size"
+#: projects/models.py:382 projects/models.py:410
+msgid "marker unit"
 msgstr ""
 
 #: projects/models.py:383
-msgid "Default (and maximal) number of marker groups in the unit"
-msgstr ""
-
-#: projects/models.py:384
-msgid "Minimum required"
+msgid "marker units"
 msgstr ""
 
 #: projects/models.py:385
+msgid "size"
+msgstr ""
+
+#: projects/models.py:386
+msgid "Default (and maximal) number of marker groups in the unit"
+msgstr ""
+
+#: projects/models.py:387
+msgid "minimum required"
+msgstr ""
+
+#: projects/models.py:388
 msgid ""
 "Minimum required number of markers groups per unit (can't be more than "
 "`size`)"
 msgstr ""
 
-#: projects/models.py:386
-msgid "Is rankable?"
+#: projects/models.py:389
+msgid "is rankable?"
 msgstr ""
 
-#: projects/models.py:387
+#: projects/models.py:390
 msgid "Whether annotators should be allowed to rank marker groups in the unit"
 msgstr ""
 
-#: projects/models.py:389
+#: projects/models.py:392
 msgid "Internal name for the unit (max 10 characters)"
 msgstr ""
 
-#: projects/models.py:401
-msgid "Marker variant"
+#: projects/models.py:404 projects/models.py:449
+msgid "marker variant"
 msgstr ""
 
-#: projects/models.py:405
-msgid "Is a free-text input?"
+#: projects/models.py:408
+msgid "is a free-text input?"
 msgstr ""
 
-#: projects/models.py:406
+#: projects/models.py:409
 msgid ""
 "Indicates whether a marker should be instantiated as a label or a free-"
 "text input"
 msgstr ""
 
-#: projects/models.py:407
-msgid "marker unit"
+#: projects/models.py:411
+msgid "order in a unit group"
 msgstr ""
 
-#: projects/models.py:408
-msgid "Order in a unit group"
-msgstr ""
-
-#: projects/models.py:409
+#: projects/models.py:412
 msgid "Order of this marker in the marker group of a unit"
 msgstr ""
 
-#: projects/models.py:443
-msgid "Marker restriction"
-msgstr ""
-
-#: projects/models.py:445
-msgid "marker variant"
-msgstr ""
-
 #: projects/models.py:446
-msgid "Restriction kind"
+msgid "marker restriction"
 msgstr ""
 
-#: projects/models.py:451
-msgid "Restriction value"
+#: projects/models.py:447
+msgid "marker restrictions"
 msgstr ""
 
-#: projects/models.py:461
-msgid "Project datum"
+#: projects/models.py:450
+msgid "restriction kind"
 msgstr ""
 
-#: projects/models.py:462
-msgid "Project data"
+#: projects/models.py:455
+msgid "restriction value"
 msgstr ""
 
-#: projects/models.py:470
-msgid "Data access log"
+#: projects/models.py:456
+msgid ""
+"e.g., if restriction kind is '<=' and value is '3', this creates a "
+"restriction '<= 3'"
 msgstr ""
 
-#: projects/models.py:472
-msgid "user"
+#: projects/models.py:465
+msgid "project datum"
 msgstr ""
 
-#: projects/models.py:473
+#: projects/models.py:466 projects/models.py:478
 msgid "project data"
 msgstr ""
 
 #: projects/models.py:474
-msgid "Datapoint ID"
+msgid "data access log"
 msgstr ""
 
 #: projects/models.py:475
-msgid "As stored in the original dataset"
-msgstr ""
-
-#: projects/models.py:476
-msgid "Flags"
+msgid "data access logs"
 msgstr ""
 
 #: projects/models.py:477
-msgid "Internal behavior flags"
-msgstr ""
-
-#: projects/models.py:478
-msgid "Is submitted?"
+msgid "user"
 msgstr ""
 
 #: projects/models.py:479
-msgid "Indicates whether the datapoint was successfully submitted by an annotator"
+msgid "datapoint ID"
 msgstr ""
 
 #: projects/models.py:480
-msgid "Is skipped?"
+msgid "As stored in the original dataset"
 msgstr ""
 
 #: projects/models.py:481
+msgid "flags"
+msgstr ""
+
+#: projects/models.py:482
+msgid "Internal behavior flags"
+msgstr ""
+
+#: projects/models.py:483
+msgid "is submitted?"
+msgstr ""
+
+#: projects/models.py:484
+msgid "Indicates whether the datapoint was successfully submitted by an annotator"
+msgstr ""
+
+#: projects/models.py:485
+msgid "is skipped?"
+msgstr ""
+
+#: projects/models.py:486
 msgid "Indicates whether the datapoint was skipped by an annotator"
 msgstr ""
 
-#: projects/models.py:489
-msgid "Pre-marker"
-msgstr ""
-
-#: projects/models.py:490
-msgid "Pre-markers"
-msgstr ""
-
-#: projects/models.py:493
-msgid "Static tokens"
-msgstr ""
-
 #: projects/models.py:494
-msgid "Comma-separated tokens that should be highlighted with a marker"
+msgid "pre-marker"
+msgstr ""
+
+#: projects/models.py:495
+msgid "pre-markers"
 msgstr ""
 
 #: projects/models.py:499
-msgid "Marker pair"
+msgid "static tokens"
 msgstr ""
 
-#: projects/models.py:510
-msgid "Relation"
+#: projects/models.py:500
+msgid "Comma-separated tokens that should be highlighted with a marker"
 msgstr ""
 
-#: projects/models.py:515
+#: projects/models.py:505
+msgid "marker pair"
+msgstr ""
+
+#: projects/models.py:506 projects/models.py:523
 msgid "marker pairs"
 msgstr ""
 
-#: projects/models.py:516
-msgid "Direction"
-msgstr ""
-
 #: projects/models.py:517
-msgid "Directed from the first to the second"
-msgstr ""
-
-#: projects/models.py:518
-msgid "Directed from the second to the first"
-msgstr ""
-
-#: projects/models.py:519
-msgid "Bi-directional"
-msgstr ""
-
-#: projects/models.py:522
-msgid "Keyboard shortcut for marking a piece of text with this relation"
-msgstr ""
-
-#: projects/models.py:523
-msgid "Graphical representation type"
+msgid "relation"
 msgstr ""
 
 #: projects/models.py:524
-msgid "Graph"
-msgstr ""
-
-#: projects/models.py:524
-msgid "List"
+msgid "direction"
 msgstr ""
 
 #: projects/models.py:525
+msgid "Directed from the first to the second"
+msgstr ""
+
+#: projects/models.py:526
+msgid "Directed from the second to the first"
+msgstr ""
+
+#: projects/models.py:527
+msgid "Bi-directional"
+msgstr ""
+
+#: projects/models.py:530
+msgid "Keyboard shortcut for marking a piece of text with this relation"
+msgstr ""
+
+#: projects/models.py:531
+msgid "graphical representation type"
+msgstr ""
+
+#: projects/models.py:532
+msgid "Graph"
+msgstr ""
+
+#: projects/models.py:532
+msgid "List"
+msgstr ""
+
+#: projects/models.py:533
 msgid "How should the relation be visualized?"
 msgstr ""
 
-#: projects/models.py:547
-msgid "Context"
+#: projects/models.py:555
+msgid "context"
 msgstr ""
 
-#: projects/models.py:550 projects/models.py:579
-msgid "Content"
+#: projects/models.py:556
+msgid "contexts"
 msgstr ""
 
-#: projects/models.py:565
-msgid "Batch"
+#: projects/models.py:559 projects/models.py:589
+msgid "content"
 msgstr ""
 
-#: projects/models.py:566
-msgid "Batches"
+#: projects/models.py:574
+msgid "batch"
 msgstr ""
 
-#: projects/models.py:577
-msgid "Input"
+#: projects/models.py:575
+msgid "batches"
 msgstr ""
 
-#: projects/models.py:583 projects/models.py:630 projects/models.py:714
-msgid "Marker group order in the unit"
+#: projects/models.py:586
+msgid "input"
 msgstr ""
 
-#: projects/models.py:584 projects/models.py:631 projects/models.py:715
+#: projects/models.py:587
+msgid "inputs"
+msgstr ""
+
+#: projects/models.py:593 projects/models.py:641 projects/models.py:727
+msgid "marker group order in the unit"
+msgstr ""
+
+#: projects/models.py:594 projects/models.py:642 projects/models.py:728
 msgid "At the submission time"
 msgstr ""
 
-#: projects/models.py:617
-msgid "Label"
+#: projects/models.py:627
+msgid "label"
 msgstr ""
 
-#: projects/models.py:619
-msgid "Start posiiton"
+#: projects/models.py:628
+msgid "labels"
 msgstr ""
 
-#: projects/models.py:620
+#: projects/models.py:630
+msgid "start posiiton"
+msgstr ""
+
+#: projects/models.py:631
 msgid "Character-wise start position in the text"
 msgstr ""
 
-#: projects/models.py:621
-msgid "End position"
+#: projects/models.py:632
+msgid "end position"
 msgstr ""
 
-#: projects/models.py:622
+#: projects/models.py:633
 msgid "Character-wise end position in the text"
 msgstr ""
 
-#: projects/models.py:624
-msgid "Extra information"
+#: projects/models.py:635
+msgid "extra information"
 msgstr ""
 
-#: projects/models.py:627 projects/models.py:711
-msgid "Was undone?"
+#: projects/models.py:638 projects/models.py:724
+msgid "was undone?"
 msgstr ""
 
-#: projects/models.py:628 projects/models.py:712
+#: projects/models.py:639 projects/models.py:725
 msgid "Indicates whether the annotator used 'Undo' button"
 msgstr ""
 
-#: projects/models.py:679
-msgid "Label review"
+#: projects/models.py:690
+msgid "label review"
 msgstr ""
 
-#: projects/models.py:682
-msgid "Is a match?"
+#: projects/models.py:691
+msgid "label reviews"
 msgstr ""
 
-#: projects/models.py:683
+#: projects/models.py:694
+msgid "is a match?"
+msgstr ""
+
+#: projects/models.py:695
 msgid "Indicates whether the reviewed and original labels match"
 msgstr ""
 
-#: projects/models.py:685
-msgid "Ambiguity?"
+#: projects/models.py:697
+msgid "ambiguity?"
 msgstr ""
 
-#: projects/models.py:689
+#: projects/models.py:701
 msgid "Decided automatically to inform a decision maker"
 msgstr ""
 
-#: projects/models.py:691 projects/models.py:693
-msgid "Start posiiton of the review label"
+#: projects/models.py:703 projects/models.py:705
+msgid "start posiiton of the review label"
 msgstr ""
 
-#: projects/models.py:696
-msgid "Is impossible?"
+#: projects/models.py:708
+msgid "is impossible?"
 msgstr ""
 
-#: projects/models.py:697
+#: projects/models.py:709
 msgid ""
 "Indicates whether the reviewer marked the datapoint as impossible wrt. "
 "guidelines"
 msgstr ""
 
-#: projects/models.py:706
-msgid "Label relation"
+#: projects/models.py:718
+msgid "label relation"
 msgstr ""
 
-#: projects/models.py:757
-msgid "A project-specific user profile"
+#: projects/models.py:719
+msgid "label relations"
 msgstr ""
 
-#: projects/models.py:759
-msgid "Points in total"
+#: projects/models.py:770
+msgid "a project-specific user profile"
 msgstr ""
 
-#: projects/models.py:792
-msgid "Level"
+#: projects/models.py:771
+msgid "project specific user profile"
 msgstr ""
 
-#: users/jinja2/users/settings.html:8
-msgid "Language"
+#: projects/models.py:773
+msgid "points in total"
+msgstr ""
+
+#: projects/models.py:806
+msgid "level"
+msgstr ""
+
+#: users/models.py:10
+msgid "profiles"
+msgstr ""
+
+#: users/jinja2/users/settings.html:8 users/models.py:13
+msgid "language"
 msgstr ""
 
 #: users/jinja2/users/settings.html:21
-msgid "Save"
+msgid "save"
 msgstr ""
 

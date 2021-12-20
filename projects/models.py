@@ -38,9 +38,9 @@ class PostProcessingMethod(CommonModel):
         verbose_name = _('post-processing method')
         verbose_name_plural = _('post-processing methods')
 
-    name = models.CharField(_("Name"), max_length=50,
+    name = models.CharField(_("name"), max_length=50,
         help_text=_("Verbose name"))
-    helper = models.CharField(_("Helper function name"), max_length=50,
+    helper = models.CharField(_("helper function name"), max_length=50,
         help_text=_("Name as specified in `projects/helpers.py`"))
 
     def __str__(self):
@@ -405,10 +405,10 @@ class MarkerVariant(CommonModel):
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE, verbose_name=_("marker"))    
-    is_free_text = models.BooleanField(_("Is a free-text input?"), default=False,
+    is_free_text = models.BooleanField(_("is a free-text input?"), default=False,
         help_text=_("Indicates whether a marker should be instantiated as a label or a free-text input"))
     unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True, verbose_name=_("marker unit"))
-    order_in_unit = models.PositiveIntegerField(_("Order in a unit group"), blank=True, null=True,
+    order_in_unit = models.PositiveIntegerField(_("order in a unit group"), blank=True, null=True,
         help_text=_("Order of this marker in the marker group of a unit"))
 
     def min(self):
@@ -443,16 +443,17 @@ class MarkerVariant(CommonModel):
 
 class MarkerRestriction(CommonModel):
     class Meta:
-        verbose_name = _('Marker restriction')
+        verbose_name = _('marker restriction')
+        verbose_name_plural = _("marker restrictions")
 
     variant = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, verbose_name=_("marker variant"))
-    kind = models.CharField(_("Restriction kind"), max_length=2, choices=[
+    kind = models.CharField(_("restriction kind"), max_length=2, choices=[
         ('no', '-'), ('ls', '<'),
         ('le', '<='), ('gs', '>'),
         ('ge', '>='), ('eq', '=')
     ])
-    value = models.PositiveIntegerField(_("Restriction value"),
-        help_text="e.g., if Restriction kind is '<=' and value is '3', this creates a restriction '<= 3'")
+    value = models.PositiveIntegerField(_("restriction value"),
+        help_text=_("e.g., if restriction kind is '<=' and value is '3', this creates a restriction '<= 3'"))
 
     def __str__(self):
         return self.kind + str(self.value)
@@ -461,8 +462,8 @@ class MarkerRestriction(CommonModel):
 class ProjectData(CommonModel):
     class Meta:
         unique_together = (('project', 'datasource'),)
-        verbose_name = _("Project datum")
-        verbose_name_plural = _("Project data")
+        verbose_name = _("project datum")
+        verbose_name_plural = _("project data")
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
@@ -470,17 +471,18 @@ class ProjectData(CommonModel):
 
 class DataAccessLog(CommonModel):
     class Meta:
-        verbose_name = _('Data access log')
+        verbose_name = _('data access log')
+        verbose_name_plural = _("data access logs")
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("user"))
     project_data = models.ForeignKey(ProjectData, on_delete=models.CASCADE, verbose_name=_("project data"))
-    datapoint = models.CharField(_("Datapoint ID"), max_length=64,
+    datapoint = models.CharField(_("datapoint ID"), max_length=64,
         help_text=_("As stored in the original dataset"))
-    flags = models.TextField(_("Flags"), default="",
+    flags = models.TextField(_("flags"), default="",
         help_text=_("Internal behavior flags"))
-    is_submitted = models.BooleanField(_("Is submitted?"),
+    is_submitted = models.BooleanField(_("is submitted?"),
         help_text=_("Indicates whether the datapoint was successfully submitted by an annotator"))
-    is_skipped = models.BooleanField(_("Is skipped?"),
+    is_skipped = models.BooleanField(_("is skipped?"),
         help_text=_("Indicates whether the datapoint was skipped by an annotator"))
 
 
@@ -489,17 +491,19 @@ class DataAccessLog(CommonModel):
 #       maybe add a name of the boolean helper that lets you mark the word iff the helper returns true?
 class PreMarker(CommonModel):
     class Meta:
-        verbose_name = _('Pre-marker')
-        verbose_name_plural = _('Pre-markers')
+        verbose_name = _('pre-marker')
+        verbose_name_plural = _('pre-markers')
+
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    tokens = models.TextField(_("Static tokens"),
+    tokens = models.TextField(_("static tokens"),
         help_text=_("Comma-separated tokens that should be highlighted with a marker"))
 
 
 class MarkerPair(CommonModel):
     class Meta:
-        verbose_name = _('Marker pair')
+        verbose_name = _('marker pair')
+        verbose_name_plural = _('marker pairs')
 
     first = models.ForeignKey(Marker, related_name='first', on_delete=models.CASCADE)
     second = models.ForeignKey(Marker, related_name='second', on_delete=models.CASCADE)
@@ -510,20 +514,21 @@ class MarkerPair(CommonModel):
 
 class Relation(CommonModel):
     class Meta:
-        verbose_name = _('Relation')
+        verbose_name = _('relation')
+        verbose_name_plural = _('relations')
 
-    name = models.CharField(_("Name"), max_length=50)
+    name = models.CharField(_("name"), max_length=50)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
     for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
     pairs = models.ManyToManyField(MarkerPair, verbose_name=_("marker pairs"))
-    direction = models.CharField(_("Direction"), max_length=1, choices=[
+    direction = models.CharField(_("direction"), max_length=1, choices=[
         ('0', _('Directed from the first to the second')),
         ('1', _('Directed from the second to the first')),
         ('2', _('Bi-directional'))
     ])
-    shortcut = models.CharField(_("Keyboard shortcut"), max_length=15, 
+    shortcut = models.CharField(_("keyboard shortcut"), max_length=15, 
         help_text=_("Keyboard shortcut for marking a piece of text with this relation"), null=True, blank=True)
-    representation = models.CharField(_("Graphical representation type"), max_length=1,
+    representation = models.CharField(_("graphical representation type"), max_length=1,
         choices=[('g', _('Graph')), ('l', _('List'))], default='g',
         help_text=_("How should the relation be visualized?"))
 
@@ -547,10 +552,11 @@ class Relation(CommonModel):
 # TODO: Add datapoint tracking
 class Context(CommonModel):
     class Meta:
-        verbose_name = _('Context')
+        verbose_name = _('context')
+        verbose_name_plural = _('contexts')
 
     datasource = models.ForeignKey(DataSource, on_delete=models.SET_NULL, null=True, blank=True)
-    content = models.TextField(_("Content"))
+    content = models.TextField(_("content"))
 
     @property
     def content_hash(self):
@@ -565,8 +571,8 @@ class Context(CommonModel):
 
 class Batch(CommonModel):
     class Meta:
-        verbose_name = _("Batch")
-        verbose_name_plural = _("Batches")
+        verbose_name = _("batch")
+        verbose_name_plural = _("batches")
 
     uuid = models.UUIDField()
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -577,13 +583,14 @@ class Batch(CommonModel):
 
 class Input(CommonModel):
     class Meta:
-        verbose_name = _('Input')
+        verbose_name = _('input')
+        verbose_name_plural = _('inputs')
 
-    content = models.TextField(_("Content"))
+    content = models.TextField(_("content"))
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    unit = models.PositiveIntegerField(_("Marker group order in the unit"), default=1,
+    unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
         help_text=_("At the submission time"))
 
     @property
@@ -617,20 +624,21 @@ class Input(CommonModel):
 
 class Label(CommonModel):
     class Meta:
-        verbose_name = _('Label')
+        verbose_name = _('label')
+        verbose_name_plural = _('labels')
 
-    start = models.PositiveIntegerField(_("Start posiiton"), null=True,
+    start = models.PositiveIntegerField(_("start posiiton"), null=True,
         help_text=_("Character-wise start position in the text"))
-    end = models.PositiveIntegerField(_("End position"), null=True,
+    end = models.PositiveIntegerField(_("end position"), null=True,
         help_text=_("Character-wise end position in the text"))
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, null=True) # null is allowed for backward compatibility reason
-    extra = models.JSONField(_("Extra information"), null=True, blank=True,
-        help_text=_("In a JSON format"))
+    extra = models.JSONField(_("extra information"), null=True, blank=True,
+        help_text=_("in a JSON format"))
     context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True, blank=True) # if there is no input, there must be context
-    undone = models.BooleanField(_("Was undone?"), default=False,
+    undone = models.BooleanField(_("was undone?"), default=False,
         help_text=_("Indicates whether the annotator used 'Undo' button"))
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    unit = models.PositiveIntegerField(_("Marker group order in the unit"), default=1,
+    unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
         help_text=_("At the submission time"))
 
     @property
@@ -679,24 +687,25 @@ class Label(CommonModel):
 
 class LabelReview(CommonModel):
     class Meta:
-        verbose_name = _('Label review')
+        verbose_name = _('label review')
+        verbose_name_plural = _('label reviews')
 
     original = models.ForeignKey(Label, on_delete=models.CASCADE)
-    is_match = models.BooleanField(_("Is a match?"), null=True,
+    is_match = models.BooleanField(_("is a match?"), null=True,
         help_text=_("Indicates whether the reviewed and original labels match"))
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    ambiguity_status = models.CharField(_("Ambiguity?"), max_length=2, default='no',
+    ambiguity_status = models.CharField(_("ambiguity?"), max_length=2, default='no',
         choices=[
             ('no', 'No ambiguity'), ('rr', 'Requires resolution'), ('rs', 'Resolved')
         ],
         help_text=_("Decided automatically to inform a decision maker"))
     resolved_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='resolved_by')
-    start = models.PositiveIntegerField(_("Start posiiton of the review label"), null=True,
+    start = models.PositiveIntegerField(_("start posiiton of the review label"), null=True,
         help_text=_("If applicable"))
-    end = models.PositiveIntegerField(_("Start posiiton of the review label"), null=True,
+    end = models.PositiveIntegerField(_("start posiiton of the review label"), null=True,
         help_text=_("If applicable"))
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    impossible = models.BooleanField(_("Is impossible?"), default=False,
+    impossible = models.BooleanField(_("is impossible?"), default=False,
         help_text=_("Indicates whether the reviewer marked the datapoint as impossible wrt. guidelines"))
 
     @property
@@ -706,15 +715,16 @@ class LabelReview(CommonModel):
 
 class LabelRelation(CommonModel):
     class Meta:
-        verbose_name = _('Label relation')
+        verbose_name = _('label relation')
+        verbose_name_plural = _('label relations')
 
     rule = models.ForeignKey(Relation, on_delete=models.CASCADE)
     first_label = models.ForeignKey(Label, related_name='first_label', on_delete=models.CASCADE)
     second_label = models.ForeignKey(Label, related_name='second_label', on_delete=models.CASCADE)
-    undone = models.BooleanField(_("Was undone?"), default=False,
+    undone = models.BooleanField(_("was undone?"), default=False,
         help_text=_("Indicates whether the annotator used 'Undo' button"))
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    unit = models.PositiveIntegerField(_("Marker group order in the unit"), default=1,
+    unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
         help_text=_("At the submission time"))
 
     @property
@@ -757,9 +767,10 @@ class LabelRelation(CommonModel):
 
 class UserProfile(CommonModel):
     class Meta:
-        verbose_name = _('A project-specific user profile')
+        verbose_name = _('a project-specific user profile')
+        verbose_name_plural = _('project specific user profile')
 
-    points = models.FloatField(_("Points in total"), default=0.0)
+    points = models.FloatField(_("points in total"), default=0.0)
     asking_time = models.IntegerField(default=0) # total asking time [OBSOLETE]
     timed_questions = models.IntegerField(default=0) # might be that some questions were not timed (like the first bunch of questions) [OBSOLETE]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profiles')
@@ -792,7 +803,7 @@ class UserProfile(CommonModel):
 
 class Level(CommonModel):
     class Meta:
-        verbose_name = _('Level')
+        verbose_name = _('level')
 
     number = models.IntegerField()
     title = models.CharField(max_length=50)

@@ -13,31 +13,31 @@
         </div>
         {% if project.has_intro_tour %}
           <div class="content">
-            <div id="followIntroTour" class='ui button'>Follow the UI intro tour</div>
+            <div id="followIntroTour" class='ui button'>{{ _("Follow the UI intro tour") }}</div>
           </div>
         {% endif %}
         <div class='content'>
-          <p class='has-text-weight-bold'>Contact information</p>
+          <p class='has-text-weight-bold'>{{ _("contact information")|capitalize }}</p>
           <!-- TODO: make this table responsive -->
           <table class='table'>
             <tbody>
               <tr>
-                <td>Responsible</td>
+                <td>{{ _("responsible")|capitalize }}</td>
                 <td>{{project.author.first_name}} {{project.author.last_name}}</td>
               </tr>
               <tr>
-                <td>Contact email</td>
+                <td>{{ _("contact email")|capitalize }}</td>
                 <td>{{project.author.email}}</td>
               </tr>
               {% if project.dt_publish %}
                 <tr>
-                  <td>Published at</td>
+                  <td>{{ _("published at")|capitalize }}</td>
                   <td>{{project.dt_publish}}</td>
                 </tr>
               {% endif %}
               {% if project.dt_finish %}
                 <tr>
-                  <td>To be finished at</td>
+                  <td>{{ _("to be finished at")|capitalize }}</td>
                   <td>
                     {{project.dt_finish}}
                   </td>

@@ -1,19 +1,19 @@
 <article class="message is-primary">
   <div class="message-header">
-    <p>Actions</p>
+    <p>{{ _("actions")|capitalize }}</p>
   </div>
   <div class="message-body">
     <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
       {{ csrf_input }}
       <div class="field is-grouped">
         <div class="control">
-          <a class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>Submit</span></a>
+          <a class='submit button'><span class="icon"><i class="fas fa-paper-plane"></i></span><span>{{ _("submit")|capitalize }}</span></a>
         </div>
         <div class="control">
-          <a id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>Undo last</span></a>
+          <a id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>{{ _("undo last")|capitalize }}</span></a>
         </div>
         <div class='control'>
-          <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle"><span class="icon"><i class="fas fa-newspaper"></i></span><span>Get new text</span></a>
+          <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle"><span class="icon"><i class="fas fa-newspaper"></i></span><span>{{ _("get new text")|capitalize }}</span></a>
         </div>
       </div>
     </form>
