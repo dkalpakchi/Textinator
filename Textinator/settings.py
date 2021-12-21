@@ -66,7 +66,8 @@ INSTALLED_APPS = [
     'nested_admin',
     'survey',
     'users',
-    'colorfield'
+    'colorfield',
+    'rosetta'
 ]
 
 MIDDLEWARE = [

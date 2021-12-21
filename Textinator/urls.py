@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin, auth
-from django.urls import path, include, reverse
+from django.urls import path, include, reverse, re_path
 from django_registration.backends.one_step.views import RegistrationView
 from django.views.generic import RedirectView
 
@@ -42,4 +42,9 @@ urlpatterns = [
         path('i18n/', include('django.conf.urls.i18n')),
     ]))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if 'rosetta' in settings.INSTALLED_APPS:
+    urlpatterns += [
+        re_path(r'^rosetta/', include('rosetta.urls'))
+    ]
 
