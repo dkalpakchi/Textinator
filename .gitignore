@@ -5,12 +5,12 @@ __pycache__/*
 node_modules/
 db.sqlite3
 media/*
-scrapers/example*
+scrapers
 *.sh
 .env
 log/*
 static_cdn/*
-data/*
+data
 aftonbladet*
 .venv
 example_texts_api/.tvenv
