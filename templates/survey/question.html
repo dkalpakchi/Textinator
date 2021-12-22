@@ -1,37 +1,40 @@
-{% for question, fields in response_form.groups_by_question %}
-    <table class="survey-table table">
-        <tbody>
-            <tr>
-                <th>{{ question|safe }}</th>
-            </tr>
-            {% for form, prefix, suffix in fields %}
-                {% if form.field.widget.attrs.category == category.name or not form.field.widget.attrs.category %}
-                    <tr class="{% if form.errors%} danger {% endif %}">
-                        <td>
-                            <div class="criterion" data-required="{{form.field.required|yesno:"true,false"}}">
-                                {{ form.label|safe }}
-                                {% if form.field.required and form.label %}
-                                    <span style="color:red">&#42;</span>
-                                {% endif %}
-                            </div>
-                            <span class="help-inline" style="color:red">
-                                <strong> {% for error in  form.errors %}{{ error }}{% endfor %} </strong>
-                            </span> <br>
-                            {% if form.field.widget.input_type == 'select' %}
-                            <select name="{{form.name}}"{% if form.field.widget.attrs.disabled %} disabled{% endif %}>
-                            {% endif %}
-                            {% if prefix %}<span class="prefix">{{prefix}}</span>{% endif %}
-                            {% for field in form %}
-                                {{ field }}
-                            {% endfor%}
-                            {% if suffix %}<span class="suffix">{{suffix}}</span>{% endif %}
-                            {% if form.field.widget.input_type == 'select' %}
-                            </select>
-                            {% endif %}
-                        </td>
-                    </tr>
+{% load survey_extras %}
+
+{% for question, fields in groups %}
+  <table class="survey-table table is-fullwidth">
+    <tbody>
+      <tr>
+        <th>{{ question|safe }}</th>
+      </tr>
+      {% for form, prefix, suffix in fields %}
+        {% if form.field.widget.attrs.category == category.name or not form.field.widget.attrs.category %}
+          <tr class="{% if form.errors%} danger {% endif %}">
+            <td>
+              <div class="criterion" data-required="{{form.field.required|yesno:"true,false"}}">
+                {{ form.label|safe }}
+                {% if form.field.required and form.label %}
+                    <span style="color:red">&#42;</span>
                 {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
+              </div>
+              <span class="help-inline" style="color:red">
+                <strong> {% for error in  form.errors %}{{ error }}{% endfor %} </strong>
+              </span>
+              <br>
+              {% if form.field.widget.input_type == 'select' %}
+                <select name="{{form.name}}"{% if form.field.widget.attrs.disabled %} disabled{% endif %}>
+              {% endif %}
+              {% if prefix %}<span class="prefix">{{prefix}}</span>{% endif %}
+              {% for field in form %}
+                {{ field }}
+              {% endfor %}
+              {% if suffix %}<span class="suffix">{{suffix}}</span>{% endif %}
+              {% if form.field.widget.input_type == 'select' %}
+                </select>
+              {% endif %}
+            </td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
 {% endfor %}

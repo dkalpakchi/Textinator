@@ -5,9 +5,9 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    command: python /usr/src/app/manage.py runserver 0.0.0.0:8000
+    command: python /usr/src/Textinator/manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/usr/src/app/
+      - .:/usr/src/Textinator/
     ports:
       - 8000:8000
     env_file:

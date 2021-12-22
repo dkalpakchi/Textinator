@@ -8,7 +8,7 @@
 {% block extrajs %}
   {{response_form.media}}
   {% if asset_context.flatpickr %}
-    <script type="text/javascript" src="{% static 'survey/js/flatpickr.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'scientific_survey/js/flatpickr.min.js' %}"></script>
   {% endif %}
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.2/dist/jquery.validate.min.js"></script>
   <script type="text/javascript" src="{% static 'scripts/survey.js' %}"></script>
@@ -17,19 +17,31 @@
 {% block extracss %}
   {% if asset_context.flatpickr %}
     {{ block.super }}
-    <link href="{% static 'survey/css/flatpickr.min.css'%}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'scientific_survey/css/flatpickr.min.css'%}" rel="stylesheet" type="text/css"/>
   {% endif %}
+  <style>
+    hr {
+      display: block;
+      height: 2px;
+      border: 0; 
+      border-top: 2px solid #ccc;
+      margin: 1em 0; padding: 0;
+    }
+  </style>
 {% endblock %}
 
 
-
 {% block body %}
-	<h1 class="title"> {{survey.name}} </h1>
-	<div class="survey-description">
-    <h3>Guidelines</h3>
-    <div>{{survey.description|safe}}</div>
+  <div class="mb-5">
+    <h1 class="title"> {{survey.name}} </h1>
+    {% if survey.description %}
+      <div class="survey-description">
+        <h3>Guidelines</h3>
+        <div>{{survey.description|safe}}</div>
+      </div>  
+    {% endif %}
   </div>
-  <div class="container column">
+  <div class="container mb-5">
     {% if step|add:step >= response_form.steps_count %}
       <span class="survey-progress-value" style="color: white;">{{step}} / {{response_form.steps_count}}</span>
     {% else %}
@@ -38,7 +50,7 @@
     <progress class="progress is-primary" value="{{step}}" max="{{response_form.steps_count}}"></progress>
   </div>
 	<div>
-      {% if step and step != 0 %}
+  {% if step and step != 0 %}
 		<form action="{% url 'survey-detail-step' id=survey.id step=step seed=response_form.random_seed %}" method="post">
 	{% else %}
 		<form action="{% url 'survey-detail' id=survey.id %}" method="post">
@@ -46,7 +58,26 @@
 	    {% csrf_token %}
       <input type="hidden" name="seed" value="{{response_form.random_seed}}">
       <input type="hidden" name="extra" value="{{response_form.extra}}">
-	    {% include "survey/question.html" %}
+
+      {% for category in categories %}
+        {% if category.name == response_form.active_category_name or not response_form.active_category_name %}
+          <article class="message">
+            <div class="message-header">
+              {{category.name}}
+            </div>
+            <div class="message-body">
+              {% if category.description %}
+                <p>{{category.description}}</p>
+                <hr>
+              {% endif %}
+              {% include "survey/question.html" with groups=response_form|groups_by_category:category.name %}
+            </div>
+          </article>
+        {% endif %}
+      {% empty %}
+        {% include "survey/question.html" with groups=response_form.groups_by_question %}
+      {% endfor %}
+
 		  {% if survey.editable_answers or response_form.response is None %}
 	      <input
           class="button is-primary"

@@ -24,24 +24,31 @@ from filebrowser.sites import site
 
 from . import views
 
+paths = [
+    path('', views.index),
+    path('admin/filebrowser/', site.urls),
+    path('admin/', admin.site.urls),
+    path('accounts/register/',
+        RegistrationView.as_view(success_url='/textinator/'),
+        name='django_registration_register'),
+    path('accounts/', include('django_registration.backends.one_step.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('projects/', include('projects.urls')),
+    path('tinymce/', include('tinymce.urls')),
+    path('users/', include('users.urls')),
+    path('i18n/', include('django.conf.urls.i18n')),
+]
+
+if 'scientific_survey' in settings.INSTALLED_APPS:
+    paths += [
+        path('survey/', include('scientific_survey.urls'))
+    ]
 
 urlpatterns = [
-    path('textinator/', include([
-        path('', views.index),
-        path('admin/filebrowser/', site.urls),
-        path('admin/', admin.site.urls),
-        path('accounts/register/',
-            RegistrationView.as_view(success_url='/textinator/'),
-            name='django_registration_register'),
-        path('accounts/', include('django_registration.backends.one_step.urls')),
-        path('accounts/', include('django.contrib.auth.urls')),
-        path('projects/', include('projects.urls')),
-        path('tinymce/', include('tinymce.urls')),
-        path('survey/', include('survey.urls')),
-        path('users/', include('users.urls')),
-        path('i18n/', include('django.conf.urls.i18n')),
-    ]))
+    path('textinator/', include(paths))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
 
 if 'rosetta' in settings.INSTALLED_APPS:
     urlpatterns += [

@@ -8,7 +8,7 @@
 	<title>{% block title %}{% endblock title %}</title>
     <link rel="icon" href="{% static 'img/favicon.ico'%}"/>
     <link rel="stylesheet" href="{% static 'styles/bulma.min.css' %}">
-	  <link rel="stylesheet" type="text/css" href="{% static 'survey/css/custom.css' %}" />
+	  <link rel="stylesheet" type="text/css" href="{% static 'scientific_survey/css/custom.css' %}" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="{% static 'styles/base_style.css' %}">
 
@@ -34,9 +34,9 @@
      {% block footer %}{% endblock %}
     </div>
   </div>
-  <script type="text/javascript" src="{% static 'survey/js/jquery.min.js' %}"></script>
-  <script type="text/javascript" src="{% static 'survey/js/jquery-ui.min.js' %}"></script>
-  <script type="text/javascript" src="{% static 'survey/js/custom.js' %}"></script>
+  <script type="text/javascript" src="{% static 'scientific_survey/js/jquery.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'scientific_survey/js/jquery-ui.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'scientific_survey/js/custom.js' %}"></script>
   {% block extrajs %}{% endblock %}
 </body>
 </html>

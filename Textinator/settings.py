@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     # 'surveys'
     # 'django_extensions',
     'nested_admin',
-    'survey',
+    'scientific_survey',
     'users',
     'colorfield',
     'rosetta'
@@ -85,6 +85,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'Textinator.backends.EmailAuthenticationBackend',
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 ROOT_URLCONF = 'Textinator.urls'
 
@@ -118,7 +120,7 @@ TEMPLATES = [
             ],
             'libraries': {
                 'common_extras': 'Textinator.templatetags.common_extras',
-                'survey_extras': 'survey.templatetags.survey_extras'
+                'survey_extras': 'scientific_survey.templatetags.survey_extras'
             },
         },
     }
