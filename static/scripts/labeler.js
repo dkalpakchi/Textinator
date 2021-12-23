@@ -1800,10 +1800,6 @@
                 $inputBlock.removeClass('is-warning');
                 $inputBlock.addClass('is-primary');
                 $inputBlock.prop('review', false);
-
-                // TODO: get title for a review task from the server
-                //       make it a configurable project setting
-                $title.html("Your question");
               } else {
                 // FIXME: review task
                 labelerModule.resetArticle();

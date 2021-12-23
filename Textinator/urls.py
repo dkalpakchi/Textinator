@@ -44,14 +44,12 @@ if 'scientific_survey' in settings.INSTALLED_APPS:
         path('survey/', include('scientific_survey.urls'))
     ]
 
+if 'rosetta' in settings.INSTALLED_APPS:
+    paths += [
+        re_path(r'^rosetta/', include('rosetta.urls'))
+    ]
+
 urlpatterns = [
     path('textinator/', include(paths))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
-
-if 'rosetta' in settings.INSTALLED_APPS:
-    urlpatterns += [
-        re_path(r'^rosetta/', include('rosetta.urls'))
-    ]
 

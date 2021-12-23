@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-12-20 16:20+0000\n"
+"POT-Creation-Date: 2021-12-23 12:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -148,43 +148,43 @@ msgid "to be finished at"
 msgstr ""
 
 #: projects/admin.py:32
-msgid "Restriction"
+msgid "restriction"
 msgstr ""
 
 #: projects/admin.py:33
-msgid "Restrictions"
+msgid "restrictions"
 msgstr ""
 
 #: projects/admin.py:42
-msgid "Project-specific marker"
+msgid "project-specific marker"
 msgstr ""
 
-#: projects/admin.py:43
-msgid "Project-specific markers"
+#: projects/admin.py:43 projects/models.py:257
+msgid "project-specific markers"
 msgstr ""
 
 #: projects/admin.py:58
-msgid "Participant"
+msgid "participant"
 msgstr ""
 
-#: projects/admin.py:59
-msgid "Participants"
+#: projects/admin.py:59 projects/models.py:255
+msgid "participants"
 msgstr ""
 
 #: projects/admin.py:66
-msgid "Context menu item"
+msgid "context menu item"
 msgstr ""
 
 #: projects/admin.py:67
-msgid "Context menu items"
+msgid "context menu items"
 msgstr ""
 
 #: projects/admin.py:85
-msgid "Project-specific relation"
+msgid "project-specific relation"
 msgstr ""
 
 #: projects/admin.py:86
-msgid "Project-specific relations"
+msgid "project-specific relations"
 msgstr ""
 
 #: projects/models.py:24
@@ -454,14 +454,6 @@ msgstr ""
 msgid "collaborators"
 msgstr ""
 
-#: projects/models.py:255
-msgid "participants"
-msgstr ""
-
-#: projects/models.py:257
-msgid "project-specific markers"
-msgstr ""
-
 #: projects/models.py:258
 msgid "author"
 msgstr ""
@@ -531,7 +523,7 @@ msgid "size"
 msgstr ""
 
 #: projects/models.py:386
-msgid "Default (and maximal) number of marker groups in the unit"
+msgid "Default (and maximal) number of marker units per annotation batch"
 msgstr ""
 
 #: projects/models.py:387
@@ -540,8 +532,8 @@ msgstr ""
 
 #: projects/models.py:388
 msgid ""
-"Minimum required number of markers groups per unit (can't be more than "
-"`size`)"
+"Minimum required number of marker units per annotation batch (can't be "
+"more than `size`)"
 msgstr ""
 
 #: projects/models.py:389
@@ -549,7 +541,7 @@ msgid "is rankable?"
 msgstr ""
 
 #: projects/models.py:390
-msgid "Whether annotators should be allowed to rank marker groups in the unit"
+msgid "Whether annotators should be allowed to rank units in the annotation batch"
 msgstr ""
 
 #: projects/models.py:392
@@ -571,11 +563,11 @@ msgid ""
 msgstr ""
 
 #: projects/models.py:411
-msgid "order in a unit group"
+msgid "order in a unit"
 msgstr ""
 
 #: projects/models.py:412
-msgid "Order of this marker in the marker group of a unit"
+msgid "Order of this marker in the unit"
 msgstr ""
 
 #: projects/models.py:446
@@ -729,11 +721,11 @@ msgid "content"
 msgstr ""
 
 #: projects/models.py:574
-msgid "batch"
+msgid "annotation batch"
 msgstr ""
 
 #: projects/models.py:575
-msgid "batches"
+msgid "annotation batches"
 msgstr ""
 
 #: projects/models.py:586
@@ -761,7 +753,7 @@ msgid "labels"
 msgstr ""
 
 #: projects/models.py:630
-msgid "start posiiton"
+msgid "start position"
 msgstr ""
 
 #: projects/models.py:631
@@ -813,7 +805,7 @@ msgid "Decided automatically to inform a decision maker"
 msgstr ""
 
 #: projects/models.py:703 projects/models.py:705
-msgid "start posiiton of the review label"
+msgid "start position of the review label"
 msgstr ""
 
 #: projects/models.py:708

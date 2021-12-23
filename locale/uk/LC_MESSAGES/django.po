@@ -7,17 +7,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-12-20 16:20+0000\n"
-"PO-Revision-Date: 2021-12-21 19:20+0000\n"
+"POT-Creation-Date: 2021-12-23 12:42+0000\n"
+"PO-Revision-Date: 2021-12-23 12:34+0000\n"
 "Last-Translator: Dmytro Kalpakchi <dmytroka@kth.se>\n"
-"Language-Team: uk <LL@li.org>\n"
 "Language: uk\n"
+"Language-Team: uk <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "Generated-By: Babel 2.9.1\n"
-"X-Translated-Using: django-rosetta 0.9.8\n"
 
 #: jinja2/partials/_navbar.html:16
 msgid "my tasks"
@@ -121,8 +121,8 @@ msgstr "У чому проблема(и) з цим текстом?"
 
 #: jinja2/partials/components/modals/flag.html:16
 msgid ""
-"Please describe any problems you experience, e.g. weird formatting, wrong "
-"sentence starts, empty text, etc."
+"Please describe any problems you experience, e.g. weird formatting, wrong"
+" sentence starts, empty text, etc."
 msgstr ""
 "Будь ласка, опишіть вашу(і) проблему(и), наприклад, дивне форматування, "
 "неправильні частини речень, відсутній текст, тощо."
@@ -152,44 +152,44 @@ msgid "to be finished at"
 msgstr "дата закінчення"
 
 #: projects/admin.py:32
-msgid "Restriction"
-msgstr "Обмеження"
+msgid "restriction"
+msgstr "обмеження"
 
 #: projects/admin.py:33
-msgid "Restrictions"
-msgstr "Обмеження"
+msgid "restrictions"
+msgstr "обмеження"
 
 #: projects/admin.py:42
-msgid "Project-specific marker"
-msgstr "Маркер проекту"
+msgid "project-specific marker"
+msgstr "маркер проекту"
 
-#: projects/admin.py:43
-msgid "Project-specific markers"
-msgstr "Маркери проекту"
+#: projects/admin.py:43 projects/models.py:257
+msgid "project-specific markers"
+msgstr "маркери проекту"
 
 #: projects/admin.py:58
-msgid "Participant"
-msgstr "Учасник"
+msgid "participant"
+msgstr "учасник"
 
-#: projects/admin.py:59
-msgid "Participants"
-msgstr "Учасники"
+#: projects/admin.py:59 projects/models.py:255
+msgid "participants"
+msgstr "учасники"
 
 #: projects/admin.py:66
-msgid "Context menu item"
-msgstr "Елемент контекстного меню"
+msgid "context menu item"
+msgstr "елемент контекстного меню"
 
 #: projects/admin.py:67
-msgid "Context menu items"
-msgstr "Елементи контекстного меню"
+msgid "context menu items"
+msgstr "елементи контекстного меню"
 
 #: projects/admin.py:85
-msgid "Project-specific relation"
-msgstr "Відношення проекту"
+msgid "project-specific relation"
+msgstr "відношення проекту"
 
 #: projects/admin.py:86
-msgid "Project-specific relations"
-msgstr "Відношення проекту"
+msgid "project-specific relations"
+msgstr "відношення проекту"
 
 #: projects/models.py:24
 msgid "Created at"
@@ -279,8 +279,10 @@ msgstr "тип фільтра у адмін. інтерфейсі"
 #: projects/models.py:104
 msgid ""
 "\n"
-"            Specifies the filter type in the data explorer interface (one of 'boolean', 'range').\n"
-"            If empty, then this action will be excluded from data explorer.\n"
+"            Specifies the filter type in the data explorer interface (one"
+" of 'boolean', 'range').\n"
+"            If empty, then this action will be excluded from data "
+"explorer.\n"
 "            "
 msgstr ""
 
@@ -302,8 +304,8 @@ msgstr "колір"
 
 #: projects/models.py:134
 msgid ""
-"Specify task types (if any) for which this marker must be present (avaiable "
-"only to admins)"
+"Specify task types (if any) for which this marker must be present "
+"(avaiable only to admins)"
 msgstr ""
 
 #: projects/models.py:135 projects/models.py:529
@@ -389,8 +391,7 @@ msgid "Guidelines for the annotation task"
 msgstr "Вказівки для анотаційного завдання"
 
 #: projects/models.py:234
-msgid ""
-"Reminders for essential parts of guidelines (keep them short and on point)"
+msgid "Reminders for essential parts of guidelines (keep them short and on point)"
 msgstr "Нагадування про суттєві частини вказівок"
 
 #: projects/models.py:235
@@ -399,19 +400,18 @@ msgstr "тимчасове повідомлення"
 
 #: projects/models.py:236
 msgid ""
-"A temporary message for urgent communication with annotators (e.g., about "
-"maintenance work)"
+"A temporary message for urgent communication with annotators (e.g., about"
+" maintenance work)"
 msgstr ""
-"Тимчасове повідомлення для термінового зв'язку з аннотаторами (наприклад, "
-"про роботи з технічного обслуговування)"
+"Тимчасове повідомлення для термінового зв'язку з аннотаторами (наприклад,"
+" про роботи з технічного обслуговування)"
 
 #: projects/models.py:237
 msgid "summary video"
 msgstr "ознайомлювальне відео"
 
 #: projects/models.py:238
-msgid ""
-"Video introducing people to the annotation task at hand (if applicable)"
+msgid "Video introducing people to the annotation task at hand (if applicable)"
 msgstr "Відео для ознайомлення з анотаційним завданням (якщо таке є)"
 
 #: projects/models.py:239
@@ -461,14 +461,6 @@ msgstr "дата оновлення"
 #: projects/models.py:253
 msgid "collaborators"
 msgstr "співавтори"
-
-#: projects/models.py:255
-msgid "participants"
-msgstr "учасники"
-
-#: projects/models.py:257
-msgid "project-specific markers"
-msgstr "маркери проекту"
 
 #: projects/models.py:258
 msgid "author"
@@ -541,8 +533,10 @@ msgid "size"
 msgstr "розмір"
 
 #: projects/models.py:386
-msgid "Default (and maximal) number of marker groups in the unit"
-msgstr "Кількість маркерів у одній групі маркерного блоку"
+msgid "Default (and maximal) number of marker units per annotation batch"
+msgstr ""
+"Кількість маркерних блоків у блоці анотації (за замовчуванням та водночас"
+" максимальна)"
 
 #: projects/models.py:387
 msgid "minimum required"
@@ -550,19 +544,19 @@ msgstr "мінімально необхідно"
 
 #: projects/models.py:388
 msgid ""
-"Minimum required number of markers groups per unit (can't be more than "
-"`size`)"
+"Minimum required number of marker units per annotation batch (can't be "
+"more than `size`)"
 msgstr ""
-"Мінімально необхідна кількість груп у маркерному блоці (не може бути більше,"
-" ніж `Розмір`"
+"Мінімально необхідна кількість маркерних блоці у блоці анотації (не може "
+"бути більше, ніж `Розмір`)"
 
 #: projects/models.py:389
 msgid "is rankable?"
 msgstr "ранжується?"
 
 #: projects/models.py:390
-msgid "Whether annotators should be allowed to rank marker groups in the unit"
-msgstr "Чи дозволяється ранжувати групи у маркерному блоці"
+msgid "Whether annotators should be allowed to rank units in the annotation batch"
+msgstr "Чи дозволяється ранжувати маркерні блоки у блоці анотації"
 
 #: projects/models.py:392
 msgid "Internal name for the unit (max 10 characters)"
@@ -578,18 +572,19 @@ msgstr "чи дозволяється вільне введення тексту
 
 #: projects/models.py:409
 msgid ""
-"Indicates whether a marker should be instantiated as a label or a free-text "
-"input"
+"Indicates whether a marker should be instantiated as a label or a free-"
+"text input"
 msgstr ""
-"Зазначає чи маркер буде створено як ярлик чи поле для вільного вводу тексту"
+"Зазначає чи маркер буде створено як ярлик чи поле для вільного вводу "
+"тексту"
 
 #: projects/models.py:411
-msgid "order in a unit group"
-msgstr "порядок у групі маркерного блоку"
+msgid "order in a unit"
+msgstr "порядок у маркерному блоці"
 
 #: projects/models.py:412
-msgid "Order of this marker in the marker group of a unit"
-msgstr "Порядок цього маркера у групі маркерного блоку"
+msgid "Order of this marker in the unit"
+msgstr "Порядок цього маркера у маркерному блоці"
 
 #: projects/models.py:446
 msgid "marker restriction"
@@ -611,8 +606,7 @@ msgstr "значення обмеження"
 msgid ""
 "e.g., if restriction kind is '<=' and value is '3', this creates a "
 "restriction '<= 3'"
-msgstr ""
-"наприклад, вид обмеження '<=' та значення '3' створять обмеження '<= 3'"
+msgstr "наприклад, вид обмеження '<=' та значення '3' створять обмеження '<= 3'"
 
 #: projects/models.py:465
 msgid "project datum"
@@ -655,8 +649,7 @@ msgid "is submitted?"
 msgstr "надіслане?"
 
 #: projects/models.py:484
-msgid ""
-"Indicates whether the datapoint was successfully submitted by an annotator"
+msgid "Indicates whether the datapoint was successfully submitted by an annotator"
 msgstr "Зазначає чи дані по цьому тексту були надіслані анотатором"
 
 #: projects/models.py:485
@@ -744,12 +737,12 @@ msgid "content"
 msgstr "вміст"
 
 #: projects/models.py:574
-msgid "batch"
-msgstr "партія"
+msgid "annotation batch"
+msgstr "блок анотації"
 
 #: projects/models.py:575
-msgid "batches"
-msgstr "партії"
+msgid "annotation batches"
+msgstr "блоки анотації"
 
 #: projects/models.py:586
 msgid "input"
@@ -776,7 +769,8 @@ msgid "labels"
 msgstr "ярлики"
 
 #: projects/models.py:630
-msgid "start posiiton"
+#, fuzzy
+msgid "start position"
 msgstr "початкова позиція"
 
 #: projects/models.py:631
@@ -828,7 +822,8 @@ msgid "Decided automatically to inform a decision maker"
 msgstr "Вираховується автоматично для інформування відповідальної особи"
 
 #: projects/models.py:703 projects/models.py:705
-msgid "start posiiton of the review label"
+#, fuzzy
+msgid "start position of the review label"
 msgstr "початкова позиція ярлика рецензії"
 
 #: projects/models.py:708
@@ -840,8 +835,8 @@ msgid ""
 "Indicates whether the reviewer marked the datapoint as impossible wrt. "
 "guidelines"
 msgstr ""
-"Зазначає чи рецензент позначив точку даних як неможливу стосовно вказівок до"
-" завдання"
+"Зазначає чи рецензент позначив точку даних як неможливу стосовно вказівок"
+" до завдання"
 
 #: projects/models.py:718
 msgid "label relation"
@@ -890,3 +885,22 @@ msgstr "зберегти"
 
 #~ msgid "undo last submission"
 #~ msgstr ""
+
+#~ msgid "Project-specific marker"
+#~ msgstr "Маркер проекту"
+
+#~ msgid "Project-specific markers"
+#~ msgstr "Маркери проекту"
+
+#~ msgid "Participant"
+#~ msgstr "Учасник"
+
+#~ msgid "Participants"
+#~ msgstr "Учасники"
+
+#~ msgid "batch"
+#~ msgstr "партія"
+
+#~ msgid "batches"
+#~ msgstr "партії"
+

@@ -75,6 +75,10 @@
               <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
               <span>{{ _("admin")|capitalize }}</span>
             </a>
+            <a href="{{ url('rosetta-old-home-redirect') }}" class='admin navbar-item'>
+              <span class="icon is-small"><i class="fas fa-language"></i></span>
+              <span>{{ _("translation")|capitalize }}</span>
+            </a>
           {% endif %}
           <hr class="navbar-divider">
           <a href="{{ url('logout') }}" class="navbar-item">

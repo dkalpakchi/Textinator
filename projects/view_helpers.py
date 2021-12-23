@@ -21,7 +21,7 @@ def process_chunk(chunk, batch, project, data_source, user, caches, booleans):
         try:
             if (not 'label' in chunk) or (type(chunk['label']) != str):
                 return (ctx_cache, label_cache), saved_labels
-            marker_obj = Marker.objects.get(short=chunk['label'].strip())
+            marker_obj = Marker.objects.get(code=chunk['label'].strip())
             # TODO: check interaction with MarkerUnits
             marker = MarkerVariant.objects.filter(project=project, marker=marker_obj).first()
         except Marker.DoesNotExist:

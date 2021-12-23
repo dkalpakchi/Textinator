@@ -306,9 +306,6 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         u = self.request.user
         if not proj.has_participant(u): raise Http404
 
-        task_markers = Marker.objects.filter(for_task_type=proj.task_type)
-        task_relations = Relation.objects.filter(for_task_type=proj.task_type)
-
         u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 
         dp, dp_id, dp_source_name, source_size, source_id = proj.data(u)
@@ -343,13 +340,9 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                 print("DataAccessLog does not exist")
                 pass
 
-        menu_items, project_markers = {}, proj.markers.distinct()
+        menu_items, project_markers = {}, MarkerVariant.objects.filter(project=proj)
         for m in project_markers:
-            menu_items[m.code] = [item.to_json() for item in MarkerContextMenuItem.objects.filter(marker=m).all()]
-
-        for m in task_markers:
-            if m not in project_markers:
-                menu_items.append([item.to_json() for item in MarkerContextMenuItem.object.filter(marker=m).all()])
+            menu_items[m.marker.code] = [item.to_json() for item in MarkerContextMenuItem.objects.filter(marker=m).all()]
 
         ctx = {
             'text': apply_premarkers(proj, dp),
@@ -359,8 +352,6 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             'dp_source_name': dp_source_name,
             'source_finished': logs + 1 >= source_size if logs else False,
             'project': proj,
-            'task_markers': task_markers,
-            'task_relations': task_relations,
             'profile': u_profile
         }
 
@@ -756,7 +747,7 @@ def data_explorer(request, proj):
             context_ids += list(relation_labels.exclude(context=None).values_list('context', flat=True).distinct())
 
         actions = defaultdict(list)
-        for m in project.markers.all():
+        for m in MarkerVariant.objects.filter(project=project):
             for a in m.actions.all():
                 if a.admin_filter:
                     for cm_item in MarkerContextMenuItem.objects.filter(marker=m, action=a):

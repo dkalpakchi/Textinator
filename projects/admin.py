@@ -29,8 +29,16 @@ class MarkerRestrictionInline(nested_admin.NestedStackedInline):
     model = MarkerRestriction
     extra = 0
     # classes = ['collapse']
-    verbose_name = _("Restriction")
-    verbose_name_plural = _("Restrictions")
+    verbose_name = _("restriction")
+    verbose_name_plural = _("restrictions")
+
+
+
+class MarkerContextMenuItemInline(nested_admin.NestedStackedInline):
+    model = MarkerContextMenuItem
+    verbose_name = _("context menu item")
+    verbose_name_plural = _("context menu items")
+    extra = 0
 
 
 # TODO: fix name 'ModelValidationError' is not defined
@@ -38,9 +46,9 @@ class MarkerRestrictionInline(nested_admin.NestedStackedInline):
 class MarkerVariantInline(nested_admin.NestedStackedInline):
     model = MarkerVariant
     extra = 0
-    inlines = [MarkerRestrictionInline]
-    verbose_name = _("Project-specific marker")
-    verbose_name_plural = _("Project-specific markers")
+    inlines = [MarkerRestrictionInline, MarkerContextMenuItemInline]
+    verbose_name = _("project-specific marker")
+    verbose_name_plural = _("project-specific markers")
 
 
 class LevelInline(nested_admin.NestedStackedInline):
@@ -55,17 +63,10 @@ class PreMarkerInline(nested_admin.NestedStackedInline):
 
 class UserProfileInline(nested_admin.NestedStackedInline):
     model = UserProfile
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
+    verbose_name = _("participant")
+    verbose_name_plural = _("participants")
     extra = 0
     exclude = ('points', 'asking_time', 'timed_questions')
-
-
-class MarkerContextMenuItemInline(admin.StackedInline):
-    model = MarkerContextMenuItem
-    verbose_name = _("Context menu item")
-    verbose_name_plural = _("Context menu items")
-    extra = 0
 
 
 class LabelInline(admin.StackedInline):
@@ -82,8 +83,8 @@ class LabelReviewInline(admin.StackedInline):
 class RelationInline(nested_admin.NestedStackedInline):
     model = Relation
     extra = 0
-    verbose_name = _("Project-specific relation")
-    verbose_name_plural = _("Project-specific relations")
+    verbose_name = _("project-specific relation")
+    verbose_name_plural = _("project-specific relations")
 
 
 class InputInline(admin.StackedInline):
@@ -154,6 +155,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
     form = ProjectForm
     inlines = [MarkerVariantInline, RelationInline, PreMarkerInline, UserProfileInline] #LevelInline, UserProfileInline]
     save_as = True
+    exclude = ('is_peer_reviewed',)
 
     def save_model(self, request, obj, form, change):
         if not obj.author:
@@ -234,10 +236,6 @@ class LabelReviewAdmin(CommonModelAdmin):
 
 @admin.register(LabelRelation)
 class LabelRelationAdmin(CommonModelAdmin):
-    _list_filter = [
-        'project',
-        'user'
-    ]
     readonly_fields = CommonModelAdmin.readonly_fields + ['graph', 'batch']
     raw_id_fields = ('first_label', 'second_label')
 
@@ -312,10 +310,9 @@ class DataAccessLogAdmin(CommonModelAdmin):
 @admin.register(Marker)
 class MarkerAdmin(CommonModelAdmin):
     list_display = ['name', 'color', 'code']
-    inlines = [MarkerContextMenuItemInline]
 
     regular_user_fields = ['name', 'color', 'shortcut']
-    admin_user_fields = ['for_task_type', 'code']
+    admin_user_fields = ['code']
 
     readonly_fields = CommonModelAdmin.readonly_fields + ['code']
 
@@ -350,13 +347,11 @@ class PreMarkerAdmin(CommonModelAdmin): pass
 admin.site.register(Permission)
 admin.site.register(ProjectData)
 admin.site.register(MarkerPair)
-admin.site.register(MarkerAction)
 admin.site.register(MarkerUnit)
-admin.site.register(MarkerRestriction)
+admin.site.register(MarkerContextMenuItem)
 
-
-admin.site.site_header = 'Textinator admin'
-admin.site.site_title = 'Textinator admin'
+admin.site.site_header = 'Textinator Admin'
+admin.site.site_title = 'Textinator Admin'
 
 admin.site.site_url = '/textinator'
 

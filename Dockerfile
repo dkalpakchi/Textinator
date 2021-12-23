@@ -18,7 +18,6 @@ RUN pip install --upgrade pip
 RUN export PATH="$PATH:/home/textinator/.local/bin"
 
 COPY ./requirements.txt .
-COPY ./django_scientific_survey-0.1-py3-none-any.whl .
 RUN pip install -r requirements.txt
 
 # copy project

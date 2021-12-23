@@ -10,13 +10,6 @@
       <div class="field is-grouped is-grouped-multiline">
         {% set project_markers_variants=project.markervariant_set.all() %}
         {% set project_markers=project.markers.all() %}
-        {% for marker in task_markers %}
-          {% if marker not in project_markers %}
-            <div class="control">
-              {{marker|display_marker}}
-            </div>
-          {% endif %}
-        {% endfor %}
         {% for marker_variant in project_markers_variants %}
           {% if not marker_variant.is_free_text %}
             <div class="control">

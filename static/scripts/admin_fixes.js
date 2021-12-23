@@ -9,7 +9,9 @@
       var $groups = $form.find('div[id*="_set-group"]');
 
       if ($groups.length) {
-        $groups.find('[id$="-DELETE"]').prop("checked", true);
+        $groups.find('[id$="-DELETE"]').each(function() {
+          $(this).prop("checked", !$(this).prop("checked"));
+        });
       }
     }
   })

@@ -130,13 +130,8 @@ class Marker(CommonModel):
     code = models.CharField(_("code"), max_length=25, unique=True, blank=True,
         help_text=_("Marker's nickname used internally"))
     color = ColorField(_("color"), help_text="Marker's color used when annotating the text")
-    for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True,
-        help_text=_("Specify task types (if any) for which this marker must be present (avaiable only to admins)"))
     shortcut = models.CharField(_("keyboard shortcut"), max_length=10, null=True, blank=True,
         help_text=_("Keyboard shortcut for annotating a piece of text with this marker"))
-    actions = models.ManyToManyField(MarkerAction, through='MarkerContextMenuItem', blank=True,
-        verbose_name=_("marker actions"),
-        help_text="Actions associated with each marker [EXPAND]")
 
     class Meta:
         verbose_name = _('marker')
@@ -189,31 +184,6 @@ class Marker(CommonModel):
             'code': self.code
         })
         return res
-
-
-class MarkerContextMenuItem(CommonModel):
-    class Meta:
-        verbose_name = _('marker context menu item')
-        verbose_name_plural = _('marker context menu items')
-
-    action = models.ForeignKey(MarkerAction, on_delete=models.CASCADE, verbose_name=_("marker action"))
-    marker = models.ForeignKey(Marker, on_delete=models.CASCADE, verbose_name=_("marker"))
-    verbose = models.CharField(_("verbose name"), max_length=50)
-    verbose_admin = models.CharField(_("verbose name in data explorer"), max_length=50, null=True, blank=True)
-    field = models.CharField(_("field name in logs"), max_length=50, null=True, blank=True,
-        help_text=_("If applicable"))
-    config = models.JSONField(_("JSON configuration"), null=True, blank=True)
-
-    def to_json(self):
-        data =  {
-            'verboseName': self.verbose,
-            'name': self.field or "{}_{}".format(self.action.name, self.pk),
-            'file': self.action.file,
-            'admin_filter': self.action.admin_filter
-        }
-        if self.config:
-            data.update(self.config)
-        return data
 
 
 class Project(CommonModel):
@@ -277,7 +247,8 @@ class Project(CommonModel):
 
     @property
     def relations(self):
-        return Relation.objects.filter(models.Q(for_task_type=self.task_type) | models.Q(project=self)).all()
+        # TODO: potentially rewrite now the query became easier
+        return Relation.objects.filter(models.Q(project=self)).all()
 
     def data(self, user):
         pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
@@ -383,11 +354,11 @@ class MarkerUnit(CommonModel):
         verbose_name_plural = _('marker units')
 
     size = models.PositiveIntegerField(_("size"), default=1,
-        help_text=_("Default (and maximal) number of marker groups in the unit"))
+        help_text=_("Default (and maximal) number of marker units per annotation batch"))
     minimum_required = models.PositiveIntegerField(_("minimum required"), default=1,
-        help_text=_("Minimum required number of markers groups per unit (can't be more than `size`)"))
+        help_text=_("Minimum required number of marker units per annotation batch (can't be more than `size`)"))
     is_rankable = models.BooleanField(_("is rankable?"), default=False,
-        help_text=_("Whether annotators should be allowed to rank marker groups in the unit"))
+        help_text=_("Whether annotators should be allowed to rank units in the annotation batch"))
     name = models.CharField(_("name"), max_length=10, 
         help_text=_("Internal name for the unit (max 10 characters)"))
 
@@ -408,8 +379,11 @@ class MarkerVariant(CommonModel):
     is_free_text = models.BooleanField(_("is a free-text input?"), default=False,
         help_text=_("Indicates whether a marker should be instantiated as a label or a free-text input"))
     unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True, verbose_name=_("marker unit"))
-    order_in_unit = models.PositiveIntegerField(_("order in a unit group"), blank=True, null=True,
-        help_text=_("Order of this marker in the marker group of a unit"))
+    order_in_unit = models.PositiveIntegerField(_("order in a unit"), blank=True, null=True,
+        help_text=_("Order of this marker in the unit"))
+    actions = models.ManyToManyField(MarkerAction, through='MarkerContextMenuItem', blank=True,
+        verbose_name=_("marker actions"),
+        help_text=_("Actions associated with this marker"))
 
     def min(self):
         for r in self.markerrestriction_set.all():
@@ -439,6 +413,31 @@ class MarkerVariant(CommonModel):
         res = self.marker.to_json()
         res['order'] = self.order_in_unit
         return res
+
+
+class MarkerContextMenuItem(CommonModel):
+    class Meta:
+        verbose_name = _('marker context menu item')
+        verbose_name_plural = _('marker context menu items')
+
+    action = models.ForeignKey(MarkerAction, on_delete=models.CASCADE, verbose_name=_("marker action"))
+    marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, verbose_name=_("marker"))
+    verbose = models.CharField(_("verbose name"), max_length=50)
+    verbose_admin = models.CharField(_("verbose name in data explorer"), max_length=50, null=True, blank=True)
+    field = models.CharField(_("field name in logs"), max_length=50, null=True, blank=True,
+        help_text=_("If applicable"))
+    config = models.JSONField(_("JSON configuration"), null=True, blank=True)
+
+    def to_json(self):
+        data =  {
+            'verboseName': self.verbose,
+            'name': self.field or "{}_{}".format(self.action.name, self.pk),
+            'file': self.action.file,
+            'admin_filter': self.action.admin_filter
+        }
+        if self.config:
+            data.update(self.config)
+        return data
 
 
 class MarkerRestriction(CommonModel):
@@ -519,7 +518,6 @@ class Relation(CommonModel):
 
     name = models.CharField(_("name"), max_length=50)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
-    for_task_type = models.CharField(max_length=10, choices=settings.TASK_TYPES, blank=True)
     pairs = models.ManyToManyField(MarkerPair, verbose_name=_("marker pairs"))
     direction = models.CharField(_("direction"), max_length=1, choices=[
         ('0', _('Directed from the first to the second')),
@@ -571,8 +569,8 @@ class Context(CommonModel):
 
 class Batch(CommonModel):
     class Meta:
-        verbose_name = _("batch")
-        verbose_name_plural = _("batches")
+        verbose_name = _("annotation batch")
+        verbose_name_plural = _("annotation batches")
 
     uuid = models.UUIDField()
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -627,7 +625,7 @@ class Label(CommonModel):
         verbose_name = _('label')
         verbose_name_plural = _('labels')
 
-    start = models.PositiveIntegerField(_("start posiiton"), null=True,
+    start = models.PositiveIntegerField(_("start position"), null=True,
         help_text=_("Character-wise start position in the text"))
     end = models.PositiveIntegerField(_("end position"), null=True,
         help_text=_("Character-wise end position in the text"))
@@ -700,9 +698,9 @@ class LabelReview(CommonModel):
         ],
         help_text=_("Decided automatically to inform a decision maker"))
     resolved_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='resolved_by')
-    start = models.PositiveIntegerField(_("start posiiton of the review label"), null=True,
+    start = models.PositiveIntegerField(_("start position of the review label"), null=True,
         help_text=_("If applicable"))
-    end = models.PositiveIntegerField(_("start posiiton of the review label"), null=True,
+    end = models.PositiveIntegerField(_("start position of the review label"), null=True,
         help_text=_("If applicable"))
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
     impossible = models.BooleanField(_("is impossible?"), default=False,

@@ -4,11 +4,6 @@
   </div>
   <div class="message-body">
     <div class="field is-grouped is-grouped-multiline">
-      {% for relation in task_relations %}
-        <div class="control">
-          {{relation|display_relation}}
-        </div>
-      {% endfor %}
       {% for relation in project.relation_set.all() %}
         <div class="control">
           {{relation|display_relation}}
