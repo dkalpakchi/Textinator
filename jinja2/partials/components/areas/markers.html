@@ -13,7 +13,7 @@
         {% for marker_variant in project_markers_variants %}
           {% if not marker_variant.is_free_text %}
             <div class="control">
-              {{marker_variant.marker|display_marker}}
+              {{marker_variant|display_marker}}
             </div>
           {% endif %}
         {% endfor %}
@@ -28,7 +28,7 @@
             {% if marker_variant.is_free_text and marker_variant.unit is none %}
               <div class="control has-tag-left is-marker-fullwidth">
                 <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","") }}_{{i}}_{{marker_variant.marker.code}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}">
-                {{marker_variant.marker|display_marker_tag}}
+                {{marker_variant|display_marker_tag}}
               </div>
             {% endif %}
           {% endfor %}
@@ -63,7 +63,7 @@
                             {% else %}
                               <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","")}}_{{i}}_{{marker_variant.marker.code}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}{% if k < mv_min %} (required){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
                             {% endif %}
-                            {{marker_variant.marker|display_marker_tag}}
+                            {{marker_variant|display_marker_tag}}
                           </div>
                         {% endif %}
                       {% endfor %}

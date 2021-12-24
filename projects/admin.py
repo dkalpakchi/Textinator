@@ -41,10 +41,31 @@ class MarkerContextMenuItemInline(nested_admin.NestedStackedInline):
     extra = 0
 
 
+class MarkerVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
+    model = MarkerVariant
+
+    def __init__(self, *args, **kwargs):
+        super(MarkerVariantInlineFormset, self).__init__(*args, **kwargs)
+
+        for i in range(len(self.forms)):
+            if self.forms[i].fields.get("custom_color"):
+                # this takes care of assignment from parent model
+                self.forms[i].initial["custom_color"] = self.forms[i].instance.color
+
+            if self.forms[i].fields.get("custom_suggestion_endpoint"):
+                # this takes care of assignment from parent model
+                self.forms[i].initial["custom_suggestion_endpoint"] = self.forms[i].instance.suggestion_endpoint
+
+            if self.forms[i].fields.get("custom_shortcut"):
+                # this takes care of assignment from parent model
+                self.forms[i].initial["custom_shortcut"] = self.forms[i].instance.shortcut
+
+
 # TODO: fix name 'ModelValidationError' is not defined
 #       happens when trying to assign marker to be both task and project specific
 class MarkerVariantInline(nested_admin.NestedStackedInline):
     model = MarkerVariant
+    formset = MarkerVariantInlineFormset
     extra = 0
     inlines = [MarkerRestrictionInline, MarkerContextMenuItemInline]
     verbose_name = _("project-specific marker")

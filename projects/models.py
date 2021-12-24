@@ -129,9 +129,11 @@ class Marker(CommonModel):
         help_text=_("The display name of the marker (max 50 characters)"))
     code = models.CharField(_("code"), max_length=25, unique=True, blank=True,
         help_text=_("Marker's nickname used internally"))
-    color = ColorField(_("color"), help_text="Marker's color used when annotating the text")
+    color = ColorField(_("color"), help_text=_("Color for the annotated text span"))
     shortcut = models.CharField(_("keyboard shortcut"), max_length=10, null=True, blank=True,
         help_text=_("Keyboard shortcut for annotating a piece of text with this marker"))
+    suggestion_endpoint = models.URLField(max_length=200, null=True, blank=True,
+        help_text=_("Endpoint for the Suggestions API"))
 
     class Meta:
         verbose_name = _('marker')
@@ -375,7 +377,7 @@ class MarkerVariant(CommonModel):
         verbose_name = _("marker variant")
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    marker = models.ForeignKey(Marker, on_delete=models.CASCADE, verbose_name=_("marker"))    
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE, verbose_name=_("marker template"))
     is_free_text = models.BooleanField(_("is a free-text input?"), default=False,
         help_text=_("Indicates whether a marker should be instantiated as a label or a free-text input"))
     unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True, verbose_name=_("marker unit"))
@@ -384,6 +386,55 @@ class MarkerVariant(CommonModel):
     actions = models.ManyToManyField(MarkerAction, through='MarkerContextMenuItem', blank=True,
         verbose_name=_("marker actions"),
         help_text=_("Actions associated with this marker"))
+    are_suggestions_enabled = models.BooleanField(_("enable suggestions?"), default=False,
+        help_text=_("Indicates whether Suggestions API should be enabled for this marker (if endpoint is specified)"))
+    custom_suggestion_endpoint = models.URLField(
+        max_length=200, null=True, blank=True,
+        help_text=_(
+            """
+            Custom endpoint for the Suggestions API (by default the one from the marker template is used).
+            Activates only if suggestions are enabled and the endpoint.
+            """
+        )
+    )
+    custom_color = ColorField(_("color"), null=True, blank=True,
+        help_text=_("Customized color for the annotated text span (color of the marker template by default)"))
+    custom_shortcut = models.CharField(_("keyboard shortcut"), max_length=10, null=True, blank=True,
+        help_text=_("Keyboard shortcut for annotating a piece of text with this marker (shortcut of the marker template by default"))
+
+    @property
+    def name(self):
+        return self.marker.name
+
+    @property
+    def color(self):
+        return self.custom_color or self.marker.color
+
+    @property
+    def shortcut(self):
+        return self.custom_shortcut or self.marker.shortcut
+
+    @property
+    def suggestion_endpoint(self):
+        return self.custom_suggestion_endpoint or self.marker.suggestion_endpoint
+
+    def get_count_restrictions(self):
+        return self.marker.get_count_restrictions()
+
+    def is_part_of_relation(self):
+        return self.marker.is_part_of_relation()
+
+    def save(self, *args, **kwargs):
+        if self.color.lower() == self.marker.color.lower():
+            self.custom_color = None
+
+        if self.shortcut == self.marker.shortcut:
+            self.custom_shortcut = None
+
+        if self.suggestion_endpoint == self.marker.suggestion_endpoint:
+            self.custom_suggestion_endpoint = None
+
+        super(MarkerVariant, self).save(*args, **kwargs)
 
     def min(self):
         for r in self.markerrestriction_set.all():

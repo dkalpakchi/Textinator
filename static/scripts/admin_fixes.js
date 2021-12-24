@@ -14,5 +14,11 @@
         });
       }
     }
+  });
+
+  $(['[id$="-custom_color"']).each(function() {
+    if ($(this).attr('placeholder')) {
+      $(this).val($(this).attr('placeholder'))
+    }
   })
 })(jQuery);
