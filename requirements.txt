@@ -26,3 +26,4 @@ django-nested-admin==3.3.3
 Babel==2.9.1
 django-rosetta==0.9.8
 django-scientific-survey==0.1.0
+django-modeltranslation

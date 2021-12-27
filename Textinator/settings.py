@@ -46,6 +46,7 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 INSTALLED_APPS = [
     'jazzmin',
     'filebrowser',
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -190,6 +191,8 @@ CACHES = {
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
+# Codes must be compliant with RFC 5646
+# (see http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry for the whole list of language codes)
 LANGUAGES = [
     ('en', 'English'),
     ('sv', 'Swedish'),
@@ -200,7 +203,7 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ] + glob.glob(os.path.join(BASE_DIR, 'locale', 'custom', '*'))
 
-LANGUAGE_CODE = 'uk'
+LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'UTC'
 

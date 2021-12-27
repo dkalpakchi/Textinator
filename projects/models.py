@@ -59,6 +59,9 @@ class DataSource(CommonModel):
         help_text=_("in a JSON format")) # json spec of the data source
     post_processing_methods = models.ManyToManyField(PostProcessingMethod, blank=True,
         verbose_name=_("post-processing methods"))
+    language = models.CharField(_("language"), max_length=10, choices=settings.LANGUAGES,
+        help_text=_("Language of this data source")
+    )
 
     @classmethod
     def type2class(cls, source_type):
@@ -88,7 +91,7 @@ class DataSource(CommonModel):
         return ds_instance.size()
 
     def __str__(self):
-        return self.name
+        return "{} ({})".format(self.name, self.language)
 
 
 class MarkerAction(CommonModel):
@@ -141,26 +144,8 @@ class Marker(CommonModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = "{}_{}_{}".format(self.name[:3].upper(), str(int(time.time())), random.randint(0, 9999))
+            self.code = "{}_{}_{}".format(self.name_en[:3].upper(), str(int(time.time())), random.randint(0, 9999))
         super(Marker, self).save(*args, **kwargs)
-
-    # TODO: should be count restrictions per project!
-    def get_count_restrictions(self, stringify=True):
-        """
-        Get the restrictions (if any) on the number of markers per submitted instance
-        
-        Args:
-            stringify (bool, optional): Whether to return the restrictions in a string format
-        
-        Returns:
-            (str or list): Restrictions on the number of markers per submitted instance
-        
-        """
-        try:
-            restrictions = list(Marker.project_set.through.objects.filter(marker=self).all())
-        except MarkerVariant.DoesNotExist:
-            return ''
-        return '&'.join([str(r) for r in restrictions]) if stringify else restrictions
 
     def is_part_of_relation(self):
         """
@@ -174,14 +159,14 @@ class Marker(CommonModel):
     def to_minimal_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
         res.update({
-            'name': self.name
+            'name': self.name_en
         })
         return res
 
     def to_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
         res.update({
-            'name': self.name,
+            'name': self.name_en,
             'color': self.color,
             'code': self.code
         })
@@ -228,12 +213,13 @@ class Project(CommonModel):
     markers = models.ManyToManyField(Marker, through='MarkerVariant', blank=True,
         verbose_name=_("project-specific markers"))
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("author"))
-    datasources = models.ManyToManyField(DataSource, through='ProjectData', verbose_name=_("data sources"))
+    datasources = models.ManyToManyField(DataSource, through='ProjectData', verbose_name=_("data sources"),
+        help_text=_("All datasets must of the same language as the project"))
     is_open = models.BooleanField(_("should the project be public?"), default=False)
     is_peer_reviewed = models.BooleanField(_("should the annotations be peer reviewed?"), default=False)
     allow_selecting_labels = models.BooleanField(_("should selecting the labels be allowed?"), default=False)
     disable_submitted_labels = models.BooleanField(_("should submitted labels be disabled?"), default=True)
-    max_markers_per_input = models.PositiveIntegerField(_("maximal number of markers per input"), null=True, blank=True)
+    max_markers_per_input = models.PositiveIntegerField(_("maximal number of markers per input"), null=True, blank=True) # TODO: obsolete?
     round_length = models.PositiveIntegerField(_("round length"), null=True, blank=True,
         help_text=_("The number of text snippets consituting one round of the game"))
     points_scope = models.CharField(_("points scope"), max_length=2,
@@ -243,14 +229,17 @@ class Project(CommonModel):
         help_text=_("Number of points per submitted task"))
     has_intro_tour = models.BooleanField(_("should the project include intro tour?"), default=False,
         help_text=_("WARNING: Intro tours are currently in beta"))
+    language = models.CharField(_("language"), max_length=10, choices=settings.LANGUAGES,
+        help_text=_("Language of this project")
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @property
     def relations(self):
-        # TODO: potentially rewrite now the query became easier
-        return Relation.objects.filter(models.Q(project=self)).all()
+        # TODO: make relations MTM and create RelationVariant
+        return Relation.objects.filter(project=self).all()
 
     def data(self, user):
         pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
@@ -418,8 +407,26 @@ class MarkerVariant(CommonModel):
     def suggestion_endpoint(self):
         return self.custom_suggestion_endpoint or self.marker.suggestion_endpoint
 
-    def get_count_restrictions(self):
-        return self.marker.get_count_restrictions()
+    @property
+    def code(self):
+        return self.marker.code
+
+    def get_count_restrictions(self, stringify=True):
+        """
+        Get the restrictions (if any) on the number of markers per submitted instance
+        
+        Args:
+            stringify (bool, optional): Whether to return the restrictions in a string format
+        
+        Returns:
+            (str or list): Restrictions on the number of markers per submitted instance
+        
+        """
+        try:
+            restrictions = list(MarkerRestriction.objects.filter(variant=self).all())
+        except MarkerVariant.DoesNotExist:
+            return ''
+        return '&'.join([str(r) for r in restrictions]) if stringify else restrictions
 
     def is_part_of_relation(self):
         return self.marker.is_part_of_relation()
@@ -813,6 +820,7 @@ class LabelRelation(CommonModel):
             'batch': str(self.batch)
         })
         return res
+
 
 class UserProfile(CommonModel):
     class Meta:

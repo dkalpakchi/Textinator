@@ -12,3 +12,8 @@
 div[data-theme="bootstrap4"] .card-title {
     float: none !important;
 }
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    color: black !important;
+    padding-left: 27px !important;
+}

@@ -133,7 +133,7 @@
         else if ($carousel.length) { handleCarousel($carousel); }
         else if ($collapsible.length) { handleCollapsible($collapsible); }
 
-        applySelect2()
+        applySelect2();
     });
 
     // Apply select2 to all select boxes when new inline row is created

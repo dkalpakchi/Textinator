@@ -2,16 +2,31 @@
 
 {% block content %}
 <h1 class="title">{{ _("settings")|capitalize }}</h1>
-<form action="{{ url('set_language') }}" method="post">
+<form action="{{ url('users:textinator_settings') }}" method="post">
   {{ csrf_input }}
   <div class="field">
-    <label for="language" class="label">{{ _("language")|capitalize }}</label>
+    <label for="language" class="label">{{ _("preferred language")|capitalize }}</label>
     <div class="control">
       <div class="select">
         <select name="language">
           {% for language in languages %}
             <option value="{{ language.code }}"{% if language.code == current_language %} selected{% endif %}>
                 {{ language.name_local }} ({{ language.code }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="field">
+    <label for="fluent_in" class="label">{{ _("fluent in")|capitalize }}</label>
+    <div class="control">
+      <!-- To be replaced by select2 library when more languages are added -->
+      <div class="select is-multiple">
+        <select multiple size="8" name="fluent_in">
+          {% for language in languages %}
+            <option value="{{ language.code }}"{% if language.code in fluent_in %} selected{% endif %}>
+              {{ language.name_local }} ({{ language.code }})
             </option>
           {% endfor %}
         </select>

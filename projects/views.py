@@ -29,6 +29,8 @@ from reportlab.lib.pagesizes import A4
 from chartjs.views.columns import BaseColumnsHighChartsView
 from chartjs.views.lines import BaseLineChartView
 
+from modeltranslation.translator import translator
+
 from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
 from .view_helpers import process_chunk
@@ -280,15 +282,10 @@ datasource_size_chart_json = DataSourceSizeJSONView.as_view()
 ## Page views
 ##
 
-# Create your views here.
+# This could potentially be converted into a function view?
 class IndexView(LoginRequiredMixin, generic.ListView):
     model = Project
     template_name = 'projects/index.html'
-
-    def get_context_data(self, **kwargs):
-        data = super().get_context_data(**kwargs)
-        data['profiles'] = UserProfile.objects.filter(user=self.request.user).all()
-        return data
 
 
 class DetailView(LoginRequiredMixin, generic.DetailView):
@@ -305,6 +302,23 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
         u = self.request.user
         if not proj.has_participant(u): raise Http404
+
+        fallback_languages = (proj.language, u.profile.preferred_language, 'en')
+        Marker.name.fallback_languages = {'default': fallback_languages}
+        Relation.name.fallback_languages = {'default': fallback_languages}
+
+        # TODO:
+        # This is supposed to be an equivalent solution to the above, but
+        # results in `{{ no such element: projects.models.Marker object['name'] }}`
+        # in the template, investigate, since this will be needed if we are to
+        # translate more fields for more models.
+        #
+        # for model in translator.get_registered_models():
+        #     if model._meta.app_label == Project._meta.app_label:
+        #         opts = translator.get_options_for_model(model)
+        #         for field_name in opts.fields:
+        #             descriptor = getattr(model, field_name)
+        #             setattr(descriptor, 'fallback_languages', fallback_languages)
 
         u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 

@@ -6,7 +6,10 @@ def common_user_variables(request):
         return {}
     else:
         data = {
-            "open_projects": Project.objects.filter(is_open=True).exclude(participants__in=[request.user.id]).all(),
+            "open_projects": Project.objects.filter(
+                is_open=True,
+                language__in=request.user.profile.fluent_languages
+            ).exclude(participants__in=[request.user.id]).all(),
             "shared_projects": request.user.shared_projects.all(),
             "user_projects": request.user.project_set.all(),
         }

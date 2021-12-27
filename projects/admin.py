@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 
 import nested_admin
+from modeltranslation.admin import TranslationAdmin
 
 from .models import *
 
@@ -128,11 +129,11 @@ class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
         fields = [
-            'title', 'short_description', 'institution', 'supported_by', 'temporary_message', 'guidelines', 'reminders',
+            'title', 'language', 'short_description', 'institution', 'supported_by', 'temporary_message', 'guidelines', 'reminders',
             'video_summary', 'sampling_with_replacement', 'disjoint_annotation', 'context_size', 'task_type', 'dt_publish',
             'dt_finish', 'collaborators', 'author', 'datasources', 'is_open', 'is_peer_reviewed',
             'allow_selecting_labels', 'disable_submitted_labels', 'show_dataset_identifiers', 'has_intro_tour', 'max_markers_per_input',
-            'round_length', 'points_scope', 'points_unit'
+            #'round_length', 'points_scope', 'points_unit'
         ]
 
     def __init__(self, *args, **kwargs):
@@ -142,8 +143,20 @@ class ProjectForm(forms.ModelForm):
             source_ids = ProjectData.objects.filter(project=obj).values_list('datasource', flat=True)
             self.initial['datasources'] = source_ids
 
+    def clean_datasources(self):
+        project_language = self.cleaned_data['language']
+        sent_ds = self.cleaned_data['datasources']
+
+        for ds in sent_ds:
+            if ds.language != project_language:
+                raise forms.ValidationError(_("All data sources must be of the same language as the project"))
+
+        return sent_ds
+
+
     def save(self, commit=True):
         sent_ds = set(self.cleaned_data.pop('datasources'))
+
         instance = forms.ModelForm.save(self, commit=False)
         
         try:
@@ -329,23 +342,8 @@ class DataAccessLogAdmin(CommonModelAdmin):
 
 
 @admin.register(Marker)
-class MarkerAdmin(CommonModelAdmin):
-    list_display = ['name', 'color', 'code']
-
-    regular_user_fields = ['name', 'color', 'shortcut']
-    admin_user_fields = ['code']
-
-    readonly_fields = CommonModelAdmin.readonly_fields + ['code']
-
-    def get_fields(self, request, obj=None):
-        """
-        Hook for specifying fields.
-        """
-        self.fields = self.regular_user_fields
-        if request.user.is_superuser:
-            # INVESTIGATE: if using += on self.fields, the fields are accumulated for some reason
-            self.fields = self.regular_user_fields + self.admin_user_fields
-        return self.fields
+class MarkerAdmin(CommonModelAdmin, TranslationAdmin):
+    pass
 
 
 @admin.register(Relation)
