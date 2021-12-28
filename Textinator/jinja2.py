@@ -5,9 +5,11 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.contrib.humanize.templatetags.humanize import NaturalTimeFormatter
 from django.utils.translation import gettext, ngettext
 from django.urls import reverse
 from django.utils import translation
+from django.utils.functional import lazy
 
 
 from jinja2 import Environment, Template, Markup
@@ -80,6 +82,11 @@ def prettify(value):
     return Markup(md)
 
 
+def naturaltime(value):
+    # TODO: this doesn't localize for some reason!
+    return NaturalTimeFormatter.string_for(value)
+
+
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('sass_processor.jinja2.ext.SassSrc')
@@ -99,6 +106,7 @@ def environment(**options):
     env.filters['bool2str'] = lambda x: str(x).lower()
     env.filters['any'] = any
     env.filters['all'] = all
+    env.filters['naturaltime'] = naturaltime
 
     env.install_gettext_translations(translation)
 

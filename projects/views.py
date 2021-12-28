@@ -396,6 +396,7 @@ def record_datapoint(request, proj):
     ctx_cache = caches['context']
 
     marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
+    free_text_inputs = json.loads(data['free_text_markers'])
 
     is_review = data.get('is_review', 'f') == 'true'
     is_resolution = data.get('is_resolution', 'f') == 'true'
@@ -406,11 +407,11 @@ def record_datapoint(request, proj):
         u_profile = UserProfile.objects.get(user=user, project=project)
         data_source = DataSource.objects.get(pk=data['datasource'])
 
-        if not project.sampling_with_replacement:
-            project_data = ProjectData.objects.get(project=project, datasource=data_source)
-            dal = DataAccessLog.objects.get(user=user, project_data=project_data, datapoint=str(data['datapoint']))
-            dal.is_submitted = True
-            dal.save()
+        # log the submission
+        project_data = ProjectData.objects.get(project=project, datasource=data_source)
+        dal = DataAccessLog.objects.get(user=user, project_data=project_data, datapoint=str(data['datapoint']))
+        dal.is_submitted = True
+        dal.save()
     except Project.DoesNotExist:
         raise Http404
     except UserProfile.DoesNotExist:
@@ -439,9 +440,8 @@ def record_datapoint(request, proj):
 
             for i, (unit, v) in enumerate(marker_groups.items()):
                 unit_cache = []
-                for short, values in v.items():
-                    marker = project.markers.filter(short=short).first()
-                    mv = MarkerVariant.objects.filter(project=project, marker=marker).annotate(
+                for code, values in v.items():
+                    mv = MarkerVariant.objects.filter(project=project, marker__code=code).annotate(
                         filtered_unit=Replace('unit__name', Value('_'), Value(''))
                     ).filter(filtered_unit=unit.split("_")[0]).first()
 
@@ -461,6 +461,16 @@ def record_datapoint(request, proj):
                 for dct in unit_cache:
                     if dct['marker'].is_free_text:
                         Input.objects.create(context=ctx, batch=batch, **dct)
+
+    if free_text_inputs:
+        ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
+        if not ctx:
+            ctx = Context.objects.create(datasource=data_source, content=data['input_context'])
+            ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
+        for code, inp_string in free_text_inputs.items():
+            marker_variant = MarkerVariant.objects.get(project=project, marker__code=code) # must be only
+            Input.objects.create(content=inp_string, marker=marker_variant, batch=batch, context=ctx)
+
 
     saved_labels = 0
     label_cache = {}
@@ -507,6 +517,43 @@ def record_datapoint(request, proj):
         'next_task': 'regular',
         'batch': str(batch)
     })
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def editing(request, proj):
+    project = get_object_or_404(Project, pk=proj)
+    if request.method == "GET":
+        label_batches = Label.objects.filter(batch__user=request.user, marker__project=project).values_list('batch__uuid', flat=True)
+        input_batches = Input.objects.filter(batch__user=request.user, marker__project=project).values_list('batch__uuid', flat=True)
+
+        batch_uuids = set(label_batches) | set(input_batches)
+        batches = Batch.objects.filter(uuid__in=batch_uuids).order_by('dt_created')
+
+        return JsonResponse({
+            'template': render_to_string('partials/components/areas/editing.html', {
+                'batches':batches,
+                'project': project
+            }, request=request)
+        })
+    else:
+        pass
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_batch(request):
+    # TODO: ensure that the request cannot be triggered by external tools
+    uuid = request.GET.get('uuid', '')
+    if uuid:
+        return JsonResponse({
+            'data': {
+                'labels': [l.to_json() for l in Label.objects.filter(batch__uuid=uuid)],
+                'inputs': [i.to_json() for i in Input.objects.filter(batch__uuid=uuid)]
+            }
+        })
+    else:
+        return JsonResponse({'data': {}})
 
 
 @login_required
@@ -559,26 +606,27 @@ def profile(request, username):
 def new_article(request, proj):
     project = Project.objects.get(pk=proj)
 
-    if not project.sampling_with_replacement:
-        ds_id = request.POST.get('sId')
-        if ds_id:
-            data_source = DataSource.objects.get(pk=ds_id)
-            project_data = ProjectData.objects.get(project=project, datasource=data_source)
-            dp_id = request.POST.get('dpId')
-            if dp_id:
-                try:
-                    log = DataAccessLog.objects.get(user=request.user, project_data=project_data, datapoint=str(dp_id), is_skipped=False)
-                    if not log.is_submitted:
-                        log.is_skipped = True
-                        log.save()
-                except DataAccessLog.DoesNotExist:
-                    DataAccessLog.objects.create(
-                        user=request.user, project_data=project_data, datapoint=str(dp_id), 
-                        is_submitted=False, is_skipped=True
-                    )
+    # log the old one
+    ds_id = request.POST.get('sId')
+    if ds_id:
+        data_source = DataSource.objects.get(pk=ds_id)
+        project_data = ProjectData.objects.get(project=project, datasource=data_source)
+        dp_id = request.POST.get('dpId')
+        if dp_id:
+            try:
+                log = DataAccessLog.objects.get(user=request.user, project_data=project_data, datapoint=str(dp_id), is_skipped=False)
+                if not log.is_submitted:
+                    log.is_skipped = True
+                    log.save()
+            except DataAccessLog.DoesNotExist:
+                DataAccessLog.objects.create(
+                    user=request.user, project_data=project_data, datapoint=str(dp_id), 
+                    is_submitted=False, is_skipped=True
+                )
 
     dp, dp_id, dp_source_name, source_size, source_id = project.data(request.user)
 
+    # log the new one
     data_source = DataSource.objects.get(pk=source_id)
     project_data, _ = ProjectData.objects.get_or_create(project=project, datasource=data_source)
     DataAccessLog.objects.create(
@@ -723,7 +771,6 @@ def data_explorer(request, proj):
                 if r.first_label.context_id == context_id or r.second_label.context_id == context_id],
             'free_labels': [l.to_short_json() for l in free_labels],
             'free_text_labels': free_text
-            # 'is_static': project.context_size != 't'
         }
         return res
 

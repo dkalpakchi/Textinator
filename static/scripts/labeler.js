@@ -10,14 +10,13 @@
     const RELATION_CHANGE_EVENT = 'labeler_relationschange';
     const LINE_ENDING_TAGS = ["P", "UL", "BLOCKQUOTE", "H1", "H2", "H3", "H4", "H5", "H6"];
 
-    var chunks = [], // the array of all chunk of text marked with a label, but not submitted yet
+    var chunks = [], // the array of all chunks of text marked with a label, but not submitted yet
         relations = {}, // a map from relationId to the list of relations constituting it
         labelId = 0,
         activeLabels = 0, // a number of labels currently present in the article
         currentRelationId = null, // the ID of the current relation (for a visual pane)
         lastRelationId = 1, // the ID of the last unsubmitted relation
         lastNodeInRelationId = 0, // TODO: maybe remove
-        contextSize = undefined, // the size of the context to be saved 'p', 't' or 'no'
         resetTextHTML = null,  // the HTML of the loaded article
         resetText = null,    // the text of the loaded article
         pluginsToRegister = 0,
@@ -59,7 +58,7 @@
       existingNode.parentNode.insertBefore(newNode, existingNode.nextSibling);
     }
 
-    function previousTextLength(node, inParagraph) {
+    function previousTextLength(node) {
       function removeRelationIds(prev) {
         var markers = prev.querySelectorAll('span[data-m]');
         var textContent = [];
@@ -105,11 +104,6 @@
         return len;
       }
 
-      // calculate the length of the text preceding the node
-      // inParagraph is a boolean variable indicating whether preceding text
-      // is taken only from the current paragraph or from the whole article
-      if (inParagraph === undefined) inParagraph = true;
-
       var textLength = getPrevLength(node.previousSibling);
       var enclosingLabel = getEnclosingLabel(node);
       if (enclosingLabel != null && enclosingLabel != node)
@@ -126,8 +120,6 @@
 
       if (parent != null && parent.tagName == "UL")
         textLength += 1 // because <ul> adds a newline character to the beginning of the string
-
-      if (inParagraph) return textLength;
 
       // all text scope
       if (parent != null) {
@@ -434,16 +426,19 @@
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
       drawingType: {},
+      taskArea: null,
       markersArea: null,
       selectorArea: null,   // the area where the article is
+      markerGroupsArea: null,
       contextMenuPlugins: {},
       isMarker: isMarker,
       isLabel: isLabel,
       init: function() {
-        contextSize = $('#taskArea').data('context');
-        this.markersArea = document.querySelector('.markers');
-        this.relationsArea = document.querySelector('.relations:not(.marked)');
-        this.selectorArea = document.querySelector('.selector');
+        this.taskArea = document.querySelector('#taskArea');
+        this.markersArea = this.taskArea.querySelector('.markers');
+        this.markerGroupsArea = this.taskArea.querySelector('.marker.groups');
+        this.relationsArea = this.taskArea.querySelector('.relations:not(.marked)');
+        this.selectorArea = this.taskArea.querySelector('.selector');
         resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
         resetText = this.selectorArea == null ? "" : this.selectorArea.textContent.trim();
         this.allowSelectingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-select') == 'true';
@@ -602,6 +597,20 @@
               control.markRelation(getClosestRelation(e.target));
             }, false);
           }
+
+          // editing mode events
+          document.addEventListener('click', function(e) {
+            var target = e.target;
+
+            // TODO: this relies on us not including any icons in the buttons, which we don't so far
+            if (target.tagName == "LI" && target.getAttribute('data-mode') == "e") {
+              var uuid = target.getAttribute('data-id'),
+                  url = document.querySelector("#editingBoard").getAttribute('data-url');
+              if (utils.isDefined) {
+                control.restoreBatch(uuid, url);
+              }
+            }
+          });
         }
       },
       register: function(plugin, label) {
@@ -679,26 +688,8 @@
         chunk['id'] = labelId;
         chunk['label'] = node.getAttribute('data-s');
         chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
-        
-        if (contextSize == 'p') {
-          // paragraph
-          chunk['context'] = chunk['text'];
-          chunk['start'] = previousTextLength(node, true);
-        } else if (contextSize == 't') {
-          // text
-          chunk['context'] = resetText;
-          chunk['start'] = previousTextLength(node, false);
-        } else if (contextSize == 's') {
-          // TODO sentence
-
-        } else if (contextSize == 'no') {
-          chunk['context'] = null;
-          chunk['lengthBefore'] = null;
-        } else {
-          // not implemented
-          console.error("Context size " + contextSize + " is not implemented");
-          return;
-        }
+        chunk['context'] = resetText;
+        chunk['start'] = previousTextLength(node, false);
         chunk['end'] = chunk['start'] + node.textContent.length;
         chunks.push(chunk);
       },
@@ -739,26 +730,8 @@
             chunk['range'] = group[0].cloneRange();
             chunk['range'].setEnd(group[N-1].endContainer, group[N-1].endOffset);
 
-            if (contextSize == 'p') {
-              // paragraph
-              var p = getEnclosingParagraph(chunk['range'].commonAncestorContainer);
-              chunk['context'] = p == null ? null : p.textContent;
-              chunk['lengthBefore'] = previousTextLength(chunk['range'].startContainer, true);
-            } else if (contextSize == 't') {
-              // text
-              chunk['context'] = resetText;
-              chunk['lengthBefore'] = previousTextLength(chunk['range'].startContainer, false);
-            } else if (contextSize == 's') {
-              // TODO sentence
-
-            } else if (contextSize == 'no') {
-              chunk['context'] = null;
-              chunk['lengthBefore'] = null;
-            } else {
-              // not implemented
-              console.error("Context size " + contextSize + " is not implemented");
-              return;
-            }
+            chunk['context'] = resetText;
+            chunk['lengthBefore'] = previousTextLength(chunk['range'].startContainer);
 
             chunk['start'] = chunk['range'].startOffset;
             chunk['end'] = chunk['start'] + group.map(getSelectionLength).reduce((a, b) => a + b, 0);
@@ -773,7 +746,6 @@
             } else {
               chunks[N-1] = chunk;
             }
-            console.log(chunk)
           } 
         } else {
           var chunk = this.getActiveChunk();
@@ -1544,6 +1516,11 @@
       },
       getSubmittableDict: function(stringify) {
         if (!utils.isDefined(stringify)) stringify = false;
+
+        var markerGroups = utils.isDefined(this.markerGroupsArea) ? $(this.markerGroupsArea).find("form#markerGroups").serializeObject() : {},
+            freeTextMarkers = utils.isDefined(this.markersArea) ? $(this.markersArea).find('input[type="text"]').serializeObject() : {},
+            submitRelations = [];
+
         if (Object.values(relations).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
           // if there are any relations, submit only those chunks that have to do with the relations
           submittableChunks = chunks.filter(isInRelations)
@@ -1568,7 +1545,6 @@
           }
         }
 
-        var submitRelations = [];
         submitRelations = submitRelations.concat.apply(submitRelations, Object.values(relations).map(function(x) {
           return {
             'links': x['links'],
@@ -1578,7 +1554,9 @@
 
         return {
           "relations": stringify ? JSON.stringify(submitRelations) : submitRelations,
-          "chunks": stringify ? JSON.stringify(submittableChunks) : submittableChunks
+          "chunks": stringify ? JSON.stringify(submittableChunks) : submittableChunks,
+          "marker_groups": stringify ? JSON.stringify(markerGroups) : markerGroups,
+          'free_text_markers': stringify ? JSON.stringify(freeTextMarkers) : freeTextMarkers
         }
       },
       unmarkChunk: function(c) {
@@ -1609,6 +1587,9 @@
           }
         });
         submittableChunks = [];
+
+        $(this.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
+        $(this.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });
       },
       resetArticle: function() {
         this.selectorArea.innerHTML = resetTextHTML;
@@ -1631,7 +1612,7 @@
           }
         });
       },
-      updateMarkAllCheckboxes() {
+      updateMarkAllCheckboxes: function() {
         var cnt = countChunksByType();
         $('[data-s] input[type="checkbox"]').prop("disabled", true);
         $('[data-s] input[type="checkbox"]').prop("checked", false);
@@ -1639,6 +1620,27 @@
           if (cnt[i] > 0) {
             $('[data-s="' + i + '"] input[type="checkbox"]').prop("disabled", false);
           }
+        }
+      },
+      hasNewInfo: function(inputData) {
+        return inputData['chunks'].length > 0 || inputData['relations'].length > 0 || 
+          inputData['marker_groups'].length > 0 || inputData['free_text_markers'].length > 0;
+      },
+      restoreBatch: function(uuid, url) {
+        if (utils.isDefined(url)) {
+          $.ajax({
+            method: "GET",
+            url: url,
+            data: {
+              'uuid': uuid
+            },
+            success: function(d) {
+              console.log(d);
+            },
+            error: function() {
+              console.log("ERROR!");
+            }
+          });
         }
       }
     }
@@ -1665,8 +1667,6 @@
         labelerModule.expectToRegister();
       }
     }
-
-    var sessionStart = new Date();  // the time the page was loaded or the last submission was made
         
     // Guidelines "Show more" button
     $('.button-scrolling').each(function(i, x) {
@@ -1752,28 +1752,36 @@
 
       var inputFormData = $inputForm.serializeObject(),
           underReview = $inputBlock.prop('review') || false,
-          $markerGroups = $("#markerGroups");
+          markerGroupsForm = utils.isDefined(labelerModule.markerGroupsArea) ?
+            labelerModule.markerGroupsArea.querySelector('#markerGroups') :
+            undefined,
+          freeTextMarkers = utils.isDefined(labelerModule.markersArea) ?
+            labelerModule.markersArea.querySelector('input[type="text"]') :
+            undefined;
 
       // if there's an input form field, then create input_context
-      if ($markerGroups.length > 0) {
-        if ($markerGroups.valid()) {
+      if (utils.isDefined(markerGroupsForm)) {
+        if ($(markerGroupsForm).valid()) {
           inputFormData['input_context'] = labelerModule.selectorArea.textContent;
         } else {
           return;
         }
       }
 
+      if (utils.isDefined(freeTextMarkers) && !inputFormData.hasOwnProperty('input_context')) {
+        inputFormData['input_context'] = labelerModule.selectorArea.textContent;
+      }
+
       $.extend(inputFormData, labelerModule.getSubmittableDict());
 
       inputFormData['is_review'] = underReview;
-      inputFormData['time'] = Math.round(((new Date()).getTime() - sessionStart.getTime()) / 1000, 1);
       inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
       inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
 
-      if (inputFormData['chunks'].length > 0 || inputFormData['relations'].length > 0 || $markerGroups.length > 0) {
-        inputFormData['chunks'] = JSON.stringify(inputFormData['chunks']);
-        inputFormData['relations'] = JSON.stringify(inputFormData['relations']);
-        inputFormData["marker_groups"] = JSON.stringify($markerGroups.length > 0 ? $markerGroups.serializeObject() : {});
+      if (labelerModule.hasNewInfo(inputFormData)) {
+        ['chunks', 'relations', 'marker_groups', 'free_text_markers'].forEach(function(x) {
+          inputFormData[x] = JSON.stringify(inputFormData[x]);
+        });
         
         $.ajax({
           method: "POST",
@@ -1783,50 +1791,25 @@
           success: function(data) {
             if (data['error'] == false) {
               var $title = $inputBlock.find('.message-header p');
-
-              // $("#markerGroups input").each(function(x) {
-              //   $(x).val('');
-              // });
-
-              if (data['next_task'] == 'regular') {
-                // no review task
-                // resetArticle();
                 
-                if (labelerModule.disableSubmittedLabels)
-                  labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
-                else
-                  labelerModule.unmark(JSON.parse(inputFormData['chunks']));
-
-                $inputBlock.removeClass('is-warning');
-                $inputBlock.addClass('is-primary');
-                $inputBlock.prop('review', false);
-              } else {
-                // FIXME: review task
-                labelerModule.resetArticle();
-
-                $questionBlock.removeClass('is-primary');
-                $questionBlock.addClass('is-warning');
-                $questionBlock.prop('review', true);
-
-                $title.html("Review question");
-              }
+              if (labelerModule.disableSubmittedLabels)
+                labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
+              else
+                labelerModule.unmark(JSON.parse(inputFormData['chunks']));
             }
 
-            var $submitted = $('#submittedTotal'),
-                $submittedToday = $('#submittedToday');
+            // var $submitted = $('#submittedTotal'),
+            //     $submittedToday = $('#submittedToday');
             
-            $submitted.text(data['submitted']);
-            $submitted.append($('<span class="smaller">q</span>'));
+            // $submitted.text(data['submitted']);
+            // $submitted.append($('<span class="smaller">q</span>'));
             
-            $submittedToday.text(data['submitted_today']);
-            $submittedToday.append($('<span class="smaller">q</span>'));
+            // $submittedToday.text(data['submitted_today']);
+            // $submittedToday.append($('<span class="smaller">q</span>'));
             
-            sessionStart = new Date();
-
-            $("#markerGroups input").each(function(i, x) { $(x).val('') });
 
             // TODO; trigger iff .countdown is present
-            $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
+            // $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
 
             labelerModule.postSubmitHandler(data.batch);
 
@@ -1835,8 +1818,7 @@
           error: function() {
             console.log("ERROR!");
             $('#undoLast').attr('disabled', true);
-            sessionStart = new Date();
-            $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');
+            // $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');
           }
         })
       }
@@ -1957,11 +1939,39 @@
       labelerModule.showRelationGraph(labelerModule.nextRelation());
     })
 
-
     $('#removeRelation').on('click', function(e) {
       e.preventDefault();
       labelerModule.showRelationGraph(labelerModule.removeCurrentRelation());
     })
+
+    $('#editingModeButton').on('click', function(e) {
+      e.preventDefault();
+
+      var $target = $(e.target).closest('a'),
+          mode = $target.attr('data-mode'),
+          $lastCol = $(labelerModule.taskArea).find('.column:last');
+
+      if (mode == 'o') {
+        $.ajax({
+          type: "GET",
+          url: $target.attr('href'),
+          success: function(d) {
+            $lastCol.prepend(d.template);
+            $target.attr('data-mode', 'c');
+            $target.text("Close editing mode");
+          },
+          error: function() {
+            console.log("Error while invoking editing mode!")
+          }
+        })
+      } else if (mode == 'c') {
+        $lastCol.find('#editingBoard').remove();
+        $target.attr('data-mode', 'o');
+        $target.text('');
+        $target.append($("<span class='icon'><i class='fas fa-pencil-alt'></i></span>"));
+        $target.append($("<span>Editing mode<span>"));
+      }
+    });
 
     /**
      * Modals handling
@@ -2002,12 +2012,12 @@
 
     $('.modal-close').on('click', function() {
       $('.modal').removeClass('is-active');
-      $('.countdown svg circle:last-child').trigger('cdAnimate');
+      // $('.countdown svg circle:last-child').trigger('cdAnimate');
     });
 
     $('.modal-background').on('click', function() {
       $('.modal').removeClass('is-active');
-      $('.countdown svg circle:last-child').trigger('cdAnimate');
+      // $('.countdown svg circle:last-child').trigger('cdAnimate');
     });
 
     $('#guidelinesButton').click();

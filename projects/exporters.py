@@ -32,11 +32,10 @@ def export_corr(project):
     # So if the context is the whole text, we need to group by batches and send over contexts only once
     # Otherwise we'll need to have contexts for every label
     # We also skip non-relation labels for corr even if they exist
-    is_paragraph_context = project.context_size == 'p'
-    json_exporter = 'to_rel_json' if is_paragraph_context else 'to_short_rel_json'
+    json_exporter = 'to_short_rel_json'
     relations = LabelRelation.objects.filter(first_label__marker__project=project, undone=False).order_by('first_label__context_id', 'batch')
 
-    grouped_relations = {} if is_paragraph_context else []
+    grouped_relations = []
     is_bidirectional, hashes = {}, set()
     group, context, context_id, batch = [], None, -1, -1
     for r in relations.prefetch_related('first_label', 'second_label', 'rule', 'batch'):
@@ -49,26 +48,19 @@ def export_corr(project):
                 if ghash not in hashes:
                     hashes.add(ghash)
 
-                    if is_paragraph_context:
-                        grouped_relations[str(batch)] = {
-                            'context': context,
-                            'relations': group
-                        }
-                    else:
-                        if group not in grouped_relations[-1]["relations"].values():
-                            grouped_relations[-1]["relations"][str(batch)] = group
+                    if group not in grouped_relations[-1]["relations"].values():
+                        grouped_relations[-1]["relations"][str(batch)] = group
             group = []
 
         if context_id == -1 or context_id != r.first_label.context_id:
             if context_id == -1:
                 context_id = r.first_label.context_id
                 context = r.first_label.context.content
-            if not is_paragraph_context:
-                context = r.first_label.context.content
-                grouped_relations.append({
-                    'context': context,
-                    "relations": {}
-                })
+            context = r.first_label.context.content
+            grouped_relations.append({
+                'context': context,
+                "relations": {}
+            })
 
         group.append({
             'type': r.rule.name,
@@ -87,14 +79,8 @@ def export_corr(project):
             if ghash not in hashes:
                 hashes.add(ghash)
 
-                if is_paragraph_context:
-                    grouped_relations[str(batch)] = {
-                        'context': context,
-                        'relations': group
-                    }
-                else:
-                    if group not in grouped_relations[-1]["relations"].values():
-                        grouped_relations[-1]["relations"][str(batch)] = group
+                if group not in grouped_relations[-1]["relations"].values():
+                    grouped_relations[-1]["relations"][str(batch)] = group
     return grouped_relations
 
 

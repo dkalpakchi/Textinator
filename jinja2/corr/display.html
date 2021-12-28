@@ -27,22 +27,6 @@
 {% include 'partials/components/modals/flag.html' %}
 
 <script>
-  $('#guidelinesButton').on('click', function() {
-    $('.guidelines.modal').addClass('is-active');
-  });
-
-  $('.modal-close').on('click', function() {
-    $('.modal').removeClass('is-active');
-    $('.countdown svg circle:last-child').trigger('cdAnimate');
-  });
-
-  $('.modal-background').on('click', function() {
-    $('.modal').removeClass('is-active');
-    $('.countdown svg circle:last-child').trigger('cdAnimate');
-  });
-
-  $('#guidelinesButton').click();
-
   const tour = new Shepherd.Tour({
     defaultStepOptions: {
       scrollTo: {

@@ -8,6 +8,7 @@ urlpatterns = [
     path('<proj>/article/new', views.new_article, name='new_article'),
     path('<proj>/article/undo_last', views.undo_last, name='undo_last'),
     path('<proj>/record_datapoint/', views.record_datapoint, name="record_datapoint"),
+    path('<proj>/edit/', views.editing, name="editing"),
     path('<proj>/join', views.join_or_leave_project, name='join_or_leave'),
     path('<proj>/time_report', views.time_report, name='time_report'),
     path('<proj>/explorer', views.data_explorer, name='data_explorer'),
@@ -19,5 +20,6 @@ urlpatterns = [
     path("<pk>/charts/users/timing", views.user_timing_chart_json, name="user_timing_chart"),
     path("<pk>/charts/users/progress", views.user_progress_chart_json, name="user_progress_chart"),
     path("<pk>/charts/datasources/sizes", views.datasource_size_chart_json, name="datasource_size_chart"),
+    path("get/batch", views.get_batch, name="get_batch"),
     path('', views.IndexView.as_view(), name='index')
 ]

@@ -1,7 +1,6 @@
 $(document).ready(function() {
-  $('[data-link]').on('click', function(e) {
+  $('div[data-link]').on('click', function(e) {
     e.preventDefault();
-    console.log("HERE");
     document.location.href = $(this).attr('data-link');
   });
 
@@ -68,8 +67,8 @@ $(document).ready(function() {
             }
             $('.join.form .submit.button').off('click');
             $('.join.form .submit.button').on('click', joinFormSubmit);
-            $('[data-link]').off('click')
-            $('[data-link]').on('click', function(e) {
+            $('div[data-link]').off('click')
+            $('div[data-link]').on('click', function(e) {
               e.preventDefault();
               document.location.href = $(this).attr('data-link');
             });
@@ -91,43 +90,43 @@ $(document).ready(function() {
     tour.start();
   })
 
-  var countdown = null,
-      interval = null;
+  // var countdown = null,
+  //     interval = null;
 
-  function resetTimer() {
-    countdown = 60;
-    var circle = $('.countdown svg circle:last-child');
-    circle.removeClass('countdown-animate')
-    circle.outerWidth();
-    circle.addClass('countdown-animate');
-  }
+  // function resetTimer() {
+  //   countdown = 60;
+  //   var circle = $('.countdown svg circle:last-child');
+  //   circle.removeClass('countdown-animate')
+  //   circle.outerWidth();
+  //   circle.addClass('countdown-animate');
+  // }
 
-  $('.countdown').on('cdAnimate', function() {
-    var countdownNumberEl = document.querySelector('.countdown-number');
+  // $('.countdown').on('cdAnimate', function() {
+  //   var countdownNumberEl = document.querySelector('.countdown-number');
 
-    resetTimer();
+  //   resetTimer();
 
-    countdownNumberEl.textContent = countdown;
+  //   countdownNumberEl.textContent = countdown;
 
-    if (interval == null) {
-      interval = setInterval(function() {
-        if (countdown == null) {
-          clearInterval(interval);
-          interval = null;
-        }
-        countdown = --countdown;
+  //   if (interval == null) {
+  //     interval = setInterval(function() {
+  //       if (countdown == null) {
+  //         clearInterval(interval);
+  //         interval = null;
+  //       }
+  //       countdown = --countdown;
 
-        if (countdown >= 0)
-          countdownNumberEl.textContent = countdown;
-      }, 1000);
-    }
-  });
+  //       if (countdown >= 0)
+  //         countdownNumberEl.textContent = countdown;
+  //     }, 1000);
+  //   }
+  // });
 
-  $('.countdown').on('cdAnimateReset', function() {
-    if (interval != null) {
-      resetTimer();
-    }
-  });
+  // $('.countdown').on('cdAnimateReset', function() {
+  //   if (interval != null) {
+  //     resetTimer();
+  //   }
+  // });
 
   $('nav .dropdown').on('click', function() {
     $(this).toggleClass('is-active');
@@ -190,7 +189,6 @@ $(document).ready(function() {
   });
 
   $('input[type!="hidden"]').each(function() {
-    console.log($(this).attr('data-required') == "true")
     if ($(this).attr('data-required') == "true") {
       $(this).rules('add', {
         required: true

@@ -2,14 +2,8 @@
   <div class="columns">
     <div class="column is-three-quarters">
       {% include 'partials/components/areas/text.html' %}
-      {% if source_id != -1 %}
-        {% include 'partials/components/areas/markers.html' %}
-        {% with area_title="Your question", input_placeholder="Type in your question here" %}
-          {% include 'partials/components/areas/text_submission.html' %}
-        {% endwith %}
-      {% else %}
-        {% include 'partials/components/areas/submission.html' %}
-      {% endif %}
+      {% include 'partials/components/areas/markers.html' %}
+      {% include 'partials/components/areas/submission.html' %}
     </div>
     <div class="column">
       {% include 'partials/components/areas/reminders.html' %}

@@ -196,12 +196,6 @@ class Project(CommonModel):
     sampling_with_replacement = models.BooleanField(_("should data be sampled with replacement?"), default=False)
     disjoint_annotation = models.BooleanField(_("should disjoint annotation be allowed?"), default=False)
     show_dataset_identifiers = models.BooleanField(_("should dataset identifiers be shown?"), default=False)
-    # TODO: implement a context of a sentence
-    # TODO: context size should depend on task_type (context is irrelevant for some tasks, e.g. text classification)
-    # context size affects only labels, not inputs
-    context_size = models.CharField(_("size of the textual context"),
-        max_length=2, choices=[('no', _('No context')), ('t', _('Text')), ('p', _('Paragraph'))],
-        help_text=_("Context size for storing labels"))
     task_type = models.CharField(_("type of the annotation task"), max_length=10, choices=settings.TASK_TYPES)
     dt_publish = models.DateTimeField(verbose_name=_("to be published at")) # TODO: implement this functionality
     dt_finish = models.DateTimeField(verbose_name=_("to be finished at"))   # TODO: implement this functionality
@@ -397,15 +391,24 @@ class MarkerVariant(CommonModel):
 
     @property
     def color(self):
-        return self.custom_color or self.marker.color
+        if hasattr(self, 'marker'):
+            return self.custom_color or self.marker.color
+        else:
+            return self.custom_color
 
     @property
     def shortcut(self):
-        return self.custom_shortcut or self.marker.shortcut
+        if hasattr(self, 'marker'):
+            return self.custom_shortcut or self.marker.shortcut
+        else:
+            return self.custom_shortcut
 
     @property
     def suggestion_endpoint(self):
-        return self.custom_suggestion_endpoint or self.marker.suggestion_endpoint
+        if hasattr(self, 'marker'):
+            return self.custom_suggestion_endpoint or self.marker.suggestion_endpoint
+        else:
+            return self.custom_suggestion_endpoint
 
     @property
     def code(self):
@@ -432,14 +435,15 @@ class MarkerVariant(CommonModel):
         return self.marker.is_part_of_relation()
 
     def save(self, *args, **kwargs):
-        if self.color.lower() == self.marker.color.lower():
-            self.custom_color = None
+        if hasattr(self, 'marker'):
+            if self.color.lower() == self.marker.color.lower():
+                self.custom_color = None
 
-        if self.shortcut == self.marker.shortcut:
-            self.custom_shortcut = None
+            if self.shortcut == self.marker.shortcut:
+                self.custom_shortcut = None
 
-        if self.suggestion_endpoint == self.marker.suggestion_endpoint:
-            self.custom_suggestion_endpoint = None
+            if self.suggestion_endpoint == self.marker.suggestion_endpoint:
+                self.custom_suggestion_endpoint = None
 
         super(MarkerVariant, self).save(*args, **kwargs)
 
