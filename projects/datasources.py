@@ -49,7 +49,10 @@ class DataSource:
         return self.__size
 
     def __getitem__(self, key):
-        return self.__data[key]
+        try:
+            return self.__data[int(key)]
+        except:
+            return None
 
 
 class PlainTextSource(DataSource):

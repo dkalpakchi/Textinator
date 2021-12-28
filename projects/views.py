@@ -435,7 +435,7 @@ def record_datapoint(request, proj):
         if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
             ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
             if not ctx:
-                ctx = Context.objects.create(datasource=data_source, content=data['input_context'])
+                ctx = Context.objects.create(datasource=data_source, datapoint=str(data['datapoint']), content=data['input_context'])
                 ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
 
             for i, (unit, v) in enumerate(marker_groups.items()):
@@ -465,7 +465,7 @@ def record_datapoint(request, proj):
     if free_text_inputs:
         ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
         if not ctx:
-            ctx = Context.objects.create(datasource=data_source, content=data['input_context'])
+            ctx = Context.objects.create(datasource=data_source, datapoint=str(data['datapoint']), content=data['input_context'])
             ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
         for code, inp_string in free_text_inputs.items():
             marker_variant = MarkerVariant.objects.get(project=project, marker__code=code) # must be only
@@ -476,7 +476,12 @@ def record_datapoint(request, proj):
     label_cache = {}
     for chunk in chunks:
         # inp is typically the same for all chunks
-        res_chunk = process_chunk(chunk, batch, project, data_source, user, (ctx_cache, label_cache), (is_resolution, is_review))
+        res_chunk = process_chunk(
+            chunk, batch, project, 
+            data_source, str(data['datapoint']), user,
+            (ctx_cache, label_cache),
+            (is_resolution, is_review)
+        )
         if res_chunk:
             ret_caches, just_saved = res_chunk
             ctx_cache, label_cache = ret_caches
@@ -528,7 +533,7 @@ def editing(request, proj):
         input_batches = Input.objects.filter(batch__user=request.user, marker__project=project).values_list('batch__uuid', flat=True)
 
         batch_uuids = set(label_batches) | set(input_batches)
-        batches = Batch.objects.filter(uuid__in=batch_uuids).order_by('dt_created')
+        batches = Batch.objects.filter(uuid__in=batch_uuids).order_by('-dt_created')
 
         return JsonResponse({
             'template': render_to_string('partials/components/areas/editing.html', {
@@ -546,11 +551,28 @@ def get_batch(request):
     # TODO: ensure that the request cannot be triggered by external tools
     uuid = request.GET.get('uuid', '')
     if uuid:
+        labels = Label.objects.filter(batch__uuid=uuid)
+        inputs = Input.objects.filter(batch__uuid=uuid)
+
+        context = None
+        if labels.count():
+            context = labels.first().context.to_json()
+        elif inputs.count():
+            context = inputs.first().context.to_json()
+
+        free_text_inputs = inputs.filter(marker__unit=None, marker__is_free_text=True)
+        groups = inputs.exclude(marker__unit=None)
+
+        # context['content'] will give us text without formatting,
+        # so we simply query the data source one more time to get with formatting
+        ds = DataSource.objects.get(pk=context['ds_id'])
+        context['content'] = prettify(ds.postprocess(ds.get(context['dp_id'])).strip())
+
         return JsonResponse({
-            'data': {
-                'labels': [l.to_json() for l in Label.objects.filter(batch__uuid=uuid)],
-                'inputs': [i.to_json() for i in Input.objects.filter(batch__uuid=uuid)]
-            }
+            'context': context,
+            'labels': [l.to_short_json() for l in labels],
+            'free_text_inputs': [i.to_short_json() for i in free_text_inputs],
+            'groups': [i.to_short_json() for i in groups]
         })
     else:
         return JsonResponse({'data': {}})

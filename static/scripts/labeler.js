@@ -2,6 +2,16 @@
   var utils = {
     isDefined: function(x) {
       return x != null && x !== undefined;
+    },
+    unique: function(arr) {
+      const seen = new Set();
+      return arr.filter(function(elem) {
+        const key = elem['start'] + " -- " + elem['end'];
+        var isDuplicate = seen.has(key);
+        if (!isDuplicate)
+          seen.add(key);
+        return !isDuplicate;
+      });
     }
   };
 
@@ -440,7 +450,7 @@
         this.relationsArea = this.taskArea.querySelector('.relations:not(.marked)');
         this.selectorArea = this.taskArea.querySelector('.selector');
         resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
-        resetText = this.selectorArea == null ? "" : this.selectorArea.textContent.trim();
+        resetText = this.getContextText();
         this.allowSelectingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-select') == 'true';
         this.disableSubmittedLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-disable') == 'true';
         markersInRelations = this.relationsArea == null ? [] :
@@ -454,6 +464,9 @@
         this.initSvg();
         this.initEvents();
         this.updateMarkAllCheckboxes();
+      },
+      getContextText: function() {
+        return this.selectorArea == null ? "" : this.selectorArea.textContent.trim()
       },
       initEvents: function() {
         // event delegation
@@ -721,11 +734,12 @@
           if (group)
             groups.push(group)
 
-
           for (var i = 0; i < groups.length; i++) {
             var chunk = {},
                 group = groups[i],
                 N = group.length;
+
+            if (group[0].collapsed) continue;
 
             chunk['range'] = group[0].cloneRange();
             chunk['range'].setEnd(group[N-1].endContainer, group[N-1].endOffset);
@@ -746,7 +760,7 @@
             } else {
               chunks[N-1] = chunk;
             }
-          } 
+          }
         } else {
           var chunk = this.getActiveChunk();
           if (utils.isDefined(chunk) && !chunk['marked'])
@@ -1574,6 +1588,7 @@
         relations = {};
         currentRelationId = null;
         lastRelationId = 1;
+        labelId = 0;
         // clear svg
         d3.selectAll("svg > *").remove()
         this.showRelationGraph(currentRelationId);
@@ -1590,6 +1605,9 @@
 
         $(this.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
         $(this.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });
+      },
+      emptyChunks: function() {
+        chunks = [];
       },
       resetArticle: function() {
         this.selectorArea.innerHTML = resetTextHTML;
@@ -1627,6 +1645,7 @@
           inputData['marker_groups'].length > 0 || inputData['free_text_markers'].length > 0;
       },
       restoreBatch: function(uuid, url) {
+        var control = this;
         if (utils.isDefined(url)) {
           $.ajax({
             method: "GET",
@@ -1635,7 +1654,113 @@
               'uuid': uuid
             },
             success: function(d) {
-              console.log(d);
+              control.postSubmitHandler();
+              control.emptyChunks();
+
+              var free = d.free_text_inputs,
+                  labels = d.labels,
+                  groups = d.groups;
+
+              control.selectorArea.setAttribute('data-s', d.context.ds_id);
+              control.selectorArea.setAttribute('data-dp', d.context.dp_id);
+              control.selectorArea.innerHTML = d.context.content;
+
+              for (var i = 0, len = free.length; i < len; i++) {
+                var inp = control.markersArea.querySelector('input[name="' + free[i].marker.code + '"]');
+                if (inp) {
+                  inp.value = free[i].content;
+                }
+              }
+
+              // label logic
+              var acc = 0,
+                  curLabelId = 0,
+                  numLabels = labels.length,
+                  cnodes = control.selectorArea.childNodes,
+                  mmpi = control.markersArea.getAttribute('data-mmpi'),
+                  processed = []; // labels that are not nested into one another
+              labels.sort(function(x, y) { return x['start'] - y['start']});
+              
+              for (var i = 0, len = cnodes.length; i < len; i++) {
+                if (curLabelId < numLabels) {
+                  if (acc + cnodes[i].textContent.length > labels[curLabelId]['start']) {
+                    // we found an element to mark
+                    var innerAcc = acc,
+                        numInnerLoops = 0,
+                        cnodeLength = cnodes[i].textContent.length;
+                    while (curLabelId < numLabels && labels[curLabelId]['end'] < acc + cnodeLength) {
+                      var areOverlapping = processed.map(function(x) {
+                            var s1 = labels[curLabelId],
+                                s2 = labels[x["id"]];
+                            return (s1['start'] >= s2['start'] && s1["end"] <= s2["end"]) || 
+                              (s2['start'] >= s1["start"] && s2["end"] <= s1["end"]);
+                          }),
+                          numOverlapping = areOverlapping.reduce((a, b) => a + b, 0);
+
+                      processed.push({
+                        "id": curLabelId,
+                        "ov": numOverlapping,
+                        "closed": false
+                      });
+                      var textNode = undefined;
+                      if (numOverlapping == 0) {
+                        textNode = cnodes[i].childNodes[cnodes[i].childNodes.length-1];
+                      } else {
+                        var minDistId = undefined,
+                            minDist = Infinity,
+                            sameLevelDist = Infinity,
+                            sameLevelId = undefined;
+                        areOverlapping.forEach(function(x, i) {
+                          var label = labels[processed[i]["id"]],
+                              dist = Math.abs(label['end'] - labels[curLabelId]['end']) +
+                                Math.abs(label['start'] - labels[curLabelId]['start']);
+
+                          if (x) {
+                            if (dist < minDist && processed[i]["ov"] == numOverlapping - 1) {
+                              minDist = dist;
+                              minDistId = processed[i]["id"];
+                            }
+                          }
+                          if (dist < sameLevelDist && processed[i]["ov"] == numOverlapping && !processed[i]["closed"]) {
+                            sameLevelDist = dist;
+                            sameLevelId = processed[i]["id"]
+                          }
+                        });
+
+                        if (utils.isDefined(minDistId)) {
+                          var tagNodes = document.querySelector('span.tag[data-i="' + minDistId + '"]').childNodes;
+                          textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
+                          if (numInnerLoops != 0 && utils.isDefined(sameLevelId)) {
+                            for (var i = 0; i <= curLabelId; i++) {
+                              if (numOverlapping < processed[i]["ov"]) {
+                                processed[i]["closed"] = true;
+                              }
+                            }
+
+                            innerAcc += labels[sameLevelId]['end'] - innerAcc;
+                          }
+                        } else {
+                          textNode = cnodes[i].childNodes[cnodes[i].childNodes.length-1];
+                        }
+                      }
+
+                      const range = new Range();
+                      // try {
+                      range.setStart(textNode, labels[curLabelId]['start'] - innerAcc);
+                      range.setEnd(textNode, labels[curLabelId]['end'] - innerAcc);
+
+                      window.getSelection().addRange(range);
+                      control.updateChunkFromSelection();
+                      var code = labels[curLabelId]['marker']['code'];
+                      control.mark(control.markersArea.querySelector('.marker[data-s="' + code + '"]'), mmpi);
+                      innerAcc += (labels[curLabelId]['start'] - innerAcc);
+                      curLabelId++;
+                      numInnerLoops++;
+                    }
+                  }
+                }
+                acc += cnodes[i].textContent.length;
+              }
             },
             error: function() {
               console.log("ERROR!");
@@ -1762,14 +1887,14 @@
       // if there's an input form field, then create input_context
       if (utils.isDefined(markerGroupsForm)) {
         if ($(markerGroupsForm).valid()) {
-          inputFormData['input_context'] = labelerModule.selectorArea.textContent;
+          inputFormData['input_context'] = labelerModule.getContextText();
         } else {
           return;
         }
       }
 
       if (utils.isDefined(freeTextMarkers) && !inputFormData.hasOwnProperty('input_context')) {
-        inputFormData['input_context'] = labelerModule.selectorArea.textContent;
+        inputFormData['input_context'] = labelerModule.getContextText();
       }
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());

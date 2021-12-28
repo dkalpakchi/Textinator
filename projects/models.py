@@ -75,15 +75,10 @@ class DataSource(CommonModel):
         return text
 
     def get(self, idx):
-        try:
-            idp = int(idx)
-        except:
-            return None
-
         source_cls = DataSource.type2class(self.source_type)
         if source_cls:
             ds_instance = source_cls(self.spec.replace('\r\n', ' ').replace('\n', ' '))
-        return ds_instance[idp]
+        return ds_instance[idx]
 
     def size(self):
         source_cls = DataSource.type2class(self.source_type)
@@ -609,13 +604,14 @@ class Relation(CommonModel):
         return res
 
 
-# TODO: Add datapoint tracking
 class Context(CommonModel):
     class Meta:
         verbose_name = _('context')
         verbose_name_plural = _('contexts')
 
     datasource = models.ForeignKey(DataSource, on_delete=models.SET_NULL, null=True, blank=True)
+    datapoint = models.CharField(_("datapoint ID"), max_length=64, null=True, blank=True,
+        help_text=_("As stored in the original dataset"))
     content = models.TextField(_("content"))
 
     @property
@@ -627,6 +623,13 @@ class Context(CommonModel):
 
     def __str__(self):
         return truncate(self.content)
+
+    def to_json(self):
+        return {
+            "ds_id": self.datasource_id,
+            "dp_id": self.datapoint,
+            "content": self.content
+        }
 
 
 class Batch(CommonModel):
@@ -650,7 +653,7 @@ class Input(CommonModel):
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
+    unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1, # TODO: rename
         help_text=_("At the submission time"))
 
     @property
