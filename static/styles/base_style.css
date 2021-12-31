@@ -12,6 +12,14 @@ body .container:first-of-type {
   font-weight: normal;
   src: local('Terminator Real NFI'), url('/textinator/static/styles/webfonts/terminator_real_nfi.woff') format('woff');
 }
+
+@font-face {
+  font-family: 'ROBOTECH GP';
+  font-style: normal;
+  font-weight: normal;
+  src: local('ROBOTECH GP'), url('/textinator/static/styles/webfonts/ROBOTECH GP.ttf') format('ttf');
+}
+
 .no-margin {
   margin: 0 !important;
 }
@@ -71,14 +79,17 @@ pre {
 }
 
 .logo {
-  font-family: 'Terminator Real NFI';
-  font-size: 2.5em;
+  font-family: 'ROBOTECH GP';
+  font-size: 5em;
+  letter-spacing: 2px;
+  line-height: 0.4em;
+  margin-bottom: 0.5em;
 }
 
 .logo-spaced {
-  font-family: 'Terminator Real NFI';
+  font-family: 'ROBOTECH GP';
   font-size: 1.5em;
-  letter-spacing: 1.5em;
+  letter-spacing: 10px;
 }
 
 .logo a {
@@ -91,9 +102,10 @@ pre {
 }
 
 .navbar .logo {
-  font-size: 1.25em;
+  font-size: 2em;
   padding-left: 50px;
   padding-right: 50px;
+  margin-bottom: 0.17em;
 }
 
 .navbar.has-bottom-border {
