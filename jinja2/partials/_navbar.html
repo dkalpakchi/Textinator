@@ -28,13 +28,13 @@
         </a>
       {% endif %}
 
-      {% if shared_projects %}
+      {% if recently_shared or shared_before %}
         <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'sp' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=sp">
           <span class="icon is-small"><i class="fas fa-users" aria-hidden="true"></i></span>
           <span>{{ _("shared projects")|capitalize }}</span>
 
-          &nbsp;&nbsp;<span id="newShared" class="tag is-danger is-normal is-rounded {% if newly_shared|length <= 0 %}is-hidden{% endif %}">
-            {{newly_shared|length}}
+          &nbsp;&nbsp;<span id="newShared" class="tag is-danger is-normal is-rounded {% if recently_shared|length <= 0 %}is-hidden{% endif %}">
+            {{recently_shared|length}}
           </span>
         </a>
       {% endif %}

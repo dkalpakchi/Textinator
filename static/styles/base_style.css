@@ -32,21 +32,36 @@ body .container:first-of-type {
 }
 
 .project.card {
-  max-width: 400px;
+  background: #17a2b8;
+  color: white;
+  max-width: 450px;
+  width: 100%;
 }
 
-#tab-content div[data-content] {
-  display: none;
+.project.card .card-header .card-header-title,
+.project.card a {
+  color: white;
+}
+
+.project.card .card-footer-item {
+  -webkit-user-select: none;  
+  -moz-user-select: none;    
+  -ms-user-select: none;      
+  user-select: none;
+}
+
+.project.card .card-content {
+  padding:  1rem 1.5rem
+}
+
+.project.card table tr td:first-child {
+  width: 1em;
 }
 
 pre {
   margin: 20px 0;
   padding: 20px;
   background: #fafafa;
-}
-
-#tab-content div[data-content].is-active {
-  display: block;
 }
 
 .tile-footer {
@@ -162,10 +177,6 @@ pre {
 
 .participations [data-link]:hover {
   border: 2px solid black;
-}
-
-.join.form {
-  margin-top: auto;
 }
 
 
@@ -537,6 +548,11 @@ label.help.is-danger {
   margin-bottom: 0.4rem;
 }
 
+
+/** 
+ * Other library fixes
+ */
+
 /* Fix integration of django-nested-admin with jazzmin */
 .nested.card-header, .nested.card-body {
   border: 1px solid rgba(0,0,0,.125)
@@ -544,4 +560,8 @@ label.help.is-danger {
 
 .is-marker-fullwidth {
   width: 100%;
+}
+
+.masonry-grid-item {
+  margin-bottom: 1em;
 }

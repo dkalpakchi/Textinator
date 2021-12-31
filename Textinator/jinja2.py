@@ -89,10 +89,21 @@ def naturaltime(value):
     return NaturalTimeFormatter.string_for(value)
 
 
+def lang_local_name(code):
+    # {'bidi': False, 'code': 'sv', 'name': 'Swedish', 'name_local': 'svenska', 'name_translated': 'Swedish'}
+    return translation.get_language_info(str(code))['name_local']
+
+
+def lang_translated_name(code):
+    # {'bidi': False, 'code': 'sv', 'name': 'Swedish', 'name_local': 'svenska', 'name_translated': 'Swedish'}
+    return translation.get_language_info(str(code))['name_translated']
+
+
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('sass_processor.jinja2.ext.SassSrc')
     extensions.append('jinja2.ext.i18n')
+    extensions.append('jinja2.ext.with_')
     options['extensions'] = extensions
     env = Environment(**options)
     env.globals.update({
@@ -109,6 +120,8 @@ def environment(**options):
     env.filters['any'] = any
     env.filters['all'] = all
     env.filters['naturaltime'] = naturaltime
+    env.filters["local_language_name"] = lang_local_name
+    env.filters['translated_language_name'] = lang_translated_name
 
     env.install_gettext_translations(translation)
 

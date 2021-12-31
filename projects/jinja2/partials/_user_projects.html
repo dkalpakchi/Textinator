@@ -1,0 +1,16 @@
+{% if user_projects %}
+  <div class="my-projects masonry-grid">
+    {% for project in user_projects %}
+      {% with can_leave=False, can_view=True %}
+        {% include 'partials/_project.html' %}
+      {% endwith %}
+    {% endfor %}
+  </div>
+{% else %}
+  <article class="message is-info">
+    <div class="message-body">
+      <p>{{ _("You have not created any projects so far.") }}</p>
+      <!-- <p>Click <a class='intro-button'>here</a> if you want an introduction to the website</p> -->
+    </div>
+  </article>      
+{% endif %}

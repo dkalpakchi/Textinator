@@ -1,26 +1,9 @@
 {% if participations %}
-  <div class="participations tile is-ancestor">
+  <div class="masonry-grid">
     {% for project in participations %}
-      <div class="tile is-parent is-vertical is-3">
-        <div data-link="{{ url('projects:detail', kwargs={'pk': project.id}) }}" class="is-child notification has-even-padding is-link tile">
-          <div class="content">
-            <p class="title">{{project.title}}</p>
-            <div class="content has-text-justified">{{project.short_description}}</div>
-            <div class="buttons columns">
-              <div class="column">
-                <a href="{{ url('projects:detail', kwargs={'pk': project.id}) }}" class="button is-link is-inverted is-outlined is-fullwidth">View</a>  
-              </div>
-              <div class="column">
-                <form class='join form' method="POST" action="{{ url('projects:join_or_leave', kwargs={'proj': project.id}) }}">
-                  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                  <input type="hidden" name="n" value="p">
-                  <input class="submit button is-fullwidth is-link is-inverted is-outlined" type="submit" value="Leave"/>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {% with can_leave=True, can_view=True %}
+        {% include 'partials/_project.html' %}
+      {% endwith %}
     {% endfor %}
   </div>
 {% else %}

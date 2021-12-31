@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h1 class="title">{{ _("settings")|capitalize }}</h1>
+<h4 class="subtitle is-uppercase has-text-weight-bold">{{ _("settings") }}</h4>
 <form action="{{ url('users:textinator_settings') }}" method="post">
   {{ csrf_input }}
   <div class="field">

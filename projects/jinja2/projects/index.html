@@ -1,21 +1,12 @@
 {% extends "layout.html" %}
 
+{% block custom_scripts %}
+  <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+{% endblock %}
+
 {% block content %}
   {% if request.GET.n == 'mp' %}
-    {% if user_projects %}
-      <div class="my-projects tile is-ancestor">
-        {% for project in user_projects %}
-          <div class="tile is-parent is-vertical is-3">
-            <div data-link="{{ url('projects:detail', kwargs={'pk': project.id}) }}" class="project is-child notification has-even-padding is-info tile box">
-              <div class="content">
-                <p class="title">{{project.title}}</p>
-                <div class="content has-text-justified">{{project.short_description}}</div>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
+    {% include 'partials/_user_projects.html' %}
   {% elif request.GET.n == 'sp' %}
     {% include 'partials/_shared_projects.html' %}
   {% elif request.GET.n == 'o' %}

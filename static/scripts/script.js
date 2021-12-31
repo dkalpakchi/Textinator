@@ -15,8 +15,8 @@ $(document).ready(function() {
     e.preventDefault();
     e.stopPropagation();
 
-    var $target = $(e.target),
-        $inputForm = $target.closest('.join.form'),
+    var $target = $(e.target).closest('a'),
+        $inputForm = $target.find('form'),
         inputFormData = $inputForm.serializeObject(),
         $newlyShared = $('#newShared');
 
@@ -27,56 +27,10 @@ $(document).ready(function() {
       data: inputFormData,
       success: function(data) {
         if (data['result'] == 'joined')
-          $target.val('Leave');
+          $target.find('span').text('Leave');
         else
-          $target.val('Join');
+          $target.find('span').text('Join');
         $target.blur();
-
-        $.ajax({
-          method: 'GET',
-          url: encodeURI('/textinator/projects/participations/update?n=' + inputFormData['n']),
-          success: function(data2) {
-            var $tab = null;
-            if (inputFormData['n'] == 'o') {
-              $tab = $('div[data-content="participations"]');  
-            } else if (inputFormData['n'] == 'p') {
-              $tab = $('div[data-content="open-projects"]');
-            } else if (inputFormData['n'] == 's') {
-              $tab = $('div[data-content="shared-projects"]');
-            }
-            if ($tab)
-              $tab.html(data2['template']);
-
-            if (inputFormData['n'] == 's') {
-              console.log($newlyShared.text())
-              if (data['result'] == 'joined') {
-                var newlyShared = parseInt($newlyShared.text()) - 1;
-                $newlyShared.text(newlyShared);
-                if (newlyShared > 0) {
-                  $newlyShared.removeClass('is-hidden');
-                } else {
-                  $newlyShared.addClass('is-hidden');
-                }
-              } else {
-                var newlyShared = parseInt($newlyShared.text()) + 1;
-                $newlyShared.text(newlyShared);
-                if (newlyShared > 0) {
-                  $newlyShared.removeClass('is-hidden');
-                }
-              }
-            }
-            $('.join.form .submit.button').off('click');
-            $('.join.form .submit.button').on('click', joinFormSubmit);
-            $('div[data-link]').off('click')
-            $('div[data-link]').on('click', function(e) {
-              e.preventDefault();
-              document.location.href = $(this).attr('data-link');
-            });
-          },
-          error: function() {
-            console.log("ERROR [GET]!")
-          }
-        })
       },
       error: function() {
         console.log("ERROR!")
@@ -84,7 +38,7 @@ $(document).ready(function() {
     })
   }
 
-  $('.join.form .submit.button').on('click', joinFormSubmit);
+  $('a#joinButton').on('click', joinFormSubmit);
   
   $('.intro-button').on('click', function() {
     tour.start();
@@ -194,5 +148,13 @@ $(document).ready(function() {
         required: true
       });
     }
+  });
+
+  $('.masonry-grid').masonry({
+    // options...
+    itemSelector: '.masonry-grid-item',
+    horizontalOrder: true,
+    fitWidth: true,
+    gutter: 14
   });
 });
