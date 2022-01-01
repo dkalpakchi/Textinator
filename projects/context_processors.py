@@ -19,7 +19,7 @@ def common_user_variables(request):
             "open_projects": Project.objects.filter(
                 is_open=True,
                 language__in=request.user.profile.fluent_languages
-            ).exclude(participants__in=[request.user.id]).all(),
+            ).exclude(Q(participants__in=[request.user.id]) | Q(author=request.user)).all(),
             "user_projects": request.user.project_set.all(),
             "shared_before": shared_before,
             "recently_shared": recently_shared,

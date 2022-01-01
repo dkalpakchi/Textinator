@@ -18,7 +18,7 @@ $(document).ready(function() {
     var $target = $(e.target).closest('a'),
         $inputForm = $target.find('form'),
         inputFormData = $inputForm.serializeObject(),
-        $newlyShared = $('#newShared');
+        $footer = $target.closest('footer');
 
     $.ajax({
       method: "POST",
@@ -26,10 +26,13 @@ $(document).ready(function() {
       dataType: "json",
       data: inputFormData,
       success: function(data) {
-        if (data['result'] == 'joined')
+        if (data['result'] == 'joined') {
           $target.find('span').text('Leave');
-        else
+          $footer.prepend($(data['template']))
+        } else {
           $target.find('span').text('Join');
+          $footer.find('a:first-child').remove();
+        }
         $target.blur();
       },
       error: function() {
@@ -150,11 +153,12 @@ $(document).ready(function() {
     }
   });
 
-  $('.masonry-grid').masonry({
-    // options...
-    itemSelector: '.masonry-grid-item',
-    horizontalOrder: true,
-    fitWidth: true,
-    gutter: 14
-  });
+  if ($.prototype.masonry !== undefined) {
+    $('.masonry-grid').masonry({
+      itemSelector: '.masonry-grid-item',
+      horizontalOrder: true,
+      fitWidth: true,
+      gutter: 14
+    });
+  }
 });

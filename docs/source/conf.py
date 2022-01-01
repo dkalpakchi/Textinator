@@ -23,7 +23,6 @@ from django.utils.html import strip_tags
 from django.utils.encoding import force_text
 
 sys.path.insert(0, str(Path(__file__).parents[2]))
-print("PATH", sys.path)
 os.environ['DJANGO_SETTINGS_MODULE'] = 'Textinator.settings'
 django.setup()
 

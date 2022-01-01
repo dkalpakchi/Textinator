@@ -3,7 +3,7 @@
     <h4 class="subtitle is-uppercase has-text-weight-bold">{{_("recently shared")|capitalize}}</h4>
     <div class="masonry-grid">
       {% for project in recently_shared %}
-        {% with can_leave=True, can_view=False, show_new=True %}
+        {% with can_leave=True, can_view=False, show_new=True, project_type='s' %}
           {% include 'partials/_project.html' %}
         {% endwith %}
       {% endfor %}
@@ -15,7 +15,7 @@
   {% if shared_before %}
     <div class="masonry-grid">
       {% for project in shared_before %}
-        {% with can_leave=True, can_view=True %}
+        {% with can_leave=True, can_view=True, project_type='s' %}
           {% include 'partials/_project.html' %}
         {% endwith %}
       {% endfor %}

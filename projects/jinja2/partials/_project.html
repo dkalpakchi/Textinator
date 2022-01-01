@@ -40,15 +40,13 @@
   </div>
   <footer class="card-footer">
     {% if can_view %}
-      <a href="{{ url('projects:detail', kwargs={'pk': project.id}) }}" class="card-footer-item">
-        {{_("view")|capitalize}}
-      </a>
+      {% include 'partials/_view_button.html' %}
     {% endif %}
     {% if can_leave %}
       <a id="joinButton" class="card-footer-item">
         <form method="POST" action="{{ url('projects:join_or_leave', kwargs={'proj': project.id}) }}">
           <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-          <input type="hidden" name="n" value="p">  
+          <input type="hidden" name="n" value="{{project_type}}">  
         </form>
         {% if project.has_participant(user) %}
           <span>{{_("leave")|capitalize}}</span>

@@ -1,7 +1,7 @@
 {% if participations %}
   <div class="masonry-grid">
     {% for project in participations %}
-      {% with can_leave=True, can_view=True %}
+      {% with can_leave=True, can_view=True, project_type='p' %}
         {% include 'partials/_project.html' %}
       {% endwith %}
     {% endfor %}

@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q, Value
 from django.db.models.functions import Replace
+from django.urls import reverse
 
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
@@ -586,7 +587,8 @@ def join_or_leave_project(request, proj):
     if request.method == "POST":
         res = {
             'error': False,
-            'result': ''
+            'result': '',
+            'template': ''
         }
         if project.participants.filter(pk=current_user.pk).exists():
             project.participants.remove(current_user)
@@ -594,6 +596,7 @@ def join_or_leave_project(request, proj):
         else:
             project.participants.add(current_user)
             res['result'] = 'joined'
+            res['template'] = render_to_string('partials/_view_button.html', {'project': project}, request=request)
         project.save()
 
         if request.POST.get('n', 'p') == 'j':
