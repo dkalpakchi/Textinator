@@ -2,6 +2,7 @@ import random
 import time
 import re
 import string
+import hashlib
 from datetime import datetime
 from collections import defaultdict
 
@@ -23,14 +24,21 @@ from .helpers import *
 class CommonModel(models.Model):
     dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name=_("Created at"),
         help_text=_("Autofilled"))
+    dt_updated = models.DateTimeField(null=True, verbose_name=_("Updated at"),
+        help_text=_("Autofilled"))
 
     class Meta:
         abstract = True
 
     def to_json(self, dt_format=None):
         return {
-            'created': self.dt_created.strftime(dt_format)
+            'created': self.dt_created.strftime(dt_format),
+            'updated': self.dt_updated.strftime(dt_format)
         } if dt_format else {}
+
+    def save(self, *args, **kwargs):
+        self.dt_updated = timezone.now()
+        super(CommonModel, self).save(*args, **kwargs)
 
 
 class PostProcessingMethod(CommonModel):
@@ -62,6 +70,8 @@ class DataSource(CommonModel):
     language = models.CharField(_("language"), max_length=10, choices=settings.LANGUAGES,
         help_text=_("Language of this data source")
     )
+    formatting = models.CharField(_('formatting'), max_length=3, choices=settings.FORMATTING_TYPES,
+        help_text=_("text formating of the data source"))
 
     @classmethod
     def type2class(cls, source_type):
@@ -172,6 +182,7 @@ class Project(CommonModel):
     class Meta:
         verbose_name = _('project')
         verbose_name_plural = _('projects')
+        ordering = ['-dt_finish']
 
     title = models.CharField(_("title"), max_length=50)
     short_description = models.TextField(_("short description"), max_length=1000, default="",
@@ -186,8 +197,6 @@ class Project(CommonModel):
         help_text=_("Reminders for essential parts of guidelines (keep them short and on point)"))
     temporary_message = HTMLField(_("temporary message"), null=True, blank=True,
         help_text=_("A temporary message for urgent communication with annotators (e.g., about maintenance work)"))
-    video_summary = FileBrowseField(_("summary video"), max_length=1000, null=True, blank=True,
-        help_text=_("Video introducing people to the annotation task at hand (if applicable)"))
     sampling_with_replacement = models.BooleanField(_("should data be sampled with replacement?"), default=False)
     disjoint_annotation = models.BooleanField(_("should disjoint annotation be allowed?"), default=False)
     show_dataset_identifiers = models.BooleanField(_("should dataset identifiers be shown?"), default=False)
@@ -221,6 +230,13 @@ class Project(CommonModel):
     language = models.CharField(_("language"), max_length=10, choices=settings.LANGUAGES,
         help_text=_("Language of this project")
     )
+    thumbnail = models.ImageField(null=True, blank=True, upload_to ='uploads/%Y/%m/%d/',
+        help_text=_("A thumbnail of your project (ignored if not provided)"))
+    video_summary = FileBrowseField(_("summary video"), max_length=1000, null=True, blank=True,
+        help_text=_("Video introducing people to the annotation task at hand (if applicable)"))
+    video_remote = models.URLField(max_length=200, null=True, blank=True,
+        help_text=_("A URL for video summary to be embedded (e.g. from YouTube)"))
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -407,7 +423,9 @@ class MarkerVariant(CommonModel):
 
     @property
     def code(self):
-        return self.marker.code
+        same_marker_pk = list(self.project.markervariant_set.filter(marker=self.marker).values_list('pk', flat=True))
+        same_marker_pk.sort()
+        return "{}_{}".format(self.marker.code, same_marker_pk.index(self.pk))
 
     def get_count_restrictions(self, stringify=True):
         """
@@ -464,11 +482,13 @@ class MarkerVariant(CommonModel):
     def to_minimal_json(self):
         res = self.marker.to_minimal_json()
         res['order'] = self.order_in_unit
+        res['code'] = self.code
         return res
 
     def to_json(self):
         res = self.marker.to_json()
         res['order'] = self.order_in_unit
+        res['code'] = self.code
         return res
 
 
@@ -657,6 +677,14 @@ class Input(CommonModel):
         help_text=_("At the submission time"))
 
     @property
+    def hash(self):
+        hash_gen = hashlib.sha256()
+        hash_gen.update(self.content.encode('utf-8'))
+        hash_gen.update(str(self.pk).encode("utf-8"))
+        hash_gen.update(self.marker.code.encode('utf-8'))
+        return hash_gen.hexdigest()
+
+    @property
     def content_hash(self):
         return hash_text(self.content)
 
@@ -677,6 +705,7 @@ class Input(CommonModel):
         res['user'] = self.batch.user.username
         res['batch'] = str(self.batch)
         res['unit'] = self.unit
+        res['hash'] = self.hash
         return res
 
     def to_json(self, dt_format=None):
@@ -703,6 +732,14 @@ class Label(CommonModel):
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
     unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
         help_text=_("At the submission time"))
+
+    @property
+    def hash(self):
+        hash_gen = hashlib.sha256()
+        hash_gen.update(self.text.encode('utf-8'))
+        hash_gen.update(str(self.pk).encode("utf-8"))
+        hash_gen.update(self.marker.code.encode('utf-8'))
+        return hash_gen.hexdigest()
 
     @property
     def text(self):
@@ -737,6 +774,7 @@ class Label(CommonModel):
         res['marker'] = self.marker.to_json()
         res['batch'] = str(self.batch)
         res['user'] = self.batch.user.username
+        res['hash'] = self.hash
         return res
 
     def to_json(self, dt_format=None):

@@ -73,14 +73,12 @@ def display_relation(rel):
 
 
 def prettify(value):
-    print(value)
     """Converts newlines into <p> and <br />s."""
     md = markdown.markdown(value)
     # Bulmify things
     md = md.replace('<h1>', '<h1 class="title is-4">')
     md = md.replace('<h2>', '<h2 class="title is-5">')
     md = md.replace('<h3>', '<h3 class="title is-6">')
-    print(md)
     return Markup(md)
 
 

@@ -21,7 +21,7 @@
         <div class="container">
           <div class="columns is-vcentered">
             <div class="column">
-              <h1 class="logo title">
+              <h1 class="logo title mb-6">
                 Textinator
               </h1>
               <h2 class="subtitle">
@@ -44,48 +44,6 @@
         </div>
       </div>
     </section>
-
-    <div class="section">
-      <div class="container">
-        <h1 class="title">Challenge yourself</h1>
-        {% for triplet in open_projects %}
-          <div class="row"></div>
-            <div class="columns">
-            {% for project in triplet %}
-              <div class="column is-one-third">
-                <div class="card">
-                  <div class="card-image">
-                    {% if project.video_summary.url %}
-                      <video src="{{project.video_summary.url}}" controls></video>
-                    {% endif %}
-                  </div>
-                  <div class="card-content">
-                    <div class="media">
-                      <div class="media-content">
-                        <p class="title is-4">{{project.title}}</p>
-                        {% if project.institution %}
-                          <p class="subtitle is-6">{{project.institution}}</p>
-                        {% endif %}
-                      </div>
-                    </div>
-
-                    <div class="content">
-                      {{project.short_description}}
-                    </div>
-                  </div>
-                  {% if project.supported_by %}
-                    <footer class="card-footer">
-                      Supported by: {{project.supported_by}}
-                    </footer>
-                  {% endif %}
-                </div>
-              </div>
-            {% endfor %}
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
 
     <footer class="footer">
       <div class="content has-text-centered">

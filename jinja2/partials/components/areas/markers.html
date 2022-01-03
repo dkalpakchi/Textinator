@@ -27,7 +27,7 @@
           {% for marker_variant in project_markers_variants %}
             {% if marker_variant.is_free_text and marker_variant.unit is none %}
               <div class="control has-tag-left is-marker-fullwidth">
-                <input class='input' type="text" name="{{marker_variant.marker.code}}" placeholder="{{marker_variant.marker.name}}">
+                <input class='input' type="text" name="{{marker_variant.code}}" placeholder="{{marker_variant.marker.name}}">
                 {{marker_variant|display_marker_tag}}
               </div>
             {% endif %}

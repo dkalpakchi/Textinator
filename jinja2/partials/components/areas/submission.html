@@ -5,6 +5,7 @@
   <div class="message-body">
     <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
       {{ csrf_input }}
+      <input type="hidden" name="mode" value="r">
       <div class="field is-grouped">
         <div class="control">
           <a class='submit button'>

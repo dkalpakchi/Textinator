@@ -34,8 +34,8 @@ from modeltranslation.translator import translator
 
 from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
-from .view_helpers import process_chunk
 from .exporters import *
+from .view_helpers import *
 
 from Textinator.jinja2 import prettify
 
@@ -392,158 +392,184 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 @require_http_methods(["POST"])
 def record_datapoint(request, proj):
     data = request.POST
+    ctx_cache = caches['context']
+    mode = data['mode']
+
     chunks = json.loads(data['chunks'])
     relations = json.loads(data['relations'])
-    ctx_cache = caches['context']
-
     marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
     free_text_inputs = json.loads(data['free_text_markers'])
-
-    is_review = data.get('is_review', 'f') == 'true'
-    is_resolution = data.get('is_resolution', 'f') == 'true'
-
     user = request.user
-    try:
-        project = Project.objects.get(pk=proj)
-        u_profile = UserProfile.objects.get(user=user, project=project)
-        data_source = DataSource.objects.get(pk=data['datasource'])
 
-        # log the submission
-        project_data = ProjectData.objects.get(project=project, datasource=data_source)
-        dal = DataAccessLog.objects.get(user=user, project_data=project_data, datapoint=str(data['datapoint']))
-        dal.is_submitted = True
-        dal.save()
-    except Project.DoesNotExist:
-        raise Http404
-    except UserProfile.DoesNotExist:
-        return JsonResponse({'error': True})
-    except DataSource.DoesNotExist:
-        data_source = None
+    if mode == 'r':
+        # regular submission
+        try:
+            project = Project.objects.get(pk=proj)
+            u_profile = UserProfile.objects.get(user=user, project=project)
+            data_source = DataSource.objects.get(pk=data['datasource'])
 
-    batch = Batch.objects.create(uuid=uuid.uuid4(), user=user)
+            # log the submission
+            project_data = ProjectData.objects.get(project=project, datasource=data_source)
+            dal = DataAccessLog.objects.get(user=user, project_data=project_data, datapoint=str(data['datapoint']))
+            dal.is_submitted = True
+            dal.save()
+        except Project.DoesNotExist:
+            raise Http404
+        except UserProfile.DoesNotExist:
+            return JsonResponse({'error': True})
+        except DataSource.DoesNotExist:
+            data_source = None
 
-    if marker_groups:
-        dct = OrderedDict()
-        for k, v in marker_groups.items():
-            unit, i, marker, _ = k.split("_")
-            prefix = "{}_{}".format(unit, i)
-            if prefix not in dct:
-                dct[prefix] = defaultdict(list)
-            if v:
-                dct[prefix][marker].append(v)
-        marker_groups = dct
+        batch = Batch.objects.create(uuid=uuid.uuid4(), user=user)
 
-        if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
-            ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
-            if not ctx:
-                ctx = Context.objects.create(datasource=data_source, datapoint=str(data['datapoint']), content=data['input_context'])
-                ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
+        if marker_groups:
+            dct = OrderedDict()
+            for k, v in marker_groups.items():
+                unit, i, marker, _ = k.split("_")
+                prefix = "{}_{}".format(unit, i)
+                if prefix not in dct:
+                    dct[prefix] = defaultdict(list)
+                if v:
+                    dct[prefix][marker].append(v)
+            marker_groups = dct
 
-            for i, (unit, v) in enumerate(marker_groups.items()):
-                unit_cache = []
-                for code, values in v.items():
-                    mv = MarkerVariant.objects.filter(project=project, marker__code=code).annotate(
-                        filtered_unit=Replace('unit__name', Value('_'), Value(''))
-                    ).filter(filtered_unit=unit.split("_")[0]).first()
+            if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
+                ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
+                if not ctx:
+                    ctx = Context.objects.create(datasource=data_source, datapoint=str(data['datapoint']), content=data['input_context'])
+                    ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
 
-                    N = len(values)
-                    if N >= mv.min() and N <= mv.max():
-                        for val in values:
-                            if val:
-                                unit_cache.append({
-                                    'content': val,
-                                    'marker': mv,
-                                    'unit': i + 1
-                                })
-                    else:
-                        unit_cache = []
-                        break
+                for i, (unit, v) in enumerate(marker_groups.items()):
+                    unit_cache = []
+                    for code, values in v.items():
+                        mv = MarkerVariant.objects.filter(project=project, marker__code=code).annotate(
+                            filtered_unit=Replace('unit__name', Value('_'), Value(''))
+                        ).filter(filtered_unit=unit.split("_")[0]).first()
 
-                for dct in unit_cache:
-                    if dct['marker'].is_free_text:
-                        Input.objects.create(context=ctx, batch=batch, **dct)
+                        N = len(values)
+                        if N >= mv.min() and N <= mv.max():
+                            for val in values:
+                                if val:
+                                    unit_cache.append({
+                                        'content': val,
+                                        'marker': mv,
+                                        'unit': i + 1
+                                    })
+                        else:
+                            unit_cache = []
+                            break
 
-    if free_text_inputs:
-        ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
-        if not ctx:
-            ctx = Context.objects.create(datasource=data_source, datapoint=str(data['datapoint']), content=data['input_context'])
-            ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
-        for code, inp_string in free_text_inputs.items():
-            marker_variant = MarkerVariant.objects.get(project=project, marker__code=code) # must be only
-            Input.objects.create(content=inp_string, marker=marker_variant, batch=batch, context=ctx)
+                    for dct in unit_cache:
+                        if dct['marker'].is_free_text:
+                            Input.objects.create(context=ctx, batch=batch, **dct)
 
-
-    saved_labels = 0
-    label_cache = {}
-    for chunk in chunks:
-        # inp is typically the same for all chunks
-        res_chunk = process_chunk(
-            chunk, batch, project, 
-            data_source, str(data['datapoint']), user,
-            (ctx_cache, label_cache),
-            (is_resolution, is_review)
-        )
-        if res_chunk:
-            ret_caches, just_saved = res_chunk
-            ctx_cache, label_cache = ret_caches
-            saved_labels += just_saved
-
-    for i, rel in enumerate(relations):
-        for link in rel['links']:
-            source_id, target_id = int(link['s']), int(link['t'])
-
-            try:
-                source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
-                target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
-            except Label.DoesNotExist:
-                continue
-
-            try:
-                rule = Relation.objects.filter(pk=rel['rule']).get()
-            except Relation.DoesNotExist:
-                continue
-
-            LabelRelation.objects.create(
-                rule=rule, first_label=source_label, second_label=target_label, batch=batch, unit=i+1
+        if free_text_inputs:
+            process_free_text_inputs(
+                free_text_inputs, batch, project, data_source,
+                data['datapoint'], data['input_context'],
+                ctx_cache=ctx_cache
             )
 
-    # Peer review task
-    # if project.is_peer_reviewed:
-    #     if u_profile.submitted() > 5 and random.random() > 0.5:
-    #         inp_query = Input.objects.exclude(user=user).values('pk')
-    #         rand_inp_id = random.choice(inp_query)['pk']
-    #         inp = Input.objects.get(pk=rand_inp_id)
-    #     else:
-    #         inp = None
-    # else:
-    #     inp = None
+        saved_labels = 0
+        label_cache = {}
+        for chunk in chunks:
+            # inp is typically the same for all chunks
+            res_chunk = process_chunk(
+                chunk, batch, project, 
+                data_source, str(data['datapoint']), user,
+                (ctx_cache, label_cache)
+            )
+            if res_chunk:
+                ret_caches, just_saved = res_chunk
+                ctx_cache, label_cache = ret_caches
+                saved_labels += just_saved
+
+        for i, rel in enumerate(relations):
+            for link in rel['links']:
+                source_id, target_id = int(link['s']), int(link['t'])
+
+                try:
+                    source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
+                    target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
+                except Label.DoesNotExist:
+                    continue
+
+                try:
+                    rule = Relation.objects.filter(pk=rel['rule']).get()
+                except Relation.DoesNotExist:
+                    continue
+
+                LabelRelation.objects.create(
+                    rule=rule, first_label=source_label, second_label=target_label, batch=batch, unit=i+1
+                )
+    elif mode == 'e':
+        # editing
+        project = Project.objects.get(pk=proj)
+        batch_uuid = data.get('batch')
+        try:
+            batch = Batch.objects.get(uuid=batch_uuid, user=user)
+        except Batch.MultipleObjectsReturned:
+            return JsonResponse({'error': True})
+        
+        if batch:
+            batch_inputs = {i.hash: i for i in Input.objects.filter(batch=batch)}
+            batch_labels = {l.hash: l for l in Label.objects.filter(batch=batch)}
+
+            inputs = []
+            print(free_text_inputs)
+            for name, fti in free_text_inputs.items():
+                if type(fti) == dict:
+                    try:
+                        inp = batch_inputs[fti['hash']]
+                        if inp.marker.code == name:
+                            inp.content = fti['value']
+                            inputs.append(inp)
+                    except KeyError:
+                        # smth is wrong
+                        pass
+                elif type(fti) == str:
+                    # we create a new record!
+                    try:
+                        data_source = DataSource.objects.get(pk=data['datasource'])
+                    except DataSource.DoesNotExist:
+                        data_source = None
+
+                    print(fti)
+                    
+                    if data_source:
+                        process_free_text_inputs(
+                            {name: fti}, batch, project, data_source,
+                            data['datapoint'], data['input_context']
+                        )
+
+            if inputs:
+                Input.objects.bulk_update(inputs, ['content'])
+
+            batch.save()
+            
+            return JsonResponse({
+                'error': False,
+                'mode': mode,
+                'template': render_editing_board(project, request.user)
+            })
+        else:
+            return JsonResponse({'error': True})
+        
 
     return JsonResponse({
         'error': False,
-        'next_task': 'regular',
-        'batch': str(batch)
+        'batch': str(batch),
+        'mode': mode
     })
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET"])
 def editing(request, proj):
     project = get_object_or_404(Project, pk=proj)
-    if request.method == "GET":
-        label_batches = Label.objects.filter(batch__user=request.user, marker__project=project).values_list('batch__uuid', flat=True)
-        input_batches = Input.objects.filter(batch__user=request.user, marker__project=project).values_list('batch__uuid', flat=True)
-
-        batch_uuids = set(label_batches) | set(input_batches)
-        batches = Batch.objects.filter(uuid__in=batch_uuids).order_by('-dt_created')
-
-        return JsonResponse({
-            'template': render_to_string('partials/components/areas/editing.html', {
-                'batches':batches,
-                'project': project
-            }, request=request)
-        })
-    else:
-        pass
+    return JsonResponse({
+        'template': render_editing_board(project, request.user)
+    })
 
 
 @login_required
@@ -576,7 +602,7 @@ def get_batch(request):
             'groups': [i.to_short_json() for i in groups]
         })
     else:
-        return JsonResponse({'data': {}})
+        return JsonResponse({})
 
 
 @login_required

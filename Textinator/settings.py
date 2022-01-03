@@ -179,10 +179,6 @@ CACHES = {
     'context': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': '127.0.0.1:11211',
-    },
-    'input': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
     }
 }
 
@@ -247,9 +243,10 @@ DATASOURCE_TYPES = [
     ('TextsAPI', 'API')
 ]
 
-MARKER_TYPES = [
-    ('lb', 'Label'),
-    ('rl', 'Relation')
+FORMATTING_TYPES = [
+    ('md', 'Markdown'),
+    ('ft', 'Formatted text'),
+    ('pt', 'Plain text')
 ]
 
 LOGIN_URL = '/textinator/accounts/login/'

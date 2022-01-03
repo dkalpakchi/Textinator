@@ -12,6 +12,20 @@
           seen.add(key);
         return !isDuplicate;
       });
+    },
+    serializeHashedObject: function(obj) {
+      var o = {};
+      $(obj).each(function(i, x) {
+        if (x.getAttribute('data-h')) {
+          o[x.getAttribute('name')] = {
+            'value': x.value,
+            'hash': x.getAttribute('data-h')
+          }  
+        } else {
+          o[x.getAttribute('name')] = x.value
+        }
+      });
+      return o;
     }
   };
 
@@ -23,6 +37,7 @@
     var chunks = [], // the array of all chunks of text marked with a label, but not submitted yet
         relations = {}, // a map from relationId to the list of relations constituting it
         labelId = 0,
+        editingBatch = undefined,
         activeLabels = 0, // a number of labels currently present in the article
         currentRelationId = null, // the ID of the current relation (for a visual pane)
         lastRelationId = 1, // the ID of the last unsubmitted relation
@@ -618,7 +633,12 @@
             // TODO: this relies on us not including any icons in the buttons, which we don't so far
             if (target.tagName == "LI" && target.getAttribute('data-mode') == "e") {
               var uuid = target.getAttribute('data-id'),
-                  url = document.querySelector("#editingBoard").getAttribute('data-url');
+                  $editingBoard = $("#editingBoard"),
+                  url = $editingBoard.attr('data-url'),
+                  $list = $editingBoard.find('li');
+              $list.removeClass('is-hovered');
+              target.classList.add('is-hovered');
+              
               if (utils.isDefined) {
                 control.restoreBatch(uuid, url);
               }
@@ -782,6 +802,9 @@
             markedSpan.setAttribute('style', 'background-color:' + color + '; color:' + textColor + ";");
             $(markedSpan).prop('in_relation', false);
             deleteMarkedBtn.className = 'delete is-small';
+
+            if (chunk['hash'])
+              markedSpan.setAttribute('data-h', chunk['hash']);
 
             initContextMenu(markedSpan, this.contextMenuPlugins);
 
@@ -1523,7 +1546,17 @@
         target.remove();
         if (sibling != null)
           sibling.remove();
-        chunks = chunks.filter(function(x) { return x.id != chunkId });
+
+        if (utils.isDefined(editingBatch)) {
+          for (var i = 0, len = chunks.length; i < len; i++) {
+            if (chunks[i].id == chunkId) {
+              chunks[i]['deleted'] = true;
+              break;
+            }
+          }
+        } else {
+          chunks = chunks.filter(function(x) { return x.id != chunkId });
+        }
         mergeWithNeighbors(parent);
         // $(target).prop('in_relation', false);
         activeLabels--;
@@ -1532,7 +1565,7 @@
         if (!utils.isDefined(stringify)) stringify = false;
 
         var markerGroups = utils.isDefined(this.markerGroupsArea) ? $(this.markerGroupsArea).find("form#markerGroups").serializeObject() : {},
-            freeTextMarkers = utils.isDefined(this.markersArea) ? $(this.markersArea).find('input[type="text"]').serializeObject() : {},
+            freeTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('input[type="text"]')) : {},
             submitRelations = [];
 
         if (Object.values(relations).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
@@ -1602,6 +1635,7 @@
           }
         });
         submittableChunks = [];
+        editingBatch = undefined;
 
         $(this.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
         $(this.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });
@@ -1656,6 +1690,7 @@
             success: function(d) {
               control.postSubmitHandler();
               control.emptyChunks();
+              editingBatch = uuid;
 
               var free = d.free_text_inputs,
                   labels = d.labels,
@@ -1668,6 +1703,7 @@
               for (var i = 0, len = free.length; i < len; i++) {
                 var inp = control.markersArea.querySelector('input[name="' + free[i].marker.code + '"]');
                 if (inp) {
+                  inp.setAttribute('data-h', free[i].hash);
                   inp.value = free[i].content;
                 }
               }
@@ -1751,6 +1787,8 @@
 
                       window.getSelection().addRange(range);
                       control.updateChunkFromSelection();
+                      var activeChunk = control.getActiveChunk();
+                      activeChunk['hash'] = labels[curLabelId]['hash'];
                       var code = labels[curLabelId]['marker']['code'];
                       control.mark(control.markersArea.querySelector('.marker[data-s="' + code + '"]'), mmpi);
                       innerAcc += (labels[curLabelId]['start'] - innerAcc);
@@ -1767,6 +1805,9 @@
             }
           });
         }
+      },
+      getEditingBatch: function() {
+        return editingBatch;
       }
     }
   })();
@@ -1876,7 +1917,6 @@
           $inputBlock = $inputForm.closest('article');
 
       var inputFormData = $inputForm.serializeObject(),
-          underReview = $inputBlock.prop('review') || false,
           markerGroupsForm = utils.isDefined(labelerModule.markerGroupsArea) ?
             labelerModule.markerGroupsArea.querySelector('#markerGroups') :
             undefined,
@@ -1899,7 +1939,6 @@
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());
 
-      inputFormData['is_review'] = underReview;
       inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
       inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
 
@@ -1908,6 +1947,9 @@
           inputFormData[x] = JSON.stringify(inputFormData[x]);
         });
         
+        if (inputFormData['mode'] == 'e')
+          inputFormData['batch'] = labelerModule.getEditingBatch();
+
         $.ajax({
           method: "POST",
           url: inputForm.action,
@@ -1915,23 +1957,15 @@
           data: inputFormData,
           success: function(data) {
             if (data['error'] == false) {
-              var $title = $inputBlock.find('.message-header p');
-                
-              if (labelerModule.disableSubmittedLabels)
-                labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
-              else
-                labelerModule.unmark(JSON.parse(inputFormData['chunks']));
+              if (data['mode'] == 'r') {
+                if (labelerModule.disableSubmittedLabels)
+                  labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
+                else
+                  labelerModule.unmark(JSON.parse(inputFormData['chunks']));
+              } else if (data['mode'] == 'e') {
+                $("#editingBoard").html(data.template);
+              }
             }
-
-            // var $submitted = $('#submittedTotal'),
-            //     $submittedToday = $('#submittedToday');
-            
-            // $submitted.text(data['submitted']);
-            // $submitted.append($('<span class="smaller">q</span>'));
-            
-            // $submittedToday.text(data['submitted_today']);
-            // $submittedToday.append($('<span class="smaller">q</span>'));
-            
 
             // TODO; trigger iff .countdown is present
             // $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
@@ -2082,6 +2116,7 @@
           url: $target.attr('href'),
           success: function(d) {
             $lastCol.prepend(d.template);
+            $("#inputForm input[name='mode']").val('e');
             $target.attr('data-mode', 'c');
             $target.text("Close editing mode");
           },
@@ -2091,7 +2126,9 @@
         })
       } else if (mode == 'c') {
         $lastCol.find('#editingBoard').remove();
+        labelerModule.setEditingBatch(undefined);
         $target.attr('data-mode', 'o');
+        $("#inputForm input[name='mode']").val('r');
         $target.text('');
         $target.append($("<span class='icon'><i class='fas fa-pencil-alt'></i></span>"));
         $target.append($("<span>Editing mode<span>"));

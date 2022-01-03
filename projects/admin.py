@@ -15,7 +15,7 @@ from .models import *
 
 
 class CommonModelAdmin(admin.ModelAdmin):
-    readonly_fields = ['dt_created']
+    readonly_fields = ['dt_created', 'dt_updated']
     _list_filter = []
 
     def changelist_view(self, request, extra_context=None):    
@@ -26,7 +26,15 @@ class CommonModelAdmin(admin.ModelAdmin):
         return super(CommonModelAdmin, self).changelist_view(request, extra_context)
 
 
-class MarkerRestrictionInline(nested_admin.NestedStackedInline):
+class CommonStackedInline(admin.StackedInline):
+    readonly_fields = ['dt_created', 'dt_updated']
+
+
+class CommonNestedStackedInline(nested_admin.NestedStackedInline):
+    readonly_fields = ['dt_created', 'dt_updated']
+
+
+class MarkerRestrictionInline(CommonNestedStackedInline):
     model = MarkerRestriction
     extra = 0
     # classes = ['collapse']
@@ -35,7 +43,7 @@ class MarkerRestrictionInline(nested_admin.NestedStackedInline):
 
 
 
-class MarkerContextMenuItemInline(nested_admin.NestedStackedInline):
+class MarkerContextMenuItemInline(CommonNestedStackedInline):
     model = MarkerContextMenuItem
     verbose_name = _("context menu item")
     verbose_name_plural = _("context menu items")
@@ -64,7 +72,7 @@ class MarkerVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
 
 # TODO: fix name 'ModelValidationError' is not defined
 #       happens when trying to assign marker to be both task and project specific
-class MarkerVariantInline(nested_admin.NestedStackedInline):
+class MarkerVariantInline(CommonNestedStackedInline):
     model = MarkerVariant
     formset = MarkerVariantInlineFormset
     extra = 0
@@ -73,17 +81,17 @@ class MarkerVariantInline(nested_admin.NestedStackedInline):
     verbose_name_plural = _("project-specific markers")
 
 
-class LevelInline(nested_admin.NestedStackedInline):
+class LevelInline(CommonNestedStackedInline):
     model = Level
     extra = 0
 
 
-class PreMarkerInline(nested_admin.NestedStackedInline):
+class PreMarkerInline(CommonNestedStackedInline):
     model = PreMarker
     extra = 0
 
 
-class UserProfileInline(nested_admin.NestedStackedInline):
+class UserProfileInline(CommonNestedStackedInline):
     model = UserProfile
     verbose_name = _("participant")
     verbose_name_plural = _("participants")
@@ -91,13 +99,14 @@ class UserProfileInline(nested_admin.NestedStackedInline):
     exclude = ('points', 'asking_time', 'timed_questions')
 
 
-class LabelInline(admin.StackedInline):
-    readonly_fields = ('text',)
+class LabelInline(CommonStackedInline):
+    readonly_fields = CommonStackedInline.readonly_fields + ['text']
     model = Label
     extra = 0
 
-class LabelReviewInline(admin.StackedInline):
-    readonly_fields = ('text',)
+
+class LabelReviewInline(CommonStackedInline):
+    readonly_fields = CommonStackedInline.readonly_fields + ['text']
     model = LabelReview
     extra = 0
 
@@ -109,12 +118,12 @@ class RelationInline(nested_admin.NestedStackedInline):
     verbose_name_plural = _("project-specific relations")
 
 
-class InputInline(admin.StackedInline):
+class InputInline(CommonStackedInline):
     model = Input
     extra = 0
 
 
-class LabelRelationInline(admin.StackedInline):
+class LabelRelationInline(CommonStackedInline):
     raw_id_fields = ('first_label', 'second_label')
     model = LabelRelation
     extra = 0
@@ -185,7 +194,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
         'task_type',
         'is_open'
     ]
-    readonly_fields = ['dt_created']
+    readonly_fields = ['dt_created', 'dt_updated']
     form = ProjectForm
     inlines = [MarkerVariantInline, RelationInline, PreMarkerInline, UserProfileInline] #LevelInline, UserProfileInline]
     save_as = True
