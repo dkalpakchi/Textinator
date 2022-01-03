@@ -4,7 +4,7 @@ import io
 import random
 import bisect
 import uuid
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from itertools import chain
 
 from django.http import JsonResponse, Http404, HttpResponse, FileResponse, StreamingHttpResponse
@@ -18,8 +18,7 @@ from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Value
-from django.db.models.functions import Replace
+from django.db.models import Q
 from django.urls import reverse
 
 from reportlab.pdfgen import canvas
@@ -395,119 +394,33 @@ def record_datapoint(request, proj):
     ctx_cache = caches['context']
     mode = data['mode']
 
-    chunks = json.loads(data['chunks'])
-    relations = json.loads(data['relations'])
-    marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
-    free_text_inputs = json.loads(data['free_text_markers'])
-    user = request.user
+    batch_info = BatchInfo(data, proj, request.user)
 
     if mode == 'r':
-        # regular submission
-        try:
-            project = Project.objects.get(pk=proj)
-            u_profile = UserProfile.objects.get(user=user, project=project)
-            data_source = DataSource.objects.get(pk=data['datasource'])
-
-            # log the submission
-            project_data = ProjectData.objects.get(project=project, datasource=data_source)
-            dal = DataAccessLog.objects.get(user=user, project_data=project_data, datapoint=str(data['datapoint']))
-            dal.is_submitted = True
-            dal.save()
-        except Project.DoesNotExist:
+        # # regular submission
+        if not batch_info.project or not batch_info.data_source:
             raise Http404
-        except UserProfile.DoesNotExist:
-            return JsonResponse({'error': True})
-        except DataSource.DoesNotExist:
-            data_source = None
 
-        batch = Batch.objects.create(uuid=uuid.uuid4(), user=user)
+        # log the submission
+        project_data = ProjectData.objects.get(project=batch_info.project, datasource=batch_info.data_source)
+        dal = DataAccessLog.objects.get(
+            user=batch_info.user,
+            project_data=project_data,
+            datapoint=batch_info.datapoint
+        )
+        dal.is_submitted = True
+        dal.save()
 
-        if marker_groups:
-            dct = OrderedDict()
-            for k, v in marker_groups.items():
-                unit, i, marker, _ = k.split("_")
-                prefix = "{}_{}".format(unit, i)
-                if prefix not in dct:
-                    dct[prefix] = defaultdict(list)
-                if v:
-                    dct[prefix][marker].append(v)
-            marker_groups = dct
+        batch = Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
 
-            if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
-                ctx = retrieve_by_hash(data['input_context'], Context, ctx_cache)
-                if not ctx:
-                    ctx = Context.objects.create(datasource=data_source, datapoint=str(data['datapoint']), content=data['input_context'])
-                    ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
-
-                for i, (unit, v) in enumerate(marker_groups.items()):
-                    unit_cache = []
-                    for code, values in v.items():
-                        mv = MarkerVariant.objects.filter(project=project, marker__code=code).annotate(
-                            filtered_unit=Replace('unit__name', Value('_'), Value(''))
-                        ).filter(filtered_unit=unit.split("_")[0]).first()
-
-                        N = len(values)
-                        if N >= mv.min() and N <= mv.max():
-                            for val in values:
-                                if val:
-                                    unit_cache.append({
-                                        'content': val,
-                                        'marker': mv,
-                                        'unit': i + 1
-                                    })
-                        else:
-                            unit_cache = []
-                            break
-
-                    for dct in unit_cache:
-                        if dct['marker'].is_free_text:
-                            Input.objects.create(context=ctx, batch=batch, **dct)
-
-        if free_text_inputs:
-            process_free_text_inputs(
-                free_text_inputs, batch, project, data_source,
-                data['datapoint'], data['input_context'],
-                ctx_cache=ctx_cache
-            )
-
-        saved_labels = 0
-        label_cache = {}
-        for chunk in chunks:
-            # inp is typically the same for all chunks
-            res_chunk = process_chunk(
-                chunk, batch, project, 
-                data_source, str(data['datapoint']), user,
-                (ctx_cache, label_cache)
-            )
-            if res_chunk:
-                ret_caches, just_saved = res_chunk
-                ctx_cache, label_cache = ret_caches
-                saved_labels += just_saved
-
-        for i, rel in enumerate(relations):
-            for link in rel['links']:
-                source_id, target_id = int(link['s']), int(link['t'])
-
-                try:
-                    source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
-                    target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
-                except Label.DoesNotExist:
-                    continue
-
-                try:
-                    rule = Relation.objects.filter(pk=rel['rule']).get()
-                except Relation.DoesNotExist:
-                    continue
-
-                LabelRelation.objects.create(
-                    rule=rule, first_label=source_label, second_label=target_label, batch=batch, unit=i+1
-                )
+        process_marker_groups(batch, batch_info, ctx_cache=ctx_cache)
+        process_free_text_inputs(batch, batch_info, ctx_cache=ctx_cache)
+        process_chunks_and_relations(batch, batch_info, ctx_cache=ctx_cache)
     elif mode == 'e':
         # editing
-        project = Project.objects.get(pk=proj)
         batch_uuid = data.get('batch')
         try:
-            batch = Batch.objects.get(uuid=batch_uuid, user=user)
+            batch = Batch.objects.get(uuid=batch_uuid, user=batch_info.user)
         except Batch.MultipleObjectsReturned:
             return JsonResponse({'error': True})
         
@@ -516,8 +429,7 @@ def record_datapoint(request, proj):
             batch_labels = {l.hash: l for l in Label.objects.filter(batch=batch)}
 
             inputs = []
-            print(free_text_inputs)
-            for name, fti in free_text_inputs.items():
+            for name, fti in batch_info.free_text_inputs.items():
                 if type(fti) == dict:
                     try:
                         inp = batch_inputs[fti['hash']]
@@ -533,24 +445,28 @@ def record_datapoint(request, proj):
                         data_source = DataSource.objects.get(pk=data['datasource'])
                     except DataSource.DoesNotExist:
                         data_source = None
-
-                    print(fti)
                     
                     if data_source:
                         process_free_text_inputs(
-                            {name: fti}, batch, project, data_source,
-                            data['datapoint'], data['input_context']
+                            batch, batch_info, free_text_inputs={name: fti}
                         )
 
             if inputs:
                 Input.objects.bulk_update(inputs, ['content'])
 
-            batch.save()
+            for chunk in batch_info.chunks:
+                if chunk.get('deleted', False):
+                    chunk_hash = chunk.get('hash')
+                    if chunk_hash and chunk_hash in batch_labels:
+                        batch_labels[chunk_hash].delete()
+            process_chunks_and_relations(batch, batch_info)
+
+            batch.save() # this updates dt_updated
             
             return JsonResponse({
                 'error': False,
                 'mode': mode,
-                'template': render_editing_board(project, request.user)
+                'template': render_editing_board(batch_info.project, batch_info.user)
             })
         else:
             return JsonResponse({'error': True})

@@ -1,34 +1,81 @@
-from .models import *
+import json
+from collections import defaultdict, OrderedDict
+
 from django.template.loader import render_to_string
-from django.db.models import F
+from django.db.models import F, Value
+from django.db.models.functions import Replace
+
+from .models import *
 
 
-def process_chunk(chunk, batch, project, data_source, datapoint, user, caches):
+class BatchInfo:
+    def __init__(self, data, proj, user):
+        self.chunks = json.loads(data['chunks'])
+        self.relations = json.loads(data['relations'])
+        self.marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
+        self.free_text_inputs = json.loads(data['free_text_markers'])
+        self.datapoint = str(data['datapoint'])
+        self.input_context = data['input_context']
+
+        try:
+            self.project = Project.objects.get(pk=proj)
+        except Project.DoesNotExist:
+            self.project = None
+            
+        try:
+            self.data_source = DataSource.objects.get(pk=data['datasource'])
+        except DataSource.DoesNotExist:
+            self.data_source = None
+
+        self.user = user
+
+
+def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
     saved_labels = 0
-    if chunk.get('marked', False):
+
+    if chunk.get('marked', False) and (not chunk.get('deleted', False)) and chunk.get('updated', True):
         ctx_cache, label_cache = caches
 
         # First check for the "context", there may be 2 cases:
         # a) the context is the whole text, in which case it's already created as input_context previously and will be just retrieved from cache
         # b) the context is something other than the whole text, in which case it will be created here
         if 'context' in chunk and type(chunk['context']) == str:
-            ctx = retrieve_by_hash(chunk['context'], Context, ctx_cache)
-            if not ctx:
-                ctx = Context.objects.create(datasource=data_source, datapoint=datapoint, content=chunk['context'])
-                ctx_cache.set(ctx.content_hash, ctx.pk, 600)
+            if ctx_cache:
+                ctx = retrieve_by_hash(chunk['context'], Context, ctx_cache)
+                if not ctx:
+                    ctx = Context.objects.create(
+                        datasource=batch_info.data_source,
+                        datapoint=batch_info.datapoint,
+                        content=chunk['context']
+                    )
+                    ctx_cache.set(ctx.content_hash, ctx.pk, 600)
+            else:
+                ctx, _ = Context.objects.get_or_create(
+                    datasource=batch_info.data_source,
+                    datapoint=batch_info.datapoint,
+                    content=chunk['context']
+                )
         else:
             ctx = None
 
         try:
             if (not 'label' in chunk) or (type(chunk['label']) != str):
                 return (ctx_cache, label_cache), saved_labels
-            marker_obj = Marker.objects.get(code=chunk['label'].strip())
+
+            chunk_label = chunk['label'].strip()
+            code = "_".join(chunk_label.split("_")[:-1])
             # TODO: check interaction with MarkerUnits
-            marker = MarkerVariant.objects.filter(project=project, marker=marker_obj).first()
-        except Marker.DoesNotExist:
+            markers = MarkerVariant.objects.filter(project=batch_info.project, marker__code=code)
+
+            marker = None
+            for mv in markers:
+                if mv.code == chunk_label:
+                    marker = mv
+                    break
+        except MarkerVariant.DoesNotExist:
             return (ctx_cache, label_cache), saved_labels
 
-        if 'lengthBefore' in chunk and 'start' in chunk and 'end' in chunk:
+        if 'lengthBefore' in chunk and 'start' in chunk and 'end' in chunk and marker:
             new_start = chunk['lengthBefore'] + chunk['start']
             new_end = chunk['lengthBefore'] + chunk['end']
 
@@ -54,23 +101,122 @@ def render_editing_board(project, user):
         'project': project
     })
 
-def process_free_text_inputs(free_text_inputs, batch, project, data_source, datapoint, input_context, ctx_cache=None):
-    if ctx_cache:
-        ctx = retrieve_by_hash(input_context, Context, ctx_cache)
-        if not ctx:
-            ctx = Context.objects.create(datasource=data_source, datapoint=str(datapoint), content=input_context)
-            ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
-    else:
-        ctx = Context.objects.get(datasource=data_source, datapoint=str(datapoint), content=input_context)
-    
-    mv = {}
-    for code, inp_string in free_text_inputs.items():
-        marker_code = "_".join(code.split("_")[:-1])
-        if marker_code not in mv:
-            marker_variants = MarkerVariant.objects.filter(project=project, marker__code=marker_code)
-            mv[marker_code] = marker_variants
 
-        for m in mv[marker_code]:
-            if m.code == code:
-                Input.objects.create(content=inp_string, marker=m, batch=batch, context=ctx)
-                break
+def process_free_text_inputs(batch, batch_info, free_text_inputs=None, ctx_cache=None):
+    fti = free_text_inputs or batch_info.free_text_inputs
+
+    if fti:
+        if ctx_cache:
+            ctx = retrieve_by_hash(batch_info.input_context, Context, ctx_cache)
+            if not ctx:
+                ctx = Context.objects.create(
+                    datasource=batch_info.data_source,
+                    datapoint=batch_info.datapoint,
+                    content=batch_info.input_context
+                )
+                ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
+        else:
+            ctx, _ = Context.objects.get_or_create(
+                datasource=batch_info.data_source,
+                datapoint=batch_info.datapoint,
+                content=batch_info.input_context
+            )
+        
+        mv = {}
+        for code, inp_string in fti.items():
+            marker_code = "_".join(code.split("_")[:-1])
+            if marker_code not in mv:
+                marker_variants = MarkerVariant.objects.filter(project=batch_info.project, marker__code=marker_code)
+                mv[marker_code] = marker_variants
+
+            for m in mv[marker_code]:
+                if m.code == code:
+                    Input.objects.create(content=inp_string, marker=m, batch=batch, context=ctx)
+                    break
+
+
+def process_chunks_and_relations(batch, batch_info, ctx_cache=None):
+    saved_labels = 0
+    label_cache = {}
+    for chunk in batch_info.chunks:
+        # inp is typically the same for all chunks
+        res_chunk = process_chunk(
+            chunk, batch, batch_info,
+            (ctx_cache, label_cache)
+        )
+        if res_chunk:
+            ret_caches, just_saved = res_chunk
+            ctx_cache, label_cache = ret_caches
+            saved_labels += just_saved
+
+    for i, rel in enumerate(batch_info.relations):
+        for link in rel['links']:
+            source_id, target_id = int(link['s']), int(link['t'])
+
+            try:
+                source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
+                target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
+            except Label.DoesNotExist:
+                continue
+
+            try:
+                rule = Relation.objects.filter(pk=rel['rule']).get()
+            except Relation.DoesNotExist:
+                continue
+
+            LabelRelation.objects.create(
+                rule=rule, first_label=source_label, second_label=target_label, batch=batch, unit=i+1
+            )
+
+
+def process_marker_groups(batch, batch_info, ctx_cache=None):
+    if batch_info.marker_groups:
+        marker_groups = OrderedDict()
+        for k, v in batch_info.marker_groups.items():
+            unit, i, marker, _ = k.split("_")
+            prefix = "{}_{}".format(unit, i)
+            if prefix not in dct:
+                marker_groups[prefix] = defaultdict(list)
+            if v:
+                marker_groups[prefix][marker].append(v)
+
+        if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
+            if ctx_cache:
+                ctx = retrieve_by_hash(batch_info.input_context, Context, ctx_cache)
+                if not ctx:
+                    ctx = Context.objects.create(
+                        datasource=batch_info.data_source,
+                        datapoint=batch_info.datapoint,
+                        content=batch_info.input_context
+                    )
+                    ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
+            else:
+                ctx, _ = Context.objects.get_or_create(
+                    datasource=batch_info.data_source,
+                    datapoint=batch_info.datapoint,
+                    content=batch_info.input_context
+                )
+
+            for i, (unit, v) in enumerate(marker_groups.items()):
+                unit_cache = []
+                for code, values in v.items():
+                    mv = MarkerVariant.objects.filter(project=batch_info.project, marker__code=code).annotate(
+                        filtered_unit=Replace('unit__name', Value('_'), Value(''))
+                    ).filter(filtered_unit=unit.split("_")[0]).first()
+
+                    N = len(values)
+                    if N >= mv.min() and N <= mv.max():
+                        for val in values:
+                            if val:
+                                unit_cache.append({
+                                    'content': val,
+                                    'marker': mv,
+                                    'unit': i + 1
+                                })
+                    else:
+                        unit_cache = []
+                        break
+
+                for dct in unit_cache:
+                    if dct['marker'].is_free_text:
+                        Input.objects.create(context=ctx, batch=batch, **dct)

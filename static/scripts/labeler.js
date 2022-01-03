@@ -45,6 +45,7 @@
         resetTextHTML = null,  // the HTML of the loaded article
         resetText = null,    // the text of the loaded article
         pluginsToRegister = 0,
+        originalConfig = undefined,
         markersInRelations = [],
         nonRelationMarkers = [],
         submittableChunks = []; // chunks to be submitted
@@ -721,7 +722,7 @@
         chunk['id'] = labelId;
         chunk['label'] = node.getAttribute('data-s');
         chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
-        chunk['context'] = resetText;
+        chunk['context'] = resetText; // was relevant when we had different context sizes
         chunk['start'] = previousTextLength(node, false);
         chunk['end'] = chunk['start'] + node.textContent.length;
         chunks.push(chunk);
@@ -764,7 +765,7 @@
             chunk['range'] = group[0].cloneRange();
             chunk['range'].setEnd(group[N-1].endContainer, group[N-1].endOffset);
 
-            chunk['context'] = resetText;
+            chunk['context'] = resetText; // was relevant when we had different context sizes
             chunk['lengthBefore'] = previousTextLength(chunk['range'].startContainer);
 
             chunk['start'] = chunk['range'].startOffset;
@@ -1636,12 +1637,6 @@
         });
         submittableChunks = [];
         editingBatch = undefined;
-
-        $(this.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
-        $(this.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });
-      },
-      emptyChunks: function() {
-        chunks = [];
       },
       resetArticle: function() {
         this.selectorArea.innerHTML = resetTextHTML;
@@ -1689,16 +1684,25 @@
             },
             success: function(d) {
               control.postSubmitHandler();
-              control.emptyChunks();
               editingBatch = uuid;
 
-              var free = d.free_text_inputs,
-                  labels = d.labels,
-                  groups = d.groups;
+              if (!utils.isDefined(originalConfig)) {
+                originalConfig = {
+                  'data-s': control.selectorArea.getAttribute('data-s'),
+                  'data-dp': control.selectorArea.getAttribute('data-dp'),
+                  'resetText': resetText,
+                  'resetTextHTML': resetTextHTML
+                }
+              }
 
               control.selectorArea.setAttribute('data-s', d.context.ds_id);
               control.selectorArea.setAttribute('data-dp', d.context.dp_id);
               control.selectorArea.innerHTML = d.context.content;
+              control.restart();
+
+              var free = d.free_text_inputs,
+                  labels = d.labels,
+                  groups = d.groups;
 
               for (var i = 0, len = free.length; i < len; i++) {
                 var inp = control.markersArea.querySelector('input[name="' + free[i].marker.code + '"]');
@@ -1724,7 +1728,7 @@
                     var innerAcc = acc,
                         numInnerLoops = 0,
                         cnodeLength = cnodes[i].textContent.length;
-                    while (curLabelId < numLabels && labels[curLabelId]['end'] < acc + cnodeLength) {
+                    while (curLabelId < numLabels && labels[curLabelId]['end'] <= acc + cnodeLength) {
                       var areOverlapping = processed.map(function(x) {
                             var s1 = labels[curLabelId],
                                 s2 = labels[x["id"]];
@@ -1738,6 +1742,7 @@
                         "ov": numOverlapping,
                         "closed": false
                       });
+                      
                       var textNode = undefined;
                       if (numOverlapping == 0) {
                         textNode = cnodes[i].childNodes[cnodes[i].childNodes.length-1];
@@ -1773,7 +1778,8 @@
                               }
                             }
 
-                            innerAcc += labels[sameLevelId]['end'] - innerAcc;
+                            if (labels[sameLevelId]['end'] > innerAcc)
+                              innerAcc += labels[sameLevelId]['end'] - innerAcc;
                           }
                         } else {
                           textNode = cnodes[i].childNodes[cnodes[i].childNodes.length-1];
@@ -1781,7 +1787,6 @@
                       }
 
                       const range = new Range();
-                      // try {
                       range.setStart(textNode, labels[curLabelId]['start'] - innerAcc);
                       range.setEnd(textNode, labels[curLabelId]['end'] - innerAcc);
 
@@ -1789,6 +1794,7 @@
                       control.updateChunkFromSelection();
                       var activeChunk = control.getActiveChunk();
                       activeChunk['hash'] = labels[curLabelId]['hash'];
+                      activeChunk['updated'] = false;
                       var code = labels[curLabelId]['marker']['code'];
                       control.mark(control.markersArea.querySelector('.marker[data-s="' + code + '"]'), mmpi);
                       innerAcc += (labels[curLabelId]['start'] - innerAcc);
@@ -1804,6 +1810,20 @@
               console.log("ERROR!");
             }
           });
+        }
+      },
+      restoreOriginal: function() {
+        editingBatch = undefined;
+        if (utils.isDefined(originalConfig)) {
+          this.selectorArea.setAttribute('data-s', originalConfig['data-s']);
+          this.selectorArea.setAttribute('data-dp', originalConfig['data-dp']);
+          resetText = originalConfig['resetText'];
+          resetTextHTML = originalConfig['resetTextHTML'];
+
+          this.selectorArea.innerHTML = resetTextHTML;
+          originalConfig = undefined;
+          this.postSubmitHandler();
+          this.restart();
         }
       },
       getEditingBatch: function() {
@@ -1962,6 +1982,9 @@
                   labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));
                 else
                   labelerModule.unmark(JSON.parse(inputFormData['chunks']));
+
+                $(labelerModule.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
+                $(labelerModule.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });
               } else if (data['mode'] == 'e') {
                 $("#editingBoard").html(data.template);
               }
@@ -2105,33 +2128,39 @@
 
     $('#editingModeButton').on('click', function(e) {
       e.preventDefault();
-
       var $target = $(e.target).closest('a'),
-          mode = $target.attr('data-mode'),
-          $lastCol = $(labelerModule.taskArea).find('.column:last');
+          mode = $target.attr('data-mode');
 
-      if (mode == 'o') {
-        $.ajax({
-          type: "GET",
-          url: $target.attr('href'),
-          success: function(d) {
-            $lastCol.prepend(d.template);
-            $("#inputForm input[name='mode']").val('e');
-            $target.attr('data-mode', 'c');
-            $target.text("Close editing mode");
-          },
-          error: function() {
-            console.log("Error while invoking editing mode!")
-          }
-        })
-      } else if (mode == 'c') {
-        $lastCol.find('#editingBoard').remove();
-        labelerModule.setEditingBatch(undefined);
-        $target.attr('data-mode', 'o');
-        $("#inputForm input[name='mode']").val('r');
-        $target.text('');
-        $target.append($("<span class='icon'><i class='fas fa-pencil-alt'></i></span>"));
-        $target.append($("<span>Editing mode<span>"));
+      var isOk = (mode != 'o') || confirm("Any unsaved annotations on the current text will be lost. Proceed?");
+      
+      if (isOk) {
+        var $lastCol = $(labelerModule.taskArea).find('.column:last');
+
+        if (mode == 'o') {
+          $.ajax({
+            type: "GET",
+            url: $target.attr('href'),
+            success: function(d) {
+              $lastCol.prepend(d.template);
+              $("#inputForm input[name='mode']").val('e');
+              $target.attr('data-mode', 'c');
+              $target.text("Close editing mode");
+            },
+            error: function() {
+              console.log("Error while invoking editing mode!")
+            }
+          })
+        } else if (mode == 'c') {
+          $lastCol.find('#editingBoard').remove();
+          $target.attr('data-mode', 'o');
+          $("#inputForm input[name='mode']").val('r');
+          $target.text('');
+          $target.append($("<span class='icon'><i class='fas fa-pencil-alt'></i></span>"));
+          $target.append($("<span>Editing mode<span>"));
+          labelerModule.restoreOriginal();
+          $(labelerModule.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
+          $(labelerModule.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });
+        }
       }
     });
 
