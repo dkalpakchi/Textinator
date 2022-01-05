@@ -984,7 +984,6 @@
               radius = 10;
 
           svg
-            .attr("width", "85%")
             .attr("height", "85%");
 
           svg.selectAll('g')
@@ -1030,8 +1029,8 @@
                     .id(function(d) { return d.id; })                     // This provide  the id of a node
                     .links(data.links)                                    // and this the list of links
               )
-              .force("charge", d3.forceManyBody().strength(-500))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-              .force("center", d3.forceCenter(radius, 30))                // This force attracts nodes to the center of the svg area
+              .force("charge", d3.forceManyBody().strength(-400))         // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+              .force("center", d3.forceCenter(radius, 10))                // This force attracts nodes to the center of the svg area
               .stop()
 
           // This function is run at each iteration of the force algorithm, updating the nodes position.
@@ -1255,7 +1254,9 @@
 
             $($parts[i]).prop('in_relation', true);
 
+            // strip marker variant part
             var s = $parts[i].getAttribute('data-s');
+            s = s.substring(0, s.lastIndexOf("_"));
 
             if (!nodes.hasOwnProperty(s)) {
               nodes[s] = [];

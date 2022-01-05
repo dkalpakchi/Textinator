@@ -218,5 +218,5 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                         break
 
                 for dct in unit_cache:
-                    if dct['marker'].is_free_text:
+                    if dct['marker'].is_free_text():
                         Input.objects.create(context=ctx, batch=batch, **dct)

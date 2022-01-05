@@ -15,3 +15,4 @@ aftonbladet*
 .venv
 example_texts_api/.tvenv
 example_texts_api/__pycache__
+htmlcov

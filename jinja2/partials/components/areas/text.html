@@ -7,7 +7,7 @@
       </span>
     </a>
   </div>
-  {% set all_text_markers=project.markervariant_set.values_list('is_free_text', flat=True)|all %}
+  {% set all_text_markers=project.markervariant_set.filter(anno_type='free-text').count() == project.markervariant_set.count() %}
   <div class="selector element content message-body{% if all_text_markers %} broad{% endif %}" data-s="{{source_id}}" data-dp="{{dp_id}}" data-f="{{source_finished}}">
     {% if source_id != -1 %}
       {{text|prettify}}

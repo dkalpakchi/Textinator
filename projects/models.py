@@ -72,6 +72,8 @@ class DataSource(CommonModel):
     )
     formatting = models.CharField(_('formatting'), max_length=3, choices=settings.FORMATTING_TYPES,
         help_text=_("text formating of the data source"))
+    # is_public = models.BooleanField(_("is public?"), default=False,
+    #     help_text=_("Whether to make data source available to other Textinator users"))
 
     @classmethod
     def type2class(cls, source_type):
@@ -183,6 +185,10 @@ class Project(CommonModel):
         verbose_name = _('project')
         verbose_name_plural = _('projects')
         ordering = ['-dt_finish']
+        permissions = (
+            ('view_this_post', 'Can view this project'),
+        )
+
 
     title = models.CharField(_("title"), max_length=50)
     short_description = models.TextField(_("short description"), max_length=1000, default="",
@@ -345,21 +351,38 @@ class Project(CommonModel):
 
 
 class MarkerUnit(CommonModel):
+    """
+    Some annotation tasks might benefit from annotating groups of markers as one unit.
+    This model stores the definitions of such units (shared across all users).
+
+    The unit configuration has two dimensions:
+    - marker group, which is defined by a one to many relationship with MarkerVariant model
+    - unit height, which provides minimum and maximum number of marker groups in this unit
+
+    `minimum_required` attribute defines a lower bound for a unit height, whereas `size` defines an upper bound.
+    """
+
     class Meta:
         verbose_name = _('marker unit')
         verbose_name_plural = _('marker units')
 
     size = models.PositiveIntegerField(_("size"), default=1,
-        help_text=_("Default (and maximal) number of marker units per annotation batch"))
+        help_text=_("Default (and maximal) number of marker groups in the unit"))
     minimum_required = models.PositiveIntegerField(_("minimum required"), default=1,
-        help_text=_("Minimum required number of marker units per annotation batch (can't be more than `size`)"))
+        help_text=_("Minimum required number of marker groups in the unit (can't be more than `size`)"))
     is_rankable = models.BooleanField(_("is rankable?"), default=False,
-        help_text=_("Whether annotators should be allowed to rank units in the annotation batch"))
-    name = models.CharField(_("name"), max_length=10, 
-        help_text=_("Internal name for the unit (max 10 characters)"))
+        help_text=_("Whether annotators should be allowed to rank marker groups in the unit"))
+
+    @property
+    def name(self):
+        return "mn{}mx{}r{}".format(self.minimum_required, self.size, int(self.is_rankable))
 
     def __str__(self):
-        return self.name
+        suffix = " ({})".format(_("rankable")) if self.is_rankable else ""
+        if self.size > self.minimum_required:
+            return _("From {} to {}{}").format(self.minimum_required, self.size, suffix)
+        elif self.size == self.minimum_required:
+            return _("Exactly {}").format(self.minimum_required)
 
     def __lt__(self, other):
         return self.pk < other.pk
@@ -372,9 +395,8 @@ class MarkerVariant(CommonModel):
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE, verbose_name=_("marker template"))
-    is_free_text = models.BooleanField(_("is a free-text input?"), default=False,
-        help_text=_("Indicates whether a marker should be instantiated as a label or a free-text input"))
-    unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True, verbose_name=_("marker unit"))
+    unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True, verbose_name=_("marker unit"),
+        limit_choices_to={})
     order_in_unit = models.PositiveIntegerField(_("order in a unit"), blank=True, null=True,
         help_text=_("Order of this marker in the unit"))
     actions = models.ManyToManyField(MarkerAction, through='MarkerContextMenuItem', blank=True,
@@ -395,6 +417,15 @@ class MarkerVariant(CommonModel):
         help_text=_("Customized color for the annotated text span (color of the marker template by default)"))
     custom_shortcut = models.CharField(_("keyboard shortcut"), max_length=10, null=True, blank=True,
         help_text=_("Keyboard shortcut for annotating a piece of text with this marker (shortcut of the marker template by default"))
+    anno_type = models.CharField(_("annotation type"), max_length=10, default='m-span', choices=settings.ANNOTATION_TYPES,
+        help_text=_("The type of annotations made using this marker"))
+
+    def __init__(self, *args, **kwargs):
+        super(MarkerVariant, self).__init__(*args, **kwargs)
+
+        for atuple in settings.ANNOTATION_TYPES:
+            at, _ = atuple
+            setattr(self, 'is_{}'.format(at.replace('-','_')), make_checker(self, 'anno_type', at))
 
     @property
     def name(self):
@@ -426,6 +457,7 @@ class MarkerVariant(CommonModel):
         same_marker_pk = list(self.project.markervariant_set.filter(marker=self.marker).values_list('pk', flat=True))
         same_marker_pk.sort()
         return "{}_{}".format(self.marker.code, same_marker_pk.index(self.pk))
+
 
     def get_count_restrictions(self, stringify=True):
         """
@@ -571,7 +603,7 @@ class PreMarker(CommonModel):
         verbose_name_plural = _('pre-markers')
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE)
     tokens = models.TextField(_("static tokens"),
         help_text=_("Comma-separated tokens that should be highlighted with a marker"))
 
@@ -726,7 +758,7 @@ class Label(CommonModel):
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, null=True) # null is allowed for backward compatibility reason
     extra = models.JSONField(_("extra information"), null=True, blank=True,
         help_text=_("in a JSON format"))
-    context = models.ForeignKey(Context, on_delete=models.CASCADE, null=True, blank=True) # if there is no input, there must be context
+    context = models.ForeignKey(Context, on_delete=models.CASCADE)
     undone = models.BooleanField(_("was undone?"), default=False,
         help_text=_("Indicates whether the annotator used 'Undo' button"))
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)

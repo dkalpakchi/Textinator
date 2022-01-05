@@ -10,11 +10,12 @@ from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 
 import nested_admin
 from modeltranslation.admin import TranslationAdmin
+from guardian.admin import GuardedModelAdmin
 
 from .models import *
 
 
-class CommonModelAdmin(admin.ModelAdmin):
+class CommonModelAdmin(GuardedModelAdmin):
     readonly_fields = ['dt_created', 'dt_updated']
     _list_filter = []
 
@@ -111,7 +112,7 @@ class LabelReviewInline(CommonStackedInline):
     extra = 0
 
 
-class RelationInline(nested_admin.NestedStackedInline):
+class RelationInline(CommonNestedStackedInline):
     model = Relation
     extra = 0
     verbose_name = _("project-specific relation")
@@ -188,7 +189,7 @@ class ProjectForm(forms.ModelForm):
 
 
 @admin.register(Project)
-class ProjectAdmin(nested_admin.NestedModelAdmin):
+class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
     _list_filter = [
         'institution',
         'task_type',
@@ -199,6 +200,8 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
     inlines = [MarkerVariantInline, RelationInline, PreMarkerInline, UserProfileInline] #LevelInline, UserProfileInline]
     save_as = True
     exclude = ('is_peer_reviewed',)
+    user_can_access_owned_objects_only = True
+    user_owned_objects_field = 'author'
 
     def save_model(self, request, obj, form, change):
         if not obj.author:

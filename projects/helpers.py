@@ -93,3 +93,9 @@ def apply_premarkers(proj, text):
                     premarker_tmpl.format(m.code, m.color, text_color, t),
                     text)
     return text
+
+
+def make_checker(self, param, value):
+    def _function():
+        return getattr(self, param) == value
+    return _function

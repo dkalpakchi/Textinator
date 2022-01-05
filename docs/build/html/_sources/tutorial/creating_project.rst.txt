@@ -2,4 +2,3 @@
 =================================
 
 We will use a previously created dataset
-:ref:`define them by hand<custom_annotation_task>`

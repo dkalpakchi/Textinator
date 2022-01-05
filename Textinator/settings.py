@@ -68,7 +68,8 @@ INSTALLED_APPS = [
     'scientific_survey',
     'users',
     'colorfield',
-    'rosetta'
+    'rosetta',
+    'guardian'
 ]
 
 MIDDLEWARE = [
@@ -85,6 +86,7 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'Textinator.backends.EmailAuthenticationBackend',
+    'guardian.backends.ObjectPermissionBackend',
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -247,6 +249,14 @@ FORMATTING_TYPES = [
     ('md', 'Markdown'),
     ('ft', 'Formatted text'),
     ('pt', 'Plain text')
+]
+
+ANNOTATION_TYPES = [
+    ('m-span', 'Marker (text spans)'),
+    ('m-text', 'Marker (whole text)'),
+    ('free-text', 'Free-text input'),
+    ('integer', 'Integer'),
+    ('float', 'Floating-point number')
 ]
 
 LOGIN_URL = '/textinator/accounts/login/'

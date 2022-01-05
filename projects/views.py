@@ -503,7 +503,7 @@ def get_batch(request):
         elif inputs.count():
             context = inputs.first().context.to_json()
 
-        free_text_inputs = inputs.filter(marker__unit=None, marker__is_free_text=True)
+        free_text_inputs = inputs.filter(marker__unit=None, marker__anno_type='free-text')
         groups = inputs.exclude(marker__unit=None)
 
         # context['content'] will give us text without formatting,
