@@ -865,8 +865,8 @@ def time_report(request, proj):
 
     # Draw things on the PDF. Here's where the PDF generation happens.
     # See the ReportLab documentation for the full list of functionality.
-    p.setFont("Terminator", size=18)
-    system_name = "Textinator"
+    p.setFont("ROBOTECH GP", size=18)
+    system_name = "ROBOTECH GP"
     p.drawString(A4[0] / 2 - 18 * PT2MM * len(system_name) * 1.1, 0.95 * A4[1], system_name)
 
     p.setFont("Helvetica", size=14)

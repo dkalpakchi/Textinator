@@ -1,74 +1,34 @@
-{% set all_text_markers=project.markervariant_set.filter(anno_type='free-text').count() == project.markervariant_set.count() %}
-{% set any_free_text_markers=project.markervariant_set.filter(unit=None, anno_type='free-text').count() > 0 %}
-{% set any_text_marker_groups=project.markervariant_set.filter(anno_type='free-text').exclude(unit=None).count() > 0 %}
-{% if not all_text_markers or any_free_text_markers %}
+{% if project.free_markers.count() > 0 %}
   <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
       <p>{{ _("markers")|capitalize }}</p>
     </div>
     <div class="message-body">
-      <div class="field is-grouped is-grouped-multiline">
-        {% set project_marker_variants=project.markervariant_set.all() %}
-        {% for marker_variant in project_marker_variants %}
-          {% if not marker_variant.is_free_text() %}
-            <div class="control">
-              {{marker_variant|display_marker}}
-            </div>
-          {% endif %}
-        {% endfor %}
-      </div>
-
-      {% if any_free_text_markers %}
-        {% if not all_text_markers %}
-          <div class="divider"></div>
-        {% endif %}
+      {% set grouped_markers = project.free_markers|groupby('anno_type') %}
+      {% for key, group in grouped_markers %}
         <div class="field is-grouped is-grouped-multiline">
-          {% for marker_variant in project_marker_variants %}
-            {% if marker_variant.is_free_text() and marker_variant.unit is none %}
-              <div class="control has-tag-left is-marker-fullwidth">
-                <input class='input' type="text" name="{{marker_variant.code}}" placeholder="{{marker_variant.marker.name}}">
-                {{marker_variant|display_marker_tag}}
-              </div>
-            {% endif %}
+          {% for marker in group %}
+            {{marker|display_marker}}
           {% endfor %}
         </div>
-      {% endif %}
+        {% if not loop.last %}
+          <div class="divider"></div>
+        {% endif %}
+      {% endfor %}
     </div>
   </article>
 {% endif %}
-{% if any_text_marker_groups %}
+
+{% if project.marker_groups.count() > 0 %}
   <article class="marker groups message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
       <p>{{ _("marker groups")|capitalize }}</p>
     </div>
     <div class="message-body">
-      {% set project_marker_variants=project.markervariant_set.exclude(unit=None).all() %}
       <form id="markerGroups" data-toggle="formcache">
         <ul id="sortable">
-          {% for unit, marker_variants in project_marker_variants|groupby("unit") %}
-              {% for i in range(unit.size) %}
-                <li class="ui-state-default notification has-background-grey-lighter">
-                  <span class="fa fa-sort"></span>
-                  <div class="field">
-                    {% for marker_variant in marker_variants|sort(attribute="order_in_unit") %}
-                      {% set mv_min = marker_variant.min() %}
-                      {% set mv_max = marker_variant.max() %}
-                      {% for k in range(mv_max) %}
-                        {% if marker_variant.is_free_text() %}
-                          <div class="control has-tag-left">
-                            {% if mv_max > 1 %}
-                              <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","") }}_{{i}}_{{marker_variant.marker.code}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}} {{loop.index}}{% if k < mv_min %} ({{ _("required") }}){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
-                            {% else %}
-                              <input class='input' type="text" name="{{marker_variant.unit.name|replace("_","")}}_{{i}}_{{marker_variant.marker.code}}_{{loop.index}}" placeholder="{{marker_variant.marker.name}}{% if k < mv_min %} ({{ _("required") }}){% endif %}" data-required="{{(i < unit.minimum_required and k < mv_min)|bool2str}}">
-                            {% endif %}
-                            {{marker_variant|display_marker_tag}}
-                          </div>
-                        {% endif %}
-                      {% endfor %}
-                    {% endfor %}
-                  </div>
-                </li>
-              {% endfor %}
+          {% for unit, markers in project.marker_groups|groupby("unit") %}
+            {% include 'partials/components/controls/markers/_group.html' %}
           {% endfor %}
         </ul>
       </form>

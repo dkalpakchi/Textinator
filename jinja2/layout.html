@@ -4,24 +4,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Textinator</title>
-    <link rel="stylesheet" href="{{ static('styles/fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ static('styles/bulma.min.css') }}">
+    <link rel="stylesheet" href="{{ static('@fortawesome/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ static('bulma/css/bulma.min.css') }}">
+    <link rel="stylesheet" href="{{ static('shepherd.js/dist/css/shepherd-theme-default.css') }}">
     <link rel="stylesheet" href="{{ static('styles/bulma-divider.min.css') }}">
     <link rel="stylesheet" href="{{ static('styles/base_style.css') }}">
-    <link rel="stylesheet" href="{{ static('styles/shepherd-theme-default.css') }}">
     <link rel="stylesheet" href="{% sass_src 'styles/style.scss' %}">
     <link href="{% sass_src 'styles/radial-progress-bar.scss' %}" rel="stylesheet" type="text/css" />
     {% block custom_styles %}{% endblock %}
 
-    <script type="text/javascript" src="{{ static('scripts/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('jquery/dist/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ static('scripts/jquery_ext.js') }}"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <script type="text/javascript" src="{{ static('scripts/d3.min.js') }}"></script>
-    <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.2/dist/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="{{ static('jquery-ui-dist/jquery-ui.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('d3/dist/d3.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('@popperjs/core/dist/umd/popper.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('tippy.js/dist/tippy.umd.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('jquery-validation/dist/jquery.validate.min.js') }}"></script>
     <script type="text/javascript" src="{{ static('scripts/formcache.min.js') }}"></script>
-    <script type="text/javascript" src="{{ static('scripts/shepherd.min.js') }}"></script>
+    <script type="text/javascript" src="{{ static('shepherd.js/dist/js/shepherd.min.js') }}"></script>
     <script type="text/javascript" src="{{ static('scripts/letter_avatar.js') }}"></script>
     <script type="text/javascript" src="{{ static('scripts/script.js') }}"></script>
     {% block custom_scripts %}{% endblock %}

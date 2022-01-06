@@ -216,7 +216,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static')
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'node_modules')
 ]
 STATIC_URL = '/textinator/static/'
 MEDIA_URL = '/textinator/media/'
@@ -254,9 +255,11 @@ FORMATTING_TYPES = [
 ANNOTATION_TYPES = [
     ('m-span', 'Marker (text spans)'),
     ('m-text', 'Marker (whole text)'),
-    ('free-text', 'Free-text input'),
+    ('free-text', 'Short free-text input'),
+    ('lfree-text', 'Long free-text input'),
     ('integer', 'Integer'),
-    ('float', 'Floating-point number')
+    ('float', 'Floating-point number'),
+    ('range', 'Range')
 ]
 
 LOGIN_URL = '/textinator/accounts/login/'
@@ -290,8 +293,8 @@ TINYMCE_DEFAULT_CONFIG = {
 FILEBROWSER_MAX_UPLOAD_SIZE = 20971520
 
 
-pdfmetrics.registerFont(TTFont('Terminator',
-    os.path.join(BASE_DIR, 'static', 'styles', 'terminator real nfi.ttf')))
+pdfmetrics.registerFont(TTFont('ROBOTECH GP',
+    os.path.join(BASE_DIR, 'static', 'styles', 'webfonts', 'ROBOTECH GP.ttf')))
 
 
 CHOICES_SEPARATOR = "|"

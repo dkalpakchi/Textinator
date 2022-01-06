@@ -1,0 +1,27 @@
+{% for i in range(unit.size) %}
+  <li class="ui-state-default notification has-background-grey-lighter">
+    <span class="fa fa-sort"></span>
+    <div class="field">
+      {% for marker in markers|sort(attribute="order_in_unit") %}
+        {% set mv_min = marker.min() %}
+        {% set mv_max = marker.max() %}
+        {% set prefix = '{}_{}_'.format(marker.unit.name|replace("_",""), i) %}
+        {% set suffix = "_{}".format(loop.index) %}
+        {% for k in range(mv_max) %}
+          {% set req = (i < unit.minimum_required and k < mv_min)|bool2str %}
+          {% set extra = 'data-required="{}"'.format(req) %}
+          {% set placeholder = marker.name %}
+          {% if mv_max > 1 %}
+            {% set placeholder = "{} {}".format(placeholder, loop.index) %}
+          {% endif %}
+
+          {% if k < mv_min %}
+            {% set placeholder = "{} ({})".format(placeholder, _("required")) %}
+          {% endif %}
+
+          {{marker|display_marker(prefix=prefix,suffix=suffix,placeholder=placeholder,extra=extra)}}
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </li>
+{% endfor %}

@@ -7,13 +7,6 @@ body .container:first-of-type {
 }
 
 @font-face {
-  font-family: 'Terminator Real NFI';
-  font-style: normal;
-  font-weight: normal;
-  src: local('Terminator Real NFI'), url('/textinator/static/styles/webfonts/terminator_real_nfi.woff') format('woff');
-}
-
-@font-face {
   font-family: 'ROBOTECH GP';
   font-style: normal;
   font-weight: normal;
@@ -537,6 +530,10 @@ label.error {
     top: 7px;
     width: 7.5em;
     z-index: 4;
+}
+
+.control.has-tag-left textarea {
+  padding-top: 35px !important;
 }
 
 input.help.is-danger {

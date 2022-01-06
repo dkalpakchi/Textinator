@@ -248,6 +248,15 @@ class Project(CommonModel):
         super().__init__(*args, **kwargs)
 
     @property
+    def free_markers(self):
+        return self.markervariant_set.filter(unit=None).order_by('anno_type')
+
+    @property
+    def marker_groups(self):
+        return self.markervariant_set.exclude(unit=None).order_by('anno_type')
+
+
+    @property
     def relations(self):
         # TODO: make relations MTM and create RelationVariant
         return Relation.objects.filter(project=self).all()
