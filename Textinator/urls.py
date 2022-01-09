@@ -19,6 +19,8 @@ from django.contrib import admin, auth
 from django.urls import path, include, reverse, re_path
 from django_registration.backends.one_step.views import RegistrationView
 from django.views.generic import RedirectView
+from django.views.i18n import JavaScriptCatalog
+
 
 from filebrowser.sites import site
 
@@ -37,6 +39,7 @@ paths = [
     path('tinymce/', include('tinymce.urls')),
     path('users/', include('users.urls')),
     path('i18n/', include('django.conf.urls.i18n')),
+    path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
 ]
 
 if 'scientific_survey' in settings.INSTALLED_APPS:

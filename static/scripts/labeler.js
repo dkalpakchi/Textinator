@@ -26,6 +26,9 @@
         }
       });
       return o;
+    },
+    title(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
     }
   };
 
@@ -448,11 +451,23 @@
       return text;
     }
 
+    function createMarkedSpan(obj) {
+      var color = obj.getAttribute('data-color'),
+          textColor = obj.getAttribute('data-text-color'),
+          markedSpan = document.createElement('span');
+      markedSpan.className = "tag";
+      markedSpan.setAttribute('data-s', obj.getAttribute('data-s'));
+      markedSpan.setAttribute('data-scope', obj.getAttribute('data-scope'));
+      markedSpan.setAttribute('style', 'background-color:' + color + '; color:' + textColor + ";");
+      return markedSpan
+    }
+
     return {
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
       drawingType: {},
       taskArea: null,
+      textLabelsArea: null,
       markersArea: null,
       selectorArea: null,   // the area where the article is
       markerGroupsArea: null,
@@ -464,7 +479,8 @@
         this.markersArea = this.taskArea.querySelector('.markers');
         this.markerGroupsArea = this.taskArea.querySelector('.marker.groups');
         this.relationsArea = this.taskArea.querySelector('.relations:not(.marked)');
-        this.selectorArea = this.taskArea.querySelector('.selector');
+        this.selectorArea = this.taskArea.querySelector('#textArea .selector');
+        this.textLabelsArea = this.taskArea.querySelector('#textLabels');
         resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
         resetText = this.getContextText();
         this.allowSelectingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-select') == 'true';
@@ -488,7 +504,7 @@
         // event delegation
         if (this.selectorArea != null) {
           var control = this;
-          this.selectorArea.addEventListener('click', function(e) {
+          this.taskArea.addEventListener('click', function(e) {
             e.stopPropagation();
             var target = e.target;
             if (isDeleteButton(target)) {
@@ -594,9 +610,13 @@
             this.markersArea.addEventListener('click', function(e) {
               var target = e.target;
               if (target.nodeName != 'INPUT') {
-                var mmpi = control.markersArea.getAttribute('data-mmpi');
-                control.mark(getClosestMarker(target), mmpi);
-                control.updateMarkAllCheckboxes();
+                if (target.getAttribute('data-scope') == 'span') {
+                  var mmpi = control.markersArea.getAttribute('data-mmpi');
+                  control.mark(getClosestMarker(target), mmpi);
+                  control.updateMarkAllCheckboxes();
+                } else if (target.getAttribute('data-scope') == 'text') {
+                  control.select(getClosestMarker(target));
+                }
               }
             }, false);
 
@@ -678,6 +698,12 @@
         $el.prop('disabled', true);
         $el.find('span[data-m="r"]').remove();
         c['submittable'] = false;
+      },
+      disableTextLabels: function() {
+        this.textLabelsArea.querySelectorAll('span.tag:not(.is-disabled)').forEach(function(x) {
+          x.querySelector('button.delete').remove();
+          x.classList.add('is-disabled');
+        })
       },
       enableChunk: function(c) {
         var $el = $('span.tag[data-i="' + c['id'] + '"]');
@@ -793,14 +819,10 @@
           var chunk = this.getActiveChunk();
 
           if (!chunk.marked) {
-            var color = obj.getAttribute('data-color'),
-                textColor = obj.getAttribute('data-text-color'),
-                markedSpan = document.createElement('span'),
+            var markedSpan = createMarkedSpan(obj),
                 deleteMarkedBtn = document.createElement('button');
-            markedSpan.className = "tag is-medium";
-            markedSpan.setAttribute('data-s', obj.getAttribute('data-s'));
+            markedSpan.classList.add('is-medium');
             markedSpan.setAttribute('data-i', chunk['id']);
-            markedSpan.setAttribute('style', 'background-color:' + color + '; color:' + textColor + ";");
             $(markedSpan).prop('in_relation', false);
             deleteMarkedBtn.className = 'delete is-small';
 
@@ -881,6 +903,18 @@
 
             clearSelection(); // force clear selection
           }
+        }
+      },
+      select: function(obj) {
+        if (!this.textLabelsArea.querySelector('[data-s="' + obj.getAttribute('data-s') + '"]')) {
+          var markedSpan = createMarkedSpan(obj),
+              deleteMarkedBtn = document.createElement('button');
+          markedSpan.textContent = obj.querySelector('span.tag:first-child').textContent;
+          markedSpan.classList.add("is-small");
+          deleteMarkedBtn.className = 'delete is-small';
+          markedSpan.appendChild(deleteMarkedBtn);
+
+          this.textLabelsArea.appendChild(markedSpan);
         }
       },
       checkRestrictions: function(inRelation) {
@@ -1536,39 +1570,47 @@
         e.stopPropagation();
         var target = e.target,
             parent = target.parentNode, // actual span
-            sibling = target.nextSibling,
-            chunkId = parent.getAttribute('data-i'),
-            chunk2del = chunks.filter(function(x) { return x.id == chunkId}); // the span with a relation number (if any)
+            scope = parent.getAttribute('data-scope');
+        
+        if (scope == 'text') {
+          parent.remove();
+        } else if (scope == 'span') {
+          var sibling = target.nextSibling,
+              chunkId = parent.getAttribute('data-i'),
+              chunk2del = chunks.filter(function(x) { return x.id == chunkId}); // the span with a relation number (if any)
 
-        var rel = isInRelations(chunk2del[0]);
-        if (rel) {
-          this.changeRelation(parent, rel, null);
-        }
-
-        target.remove();
-        if (sibling != null)
-          sibling.remove();
-
-        if (utils.isDefined(editingBatch)) {
-          for (var i = 0, len = chunks.length; i < len; i++) {
-            if (chunks[i].id == chunkId) {
-              chunks[i]['deleted'] = true;
-              break;
-            }
+          var rel = isInRelations(chunk2del[0]);
+          if (rel) {
+            this.changeRelation(parent, rel, null);
           }
-        } else {
-          chunks = chunks.filter(function(x) { return x.id != chunkId });
+
+          target.remove();
+          if (sibling != null)
+            sibling.remove();
+
+          if (utils.isDefined(editingBatch)) {
+            for (var i = 0, len = chunks.length; i < len; i++) {
+              if (chunks[i].id == chunkId) {
+                chunks[i]['deleted'] = true;
+                break;
+              }
+            }
+          } else {
+            chunks = chunks.filter(function(x) { return x.id != chunkId });
+          }
+          mergeWithNeighbors(parent);
+          // $(target).prop('in_relation', false);
+          activeLabels--;
         }
-        mergeWithNeighbors(parent);
-        // $(target).prop('in_relation', false);
-        activeLabels--;
       },
       getSubmittableDict: function(stringify) {
         if (!utils.isDefined(stringify)) stringify = false;
 
         var markerGroups = utils.isDefined(this.markerGroupsArea) ? $(this.markerGroupsArea).find("form#markerGroups").serializeObject() : {},
             freeTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('input[type="text"]')) : {},
-            submitRelations = [];
+            submitRelations = [],
+            submittableChunks = [],
+            textMarkers = Array.from(this.textLabelsArea.querySelectorAll('span.tag[data-s]:not(.is-disabled)')).map((x) => x.getAttribute('data-s'));
 
         if (Object.values(relations).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
           // if there are any relations, submit only those chunks that have to do with the relations
@@ -1605,7 +1647,8 @@
           "relations": stringify ? JSON.stringify(submitRelations) : submitRelations,
           "chunks": stringify ? JSON.stringify(submittableChunks) : submittableChunks,
           "marker_groups": stringify ? JSON.stringify(markerGroups) : markerGroups,
-          'free_text_markers': stringify ? JSON.stringify(freeTextMarkers) : freeTextMarkers
+          'free_text_markers': stringify ? JSON.stringify(freeTextMarkers) : freeTextMarkers,
+          'text_markers': stringify ? JSON.stringify(textMarkers) : textMarkers
         }
       },
       unmarkChunk: function(c) {
@@ -1620,6 +1663,7 @@
         }
       },
       postSubmitHandler: function(batch) {
+        this.disableTextLabels();
         relations = {};
         currentRelationId = null;
         lastRelationId = 1;
@@ -1672,7 +1716,8 @@
       },
       hasNewInfo: function(inputData) {
         return inputData['chunks'].length > 0 || inputData['relations'].length > 0 || 
-          inputData['marker_groups'].length > 0 || inputData['free_text_markers'].length > 0;
+          inputData['marker_groups'].length > 0 || inputData['free_text_markers'].length > 0 ||
+          inputData["text_markers"].length > 0;
       },
       restoreBatch: function(uuid, url) {
         var control = this;
@@ -1943,6 +1988,9 @@
             undefined,
           freeTextMarkers = utils.isDefined(labelerModule.markersArea) ?
             labelerModule.markersArea.querySelector('input[type="text"]') :
+            undefined,
+          textMarkers = utils.isDefined(labelerModule.markersArea) ? 
+            labelerModule.markersArea.querySelector('span.tag[data-scope="text"]') :
             undefined;
 
       // if there's an input form field, then create input_context
@@ -1954,7 +2002,7 @@
         }
       }
 
-      if (utils.isDefined(freeTextMarkers) && !inputFormData.hasOwnProperty('input_context')) {
+      if ((utils.isDefined(freeTextMarkers) || utils.isDefined(textMarkers)) && !inputFormData.hasOwnProperty('input_context')) {
         inputFormData['input_context'] = labelerModule.getContextText();
       }
 
@@ -1964,7 +2012,7 @@
       inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
 
       if (labelerModule.hasNewInfo(inputFormData)) {
-        ['chunks', 'relations', 'marker_groups', 'free_text_markers'].forEach(function(x) {
+        ['chunks', 'relations', 'marker_groups', 'free_text_markers', 'text_markers'].forEach(function(x) {
           inputFormData[x] = JSON.stringify(inputFormData[x]);
         });
         
@@ -2145,7 +2193,9 @@
               $lastCol.prepend(d.template);
               $("#inputForm input[name='mode']").val('e');
               $target.attr('data-mode', 'c');
-              $target.text("Close editing mode");
+              $target.empty();
+              $target.append($("<span class='icon'><i class='fas fa-times-circle'></i></span>"));
+              $target.append($("<span>" + utils.title(django.gettext("stop editing")) + "</span>"));
             },
             error: function() {
               console.log("Error while invoking editing mode!")
@@ -2155,9 +2205,9 @@
           $lastCol.find('#editingBoard').remove();
           $target.attr('data-mode', 'o');
           $("#inputForm input[name='mode']").val('r');
-          $target.text('');
-          $target.append($("<span class='icon'><i class='fas fa-pencil-alt'></i></span>"));
-          $target.append($("<span>Editing mode<span>"));
+          $target.empty();
+          $target.append($("<span class='icon'><i class='fas fa-edit'></i></span>"));
+          $target.append($("<span>" + utils.title(django.gettext("editor")) + "</span>"));
           labelerModule.restoreOriginal();
           $(labelerModule.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
           $(labelerModule.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });

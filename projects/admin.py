@@ -43,7 +43,6 @@ class MarkerRestrictionInline(CommonNestedStackedInline):
     verbose_name_plural = _("restrictions")
 
 
-
 class MarkerContextMenuItemInline(CommonNestedStackedInline):
     model = MarkerContextMenuItem
     verbose_name = _("context menu item")
@@ -112,8 +111,25 @@ class LabelReviewInline(CommonStackedInline):
     extra = 0
 
 
-class RelationInline(CommonNestedStackedInline):
-    model = Relation
+class RelationVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
+    model = RelationVariant
+
+    def __init__(self, *args, **kwargs):
+        super(RelationVariantInlineFormset, self).__init__(*args, **kwargs)
+
+        for i in range(len(self.forms)):
+            if self.forms[i].fields.get("custom_representation"):
+                # this takes care of assignment from parent model
+                self.forms[i].initial["custom_representation"] = self.forms[i].instance.representation
+
+            if self.forms[i].fields.get("custom_shortcut"):
+                # this takes care of assignment from parent model
+                self.forms[i].initial["custom_shortcut"] = self.forms[i].instance.shortcut
+
+
+class RelationVariantInline(CommonNestedStackedInline):
+    model = RelationVariant
+    formset = RelationVariantInlineFormset
     extra = 0
     verbose_name = _("project-specific relation")
     verbose_name_plural = _("project-specific relations")
@@ -197,7 +213,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
     ]
     readonly_fields = ['dt_created', 'dt_updated']
     form = ProjectForm
-    inlines = [MarkerVariantInline, RelationInline, PreMarkerInline, UserProfileInline] #LevelInline, UserProfileInline]
+    inlines = [MarkerVariantInline, RelationVariantInline, PreMarkerInline, UserProfileInline] #LevelInline, UserProfileInline]
     save_as = True
     exclude = ('is_peer_reviewed',)
     user_can_access_owned_objects_only = True
@@ -354,7 +370,7 @@ class DataAccessLogAdmin(CommonModelAdmin):
 
 
 @admin.register(Marker)
-class MarkerAdmin(CommonModelAdmin, TranslationAdmin):
+class MarkerAdmin(CommonModelAdmin):
     pass
 
 

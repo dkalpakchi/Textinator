@@ -545,6 +545,56 @@ label.help.is-danger {
   margin-bottom: 0.4rem;
 }
 
+.button.is-hovering {
+  width: 40px;
+  -webkit-justify-content: left;
+          justify-content: left;
+  overflow: hidden;
+  transition: width 0.3s ease-in-out;
+}
+
+.button.is-hovering .icon:first-child:not(:last-child) {
+  margin-left: calc(-.3em - 1px);
+}
+
+.button.is-hovering .icon:first-child:not(:last-child):hover {
+  margin-left: calc(-.5em - 1px);
+}
+
+.button.is-hovering:hover {
+  width: 100% !important;
+}
+
+.is-group {
+  display: flex;
+  -webkit-align-items: center;
+          align-items: center;
+  -webkit-justify-content: space-between;
+          justify-content: space-between;
+}
+
+.is-group span {
+  margin-right: 5px;
+}
+
+.is-group > span:first-child {
+  margin-right: 15px;
+}
+
+/**
+ * FontAwesome extensions
+ */
+.fa-newspaper-plus:before {
+  content: '';
+  height: 100%;       /* Fill parent */
+  width: 100%;
+  position: absolute;
+  left: 0;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: url('/textinator/static/images/fontawesome-ext/newspaper-plus.png');
+}
+
 
 /** 
  * Other library fixes

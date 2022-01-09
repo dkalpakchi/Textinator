@@ -89,55 +89,6 @@ $(document).ready(function() {
     $(this).toggleClass('is-active');
   })
 
-  /**
-   * Adapted from:
-   * https://css-tricks.com/value-bubbles-for-range-inputs/
-   */
-
-  document.addEventListener("input", function(e) {
-    var target = e.target;
-    if (target.nodeName == "INPUT" && target.getAttribute("type") == 'range') {
-      var bubble = target.parentNode.querySelector('.bubble');
-      setBubble(target, bubble);
-    }
-  });
-
-  document.querySelectorAll('input[type="range"]').forEach(function(x) {
-    var bubble = x.parentNode.querySelector('.bubble');
-    setBubble(x, bubble);
-    setBubbleDisplay(x, "none");
-  })
-
-  document.addEventListener('mousedown', function(e) {
-    var target = e.target;
-    if (target.nodeName == "INPUT" && target.getAttribute("type") == 'range') {
-      setBubbleDisplay(target, "block");
-    }
-  })
-
-  document.addEventListener('mouseup', function(e) {
-    var target = e.target;
-    if (target.nodeName == "INPUT" && target.getAttribute("type") == 'range') {
-      setBubbleDisplay(target, "none");
-    }
-  })
-
-  function setBubbleDisplay(range, display) {
-    var bubble = range.parentNode.querySelector('.bubble');
-    bubble.style.display = display;
-  }
-
-  function setBubble(range, bubble) {
-    const val = range.value;
-    const min = range.min ? range.min : 0;
-    const max = range.max ? range.max : 100;
-    const newVal = Number(((val - min) * 100) / (max - min));
-    bubble.innerHTML = val;
-
-    // Sorta magic numbers based on size of the native UI thumb
-    bubble.style.left = `calc(${newVal}% + (${8 - newVal * 0.15}px))`;
-  }
-
   $( "#sortable" ).sortable();
   $( "#sortable" ).disableSelection();
 
@@ -161,4 +112,6 @@ $(document).ready(function() {
       gutter: 14
     });
   }
+
+  bulmaSlider.attach();
 });

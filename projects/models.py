@@ -161,7 +161,7 @@ class Marker(CommonModel):
         return bool(Relation.objects.filter(models.Q(pairs__first=self) | models.Q(pairs__second=self)).all())
 
     def __str__(self):
-        return str(self.name)
+        return self.__dict__['name']
 
     def to_minimal_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
@@ -176,6 +176,53 @@ class Marker(CommonModel):
             'name': self.name_en,
             'color': self.color,
             'code': self.code
+        })
+        return res
+
+
+class MarkerPair(CommonModel):
+    class Meta:
+        verbose_name = _('marker pair')
+        verbose_name_plural = _('marker pairs')
+
+    first = models.ForeignKey(Marker, related_name='first', on_delete=models.CASCADE)
+    second = models.ForeignKey(Marker, related_name='second', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.first.code + '-:-' + self.second.code
+
+
+class Relation(CommonModel):
+    class Meta:
+        verbose_name = _('relation')
+        verbose_name_plural = _('relations')
+
+    name = models.CharField(_("name"), max_length=50)
+    pairs = models.ManyToManyField(MarkerPair, verbose_name=_("marker pairs"))
+    direction = models.CharField(_("direction"), max_length=1, choices=[
+        ('0', _('Directed from the first to the second')),
+        ('1', _('Directed from the second to the first')),
+        ('2', _('Bi-directional'))
+    ])
+    shortcut = models.CharField(_("keyboard shortcut"), max_length=15, 
+        help_text=_("Keyboard shortcut for marking a piece of text with this relation"), null=True, blank=True)
+    representation = models.CharField(_("graphical representation type"), max_length=1,
+        choices=[('g', _('Graph')), ('l', _('List'))], default='g',
+        help_text=_("How should the relation be visualized?"))
+
+    @property
+    def between(self):
+        return "|".join([str(p) for p in self.pairs.all()])
+
+    def __str__(self):
+        return self.__dict__['name']
+
+    def to_json(self, dt_format=None):
+        res = super(Relation, self).to_json(dt_format=dt_format)
+        res.update({
+            'name': self.name,
+            'pairs': [str(p) for p in self.pairs.all()],
+            'direction': self.direction
         })
         return res
 
@@ -216,6 +263,8 @@ class Project(CommonModel):
         verbose_name=_("participants"))
     markers = models.ManyToManyField(Marker, through='MarkerVariant', blank=True,
         verbose_name=_("project-specific markers"))
+    relations = models.ManyToManyField(Relation, through='RelationVariant', blank=True,
+        verbose_name=_("project-specific relations"))
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("author"))
     datasources = models.ManyToManyField(DataSource, through='ProjectData', verbose_name=_("data sources"),
         help_text=_("All datasets must of the same language as the project"))
@@ -254,12 +303,6 @@ class Project(CommonModel):
     @property
     def marker_groups(self):
         return self.markervariant_set.exclude(unit=None).order_by('anno_type')
-
-
-    @property
-    def relations(self):
-        # TODO: make relations MTM and create RelationVariant
-        return Relation.objects.filter(project=self).all()
 
     def data(self, user):
         pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
@@ -397,6 +440,37 @@ class MarkerUnit(CommonModel):
         return self.pk < other.pk
 
 
+class Range(CommonModel):
+    class Meta:
+        verbose_name = _("range")
+        verbose_name = _("ranges")
+
+    min_value = models.FloatField(verbose_name=_("minimal value"), blank=True, null=True)
+    max_value = models.FloatField(verbose_name=_("maximal value"), blank=True, null=True)
+    step = models.FloatField(verbose_name=_("step"), blank=True, null=True)
+
+    def clean(self):
+        if not (self.min_value or self.max_value or self.step):
+            raise ValidationError(_("You must specify either a step, a minimal or a maximal value"))
+
+    def __str__(self):
+        res = ""
+        if self.min_value and self.max_value:
+            res = _("Between {} and {}").format(self.min_value, self.max_value)
+        elif self.min_value:
+            res = _("From {}").format(self.min_value)
+        elif self.max_value:
+            res = _("Up to {}").format(self.max_value)
+
+        if self.step:
+            if res:
+                res += _("(step: {})").format(self.step)
+            else:
+                res = _("step {}").format(self.step).title()
+
+        return res
+
+
 class MarkerVariant(CommonModel):
     class Meta:
         unique_together = (('project', 'marker', 'unit'),)
@@ -404,6 +478,8 @@ class MarkerVariant(CommonModel):
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE, verbose_name=_("marker template"))
+    nrange = models.ForeignKey(Range, on_delete=models.SET_NULL, blank=True, null=True,
+        verbose_name=_("numeric range"), help_text=_("If applicable"))
     unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True, verbose_name=_("marker unit"),
         limit_choices_to={})
     order_in_unit = models.PositiveIntegerField(_("order in a unit"), blank=True, null=True,
@@ -441,25 +517,19 @@ class MarkerVariant(CommonModel):
         return self.marker.name
 
     @property
+    @custom_or_default('marker', 'color')
     def color(self):
-        if hasattr(self, 'marker'):
-            return self.custom_color or self.marker.color
-        else:
-            return self.custom_color
+        return self.custom_color
 
     @property
+    @custom_or_default('marker', 'shortcut')
     def shortcut(self):
-        if hasattr(self, 'marker'):
-            return self.custom_shortcut or self.marker.shortcut
-        else:
-            return self.custom_shortcut
+        return self.custom_shortcut
 
     @property
+    @custom_or_default('marker', 'suggestion_endpoint')
     def suggestion_endpoint(self):
-        if hasattr(self, 'marker'):
-            return self.custom_suggestion_endpoint or self.marker.suggestion_endpoint
-        else:
-            return self.custom_suggestion_endpoint
+        return self.custom_suggestion_endpoint
 
     @property
     def code(self):
@@ -617,52 +687,38 @@ class PreMarker(CommonModel):
         help_text=_("Comma-separated tokens that should be highlighted with a marker"))
 
 
-class MarkerPair(CommonModel):
+class RelationVariant(CommonModel):
     class Meta:
-        verbose_name = _('marker pair')
-        verbose_name_plural = _('marker pairs')
+        unique_together = (('project', 'relation'),)
+        verbose_name = _("relation variant")
 
-    first = models.ForeignKey(Marker, related_name='first', on_delete=models.CASCADE)
-    second = models.ForeignKey(Marker, related_name='second', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.first.code + '-:-' + self.second.code
-
-
-class Relation(CommonModel):
-    class Meta:
-        verbose_name = _('relation')
-        verbose_name_plural = _('relations')
-
-    name = models.CharField(_("name"), max_length=50)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True)
-    pairs = models.ManyToManyField(MarkerPair, verbose_name=_("marker pairs"))
-    direction = models.CharField(_("direction"), max_length=1, choices=[
-        ('0', _('Directed from the first to the second')),
-        ('1', _('Directed from the second to the first')),
-        ('2', _('Bi-directional'))
-    ])
-    shortcut = models.CharField(_("keyboard shortcut"), max_length=15, 
-        help_text=_("Keyboard shortcut for marking a piece of text with this relation"), null=True, blank=True)
-    representation = models.CharField(_("graphical representation type"), max_length=1,
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    relation = models.ForeignKey(Relation, on_delete=models.CASCADE, verbose_name=_("relation template"))
+    custom_shortcut = models.CharField(_("keyboard shortcut"), max_length=15, null=True, blank=True,
+        help_text=_("Keyboard shortcut for marking a piece of text with this relation (shortcut of the relation template by default)"))
+    custom_representation = models.CharField(_("graphical representation type"), max_length=1,
         choices=[('g', _('Graph')), ('l', _('List'))], default='g',
-        help_text=_("How should the relation be visualized?"))
+        help_text=_("How should the relation be visualized? (representation of the relation template by default)"))
 
     @property
-    def between(self):
-        return "|".join([str(p) for p in self.pairs.all()])
+    @custom_or_default('relation', 'shortcut')
+    def shortcut(self):
+        return self.custom_shortcut
 
-    def __str__(self):
-        return str(self.name)
+    @property
+    @custom_or_default('relation', 'representation')
+    def representation(self):
+        return self.custom_representation
 
-    def to_json(self, dt_format=None):
-        res = super(Relation, self).to_json(dt_format=dt_format)
-        res.update({
-            'name': self.name,
-            'pairs': [str(p) for p in self.pairs.all()],
-            'direction': self.direction
-        })
-        return res
+    def save(self, *args, **kwargs):
+        if hasattr(self, 'relation'):
+            if self.shortcut == self.relation.shortcut:
+                self.custom_shortcut = None
+
+            if self.custom_representation == self.relation.representation:
+                self.custom_representation = None
+
+        super(RelationVariant, self).save(*args, **kwargs)
 
 
 class Context(CommonModel):
@@ -784,7 +840,10 @@ class Label(CommonModel):
 
     @property
     def text(self):
-        return self.context.content[self.start:self.end] if self.context else ""
+        if self.start and self.end:
+            return self.context.content[self.start:self.end] if self.context else ""
+        else:
+            return "{}<Text>".format(self.marker.name)
 
     def to_short_rel_json(self, dt_format=None):
         res = super(Label, self).to_json(dt_format=dt_format)

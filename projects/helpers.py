@@ -99,3 +99,16 @@ def make_checker(self, param, value):
     def _function():
         return getattr(self, param) == value
     return _function
+
+
+def custom_or_default(fallback, prop):
+    def _inner(func):
+        def _inner2(self):
+            default = func(self)
+            if hasattr(self, fallback):
+                return default or getattr(getattr(self, fallback), prop)
+            else:
+                return default
+        return _inner2
+    return _inner
+

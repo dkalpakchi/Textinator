@@ -14,6 +14,7 @@ class BatchInfo:
         self.relations = json.loads(data['relations'])
         self.marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
         self.free_text_inputs = json.loads(data['free_text_markers'])
+        self.text_markers = json.loads(data['text_markers'])
         self.datapoint = str(data['datapoint'])
         self.input_context = data['input_context']
 
@@ -101,38 +102,43 @@ def render_editing_board(project, user):
         'project': project
     })
 
+def get_or_create_ctx_by_input_context(batch_info, ctx_cache):
+    if ctx_cache:
+        ctx = retrieve_by_hash(batch_info.input_context, Context, ctx_cache)
+        if not ctx:
+            ctx = Context.objects.create(
+                datasource=batch_info.data_source,
+                datapoint=batch_info.datapoint,
+                content=batch_info.input_context
+            )
+            ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
+    else:
+        ctx, _ = Context.objects.get_or_create(
+            datasource=batch_info.data_source,
+            datapoint=batch_info.datapoint,
+            content=batch_info.input_context
+        )
+    return ctx
+
 
 def process_free_text_inputs(batch, batch_info, free_text_inputs=None, ctx_cache=None):
     fti = free_text_inputs or batch_info.free_text_inputs
 
     if fti:
-        if ctx_cache:
-            ctx = retrieve_by_hash(batch_info.input_context, Context, ctx_cache)
-            if not ctx:
-                ctx = Context.objects.create(
-                    datasource=batch_info.data_source,
-                    datapoint=batch_info.datapoint,
-                    content=batch_info.input_context
-                )
-                ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
-        else:
-            ctx, _ = Context.objects.get_or_create(
-                datasource=batch_info.data_source,
-                datapoint=batch_info.datapoint,
-                content=batch_info.input_context
-            )
+        ctx = get_or_create_ctx_by_input_context(batch_info, ctx_cache)
         
         mv = {}
         for code, inp_string in fti.items():
-            marker_code = "_".join(code.split("_")[:-1])
-            if marker_code not in mv:
-                marker_variants = MarkerVariant.objects.filter(project=batch_info.project, marker__code=marker_code)
-                mv[marker_code] = marker_variants
+            if inp_string.strip():
+                marker_code = "_".join(code.split("_")[:-1])
+                if marker_code not in mv:
+                    marker_variants = MarkerVariant.objects.filter(project=batch_info.project, marker__code=marker_code)
+                    mv[marker_code] = marker_variants
 
-            for m in mv[marker_code]:
-                if m.code == code:
-                    Input.objects.create(content=inp_string, marker=m, batch=batch, context=ctx)
-                    break
+                for m in mv[marker_code]:
+                    if m.code == code:
+                        Input.objects.create(content=inp_string.strip(), marker=m, batch=batch, context=ctx)
+                        break
 
 
 def process_chunks_and_relations(batch, batch_info, ctx_cache=None):
@@ -181,21 +187,7 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                 marker_groups[prefix][marker].append(v)
 
         if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
-            if ctx_cache:
-                ctx = retrieve_by_hash(batch_info.input_context, Context, ctx_cache)
-                if not ctx:
-                    ctx = Context.objects.create(
-                        datasource=batch_info.data_source,
-                        datapoint=batch_info.datapoint,
-                        content=batch_info.input_context
-                    )
-                    ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
-            else:
-                ctx, _ = Context.objects.get_or_create(
-                    datasource=batch_info.data_source,
-                    datapoint=batch_info.datapoint,
-                    content=batch_info.input_context
-                )
+            ctx = get_or_create_ctx_by_input_context(batch_info, ctx_cache)
 
             for i, (unit, v) in enumerate(marker_groups.items()):
                 unit_cache = []
@@ -220,3 +212,22 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                 for dct in unit_cache:
                     if dct['marker'].is_free_text():
                         Input.objects.create(context=ctx, batch=batch, **dct)
+
+
+def process_text_markers(batch, batch_info, text_markers=None, ctx_cache=None):
+    sent_text_markers = text_markers or batch_info.text_markers
+    
+    if sent_text_markers:
+        ctx = get_or_create_ctx_by_input_context(batch_info, ctx_cache)
+
+        mv = {}
+        for tm_code in sent_text_markers:
+            marker_code = "_".join(tm_code.split("_")[:-1])
+            if marker_code not in mv:
+                marker_variants = MarkerVariant.objects.filter(project=batch_info.project, marker__code=marker_code)
+                mv[marker_code] = marker_variants
+
+            for m in mv[marker_code]:
+                if m.code == tm_code:
+                    Label.objects.create(context=ctx, marker=m, batch=batch)
+                    break

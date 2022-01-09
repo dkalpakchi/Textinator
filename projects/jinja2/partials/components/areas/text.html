@@ -1,6 +1,14 @@
-<article class="{% if source_id != -1 %}text {% endif %}message">
+<article id="textArea" class="{% if source_id != -1 %}text {% endif %}message">
   <div class="message-header">
-    <p>{{ _("text")|capitalize }}{% if project.show_dataset_identifiers and dp_source_name %} <span id="dpName">({{dp_source_name}})</span>{% endif %}</p>
+    <span class="is-group">
+      <span>
+        <p>
+          {{ _("text")|capitalize }}{% if project.show_dataset_identifiers and dp_source_name %}
+          <span id="dpName">({{dp_source_name}})</span>{% endif %}
+        </p>
+      </span>
+      <span id="textLabels"></span>
+    </span>
     <a id="flagTextButton" class="no-decoration is-pulled-right">
       <span class="icon is-small">
         <i class="fas fa-flag"></i>

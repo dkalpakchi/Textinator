@@ -372,7 +372,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         tmpl = get_template(os.path.join(proj.task_type, 'display.html'))
         data['task_type_template'] = tmpl.render(ctx, self.request)
         data['marker_actions'] = menu_items
-        data['relation_repr'] = {r.pk: r.representation for r in proj.relations}
+        data['relation_repr'] = {r.pk: r.representation for r in proj.relations.all()}
 
         # with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
         #     tmpl = Template(f.read().replace('\n', ''))
@@ -413,6 +413,7 @@ def record_datapoint(request, proj):
 
         batch = Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
 
+        process_text_markers(batch, batch_info, ctx_cache=ctx_cache)
         process_marker_groups(batch, batch_info, ctx_cache=ctx_cache)
         process_free_text_inputs(batch, batch_info, ctx_cache=ctx_cache)
         process_chunks_and_relations(batch, batch_info, ctx_cache=ctx_cache)
