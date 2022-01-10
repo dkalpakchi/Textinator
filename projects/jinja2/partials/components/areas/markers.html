@@ -6,7 +6,7 @@
     <div class="message-body">
       {% set grouped_markers = project.free_markers|groupby('anno_type') %}
       {% for key, group in grouped_markers %}
-        <div class="field is-grouped is-grouped-multiline">
+        <div class="field is-grouped is-grouped-multiline{% if key == 'range' %} has-addons is-align-items-center{% endif %}">
           {% for marker in group %}
             {{marker|display_marker}}
           {% endfor %}

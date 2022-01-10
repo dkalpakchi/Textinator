@@ -10,6 +10,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.core.cache import caches
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -450,21 +451,21 @@ class Range(CommonModel):
     step = models.FloatField(verbose_name=_("step"), blank=True, null=True)
 
     def clean(self):
-        if not (self.min_value or self.max_value or self.step):
+        if self.min_value is None and self.max_value is None and self.step is None:
             raise ValidationError(_("You must specify either a step, a minimal or a maximal value"))
 
     def __str__(self):
         res = ""
-        if self.min_value and self.max_value:
+        if self.min_value is not None and self.max_value is not None:
             res = _("Between {} and {}").format(self.min_value, self.max_value)
-        elif self.min_value:
+        elif self.min_value is not None:
             res = _("From {}").format(self.min_value)
-        elif self.max_value:
+        elif self.max_value is not None:
             res = _("Up to {}").format(self.max_value)
 
-        if self.step:
+        if self.step is not None:
             if res:
-                res += _("(step: {})").format(self.step)
+                res = "{} {}".format(res, _("(step: {})").format(self.step))
             else:
                 res = _("step {}").format(self.step).title()
 
@@ -479,7 +480,14 @@ class MarkerVariant(CommonModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE, verbose_name=_("marker template"))
     nrange = models.ForeignKey(Range, on_delete=models.SET_NULL, blank=True, null=True,
-        verbose_name=_("numeric range"), help_text=_("If applicable"))
+        verbose_name=_("numeric range"),
+        help_text=_(
+            """
+            Applicable only if the annotation types are 'integer', 'floating-point number' or 'range'.
+            If the annotation type is 'range' and no numeric range is specified, the input will range from 0 to 100 by default.
+            The values will remain unrestricted for 'integer' or 'floating-point number' types.
+            """
+        ))
     unit = models.ForeignKey(MarkerUnit, on_delete=models.CASCADE, blank=True, null=True, verbose_name=_("marker unit"),
         limit_choices_to={})
     order_in_unit = models.PositiveIntegerField(_("order in a unit"), blank=True, null=True,

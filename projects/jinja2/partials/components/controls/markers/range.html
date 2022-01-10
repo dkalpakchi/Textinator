@@ -1,5 +1,9 @@
-<div class="control has-tag-left is-marker-fullwidth">
-  <input id="{{marker.code}}" type="range" min="0" max="5" name="{{marker.code}}" class="slider is-fullwidth has-output">
-  <output for="{{marker.code}}"></output>
-  {% include 'partials/components/controls/markers/tag.html' %}
+<div class="control is-marker-w80">
+  <input id="{{marker.code}}" type="range" {% if marker.nrange and marker.nrange.min_value is not none %}min="{{marker.nrange.min_value}}"{% endif %} {% if marker.nrange and marker.nrange.max_value is not none %}max="{{marker.nrange.max_value}}"{% endif %} {% if marker.nrange and marker.nrange.step is not none %}step="{{marker.nrange.step}}"{% endif %} name="{{marker.code}}" class="slider is-fullwidth">
+</div>
+<div class="control">
+  <span class="tags has-addons">
+    {% include 'partials/components/controls/markers/tag.html' %}
+    <output class="tag is-grey" for="{{marker.code}}">???</output>
+  </span>
 </div>

@@ -413,7 +413,7 @@ def record_datapoint(request, proj):
 
         batch = Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
 
-        process_text_markers(batch, batch_info, ctx_cache=ctx_cache)
+        process_text_markers(batch, batch_info, ctx_cache=ctx_cache) # markers for the whole text
         process_marker_groups(batch, batch_info, ctx_cache=ctx_cache)
         process_free_text_inputs(batch, batch_info, ctx_cache=ctx_cache)
         process_chunks_and_relations(batch, batch_info, ctx_cache=ctx_cache)

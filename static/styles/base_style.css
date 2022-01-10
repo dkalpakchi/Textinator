@@ -609,6 +609,10 @@ label.help.is-danger {
   width: 100%;
 }
 
+.is-marker-w80 {
+  width: 80%;
+}
+
 .masonry-grid-item {
   margin-bottom: 1em;
 }
