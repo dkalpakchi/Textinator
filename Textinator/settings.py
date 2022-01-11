@@ -236,8 +236,17 @@ STATICFILES_FINDERS = [
 
 
 # The types of tasks allowed inside the Textinator project
-# TODO: handle if the file does not exist
-TASK_TYPES = list(yaml.load(open(os.path.join(BASE_DIR, 'task_types.yaml')), Loader=yaml.FullLoader).items())
+TASK_TYPES = [
+    ('generic', 'Generic'),
+    ('qa', 'Question Answering'),
+    ('mcqa', 'Multiple Choice Question Answering'),
+    ('ner', 'Named Entity Recognition'),
+    ('corr', 'Coreference Resolution'),
+    ('pronr', 'Pronoun Resolution'),
+    ('ranking', 'Ranking'),
+    ('tclass', 'Text Classification'),
+    ('mt', 'Machine Translation')
+]
 
 DATASOURCE_TYPES = [
     ('PlainText', 'Plain text'),

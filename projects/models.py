@@ -2,6 +2,7 @@ import random
 import time
 import re
 import string
+import json
 import hashlib
 from datetime import datetime
 from collections import defaultdict
@@ -228,6 +229,18 @@ class Relation(CommonModel):
         return res
 
 
+class TaskTypeSpecification(CommonModel):
+    class Meta:
+        verbose_name = _('task type specification')
+        verbose_name_plural = _('task type specification')
+    task_type = models.CharField(_("type of the annotation task"), max_length=10, choices=settings.TASK_TYPES)
+    config = models.JSONField(_("JSON configuration"))
+
+    def __str__(self):
+        dct = dict(settings.TASK_TYPES)
+        return "Specification for {}".format(dct[self.task_type])
+
+
 class Project(CommonModel):
     class Meta:
         verbose_name = _('project')
@@ -398,6 +411,14 @@ class Project(CommonModel):
 
     def save(self, *args, **kwargs):
         super(Project, self).save(*args, **kwargs)
+        try:
+            spec_obj = TaskTypeSpecification.objects.get(task_type=self.task_type)
+            spec = spec_obj.config
+            for mspec in spec["markers"]:
+                m = Marker.objects.get(code=mspec["id"])
+                MarkerVariant.objects.get_or_create(marker=m, project=self, anno_type=mspec["anno_type"])
+        except TaskTypeSpecification.DoesNotExist:
+            pass
 
     def __str__(self):
         return self.title

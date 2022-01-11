@@ -7,9 +7,9 @@
 	<meta charset="utf-8">
 	<title>{% block title %}{% endblock title %}</title>
     <link rel="icon" href="{% static 'img/favicon.ico'%}"/>
-    <link rel="stylesheet" href="{% static 'styles/bulma.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bulma/css/bulma.min.css' %}">
 	  <link rel="stylesheet" type="text/css" href="{% static 'scientific_survey/css/custom.css' %}" />
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="{% static 'jquery-ui-dist/jquery-ui.min.css' %}">
     <link rel="stylesheet" href="{% static 'styles/base_style.css' %}">
 
     {% block extracss %}{% endblock %}

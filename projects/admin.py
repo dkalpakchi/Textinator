@@ -400,6 +400,41 @@ class MarkerUnitAdmin(CommonModelAdmin): pass
 @admin.register(Range)
 class RangeAdmin(CommonModelAdmin): pass
 
+class TaskTypeConfigForm(forms.ModelForm):
+    class Meta:
+        model = TaskTypeSpecification
+        fields = '__all__'
+        # TODO: fork django-admin-json-editor and make SQL syntax highlighting with AceEditor
+        DATA_SCHEMA = {
+            'type': 'object',
+            "properties": {
+                "markers": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                    }
+                },
+                "relations": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                    }
+                }
+            }
+        }
+        widgets = {
+            'config': TextinatorJSONEditorWidget(DATA_SCHEMA, collapsed=False),
+        }
+
+@admin.register(TaskTypeSpecification)
+class TaskTypeSpecAdmin(CommonModelAdmin):
+    class Media:
+        js = (
+            'admin/js/vendor/jquery/jquery{}.js'.format('' if settings.DEBUG else '.min'),
+        )
+    
+    form = TaskTypeConfigForm
+
 admin.site.register(Permission)
 admin.site.register(ProjectData)
 admin.site.register(MarkerContextMenuItem)

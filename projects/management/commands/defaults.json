@@ -1,0 +1,102 @@
+{
+  "markers": [
+    {
+      "name": "Correct answer",
+      "color": "#48c774",
+      "shortcut": "A",
+      "id": 1
+    },
+    {
+      "name": "Distractor",
+      "color": "#f14668",
+      "shortcut": "D",
+      "id": 2
+    },
+    {
+      "name": "Reference",
+      "color": "#3273dc",
+      "shortcut": "R",
+      "id": 3
+    },
+    {
+      "name": "Antecedent",
+      "color": "#ffdd57",
+      "shortcut": "A",
+      "id": 4
+    },
+    {
+      "name": "Question",
+      "color": "#3273dc",
+      "shortcut": "Q",
+      "id": 5
+    },
+    {
+      "name": "Person",
+      "color": "#3273dc",
+      "shortcut": "P",
+      "id": 6
+    },
+    {
+      "name": "Location",
+      "color": "#48c774",
+      "shortcut": "L",
+      "id": 7
+    },
+    {
+      "name": "Organization",
+      "color": "#f96854",
+      "shortcut": "O",
+      "id": 8
+    },
+    {
+      "name": "Mention",
+      "color": "#526AE6",
+      "shortcut": "M",
+      "id": 9
+    },
+    {
+      "name": "Translation",
+      "color": "#D68378",
+      "shortcut": "T",
+      "id": 10
+    }
+  ],
+  "specs": {
+    "qa": {
+      "markers": [
+        {"id": 5, "anno_type": "free-text"},
+        {"id": 1, "anno_type": "m-span"}
+      ]
+    },
+    "mcqa": {
+      "markers": [
+        {"id": 5, "anno_type": "free-text"},
+        {"id": 1, "anno_type": "m-span"},
+        {"id": 2, "anno_type": "m-span"}
+      ]
+    },
+    "ner": {
+      "markers": [
+        {"id": 6, "anno_type": "m-span"},
+        {"id": 7, "anno_type": "m-span"},
+        {"id": 8, "anno_type": "m-span"}
+      ]
+    },
+    "pronr": {
+      "markers": [
+        {"id": 3, "anno_type": "m-span"},
+        {"id": 4, "anno_type": "m-span"}
+      ]
+    },
+    "corr": {
+      "markers": [
+        {"id": 9, "anno_type": "m-span"}
+      ]
+    },
+    "mt": {
+      "markers": [
+        {"id": 10, "anno_type": "lfree-text"}
+      ]
+    }
+  }
+}

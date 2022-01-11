@@ -24,3 +24,5 @@ RUN pip install -r requirements.txt
 # COPY . .
 
 CMD ["export", 'PATH="$PATH:/home/textinator/.local/bin"']
+
+ENTRYPOINT sh /usr/src/Textinator/entrypoint.sh
