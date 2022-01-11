@@ -413,9 +413,9 @@ def record_datapoint(request, proj):
 
         batch = Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
 
-        process_text_markers(batch, batch_info, ctx_cache=ctx_cache) # markers for the whole text
+        process_inputs(batch, batch_info, ctx_cache=ctx_cache)
         process_marker_groups(batch, batch_info, ctx_cache=ctx_cache)
-        process_free_text_inputs(batch, batch_info, ctx_cache=ctx_cache)
+        process_text_markers(batch, batch_info, ctx_cache=ctx_cache) # markers for the whole text
         process_chunks_and_relations(batch, batch_info, ctx_cache=ctx_cache)
     elif mode == 'e':
         # editing
@@ -430,27 +430,31 @@ def record_datapoint(request, proj):
             batch_labels = {l.hash: l for l in Label.objects.filter(batch=batch)}
 
             inputs = []
-            for name, fti in batch_info.free_text_inputs.items():
-                if type(fti) == dict:
-                    try:
-                        inp = batch_inputs[fti['hash']]
-                        if inp.marker.code == name:
-                            inp.content = fti['value']
-                            inputs.append(inp)
-                    except KeyError:
-                        # smth is wrong
-                        pass
-                elif type(fti) == str:
-                    # we create a new record!
-                    try:
-                        data_source = DataSource.objects.get(pk=data['datasource'])
-                    except DataSource.DoesNotExist:
-                        data_source = None
-                    
-                    if data_source:
-                        process_free_text_inputs(
-                            batch, batch_info, free_text_inputs={name: fti}
-                        )
+            for input_type, changed_inputs in batch_info.inputs():
+                for name, changed in changed_inputs.items():
+                    if type(changed) == dict:
+                        try:
+                            inp = batch_inputs[changed['hash']]
+                            if inp.marker.code == name:
+                                inp.content = changed['value']
+                                inputs.append(inp)
+                        except KeyError:
+                            # smth is wrong
+                            pass
+                    elif type(changed) == str:
+                        # we create a new record!
+                        try:
+                            data_source = DataSource.objects.get(pk=data['datasource'])
+                        except DataSource.DoesNotExist:
+                            data_source = None
+                        
+                        if data_source:
+                            kwargs = {
+                                input_type: {
+                                    name: changed
+                                }
+                            }
+                            process_inputs(batch, batch_info, **kwargs)
 
             if inputs:
                 Input.objects.bulk_update(inputs, ['content'])
@@ -504,8 +508,15 @@ def get_batch(request):
         elif inputs.count():
             context = inputs.first().context.to_json()
 
-        free_text_inputs = inputs.filter(marker__unit=None, marker__anno_type='free-text')
+        non_unit_markers_q = inputs.filter(marker__unit=None)
+        non_unit_markers = {}
+        input_types = ['free-text', 'lfree-text', 'integer', 'float', 'range']
+        for it in input_types:
+            non_unit_markers[it.replace('-', '_')] = non_unit_markers_q.filter(marker__anno_type=it)
         groups = inputs.exclude(marker__unit=None)
+
+        span_labels = labels.filter(marker__anno_type='m-span')
+        text_labels = labels.filter(marker__anno_type='m-text')
 
         # context['content'] will give us text without formatting,
         # so we simply query the data source one more time to get with formatting
@@ -514,8 +525,9 @@ def get_batch(request):
 
         return JsonResponse({
             'context': context,
-            'labels': [l.to_short_json() for l in labels],
-            'free_text_inputs': [i.to_short_json() for i in free_text_inputs],
+            'span_labels': [l.to_short_json() for l in span_labels],
+            'text_labels': [l.to_short_json() for l in text_labels],
+            'non_unit_markers': {k: [i.to_short_json() for i in v] for k, v in non_unit_markers.items()},
             'groups': [i.to_short_json() for i in groups]
         })
     else:

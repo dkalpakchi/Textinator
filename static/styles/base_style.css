@@ -519,7 +519,7 @@ label.error {
   color: #fff;
 }
 
-.control.has-tag-left .input, .control.has-tag-left .select select {
+.control.has-tag-left .select select {
     padding-left: 7em;
 }
 
@@ -528,7 +528,7 @@ label.error {
     position: absolute;
     left: 7px;
     top: 7px;
-    width: 7.5em;
+    width: fit-content;
     z-index: 4;
 }
 

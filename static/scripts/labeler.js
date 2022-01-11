@@ -16,13 +16,15 @@
     serializeHashedObject: function(obj) {
       var o = {};
       $(obj).each(function(i, x) {
-        if (x.getAttribute('data-h')) {
-          o[x.getAttribute('name')] = {
-            'value': x.value,
-            'hash': x.getAttribute('data-h')
-          }  
-        } else {
-          o[x.getAttribute('name')] = x.value
+        if (utils.isDefined(x.value) && x.value != "") {
+          if (x.getAttribute('data-h')) {
+            o[x.getAttribute('name')] = {
+              'value': x.value,
+              'hash': x.getAttribute('data-h')
+            }  
+          } else {
+            o[x.getAttribute('name')] = x.value
+          }
         }
       });
       return o;
@@ -479,7 +481,8 @@
         this.markersArea = this.taskArea.querySelector('.markers');
         this.markerGroupsArea = this.taskArea.querySelector('.marker.groups');
         this.relationsArea = this.taskArea.querySelector('.relations:not(.marked)');
-        this.selectorArea = this.taskArea.querySelector('#textArea .selector');
+        this.textArea = this.taskArea.querySelector('#textArea');
+        this.selectorArea = this.textArea.querySelector('.selector');
         this.textLabelsArea = this.taskArea.querySelector('#textLabels');
         resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
         resetText = this.getContextText();
@@ -496,6 +499,17 @@
         this.initSvg();
         this.initEvents();
         this.updateMarkAllCheckboxes();
+        this.fixUI();
+      },
+      fixUI: function() {
+        $(this.markersArea).find('.control.has-tag-left').each(function(i, x) {
+          var $input = $(x).find('input'),
+              $tag = $(x).find('span.tag');
+
+          if ($input.length) {
+            $input.css('padding-left', $tag.outerWidth() + 20);
+          }
+        })
       },
       getContextText: function() {
         return this.selectorArea == null ? "" : this.selectorArea.textContent.trim()
@@ -504,7 +518,7 @@
         // event delegation
         if (this.selectorArea != null) {
           var control = this;
-          this.taskArea.addEventListener('click', function(e) {
+          this.textArea.addEventListener('click', function(e) {
             e.stopPropagation();
             var target = e.target;
             if (isDeleteButton(target)) {
@@ -651,6 +665,8 @@
           document.addEventListener('click', function(e) {
             var target = e.target;
 
+            console.log(target)
+
             // TODO: this relies on us not including any icons in the buttons, which we don't so far
             if (target.tagName == "LI" && target.getAttribute('data-mode') == "e") {
               var uuid = target.getAttribute('data-id'),
@@ -660,7 +676,7 @@
               $list.removeClass('is-hovered');
               target.classList.add('is-hovered');
               
-              if (utils.isDefined) {
+              if (utils.isDefined(uuid) && utils.isDefined(url)) {
                 control.restoreBatch(uuid, url);
               }
             }
@@ -905,7 +921,7 @@
           }
         }
       },
-      select: function(obj) {
+      select: function(obj, hash) {
         if (!this.textLabelsArea.querySelector('[data-s="' + obj.getAttribute('data-s') + '"]')) {
           var markedSpan = createMarkedSpan(obj),
               deleteMarkedBtn = document.createElement('button');
@@ -913,6 +929,10 @@
           markedSpan.classList.add("is-small");
           deleteMarkedBtn.className = 'delete is-small';
           markedSpan.appendChild(deleteMarkedBtn);
+
+          if (utils.isDefined(hash)) {
+            markedSpan.setAttribute('data-h', hash);
+          }
 
           this.textLabelsArea.appendChild(markedSpan);
         }
@@ -1607,14 +1627,19 @@
         if (!utils.isDefined(stringify)) stringify = false;
 
         var markerGroups = utils.isDefined(this.markerGroupsArea) ? $(this.markerGroupsArea).find("form#markerGroups").serializeObject() : {},
-            freeTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('input[type="text"]')) : {},
+            shortTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('input[type="text"]')) : {},
             submitRelations = [],
-            submittableChunks = [],
-            textMarkers = Array.from(this.textLabelsArea.querySelectorAll('span.tag[data-s]:not(.is-disabled)')).map((x) => x.getAttribute('data-s'));
+            textMarkers = Array.from(this.textLabelsArea.querySelectorAll('span.tag[data-s]:not(.is-disabled)')).map((x) => x.getAttribute('data-s')),
+            numbers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('input[type="number"]')) : {},
+            ranges = utils.isDefined(this.markersArea) ?
+              utils.serializeHashedObject(
+                $(this.markersArea).find('input[type="range"]').filter((i, x) => $('output[for="' + x.id + '"]').text() != "???")
+              ) : {},
+            longTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('textarea')) : {};
 
         if (Object.values(relations).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
           // if there are any relations, submit only those chunks that have to do with the relations
-          submittableChunks = chunks.filter(isInRelations)
+          submittableChunks = chunks.filter(isInRelations) // defined at the very top of the file
           
           var nonRelationChunks = chunks.filter(x => !submittableChunks.includes(x));
           for (var i = 0, len = nonRelationChunks.length; i < len; i++) {
@@ -1647,8 +1672,11 @@
           "relations": stringify ? JSON.stringify(submitRelations) : submitRelations,
           "chunks": stringify ? JSON.stringify(submittableChunks) : submittableChunks,
           "marker_groups": stringify ? JSON.stringify(markerGroups) : markerGroups,
-          'free_text_markers': stringify ? JSON.stringify(freeTextMarkers) : freeTextMarkers,
-          'text_markers': stringify ? JSON.stringify(textMarkers) : textMarkers
+          'short_text_markers': stringify ? JSON.stringify(shortTextMarkers) : shortTextMarkers,
+          'long_text_markers': stringify ? JSON.stringify(longTextMarkers) : longTextMarkers,
+          'text_markers': stringify ? JSON.stringify(textMarkers) : textMarkers,
+          'numbers': stringify ? JSON.stringify(numbers) : numbers,
+          'ranges': stringify ? JSON.stringify(ranges) : ranges
         }
       },
       unmarkChunk: function(c) {
@@ -1681,7 +1709,6 @@
           }
         });
         submittableChunks = [];
-        editingBatch = undefined;
       },
       resetArticle: function() {
         this.selectorArea.innerHTML = resetTextHTML;
@@ -1714,10 +1741,21 @@
           }
         }
       },
+      hasNewInputs: function(inputData) {
+        return Object.keys(inputData['short_text_markers']).length || Object.keys(inputData['long_text_markers']).length ||
+          Object.keys(inputData['numbers']).length || Object.keys(inputData['ranges']).length;
+      },
+      hasNewLabels: function(inputData) {
+        return inputData['chunks'].length || inputData['relations'].length || inputData["text_markers"].length;
+      },
       hasNewInfo: function(inputData) {
-        return inputData['chunks'].length > 0 || inputData['relations'].length > 0 || 
-          inputData['marker_groups'].length > 0 || inputData['free_text_markers'].length > 0 ||
-          inputData["text_markers"].length > 0;
+        return inputData['marker_groups'].length || this.hasNewInputs(inputData) || this.hasNewLabels(inputData);
+      },
+      getMarkerTypes: function() {
+        return [
+          'chunks', 'relations', 'marker_groups', 'short_text_markers',
+          'text_markers', 'long_text_markers', 'numbers', 'ranges'
+        ]
       },
       restoreBatch: function(uuid, url) {
         var control = this;
@@ -1746,38 +1784,59 @@
               control.selectorArea.innerHTML = d.context.content;
               control.restart();
 
-              var free = d.free_text_inputs,
-                  labels = d.labels,
+              var span_labels = d.span_labels,
+                  text_labels = d.text_labels,
+                  non_unit_markers = d.non_unit_markers,
                   groups = d.groups;
 
-              for (var i = 0, len = free.length; i < len; i++) {
-                var inp = control.markersArea.querySelector('input[name="' + free[i].marker.code + '"]');
-                if (inp) {
-                  inp.setAttribute('data-h', free[i].hash);
-                  inp.value = free[i].content;
+              for (var k in non_unit_markers) {
+                for (var i = 0, len = non_unit_markers[k].length; i < len; i++) {
+                  var el = non_unit_markers[k][i],
+                      inp;
+                  if (k == 'lfree_text')
+                    inp = control.markersArea.querySelector('textarea[name="' + el.marker.code + '"]')
+                  else
+                    inp = control.markersArea.querySelector('input[name="' + el.marker.code + '"]');
+                  if (inp) {
+                    inp.setAttribute('data-h', el.hash);
+                    inp.value = el.content;
+
+                    if (inp.getAttribute('type') == 'range') {
+                      let event = new Event("input");
+                      inp.dispatchEvent(event);
+                    }
+                  }
                 }
               }
 
-              // label logic
+              // text labels
+              for (var i = 0, len = text_labels.length; i < len; i++) {
+                var lab = control.markersArea.querySelector('input[name="' + text_labels[i].marker.code + '"]');
+                if (lab) {
+                  control.select(lab, text_labels[i].hash);
+                }
+              }
+
+              // span labels logic
               var acc = 0,
                   curLabelId = 0,
-                  numLabels = labels.length,
+                  numLabels = span_labels.length,
                   cnodes = control.selectorArea.childNodes,
                   mmpi = control.markersArea.getAttribute('data-mmpi'),
                   processed = []; // labels that are not nested into one another
-              labels.sort(function(x, y) { return x['start'] - y['start']});
+              span_labels.sort(function(x, y) { return x['start'] - y['start']});
               
               for (var i = 0, len = cnodes.length; i < len; i++) {
                 if (curLabelId < numLabels) {
-                  if (acc + cnodes[i].textContent.length > labels[curLabelId]['start']) {
+                  if (acc + cnodes[i].textContent.length > span_labels[curLabelId]['start']) {
                     // we found an element to mark
                     var innerAcc = acc,
                         numInnerLoops = 0,
                         cnodeLength = cnodes[i].textContent.length;
-                    while (curLabelId < numLabels && labels[curLabelId]['end'] <= acc + cnodeLength) {
+                    while (curLabelId < numLabels && span_labels[curLabelId]['end'] <= acc + cnodeLength) {
                       var areOverlapping = processed.map(function(x) {
-                            var s1 = labels[curLabelId],
-                                s2 = labels[x["id"]];
+                            var s1 = span_labels[curLabelId],
+                                s2 = span_labels[x["id"]];
                             return (s1['start'] >= s2['start'] && s1["end"] <= s2["end"]) || 
                               (s2['start'] >= s1["start"] && s2["end"] <= s1["end"]);
                           }),
@@ -1798,9 +1857,9 @@
                             sameLevelDist = Infinity,
                             sameLevelId = undefined;
                         areOverlapping.forEach(function(x, i) {
-                          var label = labels[processed[i]["id"]],
-                              dist = Math.abs(label['end'] - labels[curLabelId]['end']) +
-                                Math.abs(label['start'] - labels[curLabelId]['start']);
+                          var label = span_labels[processed[i]["id"]],
+                              dist = Math.abs(label['end'] - span_labels[curLabelId]['end']) +
+                                Math.abs(label['start'] - span_labels[curLabelId]['start']);
 
                           if (x) {
                             if (dist < minDist && processed[i]["ov"] == numOverlapping - 1) {
@@ -1824,8 +1883,8 @@
                               }
                             }
 
-                            if (labels[sameLevelId]['end'] > innerAcc)
-                              innerAcc += labels[sameLevelId]['end'] - innerAcc;
+                            if (span_labels[sameLevelId]['end'] > innerAcc)
+                              innerAcc += span_labels[sameLevelId]['end'] - innerAcc;
                           }
                         } else {
                           textNode = cnodes[i].childNodes[cnodes[i].childNodes.length-1];
@@ -1833,17 +1892,17 @@
                       }
 
                       const range = new Range();
-                      range.setStart(textNode, labels[curLabelId]['start'] - innerAcc);
-                      range.setEnd(textNode, labels[curLabelId]['end'] - innerAcc);
+                      range.setStart(textNode, span_labels[curLabelId]['start'] - innerAcc);
+                      range.setEnd(textNode, span_labels[curLabelId]['end'] - innerAcc);
 
                       window.getSelection().addRange(range);
                       control.updateChunkFromSelection();
                       var activeChunk = control.getActiveChunk();
-                      activeChunk['hash'] = labels[curLabelId]['hash'];
+                      activeChunk['hash'] = span_labels[curLabelId]['hash'];
                       activeChunk['updated'] = false;
-                      var code = labels[curLabelId]['marker']['code'];
+                      var code = span_labels[curLabelId]['marker']['code'];
                       control.mark(control.markersArea.querySelector('.marker[data-s="' + code + '"]'), mmpi);
-                      innerAcc += (labels[curLabelId]['start'] - innerAcc);
+                      innerAcc += (span_labels[curLabelId]['start'] - innerAcc);
                       curLabelId++;
                       numInnerLoops++;
                     }
@@ -1985,12 +2044,6 @@
       var inputFormData = $inputForm.serializeObject(),
           markerGroupsForm = utils.isDefined(labelerModule.markerGroupsArea) ?
             labelerModule.markerGroupsArea.querySelector('#markerGroups') :
-            undefined,
-          freeTextMarkers = utils.isDefined(labelerModule.markersArea) ?
-            labelerModule.markersArea.querySelector('input[type="text"]') :
-            undefined,
-          textMarkers = utils.isDefined(labelerModule.markersArea) ? 
-            labelerModule.markersArea.querySelector('span.tag[data-scope="text"]') :
             undefined;
 
       // if there's an input form field, then create input_context
@@ -2002,17 +2055,18 @@
         }
       }
 
-      if ((utils.isDefined(freeTextMarkers) || utils.isDefined(textMarkers)) && !inputFormData.hasOwnProperty('input_context')) {
+      $.extend(inputFormData, labelerModule.getSubmittableDict());
+
+      if (labelerModule.hasNewInputs(inputFormData) && !inputFormData.hasOwnProperty('input_context')) {
         inputFormData['input_context'] = labelerModule.getContextText();
       }
-
-      $.extend(inputFormData, labelerModule.getSubmittableDict());
 
       inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
       inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
 
+
       if (labelerModule.hasNewInfo(inputFormData)) {
-        ['chunks', 'relations', 'marker_groups', 'free_text_markers', 'text_markers'].forEach(function(x) {
+        labelerModule.getMarkerTypes().forEach(function(x) {
           inputFormData[x] = JSON.stringify(inputFormData[x]);
         });
         
@@ -2032,10 +2086,13 @@
                 else
                   labelerModule.unmark(JSON.parse(inputFormData['chunks']));
 
-                $(labelerModule.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
-                $(labelerModule.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });
+                $(labelerModule.markersArea).find('input').each(function(i, x) { $(x).val(''); });
+                $(labelerModule.markersArea).find('output').each(function(i, x) { $(x).text('???'); }); // labels for input[type="range"]
+                $(labelerModule.markerGroupsArea).find('#markerGroups input]').each(function(i, x) { $(x).val('') });
+                $(labelerModule.markerGroupsArea).find('output').each(function(i, x) { $(x).text('???'); }); // labels for input[type="range"]
               } else if (data['mode'] == 'e') {
                 $("#editingBoard").html(data.template);
+                $('#editingBoard').find('[data-id="' + labelerModule.getEditingBatch() + '"]').addClass('is-hovered');
               }
             }
 

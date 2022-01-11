@@ -13,10 +13,13 @@ class BatchInfo:
         self.chunks = json.loads(data['chunks'])
         self.relations = json.loads(data['relations'])
         self.marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
-        self.free_text_inputs = json.loads(data['free_text_markers'])
+        self.short_text_markers = json.loads(data['short_text_markers'])
+        self.long_text_markers = json.loads(data['long_text_markers'])
+        self.numbers = json.loads(data['numbers'])
+        self.ranges = json.loads(data['ranges'])
         self.text_markers = json.loads(data['text_markers'])
         self.datapoint = str(data['datapoint'])
-        self.input_context = data['input_context']
+        self.input_context = data.get('input_context')
 
         try:
             self.project = Project.objects.get(pk=proj)
@@ -29,6 +32,14 @@ class BatchInfo:
             self.data_source = None
 
         self.user = user
+
+    def inputs(self):
+        return [
+            ('short_text_markers', self.short_text_markers),
+            ('long_text_markers', self.long_text_markers),
+            ('numbers', self.numbers),
+            ('ranges', self.ranges)
+        ]
 
 
 def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
@@ -121,24 +132,35 @@ def get_or_create_ctx_by_input_context(batch_info, ctx_cache):
     return ctx
 
 
-def process_free_text_inputs(batch, batch_info, free_text_inputs=None, ctx_cache=None):
-    fti = free_text_inputs or batch_info.free_text_inputs
+def process_inputs(batch, batch_info, short_text_markers=None, long_text_markers=None,
+    numbers=None, ranges=None, ctx_cache=None):
+    if any([short_text_markers, long_text_markers, numbers, ranges]):
+        stm, ltm, num, ran = short_text_markers, long_text_markers, numbers, ranges
+    else:
+        stm = batch_info.short_text_markers
+        ltm = batch_info.long_text_markers
+        num = batch_info.numbers
+        ran = batch_info.ranges
+    inputs = [stm, ltm, num, ran]
 
-    if fti:
+    if any(inputs):
+        new_inputs = [x for x in inputs if x]
+
         ctx = get_or_create_ctx_by_input_context(batch_info, ctx_cache)
         
         mv = {}
-        for code, inp_string in fti.items():
-            if inp_string.strip():
-                marker_code = "_".join(code.split("_")[:-1])
-                if marker_code not in mv:
-                    marker_variants = MarkerVariant.objects.filter(project=batch_info.project, marker__code=marker_code)
-                    mv[marker_code] = marker_variants
+        for inp_type in new_inputs:
+            for code, inp_string in inp_type.items():
+                if inp_string.strip():
+                    marker_code = "_".join(code.split("_")[:-1])
+                    if marker_code not in mv:
+                        marker_variants = MarkerVariant.objects.filter(project=batch_info.project, marker__code=marker_code)
+                        mv[marker_code] = marker_variants
 
-                for m in mv[marker_code]:
-                    if m.code == code:
-                        Input.objects.create(content=inp_string.strip(), marker=m, batch=batch, context=ctx)
-                        break
+                    for m in mv[marker_code]:
+                        if m.code == code:
+                            Input.objects.create(content=inp_string.strip(), marker=m, batch=batch, context=ctx)
+                            break
 
 
 def process_chunks_and_relations(batch, batch_info, ctx_cache=None):
