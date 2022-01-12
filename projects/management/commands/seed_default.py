@@ -4,8 +4,10 @@ import logging
 import random
 
 from django.core.management.base import BaseCommand
+from django.contrib.auth.models import Permission, Group
 
 from projects.models import Marker, TaskTypeSpecification
+
 
 # python manage.py seed --mode=refresh
 
@@ -69,6 +71,31 @@ def create_data():
             )
             created += is_created
         logger.info("{} specifications are created.".format(created))
+
+        created = 0
+        group_permissions = {
+            'project_manager': [
+                'add_project', 'view_project', 'change_project',
+                'add_marker', 'view_marker',
+                'add_relation', 'view_relation',
+                'add_datasource', 'change_datasource', 'delete_datasource', 'view_datasource',
+                'add_markerrestriction', 'change_markerrestriction', 'delete_markerrestriction', 'view_markerrestriction',
+                'add_markerunit', 'change_markerunit', 'delete_markerunit', 'view_markerunit',
+                'add_markervariant', 'change_markervariant', 'delete_markervariant', 'view_markervariant',
+                'add_premarker', 'change_premarker', 'delete_premarker', 'view_premarker'
+            ],
+            'user_manager': [
+                'add_user', 'change_user', 'view_user'
+            ]
+        }
+
+        for x in ["translator", "user_manager", "project_manager"]:
+            g, is_created = Group.objects.get_or_create(name=x)
+            created += is_created
+            if is_created > 0:
+                for perm in group_permissions.get(x, []):
+                    g.permissions.add(Permission.objects.get(codename=perm))
+        logger.info("{} user groups are created.".format(created))
 
 
 def run_seed(self, mode):

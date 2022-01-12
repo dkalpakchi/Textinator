@@ -62,6 +62,11 @@ class DataSource(CommonModel):
     class Meta:
         verbose_name = _('data source')
         verbose_name_plural = _('data sources')
+        permissions = (
+            ('view_this_datasource', 'View this data source'),
+            ('change_this_datasource', 'Change this data source'),
+            ('delete_this_datasource', 'Delete this data source'),
+        )
 
     name = models.CharField(_("dataset name"), max_length=50)
     source_type = models.CharField(_("dataset type"), max_length=10, choices=settings.DATASOURCE_TYPES)
@@ -74,8 +79,8 @@ class DataSource(CommonModel):
     )
     formatting = models.CharField(_('formatting'), max_length=3, choices=settings.FORMATTING_TYPES,
         help_text=_("text formating of the data source"))
-    # is_public = models.BooleanField(_("is public?"), default=False,
-    #     help_text=_("Whether to make data source available to other Textinator users"))
+    is_public = models.BooleanField(_("is public?"), default=False,
+        help_text=_("Whether to make data source available to other Textinator users"))
 
     @classmethod
     def type2class(cls, source_type):
@@ -150,6 +155,11 @@ class Marker(CommonModel):
     class Meta:
         verbose_name = _('marker')
         verbose_name_plural = _('markers')
+        permissions = (
+            ('change_this_marker', 'Change this marker'),
+            ('delete_this_marker', 'Delete this marker'),
+        )
+
 
     def save(self, *args, **kwargs):
         if not self.code:
@@ -198,6 +208,10 @@ class Relation(CommonModel):
     class Meta:
         verbose_name = _('relation')
         verbose_name_plural = _('relations')
+        permissions = (
+            ('change_this_relation', 'Change this relation'),
+            ('delete_this_relation', 'Delete this relation'),
+        )
 
     name = models.CharField(_("name"), max_length=50)
     pairs = models.ManyToManyField(MarkerPair, verbose_name=_("marker pairs"))
@@ -247,7 +261,7 @@ class Project(CommonModel):
         verbose_name_plural = _('projects')
         ordering = ['-dt_finish']
         permissions = (
-            ('view_this_post', 'Can view this project'),
+            ('view_this_project', 'Can view this project'),
         )
 
 

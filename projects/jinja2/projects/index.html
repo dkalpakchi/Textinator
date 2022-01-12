@@ -11,7 +11,9 @@
     {% include 'partials/_shared_projects.html' %}
   {% elif request.GET.n == 'o' %}
     {% include 'partials/_open_projects.html' %}
-  {% elif request.GET.n == 'p' or 'n' not in request.GET %}
+  {% elif request.GET.n == 'p' %}
     {% include 'partials/_participations.html' %}
+  {% else %}
+    {% include 'partials/_welcome.html' %}
   {% endif %}
 {% endblock %}

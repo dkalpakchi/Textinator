@@ -1,0 +1,47 @@
+<div class="container">
+  <h1 class="title has-text-centered"><i class="mdi mdi-36px mdi-flip-h mdi-party-popper"></i>Welcome to Textinator!<i class="mdi mdi-36px mdi-party-popper"></i></h1>
+
+  {% if user.is_superuser %}
+  <div class="content">
+    Thank you for choosing Textinator as your annotation tool! We've got a bunch of resources to get you started:
+    <ul>
+      <li>if you prefer reading, check our <a href="">documentation</a></li>
+      <li>if you prefer watching, check our <a href="">admin guide on YouTube</a></li>
+      <li>if you prefer exploring on your own, just go for it! <i class="far fa-smile-wink"></i></li>
+    </ul>
+    On top of that, if you want to help developing Textinator further (which we would be immensely happy about!), check out <a href="">our GitHub repository</a> and see how <u><em>you</em></u> can contribute.
+  </div>
+  {% elif user.is_staff %}
+  <div class="content">
+    Thank you for choosing Textinator as your annotation tool! We've got a bunch of resources to get you started:
+    <ul>
+      <li>if you prefer reading, check our <a href="">documentation</a></li>
+      <li>if you prefer watching, check our <a href="">project manager guide on YouTube</a></li>
+      <li>if you prefer exploring on your own, just go for it! <i class="far fa-smile-wink"></i></li>
+    </ul>
+  </div>
+  {% else %}
+  <div class="content">
+    <p>Thank you for joining Textinator! Your annotation or evaluation efforts will most certainly help in advancing Natural Language Processing (NLP) beyond its current limits.</p>
+
+    <p>
+      If you are here to help <u>annotating</u>, here are some tips:
+      <ul>
+        <li>If you are unfamiliar with Textinator or with NLP annotations in general, we have prepared <a href="">a couple of short YouTube videos</a> to help you in starting this journey <i class="far fa-smile"></i>.</li>
+        <li>If you have signed up to take part in a specific annotation effort, please check out <a href="{{ url('projects:index') }}?n=p">"My Tasks" tab</a> in the menu above. If you don't see your project there, please contact your project manager.</li>
+        <li>If you have signed up out of curiosity and willigness to help, huge thank you! We are very grateful and honored to have you on board! Please check out <a href="{{ url('projects:index') }}?n=o">"Open Tasks" tab</a> and see if we currently have any annotation efforts, open to general public. We urge you to read the instructions for the annotation task carefully to check that you understand them and are indeed eligible to take part. Please contact the project responsible if any questions arise.</li>
+      </ul>
+    </p>
+
+    <p>
+      If you are here to help <u>evaluating</u>, here are some other tips:
+      <ul>
+        <li>If you have signed up to take part in a specific evaluation effort, please check out <a href="{{ url('survey-list') }}">"Survey" tab</a> and see if your survey is ready. If you don't see your survey, please contact your project manager.</li>
+        <li>If you have signed up out of curiosity, please check out the very <a href="{{ url('survey-list') }}">"Survey" tab</a> and see if there are any surveys open to general public. We urge you to read the instructions carefully to check that you are indeed eligible to take part. Please contact the responsible for the survey if any questions arise.</li>
+      </ul>
+    </p>
+
+  </div>
+  {% endif %}
+  
+</div>

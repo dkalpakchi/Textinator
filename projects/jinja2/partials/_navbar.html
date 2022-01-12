@@ -11,22 +11,22 @@
 
   <div id="mainMenu" class="navbar-menu">
     <div class="navbar-start">
-      <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'p' or 'n' not in request.GET %} is-active{% endif %}" href="{{ url('projects:index') }}?n=p">
-        <span class="icon is-small"><i class="fas fa-medal" aria-hidden="true"></i></span>
-        <span>{{ _("my tasks")|capitalize }}</span>
-      </a>
+      {% if user_projects or user.is_staff %}
+        <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'mp' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=mp">
+          <span class="icon is-small"><i class="fas fa-project-diagram" aria-hidden="true"></i></span>
+          <span>{{ _("my projects")|capitalize }}</span>
+        </a>
+      {% endif %}
 
       <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'o' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=o">
         <span class="icon is-small"><i class="fas fa-trophy" aria-hidden="true"></i></span>
         <span>{{ _("open tasks")|capitalize }}</span>
       </a>
 
-      {% if user_projects %}
-        <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'mp' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=mp">
-          <span class="icon is-small"><i class="fas fa-project-diagram" aria-hidden="true"></i></span>
-          <span>{{ _("my projects")|capitalize }}</span>
-        </a>
-      {% endif %}
+      <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'p' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=p">
+        <span class="icon is-small"><i class="fas fa-medal" aria-hidden="true"></i></span>
+        <span>{{ _("my tasks")|capitalize }}</span>
+      </a>
 
       {% if recently_shared or shared_before %}
         <a class="navbar-item{% if request.path == url('projects:index') and request.GET.n == 'sp' %} is-active{% endif %}" href="{{ url('projects:index') }}?n=sp">
@@ -50,14 +50,20 @@
       <div class="navbar-item has-dropdown is-hoverable">
         <a class="navbar-link">
           <span class="icon is-small">
-            <i class="fas fa-user" aria-hidden="true"></i>
+            {% if user.is_superuser %}
+              <i class="fas fa-user-shield" aria-hidden="true"></i>
+            {% elif user.is_staff %}
+              <i class="fas fa-user-cog" aria-hidden="true"></i>
+            {% else %}
+              <i class="fas fa-user" aria-hidden="true"></i>
+            {% endif %}
           </span>
           <span>{{ _("profile")|capitalize }}</span>
         </a>
 
         <div class="navbar-dropdown is-right">
           <a href="{{ url('users:textinator_settings') }}" class='navbar-item'>
-            <span class="icon is-small"><i class="fas fa-cog"></i></span>
+            <span class="icon is-small"><i class="fas fa-sliders-h"></i></span>
             <span>{{ _("settings")|capitalize }}</span>
           </a>
           {% if project and (project.author == user or project.shared_with(user) or project.has_participant(user)) %}
@@ -72,7 +78,7 @@
             {% else %}
             <a href="{{ url('admin:index') }}" class='admin navbar-item'>
             {% endif %}
-              <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
+              <span class="icon is-small"><i class="fas fa-cogs"></i></span>
               <span>{{ _("admin")|capitalize }}</span>
             </a>
             <a href="{{ url('rosetta-old-home-redirect') }}" class='admin navbar-item'>

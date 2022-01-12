@@ -76,6 +76,21 @@ def lang_translated_name(code):
     # {'bidi': False, 'code': 'sv', 'name': 'Swedish', 'name_local': 'svenska', 'name_translated': 'Swedish'}
     return translation.get_language_info(str(code))['name_translated']
 
+def markify(score):
+    if type(score) == int:
+        mapping = [
+            ('times', 'danger', '', ''),
+            ('check', 'orange', '[', ']'),
+            ('check', 'darkyellow', '(', ')'),
+            ('check', 'success', '', '')
+        ]
+        return '<span class="icon has-text-{1}">{2}<i class="fas fa-{0}"></i>{3}</span>'.format(*mapping[score])
+    else:
+        if score == 'docker':
+            return '<i class="fab fa-{}"></i>'.format(score)
+        else:
+            return '<i class="fas fa-{}"></i>'.format(score)
+
 
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
@@ -99,6 +114,7 @@ def environment(**options):
     env.filters['naturaltime'] = naturaltime
     env.filters["local_language_name"] = lang_local_name
     env.filters['translated_language_name'] = lang_translated_name
+    env.filters["markify"] = markify
 
     env.install_gettext_translations(translation)
 

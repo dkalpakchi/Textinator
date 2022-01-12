@@ -17,6 +17,14 @@ body .container:first-of-type {
   margin: 0 !important;
 }
 
+.margin-center {
+  margin: 0 auto;
+}
+
+.main-gradient {
+  background: radial-gradient(#b2b2b2, #6a6a6a);
+}
+
 .participations .tile.is-child:hover,
 .open-projects .tile.is-child:hover,
 .my-projects .tile.is-child:hover,
@@ -579,6 +587,19 @@ label.help.is-danger {
 
 .is-group > span:first-child {
   margin-right: 15px;
+}
+
+.has-text-orange {
+  color: #ff8000;
+}
+
+.has-text-darkyellow {
+  color: #F6BE00;
+}
+
+.mdi.mdi-flip-h:before {
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 /**

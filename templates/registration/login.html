@@ -1,48 +1,50 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="section hero is-large">
-  <div class="container box is-vcentered is-centered">
-    <div class="logo has-text-centered">Textinator</div>
-    <div class="container">
-      {% if form.errors %}
-        <p>Your username and password didn't match. Please try again.</p>
-      {% endif %}
-
-      {% if next %}
-        {% if user.is_authenticated %}
-          <p>Your account doesn't have access to this page. To proceed, please login with an account that has access.</p>
-        {% else %}
-          <p>Please login to see this page.</p>
+<div class="hero main-gradient is-fullheight">
+  <div class="hero-body">
+    <div class="box is-vcentered margin-center">
+      <div class="logo has-text-centered">Textinator</div>
+      <div class="container">
+        {% if form.errors %}
+          <p>Your username and password didn't match. Please try again.</p>
         {% endif %}
-      {% endif %}
 
-      <form method="post" action="{% url 'login' %}" class='form'>
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{% if next %}{{next}}{% else %}{% url 'projects:index' %}{% endif %}">
-        <div class="field">
-          <label for="username" class="label">Username or e-mail:</label>
-          <div class="control">
-            <input class="input" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" type="text" required /> 
-          </div>
-        </div>
+        {% if next %}
+          {% if user.is_authenticated %}
+            <p>Your account doesn't have access to this page. To proceed, please login with an account that has access.</p>
+          {% else %}
+            <p>Please login to see this page.</p>
+          {% endif %}
+        {% endif %}
 
-        <div class="field">
-          <label for="password" class="label">{{ form.password.label_tag }}</label>
-          <div class="control">
-            <input class="input" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" type="password" required /> 
+        <form method="post" action="{% url 'login' %}" class='form'>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% if next %}{{next}}{% else %}{% url 'projects:index' %}{% endif %}">
+          <div class="field">
+            <label for="username" class="label">Username or e-mail:</label>
+            <div class="control">
+              <input class="input" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" type="text" required /> 
+            </div>
           </div>
-        </div>
 
-        <div class="field is-grouped">
-          <div class="control">
-            <input class='button is-link' type="submit" value="Login">
+          <div class="field">
+            <label for="password" class="label">{{ form.password.label_tag }}</label>
+            <div class="control">
+              <input class="input" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" type="password" required /> 
+            </div>
           </div>
-          <div class="control">
-            <a href="{% url 'django_registration_register' %}" class='button is-text'>No account?</a>
+
+          <div class="field is-grouped">
+            <div class="control">
+              <input class='button is-link' type="submit" value="Login">
+            </div>
+            <div class="control">
+              <a href="{% url 'django_registration_register' %}" class='button is-text'>No account?</a>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </div>

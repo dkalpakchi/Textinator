@@ -1,32 +1,34 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="section hero">
-  <div class="container box is-vcentered is-centered">
-    <div class="logo has-text-centered">Textinator</div>
-    <div class="container">
-      <form method="post" action="" class='form'>
-        {% csrf_token %}
-        {% for field in form %}
-          <div class="field">
-            <label for="username" class="label">{{ field.label_tag }}</label>
-            <div class="control">
-              <input class="input" id="{{ field.id_for_label }}" name="{{ field.html_name }}" type="{{ field.field.widget.input_type }}" required />
+<div class="hero main-gradient is-fullheight">
+  <div class="hero-body">
+    <div class="box is-vcentered margin-center">
+      <div class="logo has-text-centered">Textinator</div>
+      <div class="container">
+        <form method="post" action="" class='form'>
+          {% csrf_token %}
+          {% for field in form %}
+            <div class="field">
+              <label for="username" class="label">{{ field.label_tag }}</label>
+              <div class="control">
+                <input class="input" id="{{ field.id_for_label }}" name="{{ field.html_name }}" type="{{ field.field.widget.input_type }}" required />
+              </div>
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}<div class="help is-danger">{{ field.errors }}</div>{% endif %}
             </div>
-            {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
-            {% if field.errors %}<div class="help is-danger">{{ field.errors }}</div>{% endif %}
+          {% endfor %}
+          </dl>
+          <div class="field is-grouped">
+            <div class="control">
+              <input type="submit" value="Register" class="button is-link">
+            </div>
+            <div class="control">
+              <a href="{% url 'login' %}" class='button is-text'>Already have an account?</a>
+            </div>
           </div>
-        {% endfor %}
-        </dl>
-        <div class="field is-grouped">
-          <div class="control">
-            <input type="submit" value="Register" class="button is-link">
-          </div>
-          <div class="control">
-            <a href="{% url 'login' %}" class='button is-text'>Already have an account?</a>
-          </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </div>

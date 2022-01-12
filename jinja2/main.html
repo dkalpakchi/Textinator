@@ -16,16 +16,17 @@
     <script type="text/javascript" src="{{ static('scripts/script.js') }}"></script>
   </head>
   <body>
-    <section class="hero is-grey">
+    <section class="hero main-gradient is-medium">
       <div class="hero-body">
         <div class="container">
           <div class="columns is-vcentered">
             <div class="column">
+              <span class="tag is-dark">{{version}}</span>
               <h1 class="logo title mb-6">
                 Textinator
               </h1>
               <h2 class="subtitle">
-                Help researchers in conquering NLP problems!
+                Conquering NLP annotations
               </h2>
               <a href="{{url('django_registration_register')}}" class='button is-rounded is-success'>Join us!</a>
               <a href="{{url('login')}}" class='button is-rounded is-info'>Login</a>
@@ -42,6 +43,65 @@
             </div>  
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <section class="level is-mobile">
+        <div class="level-item has-text-centered">
+          <div>
+            <div class="icon is-size-1"><i class="fas fa-tools"></i></div>
+            <p class="title">Highly customizable</p>
+            <p class="heading">Custom tasks, markers, relations</p>
+          </div>
+        </div>
+        <div class="level-item has-text-centered">
+          <div>
+            <div class="icon is-size-1"><i class="fas fa-language"></i></div>
+            <p class="title">Internationalized</p>
+            <p class="heading">4 languages and counting</p>
+          </div>
+        </div>
+        <div class="level-item has-text-centered">
+          <div>
+            <div class="icon is-size-1"><i class="fab fa-docker"></i></div>
+            <p class="title">Easy to deploy</p>
+            <p class="heading">Install Docker and be ready to go</p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <hr>
+
+    <section class="section">
+      <h1 class="title has-text-centered">Textinator compared to other open-source annotation tools</h1>
+
+      <div class="container">
+        <table class="table is-hoverable is-fullwidth">
+          <thead>
+            <th>Annotation tool</th>
+            <th><span class="icon is-size-3"><i class="fas fa-umbrella"></i></span></th>
+            <th><span class="icon is-size-3"><i class="fas fa-language"></i></span></th>
+            <th><span class="icon is-size-3"><i class="fas fa-tools"></i></span></th>
+            <th><span class="icon is-size-3"><i class="fas fa-poll"></i></span></th>
+            <th><span class="icon is-size-3"><i class="fas fa-vial"></i></span></th>
+            <th><span class="icon is-size-3"><i class="fas fa-users-cog"></i></span></th>
+            <th><span class="icon is-size-3"><i class="fas fa-book"></i></span></th>
+            <th><span class="icon is-size-3"><i class="fas fa-magic"></i></span></th>
+            <th><span class="icon is-size-3"><i class="fas fa-upload"></i></span></th>
+          </thead>
+          <tbody>
+            {% for tool in oss_tools %}
+              <tr>
+                <td>{{tool.name}}</td>
+                {% for score in tool.scores %}
+                  <td>{{score|markify|safe}}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </section>
 

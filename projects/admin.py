@@ -372,6 +372,13 @@ class DataAccessLogAdmin(CommonModelAdmin):
 @admin.register(Marker)
 class MarkerAdmin(CommonModelAdmin):
     pass
+    # def has_change_permission(request, obj=None)
+    #     # Should return True if editing obj is permitted, False otherwise.
+    #     # If obj is None, should return True or False to indicate whether editing of objects of this type is permitted in general 
+
+    # def has_delete_permission(request, obj=None)
+    #     # Should return True if deleting obj is permitted, False otherwise.
+    #     # If obj is None, should return True or False to indicate whether deleting objects of this type is permitted in general
 
 
 @admin.register(Relation)
@@ -389,7 +396,9 @@ class RelationAdmin(CommonModelAdmin):
 class PostProcessingMethodAdmin(CommonModelAdmin): pass
 
 @admin.register(PreMarker)
-class PreMarkerAdmin(CommonModelAdmin): pass
+class PreMarkerAdmin(CommonModelAdmin):
+    user_can_access_owned_objects_only = True
+    user_owned_objects_field = 'project__author'
 
 @admin.register(MarkerPair)
 class MarkerPairAdmin(CommonModelAdmin): pass

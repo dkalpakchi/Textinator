@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/dkalpakchi/Textinator#readme",
   "dependencies": {
+    "@creativebulma/bulma-divider": "^1.1.0",
     "@fortawesome/fontawesome-free": "^5.9.0",
+    "@mdi/font": "^6.5.95",
     "@popperjs/core": "^2.11.2",
     "bulma": "^0.9.0",
     "bulma-carousel": "^4.0.4",
@@ -27,7 +29,6 @@
     "jquery-ui-dist": "^1.13.0",
     "jquery-validation": "^1.19.3",
     "shepherd.js": "^3.1.0",
-    "tippy.js": "^6.3.7",
-    "@creativebulma/bulma-divider": "^1.1.0"
+    "tippy.js": "^6.3.7"
   }
 }

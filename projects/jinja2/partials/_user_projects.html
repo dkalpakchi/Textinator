@@ -9,7 +9,7 @@
 {% else %}
   <article class="message is-info">
     <div class="message-body">
-      <p>{{ _("You have not created any projects so far.") }}</p>
+      <p>{{ _("You have not created any projects so far. If you want to create a new project now, please click") }} <a href="{{ url('admin:projects_project_add') }}"> {{_("here") }}</a></p>
       <!-- <p>Click <a class='intro-button'>here</a> if you want an introduction to the website</p> -->
     </div>
   </article>      
