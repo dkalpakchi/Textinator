@@ -48,7 +48,6 @@
     var bounded = [];
     labels.sort(function(x, y) { return x['start'] - y['start']});
     labels = utils.unique(labels);
-    console.log(labels);
     var markers = {};
     for (var i = 0, len = labels.length; i < len; i++) {
       var cnodes = area.childNodes,
@@ -173,7 +172,6 @@
         for (var k in freeText) {
           var obj = freeText[k],
               sample = obj[Object.keys(obj)[0]][0];
-          console.log(sample)
           $freeTextInput.append($('<option value="' + k + '">' + k + " (created by " + sample['user'] + " on " + sample['created'] + ")</option>"))
         }
 

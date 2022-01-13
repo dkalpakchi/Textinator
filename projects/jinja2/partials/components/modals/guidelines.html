@@ -9,7 +9,11 @@
       </header>
       <div class="card-content">
         <div class="button-scrolling content">
-          <p class='has-text-justified'>{{project.guidelines|safe}}</p>
+          {% if project.guidelines %}
+            {{project.guidelines|safe}}
+          {% else %}
+            <p class='has-text-justified'>{{ _("No guidelines are provided") }}</p>
+          {% endif %}
         </div>
         {% if project.has_intro_tour %}
           <div class="content">

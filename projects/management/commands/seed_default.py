@@ -3,6 +3,7 @@ import json
 import logging
 import random
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Permission, Group
 
@@ -74,7 +75,7 @@ def create_data():
 
         created = 0
         group_permissions = {
-            'project_manager': [
+            'project_managers': [
                 'add_project', 'view_project', 'change_project',
                 'add_marker', 'view_marker',
                 'add_relation', 'view_relation',
@@ -82,6 +83,7 @@ def create_data():
                 'add_markerrestriction', 'change_markerrestriction', 'delete_markerrestriction', 'view_markerrestriction',
                 'add_markerunit', 'change_markerunit', 'delete_markerunit', 'view_markerunit',
                 'add_markervariant', 'change_markervariant', 'delete_markervariant', 'view_markervariant',
+                'add_relationvariant', 'change_relationvariant', 'delete_relationvariant', 'view_relationvariant',
                 'add_premarker', 'change_premarker', 'delete_premarker', 'view_premarker'
             ],
             'user_manager': [
@@ -89,12 +91,17 @@ def create_data():
             ]
         }
 
-        for x in ["translator", "user_manager", "project_manager"]:
+        for x in ["translators", "user_managers", "project_managers"]:
             g, is_created = Group.objects.get_or_create(name=x)
             created += is_created
             if is_created > 0:
                 for perm in group_permissions.get(x, []):
                     g.permissions.add(Permission.objects.get(codename=perm))
+
+        for x in ["translators-{}".format(l) for l, _ in settings.LANGUAGES]:
+            g, is_created = Group.objects.get_or_create(name=x)
+            created += is_created
+
         logger.info("{} user groups are created.".format(created))
 
 

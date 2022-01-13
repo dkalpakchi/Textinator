@@ -1,0 +1,12 @@
+<div class="text-language-switcher mt-5">
+  {% for lang in languages %}
+    <form action="{{ url('set_language') }}" method="POST">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+      <input type="hidden" name="language" value="{{lang[0]}}">
+      <input type="submit" value="{{lang[0]|local_language_name}}">
+    </form>
+    {% if not loop.last %}
+    <span>|</span>
+    {% endif %}
+  {% endfor %}
+</div>

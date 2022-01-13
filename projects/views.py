@@ -173,8 +173,7 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        project_data = ProjectData.objects.filter(project__id=self.pk).values('pk')
-        logs = DataAccessLog.objects.filter(project_data__id__in=project_data)
+        logs = DataAccessLog.objects.filter(project__id=self.pk)
         submitted_logs = logs.filter(is_submitted=True)
         skipped_logs = logs.filter(is_skipped=True)
         
@@ -287,6 +286,11 @@ class IndexView(LoginRequiredMixin, generic.ListView):
     model = Project
     template_name = 'projects/index.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['languages'] = settings.LANGUAGES
+        return context
+
 
 class DetailView(LoginRequiredMixin, generic.DetailView):
     model = Project
@@ -327,29 +331,26 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         logs = None
         if source_id != -1:
             try:
-                p_data = ProjectData.objects.get(project=proj, datasource=DataSource.objects.get(pk=source_id))
+                d = DataSource.objects.get(pk=source_id)
             except DataSource.DoesNotExist:
                 print("DataSource does not exist")
-                pass
-            except ProjectData.DoesNotExist:
-                print("ProjectData does not exist")
                 pass
 
             try:
                 DataAccessLog.objects.get_or_create(
-                    user=u, project_data=p_data, datapoint=str(dp_id),
+                    user=u, project=proj, datasource=d, datapoint=str(dp_id),
                     is_submitted=False, is_skipped=False
                 )
             except DataAccessLog.MultipleObjectsReturned:
                 alogs = DataAccessLog.objects.filter(
-                    user=u, project_data=p_data, datapoint=str(dp_id),
+                    user=u, project=proj, datasource=d, datapoint=str(dp_id),
                     is_submitted=False, is_skipped=False
                 ).order_by('-dt_created').all()
                 for al in alogs[1:]:
                     al.delete()
 
             try:
-                logs = DataAccessLog.objects.filter(user=u, project_data=p_data, is_submitted=True).count()
+                logs = DataAccessLog.objects.filter(user=u, project=proj, datasource=d, is_submitted=True).count()
             except DataAccessLog.DoesNotExist:
                 print("DataAccessLog does not exist")
                 pass
@@ -402,11 +403,12 @@ def record_datapoint(request, proj):
             raise Http404
 
         # log the submission
-        project_data = ProjectData.objects.get(project=batch_info.project, datasource=batch_info.data_source)
         dal = DataAccessLog.objects.get(
             user=batch_info.user,
             project_data=project_data,
-            datapoint=batch_info.datapoint
+            datapoint=batch_info.datapoint,
+            project=batch_info.project,
+            datasource=batch_info.data_source
         )
         dal.is_submitted = True
         dal.save()
@@ -590,17 +592,20 @@ def new_article(request, proj):
     ds_id = request.POST.get('sId')
     if ds_id:
         data_source = DataSource.objects.get(pk=ds_id)
-        project_data = ProjectData.objects.get(project=project, datasource=data_source)
         dp_id = request.POST.get('dpId')
         if dp_id:
             try:
-                log = DataAccessLog.objects.get(user=request.user, project_data=project_data, datapoint=str(dp_id), is_skipped=False)
+                log = DataAccessLog.objects.get(
+                    user=request.user, project=project,
+                    datasource=data_source, datapoint=str(dp_id), is_skipped=False
+                )
                 if not log.is_submitted:
                     log.is_skipped = True
                     log.save()
             except DataAccessLog.DoesNotExist:
                 DataAccessLog.objects.create(
-                    user=request.user, project_data=project_data, datapoint=str(dp_id), 
+                    user=request.user, project=project,
+                    datasource=data_source, datapoint=str(dp_id), 
                     is_submitted=False, is_skipped=True
                 )
 
@@ -608,9 +613,9 @@ def new_article(request, proj):
 
     # log the new one
     data_source = DataSource.objects.get(pk=source_id)
-    project_data, _ = ProjectData.objects.get_or_create(project=project, datasource=data_source)
     DataAccessLog.objects.create(
         user=request.user, project_data=project_data, datapoint=str(dp_id), 
+        project=project, datasource=data_source,
         is_submitted=False, is_skipped=False
     )
 
@@ -763,8 +768,7 @@ def data_explorer(request, proj):
         if context_id:
             return JsonResponse(get_json_for_context(Context.objects.get(pk=context_id)))
     
-        project_data = ProjectData.objects.filter(project=project).all()
-        flagged_datapoints = DataAccessLog.objects.filter(project_data__in=project_data).exclude(flags="")
+        flagged_datapoints = DataAccessLog.objects.filter(project=project).exclude(flags="")
         if not is_admin:
             flagged_datapoints = flagged_datapoints.filter(user=request.user)
 
@@ -845,9 +849,9 @@ def flag_text(request, proj):
     project = Project.objects.filter(pk=proj).get()
     data_source = DataSource.objects.get(pk=ds_id)
 
-    project_data = ProjectData.objects.get(project=project, datasource=data_source)
     DataAccessLog.objects.create(
         user=request.user, project_data=project_data, datapoint=str(dp_id),
+        project=project, datasource=data_source,
         is_submitted=False, is_skipped=True, flags=feedback
     )
     return JsonResponse({})

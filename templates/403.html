@@ -10,6 +10,7 @@
         <div class="box has-text-centered is-vcentered margin-center">
           <h1 class="logo">403 Forbidden</h1>
           <p>{{ _("Sorry, you don't have permissions to view the page. If you believe this is a mistake, please contact your administrator.") }} </p>
+          <p><a href="{% url 'projects:index' %}">{{ _("back to the site")|capfirst }}</a></p>
         </div>
       </div>
     </section>

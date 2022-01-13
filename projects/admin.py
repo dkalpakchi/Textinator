@@ -154,20 +154,22 @@ class ProjectForm(forms.ModelForm):
 
     class Meta:
         model = Project
+
         fields = [
-            'title', 'language', 'short_description', 'institution', 'supported_by', 'temporary_message', 'guidelines', 'reminders',
-            'video_summary', 'sampling_with_replacement', 'disjoint_annotation', 'task_type', 'dt_publish',
-            'dt_finish', 'collaborators', 'datasources', 'is_open', 'is_peer_reviewed',
-            'allow_selecting_labels', 'disable_submitted_labels', 'show_dataset_identifiers', 'has_intro_tour', 'max_markers_per_input',
-            #'round_length', 'points_scope', 'points_unit'
+            'title', 'language', 'short_description', 'institution', 'supported_by',
+            'temporary_message', 'reminders', 'dt_publish', 'dt_finish', 'collaborators',
+            'task_type', 'guidelines', 'video_summary', 'datasources', 'show_dataset_identifiers',
+            'is_open', 'is_peer_reviewed', 'allow_selecting_labels', 'disable_submitted_labels',
+            'sampling_with_replacement', 'disjoint_annotation'
+            #'max_markers_per_input', 'has_intro_tour', 'round_length', 'points_scope', 'points_unit'
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        obj = kwargs.get('instance')
-        if obj:
-            source_ids = ProjectData.objects.filter(project=obj).values_list('datasource', flat=True)
-            self.initial['datasources'] = source_ids
+        # obj = kwargs.get('instance')
+        # if obj:
+        #     source_ids = ProjectData.objects.filter(project=obj).values_list('datasource', flat=True)
+        #     self.initial['datasources'] = source_ids
 
     def clean_datasources(self):
         project_language = self.cleaned_data['language']
@@ -179,27 +181,25 @@ class ProjectForm(forms.ModelForm):
 
         return sent_ds
 
-
     def save(self, commit=True):
         sent_ds = set(self.cleaned_data.pop('datasources'))
 
         instance = forms.ModelForm.save(self, commit=False)
-        
+        instance.save()
         try:
             project = Project.objects.get(pk=instance.pk)
-            existing_ds = set(DataSource.objects.filter(pk__in=ProjectData.objects.filter(
-                project=project).values_list('datasource', flat=True)).all())
+            existing_ds = set(project.datasources.all())
         except Project.DoesNotExist:
-            instance.save()
             existing_ds = set()
 
         for ds in (existing_ds | sent_ds):
             if ds in existing_ds:
                 if ds not in sent_ds:
                     # remove DS
-                    ProjectData.objects.get(project=project, datasource=ds).delete()
+                    project.datasources.remove(ds)
             else:
-                ProjectData.objects.create(project=instance, datasource=ds)
+                project.datasources.add(ds)
+        instance.save()
 
         return instance
 
@@ -211,6 +211,25 @@ class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
         'task_type',
         'is_open'
     ]
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'language', 'short_description', 'institution', 'supported_by',
+                'dt_publish', 'dt_finish', 'collaborators')
+        }),
+        (_('task specification').title(), {
+            'fields': ('task_type', 'guidelines', 'reminders', 'video_summary')
+        }),
+        (_('data').title(), {
+            'fields': ('datasources', 'show_dataset_identifiers',)
+        }),
+        (_('settings').title(), {
+            'fields': ('is_open', 'allow_selecting_labels', 'disable_submitted_labels',
+                'sampling_with_replacement', 'disjoint_annotation')
+        }),
+        (_('administration').title(), {
+            'fields': ('temporary_message',)
+        }),
+    )
     readonly_fields = ['dt_created', 'dt_updated', 'author']
     form = ProjectForm
     inlines = [MarkerVariantInline, RelationVariantInline, PreMarkerInline, UserProfileInline] #LevelInline, UserProfileInline]
@@ -365,7 +384,7 @@ class DataSourceAdmin(CommonModelAdmin):
 class DataAccessLogAdmin(CommonModelAdmin):
     _list_filter = [
         'user',
-        'project_data__project'
+        'project'
     ]
 
 
@@ -445,7 +464,6 @@ class TaskTypeSpecAdmin(CommonModelAdmin):
     form = TaskTypeConfigForm
 
 admin.site.register(Permission)
-admin.site.register(ProjectData)
 admin.site.register(MarkerContextMenuItem)
 
 admin.site.site_header = 'Textinator Admin'

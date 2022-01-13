@@ -18,3 +18,7 @@
   {{task_type_template|safe}}
 </div>
 {% endblock %}
+
+{% block custom_body_scripts %}
+<script type="text/javascript" src="{{ static('scripts/project_ui.js') }}"></script>
+{% endblock %}

@@ -64,7 +64,6 @@
 
   $(document).ready(function() {
     $("#id_source_type").on('select2:select', function(e) {
-      console.log("HERE")
       var $target = $(e.target);
           option = $target.find("option:selected").val();
 

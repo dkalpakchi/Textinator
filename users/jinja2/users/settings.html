@@ -1,38 +1,56 @@
 {% extends "layout.html" %}
 
+{% block custom_styles %}
+  <link rel="stylesheet" href="{{ static('jquery-ui-dist/jquery-ui.min.css') }}">
+{% endblock %}
+
 {% block content %}
-<h4 class="subtitle is-uppercase has-text-weight-bold">{{ _("settings") }}</h4>
-<form action="{{ url('users:textinator_settings') }}" method="post">
-  {{ csrf_input }}
-  <div class="field">
-    <label for="language" class="label">{{ _("preferred language")|capitalize }}</label>
-    <div class="control">
-      <div class="select">
-        <select name="language">
-          {% for language in languages %}
-            <option value="{{ language.code }}"{% if language.code == current_language %} selected{% endif %}>
-                {{ language.name_local }} ({{ language.code }})
-            </option>
-          {% endfor %}
-        </select>
+<div class="section pt-0">
+  <div class="container">
+    <h4 class="subtitle is-uppercase has-text-weight-bold">{{ _("settings") }}</h4>
+    <form action="{{ url('users:textinator_settings') }}" method="post">
+      {{ csrf_input }}
+      <div class="field">
+        <label for="language" class="label">{{ _("preferred language")|capitalize }}</label>
+        <div class="control">
+          <div class="select">
+            <select name="language">
+              {% for language in languages %}
+                <option value="{{ language.code }}"{% if language.code == current_language %} selected{% endif %}>
+                    {{ language.name_local }} ({{ language.code }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-  <div class="field">
-    <label for="fluent_in" class="label">{{ _("fluent in")|capitalize }}</label>
-    <div class="control">
-      <!-- To be replaced by select2 library when more languages are added -->
-      <div class="select is-multiple">
-        <select multiple size="8" name="fluent_in">
-          {% for language in languages %}
-            <option value="{{ language.code }}"{% if language.code in fluent_in %} selected{% endif %}>
-              {{ language.name_local }} ({{ language.code }})
-            </option>
-          {% endfor %}
-        </select>
+      <div class="field">
+        <label for="fluent_in" class="label">{{ _("fluent in")|capitalize }}</label>
+        <div class="control">
+          <!-- To be replaced by select2 library when more languages are added -->
+          <div class="select is-multiple">
+            <select multiple size="8" name="fluent_in">
+              {% for language in languages %}
+                <option value="{{ language.code }}"{% if language.code in fluent_in %} selected{% endif %}>
+                  {{ language.name_local }} ({{ language.code }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
       </div>
-    </div>
+      <input type="submit" class="button is-success" value='{{ _("save")|capitalize }}'>
+    </form>
+
+    {% if user.is_staff %}
+      <div data-id="accordion" class="mt-6">
+        <h3>{{ _("user details")|capitalize }}</h3>
+        <div class="content">
+          {% set groups = user.groups.values_list('name', flat=True) %}
+          <p>Your groups: {{",".join(groups) if groups else 'none'}}</p>
+        </div>
+      </div>
+    {% endif %}
   </div>
-  <input type="submit" value='{{ _("save")|capitalize }}'>
-</form>
+</div>
 {% endblock %}

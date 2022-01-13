@@ -294,8 +294,8 @@ class Project(CommonModel):
     relations = models.ManyToManyField(Relation, through='RelationVariant', blank=True,
         verbose_name=_("project-specific relations"))
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("author"))
-    datasources = models.ManyToManyField(DataSource, through='ProjectData', verbose_name=_("data sources"),
-        help_text=_("All datasets must of the same language as the project"))
+    datasources = models.ManyToManyField(DataSource, verbose_name=_("data sources"),
+        help_text=_("All data sources must be of the same language as the project"))
     is_open = models.BooleanField(_("should the project be public?"), default=False)
     is_peer_reviewed = models.BooleanField(_("should the annotations be peer reviewed?"), default=False)
     allow_selecting_labels = models.BooleanField(_("should selecting the labels be allowed?"), default=False)
@@ -333,25 +333,23 @@ class Project(CommonModel):
         return self.markervariant_set.exclude(unit=None).order_by('anno_type')
 
     def data(self, user):
-        pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
-        log = DataAccessLog.objects.filter(user=user, project_data__pk__in=pdata, is_submitted=False, is_skipped=False).first()
+        log = DataAccessLog.objects.filter(user=user, project=self, is_submitted=False, is_skipped=False).first()
         if log:
-            ds = log.project_data.datasource
+            ds = log.datasource
             dp_id = log.datapoint
             return ds.postprocess(ds.get(dp_id)).strip(), dp_id, ds.name, ds.size(), ds.pk
 
         dp_taboo = defaultdict(set)
         if not self.sampling_with_replacement:
-            pdata = self.datasources.through.objects.filter(project=self).values_list('pk', flat=True)
             if self.disjoint_annotation:
                 # TODO: check for race conditions here, could 2 annotators still get the same text?
                 # meaning each user annotates whatever is not annotated
-                logs = DataAccessLog.objects.filter(project_data__pk__in=pdata).all()
+                logs = DataAccessLog.objects.filter(project=self).all()
             else:
                 # meaning each user annotates all texts
-                logs = DataAccessLog.objects.filter(project_data__pk__in=pdata, user=user).all()
+                logs = DataAccessLog.objects.filter(project=self, user=user).all()
             for log in logs:
-                dp_taboo[log.project_data.datasource.pk].add(log.datapoint)
+                dp_taboo[log.datasource.pk].add(log.datapoint)
 
         datasources = []
         for source in self.datasources.all():
@@ -479,7 +477,7 @@ class MarkerUnit(CommonModel):
 class Range(CommonModel):
     class Meta:
         verbose_name = _("range")
-        verbose_name = _("ranges")
+        verbose_name_plural = _("ranges")
 
     min_value = models.FloatField(verbose_name=_("minimal value"), blank=True, null=True)
     max_value = models.FloatField(verbose_name=_("maximal value"), blank=True, null=True)
@@ -500,7 +498,7 @@ class Range(CommonModel):
 
         if self.step is not None:
             if res:
-                res = "{} {}".format(res, _("(step: {})").format(self.step))
+                res = "{} {}".format(res, "({})".format(_("step {}").format(self.step)))
             else:
                 res = _("step {}").format(self.step).title()
 
@@ -689,23 +687,14 @@ class MarkerRestriction(CommonModel):
         return self.kind + str(self.value)
 
 
-class ProjectData(CommonModel):
-    class Meta:
-        unique_together = (('project', 'datasource'),)
-        verbose_name = _("project datum")
-        verbose_name_plural = _("project data")
-
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
-
-
 class DataAccessLog(CommonModel):
     class Meta:
         verbose_name = _('data access log')
         verbose_name_plural = _("data access logs")
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("user"))
-    project_data = models.ForeignKey(ProjectData, on_delete=models.CASCADE, verbose_name=_("project data"))
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     datapoint = models.CharField(_("datapoint ID"), max_length=64,
         help_text=_("As stored in the original dataset"))
     flags = models.TextField(_("flags"), default="",
@@ -1013,7 +1002,7 @@ class LabelRelation(CommonModel):
 class UserProfile(CommonModel):
     class Meta:
         verbose_name = _('a project-specific user profile')
-        verbose_name_plural = _('project specific user profile')
+        verbose_name_plural = _('project specific user profiles')
 
     points = models.FloatField(_("points in total"), default=0.0)
     asking_time = models.IntegerField(default=0) # total asking time [OBSOLETE]

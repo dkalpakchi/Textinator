@@ -10,6 +10,7 @@
         <div class="box has-text-centered is-vcentered margin-center">
           <h1 class="logo">404 Not Found</h1>
           <p>{{ _("Whoops! We can not find this page on our server.") }} </p>
+          <p><a href="{% url 'projects:index' %}">{{ _("back to the site")|capfirst }}</a></p>
         </div>
       </div>
     </section>

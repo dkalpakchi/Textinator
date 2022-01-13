@@ -15,8 +15,9 @@ import glob
 import yaml
 import uuid
 import random
-
 from pathlib import Path
+
+from django.utils.translation import gettext_lazy as _
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -193,6 +194,7 @@ CACHES = {
 # (see http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry for the whole list of language codes)
 LANGUAGES = [
     ('en', 'English'),
+    ('ru', 'Russian'),
     ('sv', 'Swedish'),
     ('uk', 'Ukrainian')
 ]
@@ -210,6 +212,8 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+ROSETTA_LANGUAGE_GROUPS = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -319,7 +323,7 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [
 
         # Url that gets reversed (Permissions can be added)
-        {"name": "Back to site",  "url": "/textinator"},
+        {"name": _("Back to the site"),  "url": '/textinator'}#reverse('projects:index')},
     ],
     "language_chooser": True,
 }

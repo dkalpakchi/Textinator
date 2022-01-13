@@ -59,6 +59,28 @@ body .container:first-of-type {
   width: 1em;
 }
 
+.text-language-switcher form {
+  width: fit-content;
+  width: -webkit-fit-content;
+}
+
+.text-language-switcher span {
+  color: gray;
+}
+
+.text-language-switcher form, .text-language-switcher span {
+  float: left;
+}
+
+.text-language-switcher input[type="submit"] {
+  background: none;
+  border: none;
+  font-size: 1em;
+  color: #485fc7;
+  cursor: pointer;
+  text-decoration: none;
+}
+
 pre {
   margin: 20px 0;
   padding: 20px;

@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 
+{% block custom_styles %}
+  <link rel="stylesheet" href="{{ static('jquery-ui-dist/jquery-ui.min.css') }}">
+{% endblock %}
+
 {% block custom_scripts %}
   <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
 {% endblock %}
