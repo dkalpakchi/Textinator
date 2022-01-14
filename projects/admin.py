@@ -160,7 +160,7 @@ class ProjectForm(forms.ModelForm):
         fields = [
             'title', 'language', 'short_description', 'institution', 'supported_by',
             'temporary_message', 'reminders', 'dt_publish', 'dt_finish', 'collaborators',
-            'task_type', 'guidelines', 'video_summary', 'datasources', 'show_dataset_identifiers',
+            'task_type', 'guidelines', 'video_summary', 'datasources', 'show_datasource_identifiers',
             'is_open', 'is_peer_reviewed', 'allow_selecting_labels', 'disable_submitted_labels',
             'sampling_with_replacement', 'disjoint_annotation'
             #'max_markers_per_input', 'has_intro_tour', 'round_length', 'points_scope', 'points_unit'
@@ -222,7 +222,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
             'fields': ('task_type', 'guidelines', 'reminders', 'video_summary')
         }),
         (_('data').title(), {
-            'fields': ('datasources', 'show_dataset_identifiers',)
+            'fields': ('datasources', 'show_datasource_identifiers',)
         }),
         (_('settings').title(), {
             'fields': ('is_open', 'allow_selecting_labels', 'disable_submitted_labels',

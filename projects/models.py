@@ -25,6 +25,9 @@ from .model_helpers import *
 
 
 class CommonModel(models.Model):
+    """
+    Abstract model containing the fields for creation and update dates, as well as a stub for `to_json` method.
+    """
     dt_created = models.DateTimeField(null=True, default=timezone.now, verbose_name=_("Created at"),
         help_text=_("Autofilled"))
     dt_updated = models.DateTimeField(null=True, verbose_name=_("Updated at"),
@@ -45,6 +48,12 @@ class CommonModel(models.Model):
 
 
 class PostProcessingMethod(CommonModel):
+    """
+    Holds function names to the post-processing methods that can be applied directly to textual data.
+    Eligible methods are currently being pulled from `projects/helpers.py`, which is not a very elegant solution.
+
+    **NOTE**: this functionality is currently inactive and is a candidate for removal/overhaul in future releases.
+    """
     class Meta:
         verbose_name = _('post-processing method')
         verbose_name_plural = _('post-processing methods')
@@ -58,8 +67,32 @@ class PostProcessingMethod(CommonModel):
         return self.name
 
 
-# Create your models here.
 class DataSource(CommonModel):
+    """
+    Holds a **definition** of a datasource. Currently we support 4 `source_types`:
+    
+    - plain text -- input text directly in the admin interface (mostly for testing)
+    - plain text files -- a bunch of files hosted on the same server as Textinator
+    - JSON files -- a bunchf of JSON files hosted on the same server as Textinator
+    - Texts API -- a REST API that will be used for getting each datapoint (the endpoint should be specified)
+
+    Texts API specification is available in the `example_texts_api` folder of the GitHub repository.
+
+    DataSource specifies 3 different formattings:
+
+    - plain text (without line breaks or tabs preserved)
+    - formatted text (with line breaks and tabs preserved)
+    - markdown
+
+    By default each DataSource is private, unless `is_public` switch is on.
+
+    `owner` of the DataSource is set automatically and is nullable. 
+    The reason behind allowing NULL values is that the data might be owned by the institution,
+    not by the user and might also have projects connected to it.
+    If people want their datasource deleted together with their user account,
+    they need to request a manual deletion.
+    """
+
     class Meta:
         verbose_name = _('data source')
         verbose_name_plural = _('data sources')
@@ -82,9 +115,6 @@ class DataSource(CommonModel):
         help_text=_("text formating of the data source"))
     is_public = models.BooleanField(_("is public?"), default=False,
         help_text=_("Whether to make data source available to other Textinator users"))
-    # we allow NULL, since the user might, say, resign, but the data is owned by the institution
-    # and it might have projects connected to it, which is why we set things to NULL
-    # and people need to request a manual deletion of the data source
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("owner"))
 
     @classmethod
@@ -114,6 +144,12 @@ class DataSource(CommonModel):
 
 
 class MarkerAction(CommonModel):
+    """
+    Specifies an action that shows up after right-clicking the marker.
+    Each action is implemented as a JavaScript plugin that should exist in `static/scripts/labeler_plugins` folder
+    along with a specification of how to implement your own plugins if necessary.
+    """
+
     class Meta:
         verbose_name = _('marker action')
         verbose_name_plural = _('marker actions')
@@ -144,8 +180,9 @@ class MarkerAction(CommonModel):
 
 class Marker(CommonModel):
     """
-    This model holds the **definition** for each unit of annotation in Textinator, called `Marker`.
-    We create each `Marker` only when creating a new project and can re-use `Markers` between the projects.
+    Holds the **definition** for each unit of annotation in Textinator, called `Marker`.
+    We create each `Marker` only when creating a new project and can re-use `Markers` between the projects
+    (all `Markers` are available to all users).
     """
     name = models.CharField(_("name"), max_length=50,
         help_text=_("The display name of the marker (max 50 characters)"))
@@ -198,6 +235,13 @@ class Marker(CommonModel):
 
 
 class MarkerPair(CommonModel):
+    """
+    Holds a pair of markers and is used to define (constrain) the relations.
+    For example, if the relation `Refers to` holds between `Antecedent` and `Reference`,
+    then a marker pair of `Antecedent` and `Reference` will be created and assigned
+    to that relation definition.
+    """
+
     class Meta:
         verbose_name = _('marker pair')
         verbose_name_plural = _('marker pairs')
@@ -210,6 +254,11 @@ class MarkerPair(CommonModel):
 
 
 class Relation(CommonModel):
+    """
+    Holds a **definition** of a relation in Textinator.
+    We create each `Relation` only when creating a new project and can re-use `Relations` between the projects
+    (all `Relations` are available to all users).
+    """
     class Meta:
         verbose_name = _('relation')
         verbose_name_plural = _('relations')
@@ -233,6 +282,10 @@ class Relation(CommonModel):
 
     @property
     def between(self):
+        """
+        Returns:
+            str: The string representation of the pairs of markers for which the relation can be annotated.
+        """
         return "|".join([str(p) for p in self.pairs.all()])
 
     def __str__(self):
@@ -249,6 +302,13 @@ class Relation(CommonModel):
 
 
 class TaskTypeSpecification(CommonModel):
+    """
+    Holds a specification for an annotation task type and is used when a project of the pre-defined annotation type
+    is instantiated. The specification describes markers and relations that are to be used for this annotation task.
+
+    Default specifications are created during the first startup of the server and can be found in the `defaults.json`
+    """
+
     class Meta:
         verbose_name = _('task type specification')
         verbose_name_plural = _('task type specification')
@@ -261,6 +321,9 @@ class TaskTypeSpecification(CommonModel):
 
 
 class Project(CommonModel):
+    """
+    Holds a **definition** of each Textinator project.
+    """
     class Meta:
         verbose_name = _('project')
         verbose_name_plural = _('projects')
@@ -284,8 +347,8 @@ class Project(CommonModel):
     temporary_message = HTMLField(_("temporary message"), null=True, blank=True,
         help_text=_("A temporary message for urgent communication with annotators (e.g., about maintenance work)"))
     sampling_with_replacement = models.BooleanField(_("should data be sampled with replacement?"), default=False)
-    disjoint_annotation = models.BooleanField(_("should disjoint annotation be allowed?"), default=False)
-    show_dataset_identifiers = models.BooleanField(_("should dataset identifiers be shown?"), default=False)
+    disjoint_annotation = models.BooleanField(_("should each annotator work with their own part of data?"), default=False)
+    show_datasource_identifiers = models.BooleanField(_("should data source identifiers be shown?"), default=False)
     task_type = models.CharField(_("type of the annotation task"), max_length=10, choices=settings.TASK_TYPES)
     dt_publish = models.DateTimeField(verbose_name=_("publishing date"))
     dt_finish = models.DateTimeField(verbose_name=_("expiration date"))
@@ -331,13 +394,41 @@ class Project(CommonModel):
 
     @property
     def free_markers(self):
+        """
+        Returns:
+            QuerySet: The set of marker variants that do NOT belong to marker unit (order by annotation type)
+        """
         return self.markervariant_set.filter(unit=None).order_by('anno_type')
 
     @property
     def marker_groups(self):
+        """
+        Returns:
+            QuerySet: The set of marker variants that belong to marker unit (order by annotation type)
+        """
         return self.markervariant_set.exclude(unit=None).order_by('anno_type')
 
     def data(self, user):
+        """
+        Main method for getting data from the data sources and keeping track of who should annotate what.
+
+        The method proceeds as follows:
+
+        - If the annotator has previously requested a datapoint, but neither did any annotation, nor requested a new one, 
+          show the very same datapoint again. Otherwise, proceed.
+        - If sampling with replacement is turned off, exclude the previously annotated data. 
+        - If disjoint annotation is turned on, then all previously annotated datapoints (by anyone) should be excluded, 
+          so that the sets of annotations for each annotator are disjoint. 
+        - If disjoint annotation is off, then exclude only data previously annotated by the current user.
+        - Instantiate all datasources associated with this project
+        - TBD 
+        
+        Args:
+            user (User): Current user
+        
+        Returns:
+            DatapointInfo: The instance holding the information about the datapoint to be annotated
+        """
         log = DataAccessLog.objects.filter(user=user, project=self, is_submitted=False, is_skipped=False).first()
         if log:
             if log.datasource in self.datasources.all():
@@ -377,6 +468,7 @@ class Project(CommonModel):
         # take a random data point from data
         nds = len(datasources)
 
+        # TODO: introduce data source mixing strategies?
         # choose a dataset with a prior inversely proportional to the number of datapoints in them
         sizes = [datasources[i][0].size() for i in range(nds)]
         priors = [sizes[i] / sum(sizes) for i in range(nds)]

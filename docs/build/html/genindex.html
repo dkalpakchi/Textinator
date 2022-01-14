@@ -104,7 +104,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorial/standard_tasks.html">[Part 1] Annotation tasks supported out-of-the-box</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial/creating_datasets.html">[Part 2] Creating a new dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/creating_datasets.html">[Part 2] Creating a new data source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial/creating_project.html">[Part 3] Creating a new project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial/markers_inputs_and_labels.html">Markers, Inputs &amp; Labels: What’s the difference?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial/custom_annotation.html">Creating a custom annotation task</a></li>
@@ -133,6 +133,7 @@
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
+ | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
@@ -140,6 +141,7 @@
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  
 </div>
@@ -156,11 +158,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/models.html#projects.models.Batch">Batch (class in projects.models)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/models.html#projects.models.Batch.DoesNotExist">Batch.DoesNotExist</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/models.html#projects.models.Batch.MultipleObjectsReturned">Batch.MultipleObjectsReturned</a>
+</li>
+      <li><a href="modules/models.html#projects.models.Relation.between">between (projects.models.Relation property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -168,6 +172,8 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.Range.clean">clean() (projects.models.Range method)</a>
+</li>
       <li><a href="modules/models.html#projects.models.Marker.clean_fields">clean_fields() (projects.models.Marker method)</a>
 
       <ul>
@@ -176,6 +182,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.CommonModel">CommonModel (class in projects.models)</a>
+</li>
       <li><a href="modules/models.html#projects.models.Context">Context (class in projects.models)</a>
 </li>
       <li><a href="modules/models.html#projects.models.Context.DoesNotExist">Context.DoesNotExist</a>
@@ -188,16 +196,18 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.Project.data">data() (projects.models.Project method)</a>
+</li>
       <li><a href="modules/models.html#projects.models.DataAccessLog">DataAccessLog (class in projects.models)</a>
 </li>
       <li><a href="modules/models.html#projects.models.DataAccessLog.DoesNotExist">DataAccessLog.DoesNotExist</a>
 </li>
       <li><a href="modules/models.html#projects.models.DataAccessLog.MultipleObjectsReturned">DataAccessLog.MultipleObjectsReturned</a>
 </li>
-      <li><a href="modules/models.html#projects.models.DataSource">DataSource (class in projects.models)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.DataSource">DataSource (class in projects.models)</a>
+</li>
       <li><a href="modules/models.html#projects.models.DataSource.DoesNotExist">DataSource.DoesNotExist</a>
 </li>
       <li><a href="modules/models.html#projects.models.DataSource.MultipleObjectsReturned">DataSource.MultipleObjectsReturned</a>
@@ -209,6 +219,14 @@
   </ul></td>
 </tr></table>
 
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.Project.free_markers">free_markers (projects.models.Project property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -216,6 +234,8 @@
 
       <ul>
         <li><a href="modules/views.html#projects.views.DetailView.get_context_data">(projects.views.DetailView method)</a>
+</li>
+        <li><a href="modules/views.html#projects.views.IndexView.get_context_data">(projects.views.IndexView method)</a>
 </li>
         <li><a href="modules/views.html#projects.views.LabelLengthJSONView.get_context_data">(projects.views.LabelLengthJSONView method)</a>
 </li>
@@ -330,6 +350,8 @@
 </li>
       <li><a href="modules/models.html#projects.models.Marker.MultipleObjectsReturned">Marker.MultipleObjectsReturned</a>
 </li>
+      <li><a href="modules/models.html#projects.models.Project.marker_groups">marker_groups (projects.models.Project property)</a>
+</li>
       <li><a href="modules/models.html#projects.models.MarkerAction">MarkerAction (class in projects.models)</a>
 </li>
       <li><a href="modules/models.html#projects.models.MarkerAction.DoesNotExist">MarkerAction.DoesNotExist</a>
@@ -348,10 +370,10 @@
 </li>
       <li><a href="modules/models.html#projects.models.MarkerPair.MultipleObjectsReturned">MarkerPair.MultipleObjectsReturned</a>
 </li>
-      <li><a href="modules/models.html#projects.models.MarkerRestriction">MarkerRestriction (class in projects.models)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.MarkerRestriction">MarkerRestriction (class in projects.models)</a>
+</li>
       <li><a href="modules/models.html#projects.models.MarkerRestriction.DoesNotExist">MarkerRestriction.DoesNotExist</a>
 </li>
       <li><a href="modules/models.html#projects.models.MarkerRestriction.MultipleObjectsReturned">MarkerRestriction.MultipleObjectsReturned</a>
@@ -401,19 +423,13 @@
 </li>
       <li><a href="modules/models.html#projects.models.PreMarker.MultipleObjectsReturned">PreMarker.MultipleObjectsReturned</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/models.html#projects.models.Project">Project (class in projects.models)</a>
 </li>
       <li><a href="modules/models.html#projects.models.Project.DoesNotExist">Project.DoesNotExist</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/models.html#projects.models.Project.MultipleObjectsReturned">Project.MultipleObjectsReturned</a>
-</li>
-      <li><a href="modules/models.html#projects.models.ProjectData">ProjectData (class in projects.models)</a>
-</li>
-      <li><a href="modules/models.html#projects.models.ProjectData.DoesNotExist">ProjectData.DoesNotExist</a>
-</li>
-      <li><a href="modules/models.html#projects.models.ProjectData.MultipleObjectsReturned">ProjectData.MultipleObjectsReturned</a>
 </li>
       <li>
     projects.models
@@ -435,6 +451,12 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.Range">Range (class in projects.models)</a>
+</li>
+      <li><a href="modules/models.html#projects.models.Range.DoesNotExist">Range.DoesNotExist</a>
+</li>
+      <li><a href="modules/models.html#projects.models.Range.MultipleObjectsReturned">Range.MultipleObjectsReturned</a>
+</li>
       <li><a href="modules/models.html#projects.models.Marker.refresh_from_db">refresh_from_db() (projects.models.Marker method)</a>
 
       <ul>
@@ -449,22 +471,46 @@
 </li>
       <li><a href="modules/models.html#projects.models.Relation.MultipleObjectsReturned">Relation.MultipleObjectsReturned</a>
 </li>
+      <li><a href="modules/models.html#projects.models.RelationVariant">RelationVariant (class in projects.models)</a>
+</li>
+      <li><a href="modules/models.html#projects.models.RelationVariant.DoesNotExist">RelationVariant.DoesNotExist</a>
+</li>
+      <li><a href="modules/models.html#projects.models.RelationVariant.MultipleObjectsReturned">RelationVariant.MultipleObjectsReturned</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules/models.html#projects.models.Context.save">save() (projects.models.Context method)</a>
+      <li><a href="modules/models.html#projects.models.CommonModel.save">save() (projects.models.CommonModel method)</a>
 
       <ul>
+        <li><a href="modules/models.html#projects.models.Context.save">(projects.models.Context method)</a>
+</li>
         <li><a href="modules/models.html#projects.models.Marker.save">(projects.models.Marker method)</a>
 </li>
         <li><a href="modules/models.html#projects.models.MarkerVariant.save">(projects.models.MarkerVariant method)</a>
 </li>
         <li><a href="modules/models.html#projects.models.Project.save">(projects.models.Project method)</a>
 </li>
+        <li><a href="modules/models.html#projects.models.RelationVariant.save">(projects.models.RelationVariant method)</a>
+</li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.TaskTypeSpecification">TaskTypeSpecification (class in projects.models)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/models.html#projects.models.TaskTypeSpecification.DoesNotExist">TaskTypeSpecification.DoesNotExist</a>
+</li>
+      <li><a href="modules/models.html#projects.models.TaskTypeSpecification.MultipleObjectsReturned">TaskTypeSpecification.MultipleObjectsReturned</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -517,7 +563,7 @@
   
     <div class="footer" role="contentinfo">
         <div class="container">
-            &#169; Copyright 2021, Dmytro Kalpakchi.
+            &#169; Copyright 2022, Dmytro Kalpakchi.
         Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.
         </div>
     </div>  

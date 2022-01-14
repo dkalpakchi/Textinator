@@ -77,7 +77,7 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'Textinator'
-copyright = '2021, Dmytro Kalpakchi'
+copyright = '2022, Dmytro Kalpakchi'
 author = 'Dmytro Kalpakchi'
 
 # The full version, including alpha/beta/rc tags

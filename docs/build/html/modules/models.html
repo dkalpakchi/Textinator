@@ -111,7 +111,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorial/standard_tasks.html">[Part 1] Annotation tasks supported out-of-the-box</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorial/creating_datasets.html">[Part 2] Creating a new dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/creating_datasets.html">[Part 2] Creating a new data source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorial/creating_project.html">[Part 3] Creating a new project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorial/markers_inputs_and_labels.html">Markers, Inputs &amp; Labels: What’s the difference?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorial/custom_annotation.html">Creating a custom annotation task</a></li>
@@ -161,6 +161,30 @@
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="projects.models.CommonModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">CommonModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.CommonModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract model containing the fields for creation and update dates, as well as a stub for <cite>to_json</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
+<li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.CommonModel.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.CommonModel.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Context">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datapoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Context" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -199,7 +223,7 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.DataAccessLog">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">DataAccessLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datapoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_submitted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_skipped</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.DataAccessLog" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">DataAccessLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datapoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_submitted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_skipped</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.DataAccessLog" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -207,7 +231,8 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
 <li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
 <li><p><strong>user_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – User</p></li>
-<li><p><strong>project_data_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.ProjectData" title="projects.models.ProjectData"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectData</span></code></a>) – Project data</p></li>
+<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
+<li><p><strong>datasource_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.DataSource" title="projects.models.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSource</span></code></a>) – Datasource</p></li>
 <li><p><strong>datapoint</strong> (<em>CharField</em>) – As stored in the original dataset</p></li>
 <li><p><strong>flags</strong> (<em>TextField</em>) – Internal behavior flags</p></li>
 <li><p><strong>is_submitted</strong> (<em>BooleanField</em>) – Indicates whether the datapoint was successfully submitted by an annotator</p></li>
@@ -229,8 +254,28 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.DataSource">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">DataSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.DataSource" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">DataSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.DataSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a <strong>definition</strong> of a datasource. Currently we support 4 <cite>source_types</cite>:</p>
+<ul class="simple">
+<li><p>plain text – input text directly in the admin interface (mostly for testing)</p></li>
+<li><p>plain text files – a bunch of files hosted on the same server as Textinator</p></li>
+<li><p>JSON files – a bunchf of JSON files hosted on the same server as Textinator</p></li>
+<li><p>Texts API – a REST API that will be used for getting each datapoint (the endpoint should be specified)</p></li>
+</ul>
+<p>Texts API specification is available in the <cite>example_texts_api</cite> folder of the GitHub repository.</p>
+<p>DataSource specifies 3 different formattings:</p>
+<ul class="simple">
+<li><p>plain text (without line breaks or tabs preserved)</p></li>
+<li><p>formatted text (with line breaks and tabs preserved)</p></li>
+<li><p>markdown</p></li>
+</ul>
+<p>By default each DataSource is private, unless <cite>is_public</cite> switch is on.</p>
+<p><cite>owner</cite> of the DataSource is set automatically and is nullable. 
+The reason behind allowing NULL values is that the data might be owned by the institution,
+not by the user and might also have projects connected to it.
+If people want their datasource deleted together with their user account,
+they need to request a manual deletion.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -241,6 +286,8 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <li><p><strong>spec</strong> (<em>TextField</em>) – in a JSON format</p></li>
 <li><p><strong>language</strong> (<em>CharField</em>) – Language of this data source</p></li>
 <li><p><strong>formatting</strong> (<em>CharField</em>) – text formating of the data source</p></li>
+<li><p><strong>is_public</strong> (<em>BooleanField</em>) – Whether to make data source available to other Textinator users</p></li>
+<li><p><strong>owner_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – Owner</p></li>
 <li><p><strong>post_processing_methods</strong> (<em>ManyToManyField</em>) – Post-processing methods</p></li>
 </ul>
 </dd>
@@ -412,8 +459,9 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Marker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Marker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Marker" title="Permalink to this definition">¶</a></dt>
-<dd><p>This model holds the <strong>definition</strong> for each unit of annotation in Textinator, called <cite>Marker</cite>.
-We create each <cite>Marker</cite> only when creating a new project and can re-use <cite>Markers</cite> between the projects.</p>
+<dd><p>Holds the <strong>definition</strong> for each unit of annotation in Textinator, called <cite>Marker</cite>.
+We create each <cite>Marker</cite> only when creating a new project and can re-use <cite>Markers</cite> between the projects
+(all <cite>Markers</cite> are available to all users).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -422,6 +470,7 @@ We create each <cite>Marker</cite> only when creating a new project and can re-u
 <li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
 <li><p><strong>name</strong> (<em>CharField</em>) – The display name of the marker (max 50 characters)</p></li>
 <li><p><strong>name_en</strong> (<em>TranslationCharField</em>) – The display name of the marker (max 50 characters)</p></li>
+<li><p><strong>name_ru</strong> (<em>TranslationCharField</em>) – The display name of the marker (max 50 characters)</p></li>
 <li><p><strong>name_sv</strong> (<em>TranslationCharField</em>) – The display name of the marker (max 50 characters)</p></li>
 <li><p><strong>name_uk</strong> (<em>TranslationCharField</em>) – The display name of the marker (max 50 characters)</p></li>
 <li><p><strong>code</strong> (<em>CharField</em>) – Marker’s nickname used internally</p></li>
@@ -488,8 +537,11 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.MarkerAction">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerAction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">admin_filter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerAction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerAction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerAction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies an action that shows up after right-clicking the marker.
+Each action is implemented as a JavaScript plugin that should exist in <cite>static/scripts/labeler_plugins</cite> folder
+along with a specification of how to implement your own plugins if necessary.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -548,8 +600,12 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.MarkerPair">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerPair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerPair" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerPair</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerPair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a pair of markers and is used to define (constrain) the relations.
+For example, if the relation <cite>Refers to</cite> holds between <cite>Antecedent</cite> and <cite>Reference</cite>,
+then a marker pair of <cite>Antecedent</cite> and <cite>Reference</cite> will be created and assigned
+to that relation definition.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -634,7 +690,7 @@ This model stores the definitions of such units (shared across all users).</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.MarkerVariant">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_in_unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">are_suggestions_enabled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_suggestion_endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_shortcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anno_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerVariant" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_in_unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">are_suggestions_enabled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_suggestion_endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_shortcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anno_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerVariant" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -643,6 +699,10 @@ This model stores the definitions of such units (shared across all users).</p>
 <li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
 <li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
 <li><p><strong>marker_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Marker" title="projects.models.Marker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Marker</span></code></a>) – Marker template</p></li>
+<li><p><strong>nrange_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Range" title="projects.models.Range"><code class="xref py py-class docutils literal notranslate"><span class="pre">Range</span></code></a>) – 
+            Applicable only if the annotation types are ‘integer’, ‘floating-point number’ or ‘range’.
+            If the annotation type is ‘range’ and no numeric range is specified, the input will range from 0 to 100 by default.
+            The values will remain unrestricted for ‘integer’ or ‘floating-point number’ types.</p></li>
 <li><p><strong>unit_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.MarkerUnit" title="projects.models.MarkerUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkerUnit</span></code></a>) – Marker unit</p></li>
 <li><p><strong>order_in_unit</strong> (<em>PositiveIntegerField</em>) – Order of this marker in the unit</p></li>
 <li><p><strong>are_suggestions_enabled</strong> (<em>BooleanField</em>) – Indicates whether Suggestions API should be enabled for this marker (if endpoint is specified)</p></li>
@@ -692,8 +752,11 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.PostProcessingMethod">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">PostProcessingMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">helper</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.PostProcessingMethod" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">PostProcessingMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.PostProcessingMethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds function names to the post-processing methods that can be applied directly to textual data.
+Eligible methods are currently being pulled from <cite>projects/helpers.py</cite>, which is not a very elegant solution.</p>
+<p><strong>NOTE</strong>: this functionality is currently inactive and is a candidate for removal/overhaul in future releases.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -745,8 +808,9 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Project">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">short_description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">institution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supported_by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guidelines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reminders</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temporary_message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_with_replacement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disjoint_annotation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_dataset_identifiers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_publish</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_finish</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_open</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_peer_reviewed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_selecting_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_submitted_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_markers_per_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">round_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_intro_tour</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thumbnail</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_summary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_remote</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Project" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a <strong>definition</strong> of each Textinator project.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -759,11 +823,11 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <li><p><strong>reminders</strong> (<em>HTMLField</em>) – Reminders for essential parts of guidelines (keep them short and on point)</p></li>
 <li><p><strong>temporary_message</strong> (<em>HTMLField</em>) – A temporary message for urgent communication with annotators (e.g., about maintenance work)</p></li>
 <li><p><strong>sampling_with_replacement</strong> (<em>BooleanField</em>) – Should data be sampled with replacement?</p></li>
-<li><p><strong>disjoint_annotation</strong> (<em>BooleanField</em>) – Should disjoint annotation be allowed?</p></li>
-<li><p><strong>show_dataset_identifiers</strong> (<em>BooleanField</em>) – Should dataset identifiers be shown?</p></li>
+<li><p><strong>disjoint_annotation</strong> (<em>BooleanField</em>) – Should each annotator work with their own part of data?</p></li>
+<li><p><strong>show_datasource_identifiers</strong> (<em>BooleanField</em>) – Should data source identifiers be shown?</p></li>
 <li><p><strong>task_type</strong> (<em>CharField</em>) – Type of the annotation task</p></li>
-<li><p><strong>dt_publish</strong> (<em>DateTimeField</em>) – To be published at</p></li>
-<li><p><strong>dt_finish</strong> (<em>DateTimeField</em>) – To be finished at</p></li>
+<li><p><strong>dt_publish</strong> (<em>DateTimeField</em>) – Publishing date</p></li>
+<li><p><strong>dt_finish</strong> (<em>DateTimeField</em>) – Expiration date</p></li>
 <li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Updated at</p></li>
 <li><p><strong>author_id</strong> (ForeignKey to <code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code>) – Author</p></li>
 <li><p><strong>is_open</strong> (<em>BooleanField</em>) – Should the project be public?</p></li>
@@ -782,7 +846,8 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <li><p><strong>collaborators</strong> (<em>ManyToManyField</em>) – Collaborators</p></li>
 <li><p><strong>participants</strong> (<em>ManyToManyField</em>) – Participants</p></li>
 <li><p><strong>markers</strong> (<em>ManyToManyField</em>) – Project-specific markers</p></li>
-<li><p><strong>datasources</strong> (<em>ManyToManyField</em>) – All datasets must of the same language as the project</p></li>
+<li><p><strong>relations</strong> (<em>ManyToManyField</em>) – Project-specific relations</p></li>
+<li><p><strong>datasources</strong> (<em>ManyToManyField</em>) – All data sources must be of the same language as the project</p></li>
 </ul>
 </dd>
 </dl>
@@ -797,6 +862,47 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="projects.models.Project.data">
+<span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Project.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main method for getting data from the data sources and keeping track of who should annotate what.</p>
+<p>The method proceeds as follows:</p>
+<ul class="simple">
+<li><p>If the annotator has previously requested a datapoint, but neither did any annotation, nor requested a new one, 
+show the very same datapoint again. Otherwise, proceed.</p></li>
+<li><p>If sampling with replacement is turned off, exclude the previously annotated data.</p></li>
+<li><p>If disjoint annotation is turned on, then all previously annotated datapoints (by anyone) should be excluded, 
+so that the sets of annotations for each annotator are disjoint.</p></li>
+<li><p>If disjoint annotation is off, then exclude only data previously annotated by the current user.</p></li>
+<li><p>Instantiate all datasources associated with this project</p></li>
+<li><p>TBD</p></li>
+</ul>
+<dl class="simple">
+<dt>Args:</dt><dd><p>user (User): Current user</p>
+</dd>
+<dt>Returns:</dt><dd><p>DatapointInfo: The instance holding the information about the datapoint to be annotated</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="projects.models.Project.free_markers">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">free_markers</span></span><a class="headerlink" href="#projects.models.Project.free_markers" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns:</dt><dd><p>QuerySet: The set of marker variants that do NOT belong to marker unit (order by annotation type)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="projects.models.Project.marker_groups">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">marker_groups</span></span><a class="headerlink" href="#projects.models.Project.marker_groups" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns:</dt><dd><p>QuerySet: The set of marker variants that belong to marker unit (order by annotation type)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="projects.models.Project.save">
 <span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Project.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the current instance. Override this in a subclass if you want to
@@ -809,35 +915,48 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="projects.models.ProjectData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">ProjectData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasource</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.ProjectData" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="projects.models.Range">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Range" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
 <li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
 <li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
-<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
-<li><p><strong>datasource_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.DataSource" title="projects.models.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSource</span></code></a>) – Datasource</p></li>
+<li><p><strong>min_value</strong> (<em>FloatField</em>) – Minimal value</p></li>
+<li><p><strong>max_value</strong> (<em>FloatField</em>) – Maximal value</p></li>
+<li><p><strong>step</strong> (<em>FloatField</em>) – Step</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py exception">
-<dt class="sig sig-object py" id="projects.models.ProjectData.DoesNotExist">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.ProjectData.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="projects.models.Range.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.Range.DoesNotExist" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="projects.models.ProjectData.MultipleObjectsReturned">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.ProjectData.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="projects.models.Range.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Range.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.Range.clean">
+<span class="sig-name descname"><span class="pre">clean</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Range.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook for doing any extra model-wide validation after clean() has been
+called on every field by self.clean_fields. Any ValidationError raised
+by this method will not be associated with a particular field; it will
+have a special-case association with the field defined by NON_FIELD_ERRORS.</p>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Relation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Relation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shortcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">representation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Relation" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Relation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a <strong>definition</strong> of a relation in Textinator.
+We create each <cite>Relation</cite> only when creating a new project and can re-use <cite>Relations</cite> between the projects
+(all <cite>Relations</cite> are available to all users).</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -845,9 +964,9 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
 <li><p><strong>name</strong> (<em>CharField</em>) – Name</p></li>
 <li><p><strong>name_en</strong> (<em>TranslationCharField</em>) – Name [en]</p></li>
+<li><p><strong>name_ru</strong> (<em>TranslationCharField</em>) – Name [ru]</p></li>
 <li><p><strong>name_sv</strong> (<em>TranslationCharField</em>) – Name [sv]</p></li>
 <li><p><strong>name_uk</strong> (<em>TranslationCharField</em>) – Name [uk]</p></li>
-<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
 <li><p><strong>direction</strong> (<em>CharField</em>) – Direction</p></li>
 <li><p><strong>shortcut</strong> (<em>CharField</em>) – Keyboard shortcut for marking a piece of text with this relation</p></li>
 <li><p><strong>representation</strong> (<em>CharField</em>) – How should the relation be visualized?</p></li>
@@ -864,6 +983,15 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <dt class="sig sig-object py" id="projects.models.Relation.MultipleObjectsReturned">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.Relation.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="projects.models.Relation.between">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">between</span></span><a class="headerlink" href="#projects.models.Relation.between" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns:</dt><dd><p>str: The string representation of the pairs of markers for which the relation can be annotated.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="projects.models.Relation.clean_fields">
@@ -891,6 +1019,73 @@ all non-deferred fields are reloaded.</p>
 <p>When accessing deferred fields of an instance, the deferred loading
 of the field will call this method.</p>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.RelationVariant">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">RelationVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_shortcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_representation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.RelationVariant" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
+<li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
+<li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
+<li><p><strong>relation_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Relation" title="projects.models.Relation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Relation</span></code></a>) – Relation template</p></li>
+<li><p><strong>custom_shortcut</strong> (<em>CharField</em>) – Keyboard shortcut for marking a piece of text with this relation (shortcut of the relation template by default)</p></li>
+<li><p><strong>custom_representation</strong> (<em>CharField</em>) – How should the relation be visualized? (representation of the relation template by default)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.RelationVariant.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.RelationVariant.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.RelationVariant.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.RelationVariant.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.RelationVariant.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.RelationVariant.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="projects.models.TaskTypeSpecification">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">TaskTypeSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.TaskTypeSpecification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a specification for an annotation task type and is used when a project of the pre-defined annotation type
+is instantiated. The specification describes markers and relations that are to be used for this annotation task.</p>
+<p>Default specifications are created during the first startup of the server and can be found in the <cite>defaults.json</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
+<li><p><strong>dt_created</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
+<li><p><strong>dt_updated</strong> (<em>DateTimeField</em>) – Autofilled</p></li>
+<li><p><strong>task_type</strong> (<em>CharField</em>) – Type of the annotation task</p></li>
+<li><p><strong>config</strong> (<em>JSONField</em>) – Json configuration</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.TaskTypeSpecification.DoesNotExist">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#projects.models.TaskTypeSpecification.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="projects.models.TaskTypeSpecification.MultipleObjectsReturned">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#projects.models.TaskTypeSpecification.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -961,7 +1156,7 @@ of the field will call this method.</p>
   
     <div class="footer" role="contentinfo">
         <div class="container">
-            &#169; Copyright 2021, Dmytro Kalpakchi.
+            &#169; Copyright 2022, Dmytro Kalpakchi.
         Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.
         </div>
     </div>  
