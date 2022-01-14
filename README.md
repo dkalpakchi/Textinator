@@ -1,5 +1,11 @@
 # Textinator
 
+# Upcoming in v1.1
+- _Editor role_. Now editing is only possible via the admin interface by the system administrator. That is to ensure the quality of edits. In the next version, we present an "Editor" role allowing the promoted annotators to edit annotations themselves via regular UI.
+- _Undo last_. By design annotators are not allowed to delete their edits, since these "misedits" might end up being useful for researchers. However, they will be able to undo their last annotation in the next version (this is almost done now, just needs more testing).
+- _Suggestions API_.
+
+
 ## Installation
 ### Prerequisites
 ```

@@ -21,29 +21,33 @@
           </div>
         {% endif %}
         <div class='content'>
-          <p class='has-text-weight-bold'>{{ _("contact information")|capitalize }}</p>
+          <p class='has-text-weight-bold'>{{ _("project details")|capitalize }}</p>
           <!-- TODO: make this table responsive -->
           <table class='table'>
             <tbody>
-              <tr>
-                <td>{{ _("responsible")|capitalize }}</td>
-                <td>{{project.author.first_name}} {{project.author.last_name}}</td>
-              </tr>
-              <tr>
-                <td>{{ _("contact email")|capitalize }}</td>
-                <td>{{project.author.email}}</td>
-              </tr>
+              {% if project.author.first_name and project.author.last_name %}
+                <tr>
+                  <td>{{ _("responsible")|capitalize }}</td>
+                  <td>{{project.author.first_name}} {{project.author.last_name}}</td>
+                </tr>
+              {% endif %}
+              {% if project.author.email %}
+                <tr>
+                  <td>{{ _("contact email")|capitalize }}</td>
+                  <td>{{project.author.email}}</td>
+                </tr>
+              {% endif %}
               {% if project.dt_publish %}
                 <tr>
-                  <td>{{ _("published at")|capitalize }}</td>
-                  <td>{{project.dt_publish}}</td>
+                  <td>{{ _("published")|capitalize }}</td>
+                  <td>{{project.dt_publish|naturaltime}}</td>
                 </tr>
               {% endif %}
               {% if project.dt_finish %}
                 <tr>
-                  <td>{{ _("to be finished at")|capitalize }}</td>
+                  <td>{{ _("will be expired")|capitalize }}</td>
                   <td>
-                    {{project.dt_finish}}
+                    {{project.dt_finish|naturaltime}}
                   </td>
                 </tr>
               {% endif %}

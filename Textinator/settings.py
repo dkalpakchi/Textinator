@@ -256,7 +256,7 @@ DATASOURCE_TYPES = [
     ('PlainText', 'Plain text'),
     ('TextFile', 'Plain text file(s)'),
     ('Json', 'JSON file(s)'),
-    ('TextsAPI', 'API')
+    ('TextsAPI', 'Texts API')
 ]
 
 FORMATTING_TYPES = [

@@ -36,7 +36,7 @@ from .helpers import hash_text, retrieve_by_hash, apply_premarkers
 from .exporters import *
 from .view_helpers import *
 
-from Textinator.jinja2 import prettify
+from Textinator.jinja2 import to_markdown
 
 
 PT2MM = 0.3527777778
@@ -185,7 +185,7 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
             [submitted_logs, skipped_logs], 
             [self.submitted_logs_by_ds_and_user, self.skipped_logs_by_ds_and_user]):
             for l in logs_data:
-                ds = l.project_data.datasource
+                ds = l.datasource
                 logs_storage[ds.pk][l.user.pk][l.datapoint].append(l)
                 self.dataset_info[ds.pk] = {
                     'size': ds.size(),
@@ -326,24 +326,24 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
         u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 
-        dp, dp_id, dp_source_name, source_size, source_id = proj.data(u)
+        dp_info = proj.data(u)
 
         logs = None
-        if source_id != -1:
+        if dp_info.source_id:
             try:
-                d = DataSource.objects.get(pk=source_id)
+                d = DataSource.objects.get(pk=dp_info.source_id)
             except DataSource.DoesNotExist:
                 print("DataSource does not exist")
                 pass
 
             try:
                 DataAccessLog.objects.get_or_create(
-                    user=u, project=proj, datasource=d, datapoint=str(dp_id),
+                    user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
                     is_submitted=False, is_skipped=False
                 )
             except DataAccessLog.MultipleObjectsReturned:
                 alogs = DataAccessLog.objects.filter(
-                    user=u, project=proj, datasource=d, datapoint=str(dp_id),
+                    user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
                     is_submitted=False, is_skipped=False
                 ).order_by('-dt_created').all()
                 for al in alogs[1:]:
@@ -360,12 +360,9 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             menu_items[m.marker.code] = [item.to_json() for item in MarkerContextMenuItem.objects.filter(marker=m).all()]
 
         ctx = {
-            'text': apply_premarkers(proj, dp),
-            'source_id': source_id,
-            'source_size':  source_size,
-            'dp_id': dp_id,
-            'dp_source_name': dp_source_name,
-            'source_finished': logs + 1 >= source_size if logs else False,
+            'text': apply_premarkers(proj, dp_info.text),
+            'dp_info': dp_info,
+            'source_finished': logs + 1 >= dp_info.source_size if logs else False,
             'project': proj,
             'profile': u_profile
         }
@@ -375,8 +372,6 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         data['marker_actions'] = menu_items
         data['relation_repr'] = {r.pk: r.representation for r in proj.relations.all()}
 
-        # with open(os.path.join(settings.BASE_DIR, proj.task_type, 'display.html')) as f:
-        #     tmpl = Template(f.read().replace('\n', ''))
         return data
 
     def get(self, request, *args, **kwargs):
@@ -405,7 +400,6 @@ def record_datapoint(request, proj):
         # log the submission
         dal = DataAccessLog.objects.get(
             user=batch_info.user,
-            project_data=project_data,
             datapoint=batch_info.datapoint,
             project=batch_info.project,
             datasource=batch_info.data_source
@@ -523,7 +517,7 @@ def get_batch(request):
         # context['content'] will give us text without formatting,
         # so we simply query the data source one more time to get with formatting
         ds = DataSource.objects.get(pk=context['ds_id'])
-        context['content'] = prettify(ds.postprocess(ds.get(context['dp_id'])).strip())
+        context['content'] = to_markdown(ds.postprocess(ds.get(context['dp_id'])).strip())
 
         return JsonResponse({
             'context': context,
@@ -609,22 +603,19 @@ def new_article(request, proj):
                     is_submitted=False, is_skipped=True
                 )
 
-    dp, dp_id, dp_source_name, source_size, source_id = project.data(request.user)
+    dp_info = project.data(request.user)
 
     # log the new one
-    data_source = DataSource.objects.get(pk=source_id)
+    data_source = DataSource.objects.get(pk=dp_info.source_id)
     DataAccessLog.objects.create(
-        user=request.user, project_data=project_data, datapoint=str(dp_id), 
+        user=request.user, datapoint=str(dp_info.id), 
         project=project, datasource=data_source,
         is_submitted=False, is_skipped=False
     )
 
     return JsonResponse({
-        'text': prettify(apply_premarkers(project, dp)),
-        'source_id': source_id,
-        'source_size':  source_size,
-        'dp_id': dp_id,
-        'dp_source_name': dp_source_name
+        'text': to_markdown(apply_premarkers(project, dp_info.text)),
+        'dp_info': dp_info
     })
 
 
@@ -710,63 +701,11 @@ def undo_last(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def data_explorer(request, proj):
-    def get_json_for_context(context, relations=None, labels=None):
-        context_id = context.pk
-        if relations is None:
-            relations = LabelRelation.objects.filter(first_label__marker__project_id=proj, undone=False)
-            if not is_admin:
-                relations = relations.filter(batch__user=request.user)
-        relations = relations.filter(Q(first_label__context_id=context_id) | Q(second_label__context_id=context_id))
-        batches = relations.values_list('batch', flat=True).distinct()
-        if labels is None:
-            labels = Label.objects.filter(marker__project_id=proj, undone=False, context_id=context_id)
-            if not is_admin:
-                labels = labels.filter(batch__user=request.user)
-        relation_labels = labels.filter(batch__in=batches)
-        non_relation_labels = labels.exclude(batch__in=batches)
-        bounded_labels = non_relation_labels.exclude(start=None)
-        free_labels = non_relation_labels.filter(start=None)
-        free_text_labels = Input.objects.filter(marker__project_id=proj, context_id=context_id)
-
-        bounded = {}
-        for l in bounded_labels:
-            if l.batch.uuid not in bounded:
-                bounded[l.batch.uuid] = {
-                    'input': Input.objects.filter(batch=l.batch).first().content,
-                    'labels': []
-                }
-            bounded[l.batch.uuid]['labels'].append(l.to_short_json())
-
-        free_text = {}
-        for inp in free_text_labels:
-            uid = str(inp.batch.uuid)
-            if uid not in free_text:
-                free_text[uid] = {}
-            if inp.unit not in free_text[uid]:
-                free_text[uid][inp.unit] = []
-            free_text[uid][inp.unit].append(inp.to_short_json(dt_format="%b %d %Y %H:%M:%S, %Z"))
-
-        for key in free_text:
-            free_text[key] = [sorted(it[1], key=lambda a: int(a['marker']['order'])) for it in sorted(free_text[key].items(), key=lambda x: x[0])]
-
-        res = {
-            'data': context.content,
-            'bounded_labels': bounded,
-            'relations': [r.to_short_json(dt_format="%b %d %Y %H:%M:%S, %Z") for r in relations
-                if r.first_label.context_id == context_id or r.second_label.context_id == context_id],
-            'free_labels': [l.to_short_json() for l in free_labels],
-            'free_text_labels': free_text
-        }
-        return res
-
     project = Project.objects.filter(pk=proj).get()
 
     is_author, is_shared = project.author == request.user, project.shared_with(request.user)
     if is_author or is_shared or project.has_participant(request.user):
         is_admin = is_author or is_shared
-        context_id = request.GET.get('context')
-        if context_id:
-            return JsonResponse(get_json_for_context(Context.objects.get(pk=context_id)))
     
         flagged_datapoints = DataAccessLog.objects.filter(project=project).exclude(flags="")
         if not is_admin:
@@ -777,40 +716,18 @@ def data_explorer(request, proj):
         if not is_admin:
             labels = labels.filter(batch__user=request.user)
             relations = relations.filter(batch__user=request.user)
-        batches = relations.values_list('batch', flat=True).distinct()
-        relation_labels = labels.filter(batch__in=batches)
-        non_relation_labels = labels.exclude(batch__in=batches)
 
         inputs = Input.objects.filter(marker__project=project)
-
         batches = set(list(inputs.values_list('batch', flat=True).distinct())) | set(list(labels.values_list('batch', flat=True).distinct()))
-
         total_relations = relations.count()
-        context_ids = list(inputs.exclude(context=None).values_list('context', flat=True).distinct())
-        context_ids += list(labels.exclude(context=None).values_list('context', flat=True).distinct())
-        if total_relations > 0:
-            context_ids += list(relation_labels.exclude(context=None).values_list('context', flat=True).distinct())
 
-        actions = defaultdict(list)
-        for m in MarkerVariant.objects.filter(project=project):
-            for a in m.actions.all():
-                if a.admin_filter:
-                    for cm_item in MarkerContextMenuItem.objects.filter(marker=m, action=a):
-                        if cm_item.field:
-                            actions[cm_item.verbose_admin or cm_item.verbose].append({
-                                'marker': m,
-                                'filter': a.admin_filter,
-                                'cm': cm_item
-                            })
         ctx = {
             'project': project,
-            'contexts': Context.objects.filter(pk__in=context_ids),
             'total_labels': labels.count(),
             'total_relations': total_relations,
             'total_inputs': inputs.count(),
             'total_batches': len(batches),
-            'flagged_datapoints': flagged_datapoints,
-            'action_filters': list(actions.items())
+            'flagged_datapoints': flagged_datapoints
         }
         return render(request, 'projects/data_explorer.html', ctx)
     else:
@@ -850,7 +767,7 @@ def flag_text(request, proj):
     data_source = DataSource.objects.get(pk=ds_id)
 
     DataAccessLog.objects.create(
-        user=request.user, project_data=project_data, datapoint=str(dp_id),
+        user=request.user, datapoint=str(dp_id),
         project=project, datasource=data_source,
         is_submitted=False, is_skipped=True, flags=feedback
     )

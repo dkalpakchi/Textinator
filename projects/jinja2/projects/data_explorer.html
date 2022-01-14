@@ -22,12 +22,14 @@
     <div class="is-pulled-right">In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_datapoints.count()}} flagged text(s) </div>
   </div>
 
-  <script type="text/javascript" src="{{ static('js/highcharts/highcharts.js') }}"></script>
+  <script type="text/javascript" src="{{ static('highcharts/highcharts.js') }}"></script>
+  <script type="text/javascript" src="{{ static('highcharts/modules/no-data-to-display.js') }}"></script>
   {% if project.author == user or project.shared_with(user) %}
     <div class="container columns">
       <div class="column">
         <div id="labelLengthsChart" width="300" height="150"></div>
         <script type="text/javascript">
+          Highcharts.setOptions({lang: {noData: "Not enough data to display"}})
           $.get('{{ url("projects:label_lengths_chart", kwargs={"pk": project.pk}) }}', function(data) {
             $("#labelLengthsChart").highcharts(data);
           });
@@ -95,123 +97,5 @@
       </article>
     </div>
   {% endif %}
-
-  <div class="explorer container is-fluid">
-    {# <div id="explorerFilters" class="field">
-      <div class="message-header">
-        <span class="icon is-small">
-          <i class="fas fa-filter"></i>
-        </span>
-        &nbsp;&nbsp;Filters (not yet functional)
-      </div>
-      <div class="message-body">
-        <form id="filterForm" action="">
-          {% for name, actions in action_filters %}
-            {% for action in actions %}
-              <div class="field">
-                <span class="tags has-addons">
-                  <span class='tag is-{{action.marker.color}} is-medium'>{{action.marker.name}}</span>
-                  <span class="tag is-dark is-medium">
-                    {{name}}
-                  </span>
-                  <span class="tag is-medium">
-                    {% if action.filter == 'boolean' %}
-                      <input name="{{action.marker.code}}__{{action.cm.field}}" type="checkbox">
-                    {% elif action.filter == 'range' %}
-                      <div class="range-wrap">
-                        <input name="{{action.marker.code}}__{{action.cm.field}}" type="range" class="range" min="0" max="10">
-                        <span class="bubble"></span>  
-                      </div>
-                    {% endif %}
-                    </span>
-                </span>
-              </div>
-            {% endfor %}
-          {% endfor %}
-          <div class="field">
-            <div class="control">
-              <input type="submit" class="button is-link is-outlined is-rounded" value="Filter for current context">
-            </div>
-          </div>
-        </form>
-      </div>
-    </div> #}
-
-    {% if contexts %}
-      <div class="field">
-        <label class="label">Context</label>
-        <div class="control">
-          <div class="select">
-            <select id="exploreContexts" data-url="{{url('projects:data_explorer', kwargs={'proj': project.pk})}}">
-              {% for c in contexts %}
-                <option value="{{c.pk}}">{{c.content|truncate(150,True)}}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-      </div>
-    {% endif %}
-
-    <div class="field">
-      <label class="label">Annotations without input</label>
-      <div class="control">
-        {% include 'partials/_loader.html' %}
-        <div class="select">
-          <select id="contextFreeAnnotations">
-            <option value="-1">Annotations are loading...</option>
-          </select>
-          <span class="placeholder"></span>
-        </div>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="label">Annotations with input</label>
-      <div class="control">
-        {% include 'partials/_loader.html' %}
-        <div class="select">
-          <select id="contextAnnotations">
-            <option value="-1">Annotations are loading...</option>
-          </select>
-          <span class="placeholder"></span>
-        </div>
-      </div>
-    </div>
-    
-    <div class="field">
-      <label class="label">Relations</label>
-      <div class="control">
-        {% include 'partials/_loader.html' %}
-        <div class="select">
-          <select id="contextRelations">
-            <option value="-1">Relations are loading...</option>
-          </select>
-          <span class="placeholder"></span>
-        </div>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="label">Marker groups</label>
-      <div class="control">
-        {% include 'partials/_loader.html' %}
-        <div class="select">
-          <select id="freeText">
-            <option value="-1">Loading...</option>
-          </select>
-          <span class="placeholder"></span>
-        </div>
-      </div>
-    </div>
-
-    {% if contexts %}
-      <article id="exploreText" clas="context message is-dark">
-        {{contexts[0].content}}
-      </article>
-      <div id="freeTextResult" class="mb-5"></div>
-    {% else %}
-      <p class="mb-5">No annotations to show yet</p>
-    {% endif %}
-  </div>
 </div>
 {% endblock %}

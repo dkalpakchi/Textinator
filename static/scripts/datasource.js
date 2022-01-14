@@ -2,13 +2,11 @@
   var templates = {
     'TextFile': {
       'files': [],
-      'folders': [],
-      'remote': []
+      'folders': []
     },
     'Json': {
       'files': [],
       'folders': [],
-      'remote': [],
       'key': ''
     },
     'PlainText': {

@@ -17,3 +17,7 @@ div[data-theme="bootstrap4"] .card-title {
     color: black !important;
     padding-left: 27px !important;
 }
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 4px !important;
+}

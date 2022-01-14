@@ -1,10 +1,10 @@
-<article id="textArea" class="{% if source_id != -1 %}text {% endif %}message">
+<article id="textArea" class="{% if dp_info.source_id %}text {% endif %}message">
   <div class="message-header">
     <span class="is-group">
       <span>
         <p>
-          {{ _("text")|capitalize }}{% if project.show_dataset_identifiers and dp_source_name %}
-          <span id="dpName">({{dp_source_name}})</span>{% endif %}
+          {{ _("text")|capitalize }}{% if project.show_dataset_identifiers and dp_info.source_name %}
+          <span id="dpName">({{dp_info.source_name}})</span>{% endif %}
         </p>
       </span>
       <span id="textLabels"></span>
@@ -16,9 +16,15 @@
     </a>
   </div>
   {% set all_text_markers=project.markervariant_set.filter(anno_type='free-text').count() == project.markervariant_set.count() %}
-  <div class="selector element content message-body{% if all_text_markers %} broad{% endif %}" data-s="{{source_id}}" data-dp="{{dp_id}}" data-f="{{source_finished}}">
-    {% if source_id != -1 %}
-      {{text|prettify}}
+  <div class="selector element content message-body{% if all_text_markers %} broad{% endif %}" data-s="{{dp_info.source_id}}" data-dp="{{dp_info.id}}" data-f="{{source_finished}}">
+    {% if dp_info.source_id %}
+      {% if dp_info.source_formatting == 'md' %}
+        {{text|to_markdown}}
+      {% elif dp_info.source_formatting == 'ft' %}
+        <p class='pre-formatted-text'>{{text}}</p>
+      {% else %}
+        {{text}}
+      {% endif %}
     {% else %}
       {% include 'partials/_great_job.html' %}
     {% endif %}

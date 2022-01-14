@@ -45,6 +45,9 @@ class DataSource:
         # return a tuple of (id, datapoint with this id)
         pass
 
+    def get_source_name(self, dp_id):
+        return ""
+
     def size(self):
         return self.__size
 
@@ -73,10 +76,10 @@ class TextFileSource(DataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
 
-        self._aux_keys = [('files',), ('folders',), ('remote',)]
+        self._aux_keys = [('files',), ('folders',)]
         self.check_constraints()
 
-        self.mapping = []
+        self.__mapping = []
 
         self.__files = []
         if self.get_spec('files'):
@@ -92,11 +95,14 @@ class TextFileSource(DataSource):
             # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
             with open(fname, encoding='utf-8-sig') as f:
                 self._add_datapoint(f.read())
-                self.mapping.append(os.path.basename(fname))
+                self.__mapping.append(os.path.basename(fname))
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)
         return idx, self[idx]
+
+    def get_source_name(self, dp_id):
+        return self.__mapping[dp_id]
 
 
 class JsonSource(DataSource):
@@ -104,8 +110,10 @@ class JsonSource(DataSource):
         super().__init__(spec_data)
 
         self._required_keys = ['key']
-        self._aux_keys = [('files',), ('folders',), ('remote',)]
+        self._aux_keys = [('files',), ('folders',)]
         self.check_constraints()
+
+        self.__mapping = []
 
         self.__files = []
         if self.get_spec('files'):
@@ -114,12 +122,6 @@ class JsonSource(DataSource):
         if self.get_spec('folders'):
             for folder in self.get_spec('folders'):
                 self.__files.extend(glob.glob(os.path.join(folder, '*.json')))
-
-        if self.get_spec('remote'):
-            # TODO: fix
-            for url in self.get_spec('remote'):
-                res = requests.get(url, allow_redirects=True)
-                content_type = res.headers.get('content-type')
 
         for fname in self.__files:
             d = json.load(open(fname))
@@ -130,10 +132,15 @@ class JsonSource(DataSource):
                     self._add_datapoint(el[self.get_spec('key')])
             elif type(d) == dict:
                 self._add_datapoint(d[self.get_spec('key')])
+            self.__mapping.append(os.path.basename(fname))
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)
         return idx, self[idx]
+
+    def get_source_name(self, dp_id):
+        return self.__mapping[dp_id]
+
 
 
 class TextsAPISource(DataSource):
@@ -164,3 +171,11 @@ class TextsAPISource(DataSource):
             return data['size']
         else:
             return 0
+
+    def get_source_name(self, dp_id):
+        r = requests.get("{}/get_source_name?key={}".format(self.__endpoint, key))
+        if r.status_code == 200:
+            data = r.json()
+            return data['name']
+        else:
+            return ""

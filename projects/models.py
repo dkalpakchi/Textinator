@@ -21,6 +21,7 @@ from colorfield.fields import ColorField
 
 from .datasources import *
 from .helpers import *
+from .model_helpers import *
 
 
 class CommonModel(models.Model):
@@ -81,6 +82,10 @@ class DataSource(CommonModel):
         help_text=_("text formating of the data source"))
     is_public = models.BooleanField(_("is public?"), default=False,
         help_text=_("Whether to make data source available to other Textinator users"))
+    # we allow NULL, since the user might, say, resign, but the data is owned by the institution
+    # and it might have projects connected to it, which is why we set things to NULL
+    # and people need to request a manual deletion of the data source
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("owner"))
 
     @classmethod
     def type2class(cls, source_type):
@@ -282,8 +287,8 @@ class Project(CommonModel):
     disjoint_annotation = models.BooleanField(_("should disjoint annotation be allowed?"), default=False)
     show_dataset_identifiers = models.BooleanField(_("should dataset identifiers be shown?"), default=False)
     task_type = models.CharField(_("type of the annotation task"), max_length=10, choices=settings.TASK_TYPES)
-    dt_publish = models.DateTimeField(verbose_name=_("to be published at")) # TODO: implement this functionality
-    dt_finish = models.DateTimeField(verbose_name=_("to be finished at"))   # TODO: implement this functionality
+    dt_publish = models.DateTimeField(verbose_name=_("publishing date"))
+    dt_finish = models.DateTimeField(verbose_name=_("expiration date"))
     dt_updated = models.DateTimeField(_("updated at"), auto_now=True)
     collaborators = models.ManyToManyField(User, related_name='shared_projects', blank=True,
         verbose_name=_("collaborators"))
@@ -335,9 +340,20 @@ class Project(CommonModel):
     def data(self, user):
         log = DataAccessLog.objects.filter(user=user, project=self, is_submitted=False, is_skipped=False).first()
         if log:
-            ds = log.datasource
-            dp_id = log.datapoint
-            return ds.postprocess(ds.get(dp_id)).strip(), dp_id, ds.name, ds.size(), ds.pk
+            if log.datasource in self.datasources.all():
+                ds_def = log.datasource
+                source_cls = DataSource.type2class(ds_def.source_type)
+                ds_instance = source_cls(ds_def.spec.replace('\r\n', ' ').replace('\n', ' '))
+                dp_id = log.datapoint
+                return DatapointInfo(
+                    dp_id,                                  # the point's id in the datasource
+                    ds_def.postprocess(ds_instance[dp_id]).strip(),  # a post-processed random datapoint from the chosen dataset
+                    ds_instance,                            # instantiated DataSource of a specific type
+                    ds_def                                  # DataSource
+                )
+            else:
+                log.is_skipped = True
+                log.save()
 
         dp_taboo = defaultdict(set)
         if not self.sampling_with_replacement:
@@ -389,7 +405,10 @@ class Project(CommonModel):
 
                 ds, postprocess, idx = datasources[ds_ind]
 
-        if not finished_all:
+
+        if finished_all:
+            return DatapointInfo()
+        else:
             # get the id of the random datapoint and the datapoint itself
             dp_id, dp = ds.get_random_datapoint()
 
@@ -399,15 +418,12 @@ class Project(CommonModel):
                 while str(dp_id) in dp_taboo[idx]:
                     dp_id, dp = ds.get_random_datapoint()
 
-            # return:
-            # -> a post-processed random datapoint from the chosen dataset
-            # -> the point's id in the datasource
-            # -> datasource size 
-            # -> datasource id
-            dp_source_name = ds.mapping[dp_id] if type(ds) == TextFileSource else False
-            return postprocess(dp).strip(), dp_id, dp_source_name, ds.size(), idx
-        else:
-            return "NAN", -1, False, -1, -1
+            return DatapointInfo(
+                dp_id,                          # the point's id in the datasource
+                postprocess(dp).strip(),        # a post-processed random datapoint from the chosen dataset
+                ds,                             # instantiated DataSource of a specific type
+                DataSource.objects.get(pk=idx)  # DataSource id
+            )
         
     def get_profile_for(self, user):
         try:

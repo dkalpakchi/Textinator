@@ -52,7 +52,7 @@ def display_relation(rel):
     return Markup(template.render(rel=rel))
 
 
-def prettify(value):
+def to_markdown(value):
     """Converts newlines into <p> and <br />s."""
     md = markdown.markdown(value)
     # Bulmify things
@@ -107,7 +107,7 @@ def environment(**options):
     env.filters['url_path'] = get_path
     env.filters['display_marker'] = display_marker_variant
     env.filters['display_relation'] = display_relation
-    env.filters['prettify'] = prettify
+    env.filters['to_markdown'] = to_markdown
     env.filters['bool2str'] = lambda x: str(x).lower()
     env.filters['any'] = any
     env.filters['all'] = all

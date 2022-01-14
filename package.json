@@ -25,6 +25,7 @@
     "bulma-carousel": "^4.0.4",
     "bulma-slider": "^2.0.4",
     "d3": "^5.11.0",
+    "highcharts": "^9.3.2",
     "jquery": "^3.5.1",
     "jquery-ui-dist": "^1.13.0",
     "jquery-validation": "^1.19.3",

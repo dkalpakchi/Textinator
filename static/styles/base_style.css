@@ -21,6 +21,10 @@ body .container:first-of-type {
   margin: 0 auto;
 }
 
+.pre-formatted-text {
+  white-space: pre-wrap !important;
+}
+
 .main-gradient {
   background: radial-gradient(#b2b2b2, #6a6a6a);
 }

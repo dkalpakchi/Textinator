@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Q
 from django.db.models.fields.related import ManyToOneRel
 from django.db.models.fields import AutoField
 from django import forms
@@ -79,6 +80,7 @@ class MarkerVariantInline(CommonNestedStackedInline):
     inlines = [MarkerRestrictionInline, MarkerContextMenuItemInline]
     verbose_name = _("project-specific marker")
     verbose_name_plural = _("project-specific markers")
+    exclude = ('custom_suggestion_endpoint', 'are_suggestions_enabled',)
 
 
 class LevelInline(CommonNestedStackedInline):
@@ -149,7 +151,7 @@ class LabelRelationInline(CommonStackedInline):
 
 class ProjectForm(forms.ModelForm):
     datasources = forms.ModelMultipleChoiceField(
-        queryset=DataSource.objects.all(),
+        queryset=None, # set later
         label=DataSource._meta.verbose_name_plural)
 
     class Meta:
@@ -166,10 +168,10 @@ class ProjectForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # obj = kwargs.get('instance')
-        # if obj:
-        #     source_ids = ProjectData.objects.filter(project=obj).values_list('datasource', flat=True)
-        #     self.initial['datasources'] = source_ids
+
+        self.fields["datasources"].queryset = DataSource.objects.filter(
+            Q(is_public=True) | Q(owner=self.user)
+        )
 
     def clean_datasources(self):
         project_language = self.cleaned_data['language']
@@ -237,6 +239,11 @@ class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
     exclude = ('is_peer_reviewed',)
     user_can_access_owned_objects_only = True
     user_owned_objects_field = 'author'
+
+    def get_form(self, request, *args, **kwargs):
+         form = super(ProjectAdmin, self).get_form(request, *args, **kwargs)
+         form.user = request.user
+         return form
 
     def save_model(self, request, obj, form, change):
         if not obj.author:
@@ -379,6 +386,26 @@ class DataSourceAdmin(CommonModelAdmin):
     form = DataSourceForm
     list_display = ['name', 'source_type']
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        if request.user.is_superuser:
+            return qs
+
+        return qs.filter(Q(owner=request.user) | Q(is_public=True))
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if request.user.is_superuser:
+            return readonly_fields
+        else:
+            return list(readonly_fields) + ['owner']
+
+    def save_model(self, request, obj, form, change):
+        if not obj.owner:
+            obj.owner = request.user
+        super().save_model(request, obj, form, change)
+
 
 @admin.register(DataAccessLog)
 class DataAccessLogAdmin(CommonModelAdmin):
@@ -390,7 +417,7 @@ class DataAccessLogAdmin(CommonModelAdmin):
 
 @admin.register(Marker)
 class MarkerAdmin(CommonModelAdmin):
-    pass
+    exclude = ('suggestion_endpoint',)
     # def has_change_permission(request, obj=None)
     #     # Should return True if editing obj is permitted, False otherwise.
     #     # If obj is None, should return True or False to indicate whether editing of objects of this type is permitted in general 
