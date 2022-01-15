@@ -244,11 +244,10 @@ TASK_TYPES = [
     ('generic', 'Generic'),
     ('qa', 'Question Answering'),
     ('mcqa', 'Multiple Choice Question Answering'),
+    ('mcqar', 'Multiple Choice Question Answering with Ranking'),
     ('ner', 'Named Entity Recognition'),
-    ('corr', 'Coreference Resolution'),
     ('pronr', 'Pronoun Resolution'),
-    ('ranking', 'Ranking'),
-    ('tclass', 'Text Classification'),
+    ('corr', 'Coreference Resolution'),
     ('mt', 'Machine Translation')
 ]
 

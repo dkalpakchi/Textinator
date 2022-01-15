@@ -306,7 +306,7 @@ class TaskTypeSpecification(CommonModel):
     Holds a specification for an annotation task type and is used when a project of the pre-defined annotation type
     is instantiated. The specification describes markers and relations that are to be used for this annotation task.
 
-    Default specifications are created during the first startup of the server and can be found in the `defaults.json`
+    Default specifications are created during the first startup of the server and can be found in the `task_defaults.json`
     """
 
     class Meta:
@@ -391,6 +391,7 @@ class Project(CommonModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._original_task_type = self.task_type
 
     @property
     def free_markers(self):
@@ -534,17 +535,6 @@ class Project(CommonModel):
 
     def shared_with(self, user):
         return user in self.collaborators.all()
-
-    def save(self, *args, **kwargs):
-        super(Project, self).save(*args, **kwargs)
-        try:
-            spec_obj = TaskTypeSpecification.objects.get(task_type=self.task_type)
-            spec = spec_obj.config
-            for mspec in spec["markers"]:
-                m = Marker.objects.get(code=mspec["id"])
-                MarkerVariant.objects.get_or_create(marker=m, project=self, anno_type=mspec["anno_type"])
-        except TaskTypeSpecification.DoesNotExist:
-            pass
 
     def __str__(self):
         return self.title
@@ -905,7 +895,7 @@ class RelationVariant(CommonModel):
     relation = models.ForeignKey(Relation, on_delete=models.CASCADE, verbose_name=_("relation template"))
     custom_shortcut = models.CharField(_("keyboard shortcut"), max_length=15, null=True, blank=True,
         help_text=_("Keyboard shortcut for marking a piece of text with this relation (shortcut of the relation template by default)"))
-    custom_representation = models.CharField(_("graphical representation type"), max_length=1,
+    custom_representation = models.CharField(_("graphical representation type"), max_length=1, null=True, blank=True,
         choices=[('g', _('Graph')), ('l', _('List'))], default='g',
         help_text=_("How should the relation be visualized? (representation of the relation template by default)"))
 

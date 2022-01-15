@@ -61,6 +61,22 @@
       "id": 10
     }
   ],
+  "relations": [
+    {
+      "name": "Refers to",
+      "pairs": [[3, 4]],
+      "direction": "0",
+      "shortcut": "Shift + R",
+      "id": 1
+    },
+    {
+      "name": "Corefers",
+      "pairs": [[9, 9]],
+      "direction": "2",
+      "shortcut": "Shift + C",
+      "id": 2
+    }
+  ],
   "specs": {
     "qa": {
       "markers": [
@@ -86,12 +102,14 @@
       "markers": [
         {"id": 3, "anno_type": "m-span"},
         {"id": 4, "anno_type": "m-span"}
-      ]
+      ],
+      "relations": [1]
     },
     "corr": {
       "markers": [
         {"id": 9, "anno_type": "m-span"}
-      ]
+      ],
+      "relations": [2]
     },
     "mt": {
       "markers": [

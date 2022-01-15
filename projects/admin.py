@@ -148,8 +148,17 @@ class LabelRelationInline(CommonStackedInline):
     extra = 0
 
 
+# see https://stackoverflow.com/questions/20833638/how-to-log-all-django-form-validation-errors
+class LoggingMixin(object):
+    def add_error(self, field, error):
+        if field:
+            print('Form error on field %s: %s', field, error)
+        else:
+            print('Form error: %s', error)
+        super().add_error(field, error)
 
-class ProjectForm(forms.ModelForm):
+
+class ProjectForm(LoggingMixin, forms.ModelForm):
     datasources = forms.ModelMultipleChoiceField(
         queryset=None, # set later
         label=DataSource._meta.verbose_name_plural)
@@ -187,7 +196,6 @@ class ProjectForm(forms.ModelForm):
         sent_ds = set(self.cleaned_data.pop('datasources'))
 
         instance = forms.ModelForm.save(self, commit=False)
-        instance.save()
         try:
             project = Project.objects.get(pk=instance.pk)
             existing_ds = set(project.datasources.all())
@@ -201,8 +209,26 @@ class ProjectForm(forms.ModelForm):
                     project.datasources.remove(ds)
             else:
                 project.datasources.add(ds)
-        instance.save()
 
+        if instance._original_task_type != instance.task_type:
+            self.mv2del = list(MarkerVariant.objects.filter(project=instance).values_list('pk', flat=True))
+            self.rv2del = list(RelationVariant.objects.filter(project=instance).values_list('pk', flat=True))
+
+            try:
+                spec_obj = TaskTypeSpecification.objects.get(task_type=instance.task_type)
+                spec = spec_obj.config
+                for mspec in spec["markers"]:
+                    m = Marker.objects.get(pk=mspec["id"])
+                    MarkerVariant.objects.get_or_create(marker=m, project=instance, anno_type=mspec["anno_type"])
+
+                for rel_id in spec.get("relations", []):
+                    r = Relation.objects.get(pk=rel_id)
+                    RelationVariant.objects.get_or_create(relation=r, project=instance)
+            except TaskTypeSpecification.DoesNotExist:
+                pass
+
+        self.save_m2m()
+        instance.save()
         return instance
 
 
@@ -241,9 +267,9 @@ class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
     user_owned_objects_field = 'author'
 
     def get_form(self, request, *args, **kwargs):
-         form = super(ProjectAdmin, self).get_form(request, *args, **kwargs)
-         form.user = request.user
-         return form
+        form = super(ProjectAdmin, self).get_form(request, *args, **kwargs)
+        form.user = request.user
+        return form
 
     def save_model(self, request, obj, form, change):
         if not obj.author:
@@ -252,6 +278,12 @@ class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super(ProjectAdmin, self).save_related(request, form, formsets, change)
+
+        print(form.mv2del)
+        print(form.rv2del)
+
+        MarkerVariant.objects.filter(pk__in=form.mv2del).delete()
+        RelationVariant.objects.filter(pk__in=form.rv2del).delete()
 
     def changelist_view(self, request, extra_context=None):    
         if not request.user.is_superuser:

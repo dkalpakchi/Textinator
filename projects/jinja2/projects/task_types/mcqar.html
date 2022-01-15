@@ -1,19 +1,18 @@
 {% if project.dt_finish >= now %}
   <div class="columns">
-    <div class="column is-half">
+    <div class="column is-three-fifths">
       {% include 'partials/components/areas/text.html' %}
     </div>
-    <div class="column">
-      {% include 'partials/components/areas/reminders.html' %}
-      {% if source_id != -1 %}
-        {% include 'partials/components/areas/markers.html' %}
-      {% endif %}
+    <div class="column is-two-fifths">
       {% include 'partials/components/areas/actions.html' %}
+      {% include 'partials/components/areas/reminders.html' %}
+      {% include 'partials/components/areas/markers.html' %}
     </div>
   </div>
 
   {% include 'partials/components/modals/guidelines.html' %}
   {% include 'partials/components/modals/flag.html' %}
 {% else %}
+  <!-- Project expired -->
   {% include 'partials/_expired.html' %}
 {% endif %}

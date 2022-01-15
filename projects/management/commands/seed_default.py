@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Permission, Group
 
-from projects.models import Marker, TaskTypeSpecification
+from projects.models import Marker, TaskTypeSpecification, Relation, MarkerPair
 
 
 # python manage.py seed --mode=refresh
@@ -49,7 +49,7 @@ def create_data():
         logger.info("Markers have already been seeded")
     else:
         logger.info("Creating markers for out-of-the-box annotation tasks")
-        data = json.load(open(os.path.join(os.path.dirname(__file__), 'defaults.json')))
+        data = json.load(open(os.path.join(os.path.dirname(__file__), 'task_defaults.json')))
         
         created = 0
         marker_mapping = {}
@@ -58,13 +58,36 @@ def create_data():
             del spec['id']
             obj, is_created = Marker.objects.get_or_create(**spec)
             created += is_created
-            marker_mapping[idx] = obj.code
+            marker_mapping[idx] = obj.pk
         logger.info("{} markers are created.".format(created))
+
+        created = 0
+        relation_mapping = {}
+        for spec in data['relations']:
+            idx = spec['id']
+            pairs = spec['pairs']
+            del spec['id']
+            del spec['pairs']
+            obj, is_created = Relation.objects.get_or_create(**spec)
+            created += is_created
+            relation_mapping[idx] = obj.pk
+
+            for first, second in pairs:
+                mp = MarkerPair.objects.create(
+                    first_id=marker_mapping[first],
+                    second_id=marker_mapping[second]
+                )
+                obj.pairs.add(mp)
+                obj.save()
+        logger.info("{} relations are created.".format(created))
 
         created = 0
         for task_type, spec in data['specs'].items():
             for x in spec["markers"]:
                 x["id"] = marker_mapping[x["id"]]
+
+            if spec.get('relations'):
+                spec['relations'] = [relation_mapping[x] for x in spec['relations']]
 
             obj, is_created = TaskTypeSpecification.objects.get_or_create(
                 task_type=task_type, 

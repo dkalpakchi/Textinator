@@ -1,0 +1,17 @@
+{% if project.dt_finish >= now %}
+  <div class="columns">
+    <div class="column is-three-quarters">
+      {% include 'partials/components/areas/text.html' %}
+      {% include 'partials/components/areas/markers.html' %}
+    </div>
+    <div class="column is-one-quarter">
+      {% include 'partials/components/areas/actions.html' %}
+      {% include 'partials/components/areas/reminders.html' %}
+    </div>
+  </div>
+
+  {% include 'partials/components/modals/guidelines.html' %}
+  {% include 'partials/components/modals/flag.html' %}
+{% else %}
+  {% include 'partials/_expired.html' %}
+{% endif %}
