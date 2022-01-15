@@ -421,7 +421,7 @@ class Project(CommonModel):
           so that the sets of annotations for each annotator are disjoint. 
         - If disjoint annotation is off, then exclude only data previously annotated by the current user.
         - Instantiate all datasources associated with this project
-        - TBD 
+        - Choose an unannotated datapoint uniformly at random across all datasources and return it.
         
         Args:
             user (User): Current user
@@ -469,7 +469,13 @@ class Project(CommonModel):
         nds = len(datasources)
 
         # TODO: introduce data source mixing strategies?
-        # choose a dataset with a prior inversely proportional to the number of datapoints in them
+        # TODO: choose a dataset with a prior inversely proportional to the number of datapoints in them?
+
+        # Currently we choose a dataset D_i with probability |D_i| / N,
+        # where N is the total number of datapoints across datasets
+        # then we choose a datapoint uniformly at random (by default)
+        # So each datapoint can be chosen uniformly at random:
+        # (|D_i| / N) * (1 / |D_i|) = 1 / N
         sizes = [datasources[i][0].size() for i in range(nds)]
         priors = [sizes[i] / sum(sizes) for i in range(nds)]
         priors_cumsum = [sum(priors[:i+1]) for i in range(len(priors))]
@@ -547,10 +553,10 @@ class Project(CommonModel):
 class MarkerUnit(CommonModel):
     """
     Some annotation tasks might benefit from annotating groups of markers as one unit.
-    This model stores the definitions of such units (shared across all users).
+    This model stores the **definitions** of such units (shared across all users).
 
     The unit configuration has two dimensions:
-    - marker group, which is defined by a one to many relationship with MarkerVariant model
+    - marker group, which is defined by a one-to-many relationship with MarkerVariant model
     - unit height, which provides minimum and maximum number of marker groups in this unit
 
     `minimum_required` attribute defines a lower bound for a unit height, whereas `size` defines an upper bound.
@@ -583,6 +589,11 @@ class MarkerUnit(CommonModel):
 
 
 class Range(CommonModel):
+    """
+    Holds a definition for a numeric range, stores min, max and step (similar to Python's range).
+    Currently this is used for specifying the possible numeric ranges for marker variants of types
+    'integer', 'floating-point value' and 'range'.
+    """
     class Meta:
         verbose_name = _("range")
         verbose_name_plural = _("ranges")
@@ -614,6 +625,14 @@ class Range(CommonModel):
 
 
 class MarkerVariant(CommonModel):
+    """
+    Holds a **project-specific definition** for a previously defined `Marker`.
+    This model allows the project manager to customize a previously defined marker by:
+
+    - specifying different color or hotkey
+    - changing the annotation type of the marker (defined in settings.ANNOTATION_TYPES)
+    - assigning a marker to a unit
+    """
     class Meta:
         unique_together = (('project', 'marker', 'unit'),)
         verbose_name = _("marker variant")
@@ -668,16 +687,30 @@ class MarkerVariant(CommonModel):
     @property
     @custom_or_default('marker', 'color')
     def color(self):
+        """
+        Returns:
+           str : Custom color (if present) or a default fallback from a marker definition
+        """
         return self.custom_color
 
     @property
     @custom_or_default('marker', 'shortcut')
     def shortcut(self):
+        """
+        Returns:
+           str : Custom hotkey (if present) or a default fallback from a marker definition
+        """
         return self.custom_shortcut
 
     @property
     @custom_or_default('marker', 'suggestion_endpoint')
     def suggestion_endpoint(self):
+        """
+        **NOTE:** currently inactive, preparation for v1.1
+
+        Returns:
+           str : Custom color (if present) or a default fallback from a marker definition
+        """
         return self.custom_suggestion_endpoint
 
     @property
@@ -721,6 +754,10 @@ class MarkerVariant(CommonModel):
         super(MarkerVariant, self).save(*args, **kwargs)
 
     def min(self):
+        """
+        Returns:
+            int: The minimal number of markers of this kind per submitted instance
+        """
         for r in self.markerrestriction_set.all():
             if r.kind == 'ge' or r.kind == 'eq':
                 return r.value
@@ -729,6 +766,10 @@ class MarkerVariant(CommonModel):
         return -1
 
     def max(self):
+        """
+        Returns:
+            int: The maximal number of markers of this kind per submitted instance
+        """
         for r in self.markerrestriction_set.all():
             if r.kind == 'le' or r.kind == 'eq':
                 return r.value
@@ -753,6 +794,13 @@ class MarkerVariant(CommonModel):
 
 
 class MarkerContextMenuItem(CommonModel):
+    """
+    An M2M model binding `MarkerAction` and `MarkerVariant` and holding additional information.
+
+    - `config` holds a JSON configuration, specified in the JS plugin file for this action.
+       By storing it here, we allow each config to be customized specifically for each
+       `MarkerVariant`-`MarkerAction` binding.
+    """
     class Meta:
         verbose_name = _('marker context menu item')
         verbose_name_plural = _('marker context menu items')
@@ -778,6 +826,9 @@ class MarkerContextMenuItem(CommonModel):
 
 
 class MarkerRestriction(CommonModel):
+    """
+    Holds a **definition** of a count restriction that is placed on a `MarkerVariant`
+    """
     class Meta:
         verbose_name = _('marker restriction')
         verbose_name_plural = _("marker restrictions")
@@ -796,6 +847,14 @@ class MarkerRestriction(CommonModel):
 
 
 class DataAccessLog(CommonModel):
+    """
+    Holds data access logs for each annotator per project. We keep track of:
+
+    - which datapoint and of which data source was accessed and when
+    - whether at least one annotation was submitted for that datapoint
+    - whether the datapoint was skipped without annotation (i.e., a new text was requested)
+    - whether the user flagged anything related to this datapoint (e.g., problems with text)
+    """
     class Meta:
         verbose_name = _('data access log')
         verbose_name_plural = _("data access logs")
@@ -806,7 +865,7 @@ class DataAccessLog(CommonModel):
     datapoint = models.CharField(_("datapoint ID"), max_length=64,
         help_text=_("As stored in the original dataset"))
     flags = models.TextField(_("flags"), default="",
-        help_text=_("Internal behavior flags"))
+        help_text=_("Additional information provided by the annotator"))
     is_submitted = models.BooleanField(_("is submitted?"),
         help_text=_("Indicates whether the datapoint was successfully submitted by an annotator"))
     is_skipped = models.BooleanField(_("is skipped?"),
@@ -817,6 +876,9 @@ class DataAccessLog(CommonModel):
 # TODO: for one might want to mark pronouns 'det', 'den' iff they are really pronouns and not articles
 #       maybe add a name of the boolean helper that lets you mark the word iff the helper returns true?
 class PreMarker(CommonModel):
+    """
+    Static pre-markers to be automatically created before the annotation of a specific text begun.
+    """
     class Meta:
         verbose_name = _('pre-marker')
         verbose_name_plural = _('pre-markers')
@@ -828,6 +890,13 @@ class PreMarker(CommonModel):
 
 
 class RelationVariant(CommonModel):
+    """
+    Holds a **project-specific definition** for a previously defined `Relation`.
+    This model allows the project manager to customize a previously defined relation by:
+
+    - specifying different hotkey
+    - specifying a different visual representation (i.e., graph or list)
+    """
     class Meta:
         unique_together = (('project', 'relation'),)
         verbose_name = _("relation variant")
@@ -862,6 +931,16 @@ class RelationVariant(CommonModel):
 
 
 class Context(CommonModel):
+    """
+    An **instantiation** of a textual context that is currently annotated.
+    This is stored specifically in Textinator to avoid the loss of annotations
+    if something should happen to the original data sources.
+
+    We do specify which data source a context is from, so it could be deleted,
+    should the need arise. However, it is not deleted automatically on deletion
+    of the data source, again, to prevent the loss of annotations in case the
+    data source deletion was accidental.
+    """
     class Meta:
         verbose_name = _('context')
         verbose_name_plural = _('contexts')
@@ -890,6 +969,13 @@ class Context(CommonModel):
 
 
 class Batch(CommonModel):
+    """
+    Each time an annotator submits any annotation(s), an annotation batch is created
+    for this annotator and a unique UUID is assigned tot his batch.
+
+    All annotated `Markers` (instantiated as either `Inputs` or `Labels`) and `Relations`
+    (instantiated as `LabelRelations`) are then binded to this batch.
+    """
     class Meta:
         verbose_name = _("annotation batch")
         verbose_name_plural = _("annotation batches")
@@ -902,6 +988,32 @@ class Batch(CommonModel):
 
 
 class Input(CommonModel):
+    """
+    Holds an **instantiation** of a `Marker` that does not require specifying the start-end boundaries
+    of the text. This mostly concerns the cases when a user provides an input via HTML `<input>` tag.
+
+    Specifically this concerns `MarkerVariants` with the following annotation types:
+
+    - short (long) free-text input
+    - integer
+    - floating-point number
+    - range
+
+    `group_order` field specifies the order of the marker group that this `MarkerVariant` belongs to
+    in the `MarkerUnit` (if such unit was defined) at submission time. To exemplify, let's say there is
+    a definition of a `MarkerUnit` that consists of 3 to 5 marker groups, each of which has:
+
+    - `Question` marker (Q)
+    - `Correct answer` marker (C)
+
+    In the UI, the annotator will then see the following:
+    
+    [(Q, C)+, (Q, C)+, (Q, C)+, (Q, C), (Q, C)]
+    
+    The groups with a (+) are mandatory for submission (since a unit should hold at least 3 groups by a specification).
+    `group_order` is meaningfull only if the annotator is allowed to rank the groups within a unit.
+    If so, then `group_order` specifies the order of each (Q, C) group after ranking at submission time.
+    """
     class Meta:
         verbose_name = _('input')
         verbose_name_plural = _('inputs')
@@ -910,7 +1022,7 @@ class Input(CommonModel):
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1, # TODO: rename
+    group_order = models.PositiveIntegerField(_("marker group order in the unit"), default=1, # TODO: rename
         help_text=_("At the submission time"))
 
     @property
@@ -941,7 +1053,7 @@ class Input(CommonModel):
         res['marker'] = self.marker.to_json()
         res['user'] = self.batch.user.username
         res['batch'] = str(self.batch)
-        res['unit'] = self.unit
+        res['group_order'] = self.group_order
         res['hash'] = self.hash
         return res
 
@@ -952,6 +1064,20 @@ class Input(CommonModel):
 
 
 class Label(CommonModel):
+    """
+    Holds an **instantiation** of a `Marker` that requires specifying the start-end boundaries
+    of the text or is **NOT** provided via HTML `<input>` tag.
+
+    Specifically this concerns `MarkerVariants` with the following annotation types:
+
+    - marker (text spans)
+    - marker (whole text)
+
+    `extra` holds extra information associated with the annotation at submission time.
+    This extra information is typically via marker actions (i.e., right-clicking a marker).
+
+    The meaning of `group_order` is exactly the same as for `Input`.
+    """
     class Meta:
         verbose_name = _('label')
         verbose_name_plural = _('labels')
@@ -967,7 +1093,7 @@ class Label(CommonModel):
     undone = models.BooleanField(_("was undone?"), default=False,
         help_text=_("Indicates whether the annotator used 'Undo' button"))
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
+    group_order = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
         help_text=_("At the submission time"))
 
     @property
@@ -1015,6 +1141,7 @@ class Label(CommonModel):
         res['batch'] = str(self.batch)
         res['user'] = self.batch.user.username
         res['hash'] = self.hash
+        res['group_order'] = self.group_order
         return res
 
     def to_json(self, dt_format=None):
@@ -1027,6 +1154,9 @@ class Label(CommonModel):
 
 
 class LabelReview(CommonModel):
+    """
+    **NOTE:** currently inactive, preparation for v1.1
+    """
     class Meta:
         verbose_name = _('label review')
         verbose_name_plural = _('label reviews')
@@ -1055,6 +1185,9 @@ class LabelReview(CommonModel):
 
 
 class LabelRelation(CommonModel):
+    """
+    Holds an **instantiation** of a `Relation`.
+    """
     class Meta:
         verbose_name = _('label relation')
         verbose_name_plural = _('label relations')
@@ -1065,8 +1198,6 @@ class LabelRelation(CommonModel):
     undone = models.BooleanField(_("was undone?"), default=False,
         help_text=_("Indicates whether the annotator used 'Undo' button"))
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    unit = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
-        help_text=_("At the submission time"))
 
     @property
     def graph(self):
@@ -1108,6 +1239,11 @@ class LabelRelation(CommonModel):
 
 
 class UserProfile(CommonModel):
+    """
+    An M2M model binding `User` and `Project` and holding additional information
+
+    **NOTE**: the additional information is currently not in use and is a candidate for removal/overhaul in future releases.
+    """
     class Meta:
         verbose_name = _('a project-specific user profile')
         verbose_name_plural = _('project specific user profiles')
@@ -1144,6 +1280,9 @@ class UserProfile(CommonModel):
 
 
 class Level(CommonModel):
+    """
+    **NOTE**: this functionality is currently inactive and is a candidate for removal/overhaul in future releases.
+    """
     class Meta:
         verbose_name = _('level')
 

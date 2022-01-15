@@ -6,4 +6,3 @@ API
    :caption: API docs:
 
    modules/models
-   modules/views

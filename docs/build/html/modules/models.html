@@ -30,7 +30,6 @@
   <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Views" href="views.html" />
     <link rel="prev" title="API" href="../api.html" /> 
 
 </head>
@@ -119,7 +118,6 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="views.html">Views</a></li>
 </ul>
 </li>
 </ul>
@@ -136,8 +134,12 @@
 <span id="models"></span><h1>Models<a class="headerlink" href="#module-projects.models" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Batch">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Batch" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each time an annotator submits any annotation(s), an annotation batch is created
+for this annotator and a unique UUID is assigned tot his batch.</p>
+<p>All annotated <cite>Markers</cite> (instantiated as either <cite>Inputs</cite> or <cite>Labels</cite>) and <cite>Relations</cite>
+(instantiated as <cite>LabelRelations</cite>) are then binded to this batch.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -186,8 +188,15 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Context">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datapoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Context" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Context" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <strong>instantiation</strong> of a textual context that is currently annotated.
+This is stored specifically in Textinator to avoid the loss of annotations
+if something should happen to the original data sources.</p>
+<p>We do specify which data source a context is from, so it could be deleted,
+should the need arise. However, it is not deleted automatically on deletion
+of the data source, again, to prevent the loss of annotations in case the
+data source deletion was accidental.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -223,8 +232,15 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.DataAccessLog">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">DataAccessLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasource</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datapoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_submitted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_skipped</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.DataAccessLog" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">DataAccessLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.DataAccessLog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds data access logs for each annotator per project. We keep track of:</p>
+<ul class="simple">
+<li><p>which datapoint and of which data source was accessed and when</p></li>
+<li><p>whether at least one annotation was submitted for that datapoint</p></li>
+<li><p>whether the datapoint was skipped without annotation (i.e., a new text was requested)</p></li>
+<li><p>whether the user flagged anything related to this datapoint (e.g., problems with text)</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -234,7 +250,7 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <li><p><strong>project_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Project" title="projects.models.Project"><code class="xref py py-class docutils literal notranslate"><span class="pre">Project</span></code></a>) – Project</p></li>
 <li><p><strong>datasource_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.DataSource" title="projects.models.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSource</span></code></a>) – Datasource</p></li>
 <li><p><strong>datapoint</strong> (<em>CharField</em>) – As stored in the original dataset</p></li>
-<li><p><strong>flags</strong> (<em>TextField</em>) – Internal behavior flags</p></li>
+<li><p><strong>flags</strong> (<em>TextField</em>) – Additional information provided by the annotator</p></li>
 <li><p><strong>is_submitted</strong> (<em>BooleanField</em>) – Indicates whether the datapoint was successfully submitted by an annotator</p></li>
 <li><p><strong>is_skipped</strong> (<em>BooleanField</em>) – Indicates whether the datapoint was skipped by an annotator</p></li>
 </ul>
@@ -306,8 +322,29 @@ they need to request a manual deletion.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Input">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Input" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds an <strong>instantiation</strong> of a <cite>Marker</cite> that does not require specifying the start-end boundaries
+of the text. This mostly concerns the cases when a user provides an input via HTML <cite>&lt;input&gt;</cite> tag.</p>
+<p>Specifically this concerns <cite>MarkerVariants</cite> with the following annotation types:</p>
+<ul class="simple">
+<li><p>short (long) free-text input</p></li>
+<li><p>integer</p></li>
+<li><p>floating-point number</p></li>
+<li><p>range</p></li>
+</ul>
+<p><cite>group_order</cite> field specifies the order of the marker group that this <cite>MarkerVariant</cite> belongs to
+in the <cite>MarkerUnit</cite> (if such unit was defined) at submission time. To exemplify, let’s say there is
+a definition of a <cite>MarkerUnit</cite> that consists of 3 to 5 marker groups, each of which has:</p>
+<ul class="simple">
+<li><p><cite>Question</cite> marker (Q)</p></li>
+<li><p><cite>Correct answer</cite> marker (C)</p></li>
+</ul>
+<p>In the UI, the annotator will then see the following:</p>
+<p>[(Q, C)+, (Q, C)+, (Q, C)+, (Q, C), (Q, C)]</p>
+<p>The groups with a (+) are mandatory for submission (since a unit should hold at least 3 groups by a specification).
+<cite>group_order</cite> is meaningfull only if the annotator is allowed to rank the groups within a unit.
+If so, then <cite>group_order</cite> specifies the order of each (Q, C) group after ranking at submission time.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -317,7 +354,7 @@ they need to request a manual deletion.</p>
 <li><p><strong>marker_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.MarkerVariant" title="projects.models.MarkerVariant"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkerVariant</span></code></a>) – Marker</p></li>
 <li><p><strong>context_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Context" title="projects.models.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>) – Context</p></li>
 <li><p><strong>batch_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Batch" title="projects.models.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a>) – Batch</p></li>
-<li><p><strong>unit</strong> (<em>PositiveIntegerField</em>) – At the submission time</p></li>
+<li><p><strong>group_order</strong> (<em>PositiveIntegerField</em>) – At the submission time</p></li>
 </ul>
 </dd>
 </dl>
@@ -335,8 +372,18 @@ they need to request a manual deletion.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Label">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">undone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Label" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds an <strong>instantiation</strong> of a <cite>Marker</cite> that requires specifying the start-end boundaries
+of the text or is <strong>NOT</strong> provided via HTML <cite>&lt;input&gt;</cite> tag.</p>
+<p>Specifically this concerns <cite>MarkerVariants</cite> with the following annotation types:</p>
+<ul class="simple">
+<li><p>marker (text spans)</p></li>
+<li><p>marker (whole text)</p></li>
+</ul>
+<p><cite>extra</cite> holds extra information associated with the annotation at submission time.
+This extra information is typically via marker actions (i.e., right-clicking a marker).</p>
+<p>The meaning of <cite>group_order</cite> is exactly the same as for <cite>Input</cite>.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -349,7 +396,7 @@ they need to request a manual deletion.</p>
 <li><p><strong>context_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Context" title="projects.models.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>) – Context</p></li>
 <li><p><strong>undone</strong> (<em>BooleanField</em>) – Indicates whether the annotator used ‘Undo’ button</p></li>
 <li><p><strong>batch_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Batch" title="projects.models.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a>) – Batch</p></li>
-<li><p><strong>unit</strong> (<em>PositiveIntegerField</em>) – At the submission time</p></li>
+<li><p><strong>group_order</strong> (<em>PositiveIntegerField</em>) – At the submission time</p></li>
 </ul>
 </dd>
 </dl>
@@ -367,8 +414,9 @@ they need to request a manual deletion.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.LabelRelation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">LabelRelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">undone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.LabelRelation" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">LabelRelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.LabelRelation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds an <strong>instantiation</strong> of a <cite>Relation</cite>.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -379,7 +427,6 @@ they need to request a manual deletion.</p>
 <li><p><strong>second_label_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Label" title="projects.models.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a>) – Second label</p></li>
 <li><p><strong>undone</strong> (<em>BooleanField</em>) – Indicates whether the annotator used ‘Undo’ button</p></li>
 <li><p><strong>batch_id</strong> (ForeignKey to <a class="reference internal" href="#projects.models.Batch" title="projects.models.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a>) – Batch</p></li>
-<li><p><strong>unit</strong> (<em>PositiveIntegerField</em>) – At the submission time</p></li>
 </ul>
 </dd>
 </dl>
@@ -397,8 +444,9 @@ they need to request a manual deletion.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.LabelReview">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">LabelReview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_match</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ambiguity_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolved_by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impossible</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.LabelReview" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">LabelReview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.LabelReview" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>NOTE:</strong> currently inactive, preparation for v1.1</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -430,8 +478,9 @@ they need to request a manual deletion.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Level">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Level" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Level" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>NOTE</strong>: this functionality is currently inactive and is a candidate for removal/overhaul in future releases.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -570,8 +619,17 @@ along with a specification of how to implement your own plugins if necessary.</p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.MarkerContextMenuItem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerContextMenuItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose_admin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerContextMenuItem" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerContextMenuItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerContextMenuItem" title="Permalink to this definition">¶</a></dt>
+<dd><p>An M2M model binding <cite>MarkerAction</cite> and <cite>MarkerVariant</cite> and holding additional information.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><cite>config</cite> holds a JSON configuration, specified in the JS plugin file for this action.</dt><dd><p>By storing it here, we allow each config to be customized specifically for each
+<cite>MarkerVariant</cite>-<cite>MarkerAction</cite> binding.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -630,8 +688,9 @@ to that relation definition.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.MarkerRestriction">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerRestriction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerRestriction" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerRestriction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerRestriction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a <strong>definition</strong> of a count restriction that is placed on a <cite>MarkerVariant</cite></p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -659,9 +718,9 @@ to that relation definition.</p>
 <dt class="sig sig-object py" id="projects.models.MarkerUnit">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerUnit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerUnit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Some annotation tasks might benefit from annotating groups of markers as one unit.
-This model stores the definitions of such units (shared across all users).</p>
+This model stores the <strong>definitions</strong> of such units (shared across all users).</p>
 <p>The unit configuration has two dimensions:
-- marker group, which is defined by a one to many relationship with MarkerVariant model
+- marker group, which is defined by a one-to-many relationship with MarkerVariant model
 - unit height, which provides minimum and maximum number of marker groups in this unit</p>
 <p><cite>minimum_required</cite> attribute defines a lower bound for a unit height, whereas <cite>size</cite> defines an upper bound.</p>
 <dl class="field-list simple">
@@ -690,8 +749,15 @@ This model stores the definitions of such units (shared across all users).</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.MarkerVariant">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_in_unit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">are_suggestions_enabled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_suggestion_endpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_shortcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anno_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerVariant" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">MarkerVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerVariant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a <strong>project-specific definition</strong> for a previously defined <cite>Marker</cite>.
+This model allows the project manager to customize a previously defined marker by:</p>
+<ul class="simple">
+<li><p>specifying different color or hotkey</p></li>
+<li><p>changing the annotation type of the marker (defined in settings.ANNOTATION_TYPES)</p></li>
+<li><p>assigning a marker to a unit</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -739,6 +805,24 @@ This model stores the definitions of such units (shared across all users).</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="projects.models.MarkerVariant.max">
+<span class="sig-name descname"><span class="pre">max</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerVariant.max" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns:</dt><dd><p>int: The maximal number of markers of this kind per submitted instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="projects.models.MarkerVariant.min">
+<span class="sig-name descname"><span class="pre">min</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerVariant.min" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns:</dt><dd><p>int: The minimal number of markers of this kind per submitted instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="projects.models.MarkerVariant.save">
 <span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.MarkerVariant.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the current instance. Override this in a subclass if you want to
@@ -781,8 +865,9 @@ Eligible methods are currently being pulled from <cite>projects/helpers.py</cite
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.PreMarker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">PreMarker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.PreMarker" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">PreMarker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.PreMarker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Static pre-markers to be automatically created before the annotation of a specific text begun.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -874,7 +959,7 @@ show the very same datapoint again. Otherwise, proceed.</p></li>
 so that the sets of annotations for each annotator are disjoint.</p></li>
 <li><p>If disjoint annotation is off, then exclude only data previously annotated by the current user.</p></li>
 <li><p>Instantiate all datasources associated with this project</p></li>
-<li><p>TBD</p></li>
+<li><p>Choose an unannotated datapoint uniformly at random across all datasources and return it.</p></li>
 </ul>
 <dl class="simple">
 <dt>Args:</dt><dd><p>user (User): Current user</p>
@@ -916,8 +1001,11 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.Range">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Range" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">Range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.Range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a definition for a numeric range, stores min, max and step (similar to Python’s range).
+Currently this is used for specifying the possible numeric ranges for marker variants of types
+‘integer’, ‘floating-point value’ and ‘range’.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -1024,8 +1112,14 @@ of the field will call this method.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.RelationVariant">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">RelationVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_shortcut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_representation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.RelationVariant" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">RelationVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.RelationVariant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds a <strong>project-specific definition</strong> for a previously defined <cite>Relation</cite>.
+This model allows the project manager to customize a previously defined relation by:</p>
+<ul class="simple">
+<li><p>specifying different hotkey</p></li>
+<li><p>specifying a different visual representation (i.e., graph or list)</p></li>
+</ul>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
@@ -1091,8 +1185,10 @@ is instantiated. The specification describes markers and relations that are to b
 
 <dl class="py class">
 <dt class="sig sig-object py" id="projects.models.UserProfile">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">UserProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_created</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt_updated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asking_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timed_questions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.UserProfile" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">projects.models.</span></span><span class="sig-name descname"><span class="pre">UserProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#projects.models.UserProfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>An M2M model binding <cite>User</cite> and <cite>Project</cite> and holding additional information</p>
+<p><strong>NOTE</strong>: the additional information is currently not in use and is a candidate for removal/overhaul in future releases.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>id</strong> (<em>AutoField</em>) – Id</p></li>
