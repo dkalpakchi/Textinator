@@ -267,13 +267,15 @@ class Relation(CommonModel):
             ('delete_this_relation', 'Delete this relation'),
         )
 
-    name = models.CharField(_("name"), max_length=50)
-    pairs = models.ManyToManyField(MarkerPair, verbose_name=_("marker pairs"))
-    direction = models.CharField(_("direction"), max_length=1, choices=[
+    DIRECTIONS = [
         ('0', _('Directed from the first to the second')),
         ('1', _('Directed from the second to the first')),
         ('2', _('Bi-directional'))
-    ])
+    ]
+
+    name = models.CharField(_("name"), max_length=50)
+    pairs = models.ManyToManyField(MarkerPair, verbose_name=_("marker pairs"))
+    direction = models.CharField(_("direction"), max_length=1, choices=DIRECTIONS)
     shortcut = models.CharField(_("keyboard shortcut"), max_length=15, 
         help_text=_("Keyboard shortcut for marking a piece of text with this relation"), null=True, blank=True)
     representation = models.CharField(_("graphical representation type"), max_length=1,
@@ -299,6 +301,11 @@ class Relation(CommonModel):
             'direction': self.direction
         })
         return res
+
+    @property
+    def verbose_direction(self):
+        dir_map = dict(Relation.DIRECTIONS)
+        return dir_map[self.direction]
 
 
 class TaskTypeSpecification(CommonModel):
@@ -710,6 +717,14 @@ class MarkerVariant(CommonModel):
         return "{}_{}".format(self.marker.code, same_marker_pk.index(self.pk))
 
 
+    def add_restrictions(self, restrictions):
+        if type(restrictions) == list:
+            for x in restrictions:
+                mr = MarkerRestriction.from_string(x)
+                mr.variant = self
+                mr.save()
+
+
     def get_count_restrictions(self, stringify=True):
         """
         Get the restrictions (if any) on the number of markers per submitted instance
@@ -753,7 +768,7 @@ class MarkerVariant(CommonModel):
                 return r.value
             elif r.kind == 'gs':
                 return r.value + 1
-        return -1
+        return 1
 
     def max(self):
         """
@@ -765,7 +780,7 @@ class MarkerVariant(CommonModel):
                 return r.value
             elif r.kind == 'ls':
                 return r.value - 1
-        return -1
+        return 1
 
     def __str__(self):
         return str(self.marker) + "<{}>".format(self.project.title)
@@ -823,17 +838,31 @@ class MarkerRestriction(CommonModel):
         verbose_name = _('marker restriction')
         verbose_name_plural = _("marker restrictions")
 
-    variant = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, verbose_name=_("marker variant"))
-    kind = models.CharField(_("restriction kind"), max_length=2, choices=[
+    RESTRICTION_KINDS = [
         ('no', '-'), ('ls', '<'),
         ('le', '<='), ('gs', '>'),
         ('ge', '>='), ('eq', '=')
-    ])
+    ]
+
+    variant = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, verbose_name=_("marker variant"))
+    kind = models.CharField(_("restriction kind"), max_length=2, choices=RESTRICTION_KINDS)
     value = models.PositiveIntegerField(_("restriction value"),
         help_text=_("e.g., if restriction kind is '<=' and value is '3', this creates a restriction '<= 3'"))
 
     def __str__(self):
         return self.kind + str(self.value)
+
+    @classmethod
+    def from_string(cls, value):
+        try:
+            kind, value = value.split()
+            mp = dict([(x[1], x[0]) for x in cls.RESTRICTION_KINDS])
+            instance = cls(kind=mp[kind.strip()], value=int(value.strip()))
+            return instance
+        except ValueError:
+            return None
+        except KeyError:
+            return None
 
 
 class DataAccessLog(CommonModel):
@@ -1034,7 +1063,8 @@ class Input(CommonModel):
         res = super(Input, self).to_json(dt_format=dt_format)
         res['content'] = self.content
         res['marker'] = self.marker.to_minimal_json()
-        res['unit'] = self.unit
+        if self.marker.unit:
+            res['group_order'] = self.group_order
         return res
 
     def to_short_json(self, dt_format=None):
@@ -1043,7 +1073,8 @@ class Input(CommonModel):
         res['marker'] = self.marker.to_json()
         res['user'] = self.batch.user.username
         res['batch'] = str(self.batch)
-        res['group_order'] = self.group_order
+        if self.marker.unit:
+            res['group_order'] = self.group_order
         res['hash'] = self.hash
         return res
 
@@ -1107,8 +1138,12 @@ class Label(CommonModel):
             'marker': self.marker.name,
             'text': self.text,
         })
+        if self.marker.unit:
+            res['group_order'] = self.group_order
         for x in ['extra', 'start', 'end']:
-            if getattr(self, x):
+            val = getattr(self, x)
+            is_not_empty = val if type(val) == dict else True
+            if val is not None and is_not_empty:
                 res[x] = getattr(self, x)
         return res
 
@@ -1120,6 +1155,8 @@ class Label(CommonModel):
     def to_minimal_json(self, dt_format=None):
         res = self.to_short_rel_json()
         res['marker'] = self.marker.to_minimal_json()
+        if self.marker.unit:
+            res['group_order'] = self.group_order
         return res
 
     def to_short_json(self, dt_format=None):
@@ -1128,7 +1165,6 @@ class Label(CommonModel):
         res['batch'] = str(self.batch)
         res['user'] = self.batch.user.username
         res['hash'] = self.hash
-        res['group_order'] = self.group_order
         return res
 
     def to_json(self, dt_format=None):
@@ -1185,6 +1221,8 @@ class LabelRelation(CommonModel):
     undone = models.BooleanField(_("was undone?"), default=False,
         help_text=_("Indicates whether the annotator used 'Undo' button"))
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
+    cluster = models.PositiveIntegerField(_("relation cluster"), default=1,
+        help_text=_("At the submission time"))
 
     @property
     def graph(self):
@@ -1209,7 +1247,8 @@ class LabelRelation(CommonModel):
             'first': self.first_label.to_short_json(),
             'second': self.second_label.to_short_json(),
             'user': self.batch.user.username,
-            'batch': str(self.batch)
+            'batch': str(self.batch),
+            'cluster': self.cluster,
         })
         return res
 
@@ -1220,7 +1259,8 @@ class LabelRelation(CommonModel):
             'first': self.first_label.to_json(),
             'second': self.second_label.to_json(),
             'user': self.batch.user.username,
-            'batch': str(self.batch)
+            'batch': str(self.batch),
+            'cluster': self.cluster
         })
         return res
 

@@ -178,6 +178,7 @@ def process_chunks_and_relations(batch, batch_info, ctx_cache=None):
             saved_labels += just_saved
 
     for i, rel in enumerate(batch_info.relations):
+        print(batch_info.relations)
         for link in rel['links']:
             source_id, target_id = int(link['s']), int(link['t'])
 
@@ -193,7 +194,7 @@ def process_chunks_and_relations(batch, batch_info, ctx_cache=None):
                 continue
 
             LabelRelation.objects.create(
-                rule=rule, first_label=source_label, second_label=target_label, batch=batch, unit=i+1
+                rule=rule, first_label=source_label, second_label=target_label, batch=batch, cluster=i+1
             )
 
 
@@ -201,31 +202,50 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
     if batch_info.marker_groups:
         marker_groups = OrderedDict()
         for k, v in batch_info.marker_groups.items():
-            unit, i, marker, _ = k.split("_")
+            name_parts = k.split("_")
+            unit, i, mv_code = name_parts[0], name_parts[1], "_".join(name_parts[2:-1])
             prefix = "{}_{}".format(unit, i)
-            if prefix not in dct:
+            if prefix not in marker_groups:
                 marker_groups[prefix] = defaultdict(list)
             if v:
-                marker_groups[prefix][marker].append(v)
+                if type(v) == list:
+                    marker_groups[prefix][mv_code].extend(v)
+                else:
+                    marker_groups[prefix][mv_code].append(v)
 
         if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
             ctx = get_or_create_ctx_by_input_context(batch_info, ctx_cache)
 
-            for i, (unit, v) in enumerate(marker_groups.items()):
+            mv_map = {}
+            for i, (prefix, v) in enumerate(marker_groups.items()):
                 unit_cache = []
                 for code, values in v.items():
-                    mv = MarkerVariant.objects.filter(project=batch_info.project, marker__code=code).annotate(
-                        filtered_unit=Replace('unit__name', Value('_'), Value(''))
-                    ).filter(filtered_unit=unit.split("_")[0]).first()
+                    marker_code = "_".join(code.split("_")[:-1])
+                    if marker_code not in mv_map:
+                        marker_variants = MarkerVariant.objects.filter(
+                            project=batch_info.project, marker__code=marker_code
+                        )
+                        mv_map[marker_code] = marker_variants
 
-                    N = len(values)
+                    mv = None
+                    for m in mv_map[marker_code]:
+                        if m.code == code:
+                            mv = m
+                            break
+
+                    unit = prefix.split("_")[0]
+
+                    if mv.unit.name != unit:
+                        continue
+
+                    N = sum(map(bool, values))
                     if N >= mv.min() and N <= mv.max():
                         for val in values:
                             if val:
                                 unit_cache.append({
                                     'content': val,
                                     'marker': mv,
-                                    'unit': i + 1
+                                    'group_order': i + 1
                                 })
                     else:
                         unit_cache = []

@@ -21,3 +21,7 @@ div[data-theme="bootstrap4"] .card-title {
 .select2-container--default .select2-selection--single .select2-selection__arrow {
     top: 4px !important;
 }
+
+.select2.select2-container.select2-container--default {
+    width: 100% !important;
+}

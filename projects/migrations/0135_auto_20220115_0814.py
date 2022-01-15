@@ -20,9 +20,10 @@ class Migration(migrations.Migration):
             old_name='unit',
             new_name='group_order',
         ),
-        migrations.RemoveField(
+        migrations.RenameField(
             model_name='labelrelation',
-            name='unit',
+            old_name='unit',
+            new_name='cluster'
         ),
         migrations.RemoveField(
             model_name='project',

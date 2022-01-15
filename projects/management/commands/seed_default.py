@@ -7,7 +7,9 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Permission, Group
 
-from projects.models import Marker, TaskTypeSpecification, Relation, MarkerPair
+from projects.models import (
+    Marker, TaskTypeSpecification, Relation, MarkerPair, MarkerUnit
+)
 
 
 # python manage.py seed --mode=refresh
@@ -82,9 +84,21 @@ def create_data():
         logger.info("{} relations are created.".format(created))
 
         created = 0
+        unit_mapping = {}
+        for spec in data['units']:
+            idx = spec['id']
+            del spec['id']
+            obj, is_created = MarkerUnit.objects.get_or_create(**spec)
+            created += is_created
+            unit_mapping[idx] = obj.pk
+        logger.info("{} marker units are created.".format(created))
+
+        created = 0
         for task_type, spec in data['specs'].items():
             for x in spec["markers"]:
                 x["id"] = marker_mapping[x["id"]]
+                if "unit_id" in x:
+                    x["unit_id"] = unit_mapping[x["unit_id"]]
 
             if spec.get('relations'):
                 spec['relations'] = [relation_mapping[x] for x in spec['relations']]

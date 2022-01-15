@@ -148,17 +148,7 @@ class LabelRelationInline(CommonStackedInline):
     extra = 0
 
 
-# see https://stackoverflow.com/questions/20833638/how-to-log-all-django-form-validation-errors
-class LoggingMixin(object):
-    def add_error(self, field, error):
-        if field:
-            print('Form error on field %s: %s', field, error)
-        else:
-            print('Form error: %s', error)
-        super().add_error(field, error)
-
-
-class ProjectForm(LoggingMixin, forms.ModelForm):
+class ProjectForm(forms.ModelForm):
     datasources = forms.ModelMultipleChoiceField(
         queryset=None, # set later
         label=DataSource._meta.verbose_name_plural)
@@ -220,13 +210,24 @@ class ProjectForm(LoggingMixin, forms.ModelForm):
                 spec = spec_obj.config
                 for mspec in spec["markers"]:
                     m = Marker.objects.get(pk=mspec["id"])
-                    MarkerVariant.objects.get_or_create(marker=m, project=instance, anno_type=mspec["anno_type"])
+                    if mspec.get("unit_id"):
+                        mv = MarkerVariant.objects.create(
+                            marker=m, project=instance, anno_type=mspec["anno_type"], unit_id=mspec["unit_id"]
+                        )
+                    else:
+                        mv = MarkerVariant.objects.create(marker=m, project=instance, anno_type=mspec["anno_type"])
+
+                    if mspec.get("restrictions"):
+                        mv.add_restrictions(mspec["restrictions"])
 
                 for rel_id in spec.get("relations", []):
                     r = Relation.objects.get(pk=rel_id)
-                    RelationVariant.objects.get_or_create(relation=r, project=instance)
+                    RelationVariant.objects.create(relation=r, project=instance)
             except TaskTypeSpecification.DoesNotExist:
                 pass
+
+        if instance.task_type == 'corr' or instance.task_type == 'pronr':
+            instance.allow_selecting_labels = True
 
         self.save_m2m()
         instance.save()

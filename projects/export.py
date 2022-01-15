@@ -19,9 +19,9 @@ def merge2cluster(group):
 def group2hash(group):
     if type(group) == list:
         group = sorted(group, key=lambda x: x['first']['start'])
-        return ";".join(["{}:{}:{}:{}:{}:{}".format(
+        return ";".join(["{}:{}:{}:{}:{}".format(
             x['type'], x['first']['start'], x['first']['end'],
-            x['second']['start'], x['second']['end'], x['first']['user']
+            x['second']['start'], x['second']['end']
         ) for x in group])
     elif type(group) == dict:
         nodes = sorted(group['nodes'], key=lambda x: x['start'])
@@ -40,13 +40,13 @@ class Exporter:
         json_exporter = 'to_short_rel_json'
         relations = LabelRelation.objects.filter(
             first_label__marker__project=self.__project, undone=False
-        ).order_by('first_label__context_id', 'batch')
+        ).order_by('first_label__context_id', 'batch', 'cluster')
 
         grouped_relations = []
         is_bidirectional, hashes = {}, set()
-        group, context, context_id, batch = [], None, -1, -1
+        group, context, context_id, batch, cluster = [], None, -1, -1, -1
         for r in relations.prefetch_related('first_label', 'second_label', 'rule', 'batch'):
-            if batch == -1 or r.batch != batch:
+            if batch == -1 or r.batch != batch or r.cluster != cluster:
                 if group:
                     if have_the_same_relation(group) and is_bidirectional.get(group[0]['type'], False):
                         group = merge2cluster(group)
@@ -56,7 +56,7 @@ class Exporter:
                         hashes.add(ghash)
 
                         if group not in grouped_relations[-1]["relations"].values():
-                            grouped_relations[-1]["relations"][str(batch)] = group
+                            grouped_relations[-1]["relations"]["{}_{}".format(batch, cluster)] = group
                 group = []
 
             if context_id == -1 or context_id != r.first_label.context_id:
@@ -75,6 +75,7 @@ class Exporter:
                 'second': getattr(r.second_label, json_exporter)()
             })
             batch = r.batch
+            cluster = r.cluster
             context_id = r.first_label.context_id
             is_bidirectional[r.rule.name] = r.rule.direction == '2'
         else:
@@ -87,9 +88,11 @@ class Exporter:
                     hashes.add(ghash)
 
                     if group not in grouped_relations[-1]["relations"].values():
-                        grouped_relations[-1]["relations"][str(batch)] = group
+                        grouped_relations[-1]["relations"]["{}_{}".format(batch, cluster)] = group
         return grouped_relations
 
+    def _export_pronr(self):
+        return self._export_corr()
 
     def _export_qa(self):
         inputs = Input.objects.filter(marker__project=self.__project).order_by('context_id')
@@ -118,9 +121,10 @@ class Exporter:
                         "text": label.text,
                         "start": label.start,
                         "end": label.end,
-                        "type": label.marker.marker.name,
-                        "extra": label.extra
+                        "type": label.marker.name,
                     })
+                    if label.extra:
+                        ann["choices"][-1]["extra"] = label.extra
                 obj["annotations"].append(ann)
 
             cur_context_id = inp.context_id
@@ -128,6 +132,57 @@ class Exporter:
             resp.append(obj)
         return resp
 
+    def _export_mcqa(self):
+        return self._export_qa()
+
+    def _export_mcqar(self):
+        input_batches = Input.objects.filter(marker__project=self.__project).values_list('batch', flat=True)
+        batches = Batch.objects.filter(pk__in=input_batches).prefetch_related('label_set', 'input_set')
+
+        resp = {}
+        for batch in batches:
+            inputs = batch.input_set
+
+            if inputs.count():
+                context_id = inputs.first().context_id
+                if context_id not in resp:
+                    resp[context_id] = {
+                        "context": inputs.first().context.content,
+                        "annotations": []
+                    }
+
+                if inputs.count():
+                    resp[context_id]["annotations"].append([i.to_minimal_json() for i in inputs.all()])
+        
+        return list(resp.values())
+
+    def _export_ner(self):
+        label_batches = Label.objects.filter(
+            marker__project=self.__project, undone=False
+        ).values_list('batch', flat=True)
+
+        batches = Batch.objects.filter(pk__in=label_batches).prefetch_related('label_set')
+        resp = {}
+        for batch in batches:
+            labels = batch.label_set
+
+            if labels.count():
+                context_id = labels.first().context_id
+                if context_id not in resp:
+                    resp[context_id] = {
+                        "context": labels.first().context.content,
+                        "annotations": []
+                    }
+
+                ann = {}
+                if labels.count():
+                    ann["named_entities"] = [l.to_minimal_json() for l in labels.all()]
+                
+                resp[context_id]["annotations"].append(ann)
+        return list(resp.values())
+
+    def _export_mt(self):
+        return self._export_mcqar()
 
     def _export_generic(self):
         label_batches = Label.objects.filter(

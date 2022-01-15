@@ -77,6 +77,14 @@
       "id": 2
     }
   ],
+  "units": [
+    {
+      "size": 5,
+      "minimum_required": 1,
+      "is_rankable": true,
+      "id": 1
+    }
+  ],
   "specs": {
     "qa": {
       "markers": [
@@ -89,6 +97,14 @@
         {"id": 5, "anno_type": "free-text"},
         {"id": 1, "anno_type": "m-span"},
         {"id": 2, "anno_type": "m-span"}
+      ]
+    },
+    "mcqar": {
+      "markers": [
+        {"id": 5, "anno_type": "free-text", "unit_id": 1, "order_in_unit": 1},
+        {"id": 1, "anno_type": "free-text", "unit_id": 1, "order_in_unit": 2},
+        {"id": 2, "anno_type": "free-text", "unit_id": 1, "order_in_unit": 3,
+         "restrictions": [">= 2", "< 4"]}
       ]
     },
     "ner": {

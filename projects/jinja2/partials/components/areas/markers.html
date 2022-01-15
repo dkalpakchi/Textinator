@@ -1,5 +1,5 @@
 {% if project.free_markers.count() > 0 %}
-  <article class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
+  <article id="markersArea" class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
       <p>{{ _("markers")|capitalize }}</p>
     </div>
@@ -20,7 +20,7 @@
 {% endif %}
 
 {% if project.marker_groups.count() > 0 %}
-  <article class="marker groups message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
+  <article id="markerGroupsArea" class="marker groups message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
       <p>{{ _("marker groups")|capitalize }}</p>
     </div>

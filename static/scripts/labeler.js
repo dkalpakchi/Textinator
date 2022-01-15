@@ -478,10 +478,11 @@
       isLabel: isLabel,
       init: function() {
         this.taskArea = document.querySelector('#taskArea');
-        this.markersArea = this.taskArea.querySelector('.markers');
-        this.markerGroupsArea = this.taskArea.querySelector('.marker.groups');
-        this.relationsArea = this.taskArea.querySelector('.relations:not(.marked)');
+        this.markersArea = this.taskArea.querySelector('#markersArea');
+        this.markerGroupsArea = this.taskArea.querySelector('#markerGroupsArea');
+        this.relationsArea = this.taskArea.querySelector('#relationsArea');
         this.textArea = this.taskArea.querySelector('#textArea');
+        this.actionsArea = this.taskArea.querySelector('#actionsArea');
         this.selectorArea = this.textArea.querySelector('.selector');
         this.textLabelsArea = this.taskArea.querySelector('#textLabels');
         resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
@@ -502,12 +503,16 @@
         this.fixUI();
       },
       fixUI: function() {
-        $(this.markersArea).find('.control.has-tag-left').each(function(i, x) {
-          var $input = $(x).find('input'),
-              $tag = $(x).find('span.tag');
+        [this.markersArea, this.markerGroupsArea].forEach(function(area) {
+          if (utils.isDefined(area)) {
+            $(area).find('.control.has-tag-left').each(function(i, x) {
+              var $input = $(x).find('input'),
+                  $tag = $(x).find('span.tag');
 
-          if ($input.length) {
-            $input.css('padding-left', $tag.outerWidth() + 20);
+              if ($input.length) {
+                $input.css('padding-left', $tag.outerWidth() + 20);
+              }
+            })
           }
         })
       },
@@ -1749,7 +1754,7 @@
         return inputData['chunks'].length || inputData['relations'].length || inputData["text_markers"].length;
       },
       hasNewInfo: function(inputData) {
-        return inputData['marker_groups'].length || this.hasNewInputs(inputData) || this.hasNewLabels(inputData);
+        return Object.values(inputData['marker_groups']).filter((x) => x).length || this.hasNewInputs(inputData) || this.hasNewLabels(inputData);
       },
       getMarkerTypes: function() {
         return [
@@ -2010,10 +2015,7 @@
       var $inputForm = $('#inputForm'),
           $inputBlock = $inputForm.closest('article');
 
-      var inputFormData = $inputForm.serializeObject(),
-          markerGroupsForm = utils.isDefined(labelerModule.markerGroupsArea) ?
-            labelerModule.markerGroupsArea.querySelector('#markerGroups') :
-            undefined;
+      var inputFormData = $inputForm.serializeObject();
 
       // if there's an input form field, then create input_context
       inputFormData['input_context'] = labelerModule.getContextText();
@@ -2023,6 +2025,7 @@
       inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
       inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
 
+      console.log(inputFormData);
 
       if (labelerModule.hasNewInfo(inputFormData)) {
         labelerModule.getMarkerTypes().forEach(function(x) {
@@ -2045,9 +2048,11 @@
                 else
                   labelerModule.unmark(JSON.parse(inputFormData['chunks']));
 
+                $(labelerModule.markersArea).find('textarea').each(function(i, x) { $(x).val(''); });
+                $(labelerModule.markerGroupsArea).find('#markerGroups textarea').each(function(i, x) { $(x).val('') });
                 $(labelerModule.markersArea).find('input').each(function(i, x) { $(x).val(''); });
                 $(labelerModule.markersArea).find('output').each(function(i, x) { $(x).text('???'); }); // labels for input[type="range"]
-                $(labelerModule.markerGroupsArea).find('#markerGroups input]').each(function(i, x) { $(x).val('') });
+                $(labelerModule.markerGroupsArea).find('#markerGroups input').each(function(i, x) { $(x).val('') });
                 $(labelerModule.markerGroupsArea).find('output').each(function(i, x) { $(x).text('???'); }); // labels for input[type="range"]
               } else if (data['mode'] == 'e') {
                 $("#editingBoard").html(data.template);
@@ -2108,6 +2113,11 @@
               // TODO: great_job image path should be dynamic
               $selector.html(d.text)
               $text.siblings('article').remove()
+
+              $(labelerModule.markersArea).remove();
+              $(labelerModule.relationsArea).remove();
+              $(labelerModule.markerGroupsArea).remove();
+              $(labelerModule.actionsArea).remove();
             } else {
               $selector.html(d.text);
               labelerModule.restart();
