@@ -1716,6 +1716,8 @@
         resetTextHTML = this.selectorArea.innerHTML;
         resetText = this.selectorArea.textContent;
 
+        $(this.textLabelsArea).empty();
+
         this.initPreMarkers();
         this.updateMarkAllCheckboxes();
       },
@@ -2014,19 +2016,9 @@
             undefined;
 
       // if there's an input form field, then create input_context
-      if (utils.isDefined(markerGroupsForm)) {
-        if ($(markerGroupsForm).valid()) {
-          inputFormData['input_context'] = labelerModule.getContextText();
-        } else {
-          return;
-        }
-      }
+      inputFormData['input_context'] = labelerModule.getContextText();
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());
-
-      if (labelerModule.hasNewInputs(inputFormData) && !inputFormData.hasOwnProperty('input_context')) {
-        inputFormData['input_context'] = labelerModule.getContextText();
-      }
 
       inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
       inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
@@ -2098,42 +2090,23 @@
           },
           success: function(d) {
             // update text, source id and datapoint id
-            $el.attr('data-s', d.source_id);
-            $el.attr('data-dp', d.dp_id);
+            $el.attr('data-s', d.dp_info.source_id);
+            $el.attr('data-dp', d.dp_info.id);
             var dpName = $('#dpName');
             if (dpName.text()) {
-              dpName.text("(" + d.dp_source_name + ")")
+              dpName.text("(" + d.dp_info.source_name + ")")
             }
 
             var $selector = $(labelerModule.selectorArea);
 
-            if (d.source_id == -1) {
+            if (d.dp_info.is_empty) {
               var $text = $selector.closest('article.text');
               if ($text) {
                 $text.removeClass('text');
               }
 
               // TODO: great_job image path should be dynamic
-              $selector.html('\
-                <div class="hero is-large">\
-                  <div class="hero-body">\
-                    <div class="container">\
-                      <div class="columns is-vcentered">\
-                        <div class="column is-2">\
-                          <figure class="image is-128x128">\
-                            <img src="/textinator/static/images/great_job.png" alt="">\
-                          </figure>\
-                        </div>\
-                        <div class="column">\
-                          <h1 class="title">\
-                            You have finished this challenge!\
-                            <p class="subtitle">Thank you for the participation! Your contribution to the research is invaluable!</p>\
-                          </h1>\
-                        </div>\
-                      </div>\
-                    </div>\
-                  </div>\
-                </div>')
+              $selector.html(d.text)
               $text.siblings('article').remove()
             } else {
               $selector.html(d.text);

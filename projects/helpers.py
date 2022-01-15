@@ -15,7 +15,7 @@ def hash_text(text):
     if isinstance(text, str):
         m.update(text.encode('utf8'))
     else:
-        m.update(str(text))
+        m.update(str(text).encode('utf8'))
     return m.hexdigest()
 
 

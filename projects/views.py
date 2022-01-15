@@ -33,10 +33,10 @@ from modeltranslation.translator import translator
 
 from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
-from .exporters import *
+from .export import Exporter
 from .view_helpers import *
 
-from Textinator.jinja2 import to_markdown
+from Textinator.jinja2 import to_markdown, to_formatted_text
 
 
 PT2MM = 0.3527777778
@@ -359,10 +359,19 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         for m in project_markers:
             menu_items[m.marker.code] = [item.to_json() for item in MarkerContextMenuItem.objects.filter(marker=m).all()]
 
+        if dp_info.is_empty:
+            text = render_to_string('partials/_great_job.html')
+        else:
+            text = apply_premarkers(proj, dp_info.text)
+            if dp_info.source_formatting == 'md':
+                text = to_markdown(text)
+            elif dp_info.source_formatting == 'ft':
+                text = to_formatted_text(text)
+
         ctx = {
-            'text': apply_premarkers(proj, dp_info.text),
+            'text': text,
             'dp_info': dp_info,
-            'source_finished': logs + 1 >= dp_info.source_size if logs else False,
+            'source_finished': (logs + 1) >= dp_info.source_size if logs else False,
             'project': proj,
             'profile': u_profile
         }
@@ -605,17 +614,27 @@ def new_article(request, proj):
 
     dp_info = project.data(request.user)
 
-    # log the new one
-    data_source = DataSource.objects.get(pk=dp_info.source_id)
-    DataAccessLog.objects.create(
-        user=request.user, datapoint=str(dp_info.id), 
-        project=project, datasource=data_source,
-        is_submitted=False, is_skipped=False
-    )
+    if dp_info.is_empty:
+        text = render_to_string('partials/_great_job.html')
+    else:
+        # log the new one
+        data_source = DataSource.objects.get(pk=dp_info.source_id)
+        DataAccessLog.objects.create(
+            user=request.user, datapoint=str(dp_info.id), 
+            project=project, datasource=data_source,
+            is_submitted=False, is_skipped=False
+        )
+
+        text = apply_premarkers(project, dp_info.text)
+
+        if dp_info.source_formatting == 'md':
+            text = to_markdown(text)
+        elif dp_info.source_formatting == 'ft':
+            text = to_formatted_text(text)
 
     return JsonResponse({
-        'text': to_markdown(apply_premarkers(project, dp_info.text)),
-        'dp_info': dp_info
+        'text': text,
+        'dp_info': dp_info.to_json()
     })
 
 
@@ -747,12 +766,11 @@ def async_delete_input(request, proj, inp):
 @login_required
 @require_http_methods(["GET"])
 def export(request, proj):
-    project = Project.objects.filter(pk=proj).get()
-    task_type = project.task_type
-    exporter = globals().get('export_{}'.format(task_type), export_generic)
-    if exporter:
-        return JsonResponse({"data": exporter(project)})
-    else:
+    try:
+        project = Project.objects.get(pk=proj)
+        exporter = Exporter(project)
+        return JsonResponse({"data": exporter.export()})
+    except Project.DoesNotExist:
         raise Http404
 
 

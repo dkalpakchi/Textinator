@@ -61,6 +61,11 @@ def to_markdown(value):
     md = md.replace('<h3>', '<h3 class="title is-6">')
     return Markup(md)
 
+def to_formatted_text(value):
+    return "<p class='pre-formatted-text'>{}</p>".format(value)
+
+def wrap_paragraph(value):
+    return "<p>{}</p>".format(value)
 
 def naturaltime(value):
     # TODO: this doesn't localize for some reason!
@@ -108,6 +113,8 @@ def environment(**options):
     env.filters['display_marker'] = display_marker_variant
     env.filters['display_relation'] = display_relation
     env.filters['to_markdown'] = to_markdown
+    env.filters['to_formatted_text'] = to_formatted_text
+    env.filters['wrap_paragraph'] = wrap_paragraph
     env.filters['bool2str'] = lambda x: str(x).lower()
     env.filters['any'] = any
     env.filters['all'] = all

@@ -437,12 +437,13 @@ class Project(CommonModel):
                 source_cls = DataSource.type2class(ds_def.source_type)
                 ds_instance = source_cls(ds_def.spec.replace('\r\n', ' ').replace('\n', ' '))
                 dp_id = log.datapoint
-                return DatapointInfo(
-                    dp_id,                                  # the point's id in the datasource
-                    ds_def.postprocess(ds_instance[dp_id]).strip(),  # a post-processed random datapoint from the chosen dataset
-                    ds_instance,                            # instantiated DataSource of a specific type
-                    ds_def                                  # DataSource
-                )
+                if ds_instance[dp_id] is not None:
+                    return DatapointInfo(
+                        dp_id,                                  # the point's id in the datasource
+                        ds_def.postprocess(ds_instance[dp_id]).strip(),  # a post-processed random datapoint from the chosen dataset
+                        ds_instance,                            # instantiated DataSource of a specific type
+                        ds_def                                  # DataSource
+                    )
             else:
                 log.is_skipped = True
                 log.save()
@@ -504,9 +505,8 @@ class Project(CommonModel):
 
                 ds, postprocess, idx = datasources[ds_ind]
 
-
         if finished_all:
-            return DatapointInfo()
+            return DatapointInfo(is_empty=True)
         else:
             # get the id of the random datapoint and the datapoint itself
             dp_id, dp = ds.get_random_datapoint()
@@ -772,8 +772,8 @@ class MarkerVariant(CommonModel):
 
     def to_minimal_json(self):
         res = self.marker.to_minimal_json()
-        res['order'] = self.order_in_unit
-        res['code'] = self.code
+        if self.order_in_unit:
+            res['order'] = self.order_in_unit
         return res
 
     def to_json(self):
@@ -1096,7 +1096,7 @@ class Label(CommonModel):
 
     @property
     def text(self):
-        if self.start and self.end:
+        if self.start is not None and self.end is not None:
             return self.context.content[self.start:self.end] if self.context else ""
         else:
             return "{}<Text>".format(self.marker.name)
@@ -1104,13 +1104,12 @@ class Label(CommonModel):
     def to_short_rel_json(self, dt_format=None):
         res = super(Label, self).to_json(dt_format=dt_format)
         res.update({
-            'marker': self.marker.marker.name,
-            'extra': self.extra,
-            'start': self.start,
-            'end': self.end,
+            'marker': self.marker.name,
             'text': self.text,
-            'user': self.batch.user.username,
         })
+        for x in ['extra', 'start', 'end']:
+            if getattr(self, x):
+                res[x] = getattr(self, x)
         return res
 
     def to_rel_json(self, dt_format=None):
@@ -1121,8 +1120,6 @@ class Label(CommonModel):
     def to_minimal_json(self, dt_format=None):
         res = self.to_short_rel_json()
         res['marker'] = self.marker.to_minimal_json()
-        res['batch'] = str(self.batch)
-        res['user'] = self.batch.user.username
         return res
 
     def to_short_json(self, dt_format=None):

@@ -196,6 +196,7 @@ class ProjectForm(LoggingMixin, forms.ModelForm):
         sent_ds = set(self.cleaned_data.pop('datasources'))
 
         instance = forms.ModelForm.save(self, commit=False)
+        instance.save()
         try:
             project = Project.objects.get(pk=instance.pk)
             existing_ds = set(project.datasources.all())
@@ -279,11 +280,11 @@ class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
     def save_related(self, request, form, formsets, change):
         super(ProjectAdmin, self).save_related(request, form, formsets, change)
 
-        print(form.mv2del)
-        print(form.rv2del)
+        if hasattr(form, 'mv2del'):
+            MarkerVariant.objects.filter(pk__in=form.mv2del).delete()
 
-        MarkerVariant.objects.filter(pk__in=form.mv2del).delete()
-        RelationVariant.objects.filter(pk__in=form.rv2del).delete()
+        if hasattr(form, 'rv2del'):
+            RelationVariant.objects.filter(pk__in=form.rv2del).delete()
 
     def changelist_view(self, request, extra_context=None):    
         if not request.user.is_superuser:
