@@ -315,17 +315,6 @@
       $('#contextRelations').parent().hide();
       $('#freeText').parent().hide();
 
-      $("[id^=item-context-]").accordion({
-        collapsible: true,
-        active: false
-      });
-
-      $("#flaggedCollapse").accordion({
-        collapsible: true,
-        active: false,
-        icons: false,
-      });
-
       $("#explorerFilters").accordion({
         collapsible: true,
         active: false,
@@ -392,6 +381,17 @@
         hideByFilters();
       });
     }
+
+    $("[id^=item-context-]").accordion({
+      collapsible: true,
+      active: false
+    });
+
+    $("#flaggedCollapse").accordion({
+      collapsible: true,
+      active: false,
+      icons: false,
+    });
 
     $('a[download]').on('click', function() {
       var $btn = $(this);

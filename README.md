@@ -1,4 +1,4 @@
-# Textinator
+![Textinator logo](https://github.com/dkalpakchi/Textinator/raw/master/docs/source/logo.png "Textinator")
 
 # Upcoming in v1.1
 - _Editor role_. Now editing is only possible via the admin interface by the system administrator. That is to ensure the quality of edits. In the next version, we present an "Editor" role allowing the promoted annotators to edit annotations themselves via regular UI.

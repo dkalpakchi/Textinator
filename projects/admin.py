@@ -249,7 +249,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('title', 'language', 'short_description', 'institution', 'supported_by',
-                'dt_publish', 'dt_finish', 'collaborators')
+                'dt_publish', 'dt_finish', 'collaborators', 'author')
         }),
         (_('task specification').title(), {
             'fields': ('task_type', 'guidelines', 'reminders', 'video_summary')

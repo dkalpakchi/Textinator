@@ -37,6 +37,7 @@ Custom restrictions for the markers can be added via the `Restrictions` pane ava
 Major modifications to out-of-the-box task types
 -------------------------------------------------
 
+Adding custom markers or relations to the out-of-the-box tasks is also possible, but current export functionality is configured to work only with the default markers/relations to give as consice JSON file as possible. Having said that, you could try to add markers/relations to your task and see if the default export functionality still works. If it doesn't, you can use the generic export by clicking on the `Export JSON (generic)` button under `Data explorer`, which is guaranteed to contain all annotations, albeit in a somewhat longer format.
 
 
 Defining markers

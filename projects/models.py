@@ -130,16 +130,22 @@ class DataSource(CommonModel):
 
     def get(self, idx):
         source_cls = DataSource.type2class(self.source_type)
-        spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
-        spec['username'] = self.owner.username
-        ds_instance = source_cls(spec)
+        if self.owner:
+            spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+            spec['username'] = self.owner.username
+            ds_instance = source_cls(spec)
+        else:
+            ds_instance = source_cls(self.spec.replace('\r\n', ' ').replace('\n', ' '))
         return ds_instance[idx]
 
     def size(self):
         source_cls = DataSource.type2class(self.source_type)
-        spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
-        spec['username'] = self.owner.username
-        ds_instance = source_cls(spec)
+        if self.owner:
+            spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+            spec['username'] = self.owner.username
+            ds_instance = source_cls(spec)
+        else:
+            ds_instance = source_cls(self.spec.replace('\r\n', ' ').replace('\n', ' '))
         return ds_instance.size()
 
     def __str__(self):
