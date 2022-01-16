@@ -125,6 +125,9 @@ def create_data():
             ],
             'user_manager': [
                 'add_user', 'change_user', 'view_user'
+            ],
+            'file_managers': [
+                'view_filebrowser'
             ]
         }
 

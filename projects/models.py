@@ -883,7 +883,7 @@ class DataAccessLog(CommonModel):
     datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     datapoint = models.CharField(_("datapoint ID"), max_length=64,
         help_text=_("As stored in the original dataset"))
-    flags = models.TextField(_("flags"), default="",
+    flags = models.TextField(_("flags"), default="", blank=True,
         help_text=_("Additional information provided by the annotator"))
     is_submitted = models.BooleanField(_("is submitted?"),
         help_text=_("Indicates whether the datapoint was successfully submitted by an annotator"))
