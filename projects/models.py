@@ -130,13 +130,16 @@ class DataSource(CommonModel):
 
     def get(self, idx):
         source_cls = DataSource.type2class(self.source_type)
-        if source_cls:
-            ds_instance = source_cls(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+        spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+        spec['username'] = self.owner.username
+        ds_instance = source_cls(spec)
         return ds_instance[idx]
 
     def size(self):
         source_cls = DataSource.type2class(self.source_type)
-        ds_instance = source_cls(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+        spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+        spec['username'] = self.owner.username
+        ds_instance = source_cls(spec)
         return ds_instance.size()
 
     def __str__(self):
@@ -442,7 +445,9 @@ class Project(CommonModel):
             if log.datasource in self.datasources.all():
                 ds_def = log.datasource
                 source_cls = DataSource.type2class(ds_def.source_type)
-                ds_instance = source_cls(ds_def.spec.replace('\r\n', ' ').replace('\n', ' '))
+                spec = json.loads(ds_def.spec.replace('\r\n', ' ').replace('\n', ' '))
+                spec['username'] = user.username
+                ds_instance = source_cls(spec)
                 dp_id = log.datapoint
                 if ds_instance[dp_id] is not None:
                     return DatapointInfo(
@@ -471,7 +476,9 @@ class Project(CommonModel):
         for source in self.datasources.all():
             source_cls = DataSource.type2class(source.source_type)
             if source_cls:
-                ds_instance = source_cls(source.spec.replace('\r\n', ' ').replace('\n', ' '))
+                spec = json.loads(source.spec.replace('\r\n', ' ').replace('\n', ' '))
+                spec['username'] = user.username
+                ds_instance = source_cls(spec)
                 datasources.append((ds_instance, source.postprocess, source.pk))
 
         # take a random data point from data
@@ -486,31 +493,35 @@ class Project(CommonModel):
         # So each datapoint can be chosen uniformly at random:
         # (|D_i| / N) * (1 / |D_i|) = 1 / N
         sizes = [datasources[i][0].size() for i in range(nds)]
-        priors = [sizes[i] / sum(sizes) for i in range(nds)]
-        priors_cumsum = [sum(priors[:i+1]) for i in range(len(priors))]
+        data_exists = sum(sizes) > 0
+        if data_exists:
+            priors = [sizes[i] / sum(sizes) for i in range(nds)]
+            priors_cumsum = [sum(priors[:i+1]) for i in range(len(priors))]
 
-        rnd = random.random()
-        ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
+            rnd = random.random()
+            ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
 
-        ds, postprocess, idx = datasources[ds_ind]
+            ds, postprocess, idx = datasources[ds_ind]
 
-        ds_ind_taboo, finished_all = set(), False
-        if len(dp_taboo[idx]) >= sizes[ds_ind]:
-            # try to select a new datasource that is not finished yet
-            while len(dp_taboo[idx]) >= sizes[ds_ind]:
-                # means this datasource is done, add it to the taboo list
-                ds_ind_taboo.add(ds_ind)
+            ds_ind_taboo, finished_all = set(), False
+            if len(dp_taboo[idx]) >= sizes[ds_ind]:
+                # try to select a new datasource that is not finished yet
+                while len(dp_taboo[idx]) >= sizes[ds_ind]:
+                    # means this datasource is done, add it to the taboo list
+                    ds_ind_taboo.add(ds_ind)
 
-                if len(ds_ind_taboo) >= nds:
-                    # means we're done
-                    finished_all = True
-                    break
+                    if len(ds_ind_taboo) >= nds:
+                        # means we're done
+                        finished_all = True
+                        break
 
-                while ds_ind in ds_ind_taboo:
-                    rnd = random.random()
-                    ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
+                    while ds_ind in ds_ind_taboo:
+                        rnd = random.random()
+                        ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
 
-                ds, postprocess, idx = datasources[ds_ind]
+                    ds, postprocess, idx = datasources[ds_ind]
+        else:
+            return DatapointInfo(no_data=True)
 
         if finished_all:
             return DatapointInfo(is_empty=True)

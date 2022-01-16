@@ -1,4 +1,4 @@
-<article id="textArea" class="{% if not dp_info.is_empty %}text {% endif %}message">
+<article id="textArea" class="{% if not dp_info.is_empty and not dp_info.no_data %}text {% endif %}message">
   <div class="message-header">
     <span class="is-group">
       <span>
@@ -17,7 +17,9 @@
   </div>
   {% set all_text_markers=project.markervariant_set.filter(anno_type='free-text').count() == project.markervariant_set.count() %}
   <div class="selector element content message-body{% if all_text_markers %} broad{% endif %}" data-s="{% if dp_info.source_id is not none and not dp_info.is_empty %}{{dp_info.source_id}}{% endif %}" data-dp="{% if dp_info.id is not none and not dp_info.is_empty %}{{dp_info.id}}{% endif %}" data-f="{{dp_info.is_empty}}">
-    {% if dp_info.is_empty %}
+    {% if dp_info.no_data %}
+      {% include 'partials/_no_data.html' %}
+    {% elif dp_info.is_empty %}
       {% include 'partials/_great_job.html' %}
     {% else %}
       {% if dp_info.source_formatting == 'md' %}

@@ -322,7 +322,7 @@ JAZZMIN_UI_TWEAKS = {
 # Textinator settings
 DATA_DIRS = [
     os.path.join(BASE_DIR, 'data'),
-    os.path.join(MEDIA_ROOT, 'uploads')
+    os.path.join(MEDIA_ROOT, 'uploads', "{username}")
 ]
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 20240

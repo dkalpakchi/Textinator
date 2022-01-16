@@ -25,7 +25,7 @@ def get_datapoint():
 def get_random_datapoint():
     idx = random.randint(0, len(texts)-1)
     return jsonify({
-        'id': idx,
+        'key': idx,
         'text': texts[idx]
     })
 
@@ -37,7 +37,7 @@ def size():
     })
 
 
-@app.route("/size", methods=['GET'])
+@app.route("/get_source_name", methods=['GET'])
 def get_source_name():
     key = request.args['key']
     return jsonify({

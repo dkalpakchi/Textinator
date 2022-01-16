@@ -1,5 +1,5 @@
 class DatapointInfo:
-    def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, is_empty=False):
+    def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, is_empty=False, no_data=False):
         self.id = dp_id
         self.text = text
         if ds:
@@ -15,6 +15,7 @@ class DatapointInfo:
             self.source_id, self.source_formatting = None, None
 
         self.is_empty = is_empty
+        self.no_data = no_data
 
     def to_json(self):
         return {

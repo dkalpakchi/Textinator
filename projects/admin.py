@@ -11,12 +11,12 @@ from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 
 import nested_admin
 from modeltranslation.admin import TranslationAdmin
-from guardian.admin import GuardedModelAdmin
+# from guardian.admin import GuardedModelAdmin
 
 from .models import *
 
 
-class CommonModelAdmin(GuardedModelAdmin):
+class CommonModelAdmin(admin.ModelAdmin):
     readonly_fields = ['dt_created', 'dt_updated']
     _list_filter = []
 
@@ -238,7 +238,7 @@ class ProjectForm(forms.ModelForm):
 
 
 @admin.register(Project)
-class ProjectAdmin(nested_admin.NestedModelAdmin, GuardedModelAdmin):
+class ProjectAdmin(nested_admin.NestedModelAdmin):
     _list_filter = [
         'institution',
         'task_type',

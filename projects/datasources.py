@@ -2,6 +2,7 @@ import os
 import requests
 import json
 import random
+import string
 from pathlib import Path
 
 from django.conf import settings
@@ -11,9 +12,14 @@ class AbsentSpecError(Exception):
     pass
 
 
-class DataSource:
+class AbstractDataSource:
     def __init__(self, spec_data):
-        self.__spec = json.loads(spec_data)
+        if type(spec_data) == str:
+            self.__spec = json.loads(spec_data)
+        elif type(spec_data) == dict:
+            self.__spec = spec_data
+        else:
+            self.__spec = json.loads(str(spec_data))
         self.__data = []
         self.__size = 0
 
@@ -61,7 +67,7 @@ class DataSource:
             return None
 
 
-class PlainTextSource(DataSource):
+class PlainTextSource(AbstractDataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
         self._required_keys = ['texts']
@@ -75,7 +81,7 @@ class PlainTextSource(DataSource):
         return idx, self[idx]
 
 
-class TextFileSource(DataSource):
+class TextFileSource(AbstractDataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
 
@@ -84,13 +90,18 @@ class TextFileSource(DataSource):
 
         self.__mapping = []
 
+        if self.get_spec('username'):
+            self.__allowed_dirs = list(map(lambda x: x.format(username=self.get_spec('username')), settings.DATA_DIRS))
+        else:
+            fmt = string.Formatter()
+            self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
+
         self.__files = []
         if self.get_spec('files'):
             for fname in self.get_spec('files'):
                 found_file = None
-                for d in settings.DATA_DIRS:
+                for d in self.__allowed_dirs:
                     cand_file = os.path.join(d, fname)
-                    print(cand_file)
                     if os.path.exists(cand_file) and os.path.isfile(cand_file):
                         found_file = cand_file
                         break
@@ -101,7 +112,7 @@ class TextFileSource(DataSource):
         if self.get_spec('folders'):
             for folder in self.get_spec('folders'):
                 found_folder = None
-                for d in settings.DATA_DIRS:
+                for d in self.__allowed_dirs:
                     cand_folder = os.path.join(d, folder)
                     if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
                         found_folder = cand_folder
@@ -114,7 +125,7 @@ class TextFileSource(DataSource):
 
         for fname in self.__files:
             found_file = None
-            for d in settings.DATA_DIRS:
+            for d in self.__allowed_dirs:
                 cand_file = os.path.join(d, fname)
                 if os.path.exists(cand_file) and os.path.isfile(cand_file):
                     found_file = cand_file
@@ -131,10 +142,11 @@ class TextFileSource(DataSource):
         return idx, self[idx]
 
     def get_source_name(self, dp_id):
-        return self.__mapping[dp_id]
+        # we know dp_id is for sure an integer
+        return self.__mapping[int(dp_id)]
 
 
-class JsonSource(DataSource):
+class JsonSource(AbstractDataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
 
@@ -144,11 +156,17 @@ class JsonSource(DataSource):
 
         self.__mapping = []
 
+        if self.get_spec('username'):
+            self.__allowed_dirs = map(lambda x: x.format(username=self.get_spec('username')), settings.DATA_DIRS)
+        else:
+            fmt = string.Formatter()
+            self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
+
         self.__files = []
         if self.get_spec('files'):
             for fname in self.get_spec('files'):
                 found_file = None
-                for d in settings.DATA_DIRS:
+                for d in self.__allowed_dirs:
                     cand_file = os.path.join(d, fname)
                     if os.path.exists(cand_file) and os.path.isfile(cand_file):
                         found_file = cand_file
@@ -160,7 +178,7 @@ class JsonSource(DataSource):
         if self.get_spec('folders'):
             for folder in self.get_spec('folders'):
                 found_folder = None
-                for d in settings.DATA_DIRS:
+                for d in self.__allowed_dirs:
                     cand_folder = os.path.join(d, folder)
                     if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
                         found_folder = cand_folder
@@ -185,11 +203,12 @@ class JsonSource(DataSource):
         return idx, self[idx]
 
     def get_source_name(self, dp_id):
-        return self.__mapping[dp_id]
+        # we know dp_id is for sure an integer
+        return self.__mapping[int(dp_id)]
 
 
 
-class TextsAPISource(DataSource):
+class TextsAPISource(AbstractDataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
         self.__endpoint = self.get_spec('endpoint').rstrip('/')
@@ -206,7 +225,7 @@ class TextsAPISource(DataSource):
         r = requests.get("{}/get_random_datapoint".format(self.__endpoint))
         if r.status_code == 200:
             data = r.json()
-            return data['id'], data['text']
+            return data['key'], data['text']
         else:
             return -1, ""
 
