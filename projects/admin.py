@@ -7,6 +7,8 @@ from django.contrib.auth.models import User, Permission
 from django_admin_json_editor import JSONEditorWidget
 from django.contrib.admin import SimpleListFilter, DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
+
 from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
 
 import nested_admin
@@ -296,6 +298,9 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
         else:
             self.list_filter = self._list_filter
         return super(ProjectAdmin, self).changelist_view(request, extra_context)
+
+    def view_on_site(self, obj):
+        return reverse('projects:detail', kwargs={'pk': obj.pk})
 
 
 @admin.register(Context)

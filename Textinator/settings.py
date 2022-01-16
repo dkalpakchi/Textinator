@@ -332,6 +332,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600 # 100MB
 TASK_TYPES = [
     ('generic', 'Generic'),
     ('qa', 'Question Answering'),
+    ('qar', 'Question Answering with Ranking'),
     ('mcqa', 'Multiple Choice Question Answering'),
     ('mcqar', 'Multiple Choice Question Answering with Ranking'),
     ('ner', 'Named Entity Recognition'),

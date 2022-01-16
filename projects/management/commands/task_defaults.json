@@ -92,6 +92,12 @@
         {"id": 1, "anno_type": "m-span"}
       ]
     },
+    "qar": {
+      "markers": [
+        {"id": 5, "anno_type": "free-text", "unit_id": 1, "order_in_unit": 1},
+        {"id": 1, "anno_type": "free-text", "unit_id": 1, "order_in_unit": 2}
+      ]
+    },
     "mcqa": {
       "markers": [
         {"id": 5, "anno_type": "free-text"},

@@ -1,7 +1,43 @@
 .. _custom_annotation_task:
 
-Creating a custom annotation task
-==================================
+[Part 5] Creating a custom annotation task
+===========================================
+
+.. contents:: Table of Contents
+  :local:
+
+Minor modifications to out-of-the-box task types
+-------------------------------------------------
+
+You can the following modifications to the out-of-the-box tasks without any ramifications to the data export:
+
+- color of markers
+- hotkeys for markers or relations
+- changing visualization type for a relation (graph or list)
+- adding custom restrictions on the number of markers (e.g., there should be at least 2 distractors per each submitted multiple choice question)
+
+The changes of color and hotkeys for the markers can be done via the project's form `Project-specific markers` tab (relevant fields are marked by a red rectangle in the screenshot below).
+
+.. image:: images/existing_marker_mod.png
+  :width: 100%
+  :alt: The screenshot of the form for customizing a marker
+
+The changes of hotkeys and visualization type for the relations can be done via the project's form `Project-specific relations` tab (relevant fields are marked by a red rectangle in the screenshot below).
+
+.. image:: images/existing_rel_mod.png
+  :width: 100%
+  :alt: The screenshot of the form for customizing a relation
+
+Custom restrictions for the markers can be added via the `Restrictions` pane available at the bottom of each `Marker's` form. For instance, the restriction of having at least 2 markers of such kind can be added as shown in the screenshot below.
+
+.. image:: images/existing_marker_restrictions.png
+  :width: 100%
+  :alt: The screenshot of the form for customizing a marker
+
+Major modifications to out-of-the-box task types
+-------------------------------------------------
+
+
 
 Defining markers
 -------------------
