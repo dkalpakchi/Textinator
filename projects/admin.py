@@ -168,9 +168,12 @@ class ProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["datasources"].queryset = DataSource.objects.filter(
-            Q(is_public=True) | Q(owner=self.user)
-        )
+        if self.user.is_superuser:
+            self.fields["datasources"].queryset = DataSource.objects.all()
+        else:
+            self.fields["datasources"].queryset = DataSource.objects.filter(
+                Q(is_public=True) | Q(owner=self.user)
+            )
 
     def clean_datasources(self):
         project_language = self.cleaned_data['language']

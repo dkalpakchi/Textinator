@@ -1,0 +1,80 @@
+{% extends "admin/base_site.html" %}
+
+<!-- LOADING -->
+{% load static i18n fb_tags fb_csrf fb_compat %}
+
+<!-- STYLESHEETS -->
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+{% endblock %}
+
+<!-- COLTYPE/BODYCLASS -->
+{% block bodyclass %}change-form filebrowser{% if query.pop %} popup{% endif %}{% endblock %}
+{% block coltype %}colM{% endblock %}
+
+<!-- BREADCRUMBS -->
+{% block breadcrumbs %}{% include "filebrowser/include/breadcrumbs.html" %}{% endblock %}
+
+<!-- CONTENT -->
+{% block content %}
+<div id="content-main">
+  <!-- POP-UP BREADCRUMBS -->
+  {% if query.pop %}
+    {% include "filebrowser/include/breadcrumbs.html" %}
+  {% endif %}
+  <form action="{% query_string '' 'p' %}" method="post">
+    {% fb_csrf_token %}
+    <div>
+      {% if form.errors %}<p class="errornote">{% trans 'Please correct the following errors.' %}</p>{% endif %}
+      <fieldset class="card card-info card-outline">
+        <div class="card-header">
+          <h4>{% trans "New Folder" %}</h4>
+        </div>
+        <div class="card-body">
+          {% if form.custom_action.errors %}
+            <div class="form-row errors">
+              {{ form.custom_action.errors }}
+            </div>
+          {% endif %}
+          <table class="table table-borderless" style="font-size: 13px;">
+            <tbody>
+              <tr>
+                <td><label class="required" for="id_dir_name">{{ form.name.label }}</label></td>
+                <td>
+                  {{ form.name }}
+                  <p class="help">
+                    {{ form.name.help_text|safe }}
+                    {% if settings_var.NORMALIZE_FILENAME or settings_var.CONVERT_FILENAME %}
+                      <br />
+                      {% if settings_var.NORMALIZE_FILENAME %}
+                        {% trans "The Name will be normalized by converting or stripping all non-standard characters." %} <br />
+                      {% endif %}
+                      {% if settings_var.CONVERT_FILENAME %}
+                        {% trans "The Name will be converted to lowercase. Spaces will be replaced with underscores." %}
+                      {% endif %}
+                    {% endif %}
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
+      <div class="card card-info card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-edit"></i>
+            Actions
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <input type="submit" value="{% trans 'Submit' %}" class="default btn btn-outline-success form-control" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -13,6 +13,10 @@
   </header>
   <div class="card-content">
     <div class="content">
+      {% if project.video_summary.url %}
+        <video src="{{project.video_summary.url}}" controls></video>
+      {% endif %}
+
       <table class="">
         <tbody>
           <tr>

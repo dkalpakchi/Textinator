@@ -37,5 +37,13 @@ def size():
     })
 
 
+@app.route("/size", methods=['GET'])
+def get_source_name():
+    key = request.args['key']
+    return jsonify({
+        'name': texts.index(key)
+    })
+
+
 if __name__ == '__main__':
     app.run(debug=True)

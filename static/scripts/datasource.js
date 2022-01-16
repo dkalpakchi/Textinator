@@ -29,7 +29,42 @@
           }
         }
       }
-    }
+    },
+    "TextFile": {
+      'type': 'object',
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    'Json': {
+      'type': 'object',
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key": "string"
+      }
+    },
   }
 
   function updateSchema(option) {

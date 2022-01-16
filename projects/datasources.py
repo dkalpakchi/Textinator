@@ -1,8 +1,11 @@
 import os
 import requests
-import glob
 import json
 import random
+from pathlib import Path
+
+from django.conf import settings
+
 
 class AbsentSpecError(Exception):
     pass
@@ -83,19 +86,45 @@ class TextFileSource(DataSource):
 
         self.__files = []
         if self.get_spec('files'):
-            self.__files.extend(self.get_spec('files'))
+            for fname in self.get_spec('files'):
+                found_file = None
+                for d in settings.DATA_DIRS:
+                    cand_file = os.path.join(d, fname)
+                    print(cand_file)
+                    if os.path.exists(cand_file) and os.path.isfile(cand_file):
+                        found_file = cand_file
+                        break
+
+                if found_file:
+                    self.__files.append(found_file)
 
         if self.get_spec('folders'):
             for folder in self.get_spec('folders'):
-                for d, subdirs, files in os.walk(folder):
-                    for f in files:
-                        self.__files.append(os.path.join(d, f))
+                found_folder = None
+                for d in settings.DATA_DIRS:
+                    cand_folder = os.path.join(d, folder)
+                    if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
+                        found_folder = cand_folder
+                        break
+
+                if found_folder:
+                    for d, subdirs, files in os.walk(found_folder):
+                        for f in files:
+                            self.__files.append(os.path.join(d, f))
 
         for fname in self.__files:
-            # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
-            with open(fname, encoding='utf-8-sig') as f:
-                self._add_datapoint(f.read())
-                self.__mapping.append(os.path.basename(fname))
+            found_file = None
+            for d in settings.DATA_DIRS:
+                cand_file = os.path.join(d, fname)
+                if os.path.exists(cand_file) and os.path.isfile(cand_file):
+                    found_file = cand_file
+                    break
+
+            if found_file:
+                # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
+                with open(found_file, encoding='utf-8-sig') as f:
+                    self._add_datapoint(f.read())
+                    self.__mapping.append(os.path.basename(fname))
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)
@@ -117,11 +146,28 @@ class JsonSource(DataSource):
 
         self.__files = []
         if self.get_spec('files'):
-            self.__files.extend(self.get_spec('files'))
+            for fname in self.get_spec('files'):
+                found_file = None
+                for d in settings.DATA_DIRS:
+                    cand_file = os.path.join(d, fname)
+                    if os.path.exists(cand_file) and os.path.isfile(cand_file):
+                        found_file = cand_file
+                        break
+
+                if found_file:
+                    self.__files.append(found_file)
 
         if self.get_spec('folders'):
             for folder in self.get_spec('folders'):
-                self.__files.extend(glob.glob(os.path.join(folder, '*.json')))
+                found_folder = None
+                for d in settings.DATA_DIRS:
+                    cand_folder = os.path.join(d, folder)
+                    if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
+                        found_folder = cand_folder
+                        break
+
+                if found_folder:
+                    self.__files.extend(Path(found_folder).rglob('*.json'))
 
         for fname in self.__files:
             d = json.load(open(fname))

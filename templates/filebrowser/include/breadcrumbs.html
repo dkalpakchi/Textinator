@@ -1,0 +1,40 @@
+{% load i18n fb_tags fb_compat %}
+
+<ul class="breadcrumb float-sm-right">
+  {% if not query.pop %}
+    <li class="breadcrumb-item">
+      <a href="{% url 'admin:index' %}">
+        <i class="fa fa-tachometer-alt"></i>
+        {% trans "Home" %}
+      </a>
+    </li>
+  {% endif %}
+
+  <li class="breadcrumb-item">
+    {% if breadcrumbs or breadcrumbs_title %}
+      <a href="{% url 'filebrowser:fb_browse' %}{% query_string "" "q,dir,filename,p" %}">{% trans 'FileBrowser' %}</a> 
+    {% else %}
+      {% trans 'FileBrowser' %}
+    {% endif %}
+  </li>
+
+  {% for item in breadcrumbs %}
+    <li class="breadcrumb-item">
+      {% if not forloop.last %}
+        <a href="{% url 'filebrowser:fb_browse' %}{% query_string "" "q,dir,filename,p" %}&amp;dir={{ item.1|urlencode }}">{{ item.0 }}</a>
+      {% else %}
+        {% if breadcrumbs_title %}
+          <a href="{% url 'filebrowser:fb_browse' %}{% query_string "" "q,dir,filename,p" %}&amp;dir={{ item.1|urlencode }}">{{ item.0 }}</a> 
+        {% else %}
+          {{ item.0 }} 
+        {% endif %}
+      {% endif %}
+    </li>
+  {% endfor %}
+
+  {% if breadcrumbs_title %}
+    <li class="breadcrumb-item">
+      {{ breadcrumbs_title }}
+    </li>
+  {% endif %}
+</ul>

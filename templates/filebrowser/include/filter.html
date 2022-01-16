@@ -1,0 +1,21 @@
+{% load i18n fb_tags %}
+
+<div class="form-group">
+  <select class="form-control search-filter" style="width: 100%;" tabindex="-1" aria-hidden="true" name="filter_date">
+    <option {% if not query.filter_date %}selected {% endif %} value="">{% trans "Any date" %}</option>
+    <option {% if query.filter_date == "today" %}selected {% endif %}value="today">{% trans "Today" %}</option>
+    <option {% if query.filter_date == "past7days" %}selected {% endif %}value="past7days">{% trans "Past 7 days" %}</option>
+    <option {% if query.filter_date == "thismonth" %}selected {% endif %}value="thismonth">{% trans "This Month" %}</option>
+    <option {% if query.filter_date == "thisyear" %}selected {% endif %}value="thisyear">{% trans "This year" %}</option>
+  </select>
+</div>
+
+<div class="form-group">
+  <select class="form-control search-filter" style="width: 100%;" tabindex="-1" aria-hidden="true" name="filter_type">
+    <option {% if not query.filter_type %}selected {% endif %}value="">{% trans "All types" %}</option>
+    <option {% if query.filter_type == 'Folder' %}selected {% endif %}value="Folder">{% trans "Today" %}</option>
+    {% for extension in settings_var.EXTENSIONS %}
+      <option {% if query.filter_type == extension %}selected {% endif %}value="{{ extension }}">{% trans extension %}</option>
+    {% endfor %}
+  </select>
+</div>

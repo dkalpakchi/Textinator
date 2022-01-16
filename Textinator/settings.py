@@ -26,9 +26,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 20240
-DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600 # 100 MB
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -238,44 +235,6 @@ STATICFILES_FINDERS = [
     'sass_processor.finders.CssFinder',
 ]
 
-
-# The types of tasks allowed inside the Textinator project
-TASK_TYPES = [
-    ('generic', 'Generic'),
-    ('qa', 'Question Answering'),
-    ('mcqa', 'Multiple Choice Question Answering'),
-    ('mcqar', 'Multiple Choice Question Answering with Ranking'),
-    ('ner', 'Named Entity Recognition'),
-    ('pronr', 'Pronoun Resolution'),
-    ('corr', 'Coreference Resolution'),
-    ('mt', 'Machine Translation')
-]
-
-DATASOURCE_TYPES = [
-    ('PlainText', 'Plain text'),
-    ('TextFile', 'Plain text file(s)'),
-    ('Json', 'JSON file(s)'),
-    ('TextsAPI', 'Texts API')
-]
-
-FORMATTING_TYPES = [
-    ('md', 'Markdown'),
-    ('ft', 'Formatted text'),
-    ('pt', 'Plain text')
-]
-
-ANNOTATION_TYPES = [
-    ('m-span', 'Marker (text spans)'),
-    ('m-text', 'Marker (whole text)'),
-    ('free-text', 'Short free-text input'),
-    ('lfree-text', 'Long free-text input'),
-    ('integer', 'Integer'),
-    ('float', 'Floating-point number'),
-    ('range', 'Range')
-]
-
-LOGIN_URL = '/textinator/accounts/login/'
-
 TINYMCE_DEFAULT_CONFIG = {
     'height': 400,
     'width': '90%',
@@ -302,7 +261,7 @@ TINYMCE_DEFAULT_CONFIG = {
 #     'file_browser_callback': 'customFileBrowser'
 # }
 
-FILEBROWSER_MAX_UPLOAD_SIZE = 20971520
+FILEBROWSER_MAX_UPLOAD_SIZE = 20971520 # 20MB
 
 
 pdfmetrics.registerFont(TTFont('ROBOTECH GP',
@@ -359,3 +318,49 @@ JAZZMIN_UI_TWEAKS = {
     },
     "actions_sticky_top": True
 }
+
+# Textinator settings
+DATA_DIRS = [
+    os.path.join(BASE_DIR, 'data'),
+    os.path.join(MEDIA_ROOT, 'uploads')
+]
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 20240
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600 # 100MB
+
+# The types of tasks allowed inside the Textinator project
+TASK_TYPES = [
+    ('generic', 'Generic'),
+    ('qa', 'Question Answering'),
+    ('mcqa', 'Multiple Choice Question Answering'),
+    ('mcqar', 'Multiple Choice Question Answering with Ranking'),
+    ('ner', 'Named Entity Recognition'),
+    ('pronr', 'Pronoun Resolution'),
+    ('corr', 'Coreference Resolution'),
+    ('mt', 'Machine Translation')
+]
+
+DATASOURCE_TYPES = [
+    ('PlainText', 'Plain text'),
+    ('TextFile', 'Plain text file(s)'),
+    ('Json', 'JSON file(s)'),
+    ('TextsAPI', 'Texts API')
+]
+
+FORMATTING_TYPES = [
+    ('md', 'Markdown'),
+    ('ft', 'Formatted text'),
+    ('pt', 'Plain text')
+]
+
+ANNOTATION_TYPES = [
+    ('m-span', 'Marker (text spans)'),
+    ('m-text', 'Marker (whole text)'),
+    ('free-text', 'Short free-text input'),
+    ('lfree-text', 'Long free-text input'),
+    ('integer', 'Integer'),
+    ('float', 'Floating-point number'),
+    ('range', 'Range')
+]
+
+LOGIN_URL = '/textinator/accounts/login/'
