@@ -17,7 +17,9 @@
     <div>
       <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
       <a data-url="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
-      <a data-url="{{ url('projects:data_exporter_generic', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON (generic)</a>
+      {% if project.task_type != "generic" %}
+        <a data-url="{{ url('projects:data_exporter_generic', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON (generic)</a>
+      {% endif %}
       {% if project.author == user or project.shared_with(user) %}
         <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-warning">Generate a PDF time report</a>
       {% endif %}

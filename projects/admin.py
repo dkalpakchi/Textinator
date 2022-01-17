@@ -51,6 +51,7 @@ class MarkerContextMenuItemInline(CommonNestedStackedInline):
     verbose_name = _("context menu item")
     verbose_name_plural = _("context menu items")
     extra = 0
+    exclude = ('verbose_admin',)
 
 
 class MarkerVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
@@ -459,7 +460,20 @@ class DataAccessLogAdmin(CommonModelAdmin):
 
 @admin.register(Marker)
 class MarkerAdmin(CommonModelAdmin):
-    exclude = ('suggestion_endpoint',)
+    exclude = ('suggestion_endpoint', 'code')
+
+    def get_form(self, request, *args, **kwargs):
+        form = super(MarkerAdmin, self).get_form(request, *args, **kwargs)
+        
+        if request.user.is_superuser:
+            self.exclude = ['suggestion_endpoint']
+        return form
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if request.user.is_superuser:
+            return readonly_fields + ['code']
+        return readonly_fields
     # def has_change_permission(request, obj=None)
     #     # Should return True if editing obj is permitted, False otherwise.
     #     # If obj is None, should return True or False to indicate whether editing of objects of this type is permitted in general 
@@ -533,7 +547,7 @@ class TaskTypeSpecAdmin(CommonModelAdmin):
     form = TaskTypeConfigForm
 
 admin.site.register(Permission)
-admin.site.register(MarkerContextMenuItem)
+# admin.site.register(MarkerContextMenuItem)
 
 admin.site.site_header = 'Textinator Admin'
 admin.site.site_title = 'Textinator Admin'

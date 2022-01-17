@@ -31,7 +31,9 @@
           <tr>
             <td><i class="fa fa-calendar-day"></i></td>
             <td>
-              {% if project.dt_finish < now %}
+              {% if project.dt_publish > now %}
+                <time datetime="{{project.dt_publish}}">{{_("to be published")|capitalize}} {{project.dt_publish|naturaltime}}</time>
+              {% elif project.dt_finish < now %}
                 <time datetime="{{project.dt_finish}}">{{_("expired")|capitalize}} {{project.dt_finish|naturaltime}}</time>
               {% else %}
                 <time datetime="{{project.dt_finish}}">{{_("finishes")|capitalize}} {{project.dt_finish|naturaltime}}</time>

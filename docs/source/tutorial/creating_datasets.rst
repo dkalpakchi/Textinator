@@ -17,15 +17,15 @@ of your user groups. If it doesn't, please contact your system administrator to 
 
 After you have been added to the `project_managers` group, you can access the data source creation form in multiple ways:
 
-- via `Quick links` pane on the `Welcome` page.
+via `Quick links` pane on the `Welcome` page.
 	.. image:: images/add_data_source1.png
 	  :width: 100%
 	  :alt: The screenshot of the first method
-- via `Admin panel dashboard`
+via `Admin panel dashboard`
 	.. image:: images/add_data_source2.png
 	  :width: 100%
 	  :alt: The screenshot of the second method
-- via `Admin panel/Data sources`
+via `Admin panel/Data sources`
 	.. image:: images/add_data_source3.png
 	  :width: 100%
 	  :alt: The screenshot of the third method
@@ -106,26 +106,26 @@ What server is compatible with Texts API?
 
 Texts API is pretty simple and requires your server to support 4 GET requests:
 
-- /get_datapoint -- takes 'key' as a GET argument and returns the following JSON object 
+/get_datapoint -- takes 'key' as a GET argument and returns the following JSON object 
 	.. code-block:: json
 
 	    {
 	        "text": "text-for-the-given-key"
 	    }
-- /get_random_datapoint -- returns the following JSON object 
+/get_random_datapoint -- returns the following JSON object 
 	.. code-block:: json
 
 	    {
         	"key": "key-for-the-random-datapoint",
         	"text": "text-for-the-key-above"
 	    }
-- /size -- returns the following JSON object
+/size -- returns the following JSON object
 	.. code-block:: json
 
 	    {
         	"size": "size-of-your-dataset"
 	    }
-- /get_source_name -- takes 'key' as a GET argument and returns the name of the source for the datapoint (e.g., a file name)
+/get_source_name -- takes 'key' as a GET argument and returns the name of the source for the datapoint (e.g., a file name)
 	.. code-block:: json
 
 	    {
@@ -133,7 +133,7 @@ Texts API is pretty simple and requires your server to support 4 GET requests:
 	    }
 
 
-A simple example Flask server is provided in the *example_texts_api* folder in the GitHub repository.
+A simple example Flask server is provided in the `example_texts_api folder in the GitHub repository <https://github.com/dkalpakchi/Textinator/tree/master/example_texts_api>`_.
 
 What if I really want to upload data via UI?
 ---------------------------------------------
@@ -143,8 +143,7 @@ What if I really want to upload data via UI?
 Currently there is no *recommended* way of uploading your files into Textinator. However, if you really insist, there is a temporary
 workaround that has multiple limitations (introduced to discourage its usage):
 
-1. Your data will be accessible by **all** other staff members of Textinator. They will even be able to delete it. So this solution
-   should only be used either if you are the only user of Textinator or there is an honor code in place.
+1. Your data will be accessible by **all** other staff members of Textinator. So this solution should only be used either if you are the only user of Textinator or there is an honor code in place.
 2. The upload size is limited to 20MB per file.
 3. You are still limited to either plain-text files or JSON files (that can contain plain text, preformatted text or markdown though).
 

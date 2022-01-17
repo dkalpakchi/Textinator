@@ -229,14 +229,14 @@ class Marker(CommonModel):
     def to_minimal_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
         res.update({
-            'name': self.name_en
+            'name': self.__dict__['name']
         })
         return res
 
     def to_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
         res.update({
-            'name': self.name_en,
+            'name': self.__dict__['name'],
             'color': self.color,
             'code': self.code
         })
@@ -380,7 +380,7 @@ class Project(CommonModel):
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("author"))
     datasources = models.ManyToManyField(DataSource, verbose_name=_("data sources"),
         help_text=_("All data sources must be of the same language as the project"))
-    is_open = models.BooleanField(_("should the project be public?"), default=False)
+    is_open = models.BooleanField(_("should the project be public?"), default=True)
     is_peer_reviewed = models.BooleanField(_("should the annotations be peer reviewed?"), default=False)
     allow_selecting_labels = models.BooleanField(_("should selecting the labels be allowed?"), default=False)
     disable_submitted_labels = models.BooleanField(_("should submitted labels be disabled?"), default=True)

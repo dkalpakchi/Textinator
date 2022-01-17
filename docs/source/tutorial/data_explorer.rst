@@ -35,3 +35,9 @@ If you have done any customization to an out-of-the-box task, we recommend using
 
 PDF time report
 ------------------------
+
+Textinator is also capable of generating a per-month time report per annotator. Note that this report can **NOT** be a ground for payments, since Textinator provides only an *estimate* of the spent time. For instance, the time needed for breaks or potential research connected to the annotation process should also be counted, but is not accounted for in Textinator's report. The report should be mostly used as a sanity check and if the reported numbers and the real numbers differ by a substantial amount, it's just a flag to the project manager that this should be investigated further.
+
+.. image:: images/data_explorer_time_report.png
+  :width: 100%
+  :alt: The screenshot of the PDF time report
