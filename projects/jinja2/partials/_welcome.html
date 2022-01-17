@@ -5,19 +5,19 @@
     <div class="content">
       {{ _("Thank you for choosing Textinator as your annotation tool! We've got a bunch of resources to get you started:") }}
       <ul>
-        <li>{{ _("if you prefer reading, here is the {}").format('<a href="">{}</a>'.format(_("documentation"))|safe) }} </li>
-        <li>{{ _("if you prefer watching, here is the {}").format('<a href="">{}</a>'.format(_("admin guide on YouTube"))|safe ) }}</li>
+        <li>{{ _("if you prefer reading, here is the {}").format('<a href="https://textinator.readthedocs.io/en/latest/">{}</a>'.format(_("documentation"))|safe) }} </li>
+        <li>{{ _("if you prefer watching, here is the {}").format('<a href="https://www.youtube.com/channel/UCUVbyJJFIUwfl129FGhPGJw">{}</a>'.format(_("admin guide on YouTube"))|safe ) }}</li>
         <li>{{ _("if you prefer exploring on your own, just go for it!") }} <i class="far fa-smile-wink"></i></li>
       </ul>
-      {{ _("On top of that, if you want to help developing Textinator further (which we would be immensely happy about!), here is the {}").format('<a href="">{}</a>'.format(_("our GitHub repository"))|safe) }}.
+      {{ _("On top of that, if you want to help developing Textinator further (which we would be immensely happy about!), here is the {}").format('<a href="https://github.com/dkalpakchi/Textinator">{}</a>'.format(_("our GitHub repository"))|safe) }}.
     </div>
     {% include 'partials/_text_language_switcher.html' %}
   {% elif user.is_staff %}
     <div class="content">
       {{ _("Thank you for choosing Textinator as your annotation tool! We've got a bunch of resources to get you started:") }}
       <ul>
-        <li>{{ _("if you prefer reading, here is the {}").format('<a href="">{}</a>'.format(_("documentation"))|safe) }}</li>
-        <li>{{ _("if you prefer watching, here is the {}").format('<a href="">{}</a>'.format(_("project manager guide on YouTube"))|safe) }} </li>
+        <li>{{ _("if you prefer reading, here is the {}").format('<a href="https://textinator.readthedocs.io/en/latest/">{}</a>'.format(_("documentation"))|safe) }}</li>
+        <li>{{ _("if you prefer watching, here is the {}").format('<a href="https://www.youtube.com/channel/UCUVbyJJFIUwfl129FGhPGJw">{}</a>'.format(_("project manager guide on YouTube"))|safe) }} </li>
         <li>{{ _("if you prefer exploring on your own, just go for it!") }} <i class="far fa-smile-wink"></i></li>
       </ul>
     </div>
@@ -36,7 +36,7 @@
       <p>
         {{ _("If you are here to help <u>annotating</u>, here are some tips:") }}
         <ul>
-          <li>{{ _("If you are unfamiliar with Textinator or with NLP annotations in general, we have prepared {} to help you in starting this journey").format('<a href="">{}</a>'.format(_("a couple of short YouTube videos"))|safe) }} <i class="far fa-smile"></i>.</li>
+          <li>{{ _("If you are unfamiliar with Textinator or with NLP annotations in general, we have prepared {} to help you in starting this journey").format('<a href="https://www.youtube.com/channel/UCUVbyJJFIUwfl129FGhPGJw">{}</a>'.format(_("a couple of short YouTube videos"))|safe) }} <i class="far fa-smile"></i>.</li>
           <li>{{ _("If you have signed up to take part in a specific annotation effort, please click on the {} in the menu above. If you don't see your project there, please contact your project manager.").format('<a href="{}?n=p">{}</a>'.format(
             url('projects:index'), _('"My Tasks" tab'))|safe) }}</li>
           <li>{{ _("If you have signed up out of curiosity and willingness to help, huge thank you! We are very grateful and honored to have you on board! Please click on the {} and see if we currently have any annotation efforts, open to general public.").format('<a href="{}?n=o">{}</a>'.format(url('projects:index'), _('"Open Tasks" tab'))|safe)}} {{ _("We urge you to read the instructions carefully to check that you understand them and are indeed eligible to take part. Please contact the project responsible if any questions arise.") }}</li>
