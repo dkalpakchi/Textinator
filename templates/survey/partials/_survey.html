@@ -1,0 +1,13 @@
+{% load humanize %}
+
+<div class="card mb-3">
+  <header class="card-header">
+    <p class="card-header-title">
+      {{survey.name}}
+      ({{ _("expires") }} {{survey.expire_date|naturalday}})
+    </p>
+    <button class="card-header-icon" aria-label="more options">
+      <a href="{{url}}" class="button is-{% if action == 'continue' %}success{% else %}info{% endif %}">{{action|capfirst}}</a>
+    </button>
+  </header>
+</div>

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-01-13 14:05+0000\n"
-"PO-Revision-Date: 2022-01-13 14:14+0000\n"
+"POT-Creation-Date: 2022-01-17 13:35+0000\n"
+"PO-Revision-Date: 2022-01-17 13:44+0000\n"
 "Last-Translator:   <mail@textinator.se>\n"
 "Language-Team: sv <LL@li.org>\n"
 "Language: sv\n"
@@ -19,163 +19,188 @@ msgstr ""
 "Generated-By: Babel 2.9.1\n"
 "X-Translated-Using: django-rosetta 0.9.8\n"
 
-#: projects/admin.py:42
+#: Textinator/settings.py:285
+msgid "Back to the site"
+msgstr ""
+
+#: projects/admin.py:45
 msgid "restriction"
 msgstr "begränsning"
 
-#: projects/admin.py:43
+#: projects/admin.py:46
 msgid "restrictions"
 msgstr "begränsningar"
 
-#: projects/admin.py:48
+#: projects/admin.py:51
 msgid "context menu item"
 msgstr "snabbmenyalternativ"
 
-#: projects/admin.py:49
+#: projects/admin.py:52
 msgid "context menu items"
 msgstr "snabbmenyalternativ"
 
-#: projects/admin.py:80
+#: projects/admin.py:84
 msgid "project-specific marker"
 msgstr "projektspecifik markör"
 
-#: projects/admin.py:81 projects/models.py:293
+#: projects/admin.py:85 projects/models.py:377
 msgid "project-specific markers"
 msgstr "projektspecifika markörer"
 
-#: projects/admin.py:96
+#: projects/admin.py:101
 msgid "participant"
 msgstr "deltagare"
 
-#: projects/admin.py:97 projects/models.py:291
+#: projects/admin.py:102 projects/models.py:375
 msgid "participants"
 msgstr "deltagare"
 
-#: projects/admin.py:134
+#: projects/admin.py:139
 msgid "project-specific relation"
 msgstr "projektspecifik relation"
 
-#: projects/admin.py:135 projects/models.py:295
+#: projects/admin.py:140 projects/models.py:379
 msgid "project-specific relations"
 msgstr "projektspecifika relationer"
 
-#: projects/admin.py:178 projects/models.py:298
+#: projects/admin.py:187 projects/models.py:382
 msgid "All data sources must be of the same language as the project"
 msgstr ""
 
-#: projects/models.py:27
+#: projects/admin.py:255
+msgid "task specification"
+msgstr "uppgiftsspecifikation "
+
+#: projects/admin.py:258
+msgid "data"
+msgstr ""
+
+#: projects/admin.py:261 projects/jinja2/partials/_navbar.html:67
+#: users/jinja2/users/settings.html:10
+msgid "settings"
+msgstr "inställningar"
+
+#: projects/admin.py:265
+msgid "administration"
+msgstr "administrering"
+
+#: projects/models.py:31
 msgid "Created at"
 msgstr "Skapelsedatum"
 
-#: projects/models.py:28 projects/models.py:30
+#: projects/models.py:32 projects/models.py:34
 msgid "Autofilled"
 msgstr "Autofylld"
 
-#: projects/models.py:29
+#: projects/models.py:33
 msgid "Updated at"
 msgstr "uppdateringsdatum"
 
-#: projects/models.py:48
+#: projects/models.py:58
 msgid "post-processing method"
 msgstr "efterbearbetningsmetod"
 
-#: projects/models.py:49 projects/models.py:76
+#: projects/models.py:59 projects/models.py:110
 msgid "post-processing methods"
 msgstr "efterbearbetningsmetoder"
 
-#: projects/models.py:51 projects/models.py:116 projects/models.py:145
-#: projects/models.py:216
+#: projects/models.py:61 projects/models.py:166 projects/models.py:196
+#: projects/models.py:285
 msgid "name"
 msgstr "namn"
 
-#: projects/models.py:52
+#: projects/models.py:62
 msgid "Verbose name"
 msgstr ""
 
-#: projects/models.py:53
+#: projects/models.py:63
 msgid "helper function name"
 msgstr "namn på hjälpfunktion"
 
-#: projects/models.py:54
+#: projects/models.py:64
 msgid "Name as specified in `projects/helpers.py`"
 msgstr "Namn som specifierat i `projects/helpers.py`"
 
-#: projects/models.py:63
+#: projects/models.py:97
 msgid "data source"
 msgstr "datakälla"
 
-#: projects/models.py:64 projects/models.py:297
+#: projects/models.py:98 projects/models.py:381
 msgid "data sources"
 msgstr "datakällor"
 
-#: projects/models.py:71
+#: projects/models.py:105
 msgid "dataset name"
 msgstr "namn på datamängd"
 
-#: projects/models.py:72
+#: projects/models.py:106
 msgid "dataset type"
 msgstr "typ av datamängd"
 
-#: projects/models.py:73
+#: projects/models.py:107
 msgid "specification"
 msgstr "specifikation"
 
-#: projects/models.py:74 projects/models.py:868
+#: projects/models.py:108 projects/models.py:1129
 msgid "in a JSON format"
 msgstr "i JSON-formattet"
 
-#: projects/models.py:77 projects/models.py:313
+#: projects/models.py:111 projects/models.py:397
 msgid "language"
 msgstr "språk"
 
-#: projects/models.py:78
+#: projects/models.py:112
 msgid "Language of this data source"
 msgstr ""
 
-#: projects/models.py:80
+#: projects/models.py:114
 msgid "formatting"
 msgstr ""
 
-#: projects/models.py:81
+#: projects/models.py:115
 msgid "text formating of the data source"
 msgstr ""
 
-#: projects/models.py:82
+#: projects/models.py:116
 msgid "is public?"
 msgstr "är offentlig?"
 
-#: projects/models.py:83
+#: projects/models.py:117
 msgid "Whether to make data source available to other Textinator users"
 msgstr ""
 
-#: projects/models.py:113 projects/models.py:654
+#: projects/models.py:118
+msgid "owner"
+msgstr ""
+
+#: projects/models.py:163 projects/models.py:830
 msgid "marker action"
 msgstr "marköråtgärd"
 
-#: projects/models.py:114 projects/models.py:531
+#: projects/models.py:164 projects/models.py:670
 msgid "marker actions"
 msgstr "marköråtgärder"
 
-#: projects/models.py:117
+#: projects/models.py:167
 msgid "description"
 msgstr "beskrivning"
 
-#: projects/models.py:118
+#: projects/models.py:168
 msgid "file name"
 msgstr "filnamn"
 
-#: projects/models.py:119
+#: projects/models.py:169
 msgid ""
 "a name of the JS plugin file in the `/static/scripts/labeler_plugins` "
 "directory"
 msgstr ""
 "namnet på filen med JS-plugin i mappen `/static/scripts/labeler_plugins`"
 
-#: projects/models.py:120
+#: projects/models.py:170
 msgid "type of admin filter"
 msgstr "typ av adminfilter"
 
-#: projects/models.py:121
+#: projects/models.py:171
 msgid ""
 "\n"
 "            Specifies the filter type in the data explorer interface (one of 'boolean', 'range').\n"
@@ -183,146 +208,146 @@ msgid ""
 "            "
 msgstr ""
 
-#: projects/models.py:146
+#: projects/models.py:197
 msgid "The display name of the marker (max 50 characters)"
 msgstr ""
 
-#: projects/models.py:147
+#: projects/models.py:198
 msgid "code"
 msgstr "kod"
 
-#: projects/models.py:148
+#: projects/models.py:199
 msgid "Marker's nickname used internally"
 msgstr "Markörs smeknamn som används internt"
 
-#: projects/models.py:149 projects/models.py:544
+#: projects/models.py:200 projects/models.py:683
 msgid "color"
 msgstr "färg"
 
-#: projects/models.py:149
+#: projects/models.py:200
 msgid "Color for the annotated text span"
 msgstr ""
 
-#: projects/models.py:150 projects/models.py:223 projects/models.py:546
-#: projects/models.py:740
+#: projects/models.py:201 projects/models.py:288 projects/models.py:685
+#: projects/models.py:942
 msgid "keyboard shortcut"
 msgstr "tangentbordsgenväg"
 
-#: projects/models.py:151
+#: projects/models.py:202
 msgid "Keyboard shortcut for annotating a piece of text with this marker"
 msgstr ""
 
-#: projects/models.py:153
+#: projects/models.py:204
 msgid "Endpoint for the Suggestions API"
 msgstr ""
 
-#: projects/models.py:156 projects/models.py:655
+#: projects/models.py:207 projects/models.py:831
 msgid "marker"
 msgstr "markör"
 
 #: projects/jinja2/partials/components/areas/markers.html:4
-#: projects/models.py:157
+#: projects/models.py:208
 msgid "markers"
 msgstr "markörer"
 
-#: projects/models.py:197
+#: projects/models.py:255
 msgid "marker pair"
 msgstr "markörpar"
 
-#: projects/models.py:198 projects/models.py:217
+#: projects/models.py:256 projects/models.py:286
 msgid "marker pairs"
 msgstr "markörpar"
 
-#: projects/models.py:209
+#: projects/models.py:272
 msgid "relation"
 msgstr "relation"
 
 #: projects/jinja2/partials/components/areas/relations.html:3
-#: projects/models.py:210
+#: projects/models.py:273
 msgid "relations"
 msgstr "relationer"
 
-#: projects/models.py:218
-msgid "direction"
-msgstr "riktning"
-
-#: projects/models.py:219
+#: projects/models.py:280
 msgid "Directed from the first to the second"
 msgstr "Inriktad från den första till den andra"
 
-#: projects/models.py:220
+#: projects/models.py:281
 msgid "Directed from the second to the first"
 msgstr "Inriktad från den andra till den första"
 
-#: projects/models.py:221
+#: projects/models.py:282
 msgid "Bi-directional"
 msgstr "Dubbelriktad"
 
-#: projects/models.py:224
+#: projects/models.py:287
+msgid "direction"
+msgstr "riktning"
+
+#: projects/models.py:289
 msgid "Keyboard shortcut for marking a piece of text with this relation"
 msgstr ""
 
-#: projects/models.py:225 projects/models.py:742
+#: projects/models.py:290 projects/models.py:944
 msgid "graphical representation type"
 msgstr ""
 
-#: projects/models.py:226 projects/models.py:743
+#: projects/models.py:291 projects/models.py:945
 msgid "Graph"
 msgstr "Graf"
 
-#: projects/models.py:226 projects/models.py:743
+#: projects/models.py:291 projects/models.py:945
 msgid "List"
 msgstr "Lista"
 
-#: projects/models.py:227
+#: projects/models.py:292
 msgid "How should the relation be visualized?"
 msgstr "Hur ska relationen visualiseras?"
 
-#: projects/models.py:248 projects/models.py:249
+#: projects/models.py:329 projects/models.py:330
 msgid "task type specification"
 msgstr "uppgiftstypspecifikation "
 
-#: projects/models.py:250 projects/models.py:284
+#: projects/models.py:331 projects/models.py:368
 msgid "type of the annotation task"
 msgstr "typ av annoteringsuppgift"
 
-#: projects/models.py:251 projects/models.py:660
+#: projects/models.py:332 projects/models.py:836
 msgid "JSON configuration"
 msgstr "JSON-konfiguration"
 
-#: projects/models.py:260
+#: projects/models.py:344
 msgid "project"
 msgstr "projekt"
 
-#: projects/models.py:261
+#: projects/models.py:345
 msgid "projects"
 msgstr "projekt"
 
-#: projects/models.py:268
+#: projects/models.py:352
 msgid "title"
 msgstr "titel"
 
-#: projects/models.py:269
+#: projects/models.py:353
 msgid "short description"
 msgstr "kort beskrivning"
 
-#: projects/models.py:270
+#: projects/models.py:354
 msgid "Will be displayed on the project card"
 msgstr "Kommer att visas på projektkortet"
 
-#: projects/models.py:271
+#: projects/models.py:355
 msgid "institution"
 msgstr "institution"
 
-#: projects/models.py:272
+#: projects/models.py:356
 msgid "Institution responsible for the project"
 msgstr "Institution som ansvarar för projektet"
 
-#: projects/models.py:273
+#: projects/models.py:357
 msgid "supported by"
 msgstr "stöds av"
 
-#: projects/models.py:274
+#: projects/models.py:358
 msgid ""
 "The name of the organization supporting the project financially (if "
 "applicable)"
@@ -330,29 +355,29 @@ msgstr ""
 "Namnet på den organisation som stöder projektet ekonomiskt (om tillämpligt) "
 
 #: projects/jinja2/partials/components/areas/reminders.html:4
-#: projects/models.py:275
+#: projects/models.py:359
 msgid "guidelines"
 msgstr "riktlinjer"
 
-#: projects/models.py:276
+#: projects/models.py:360
 msgid "Guidelines for the annotation task"
 msgstr "Riktlinjer för annoteringsuppgift"
 
 #: projects/jinja2/partials/components/areas/reminders.html:3
-#: projects/models.py:277
+#: projects/models.py:361
 msgid "reminders"
 msgstr "påminnelser"
 
-#: projects/models.py:278
+#: projects/models.py:362
 msgid ""
 "Reminders for essential parts of guidelines (keep them short and on point)"
 msgstr ""
 
-#: projects/models.py:279
+#: projects/models.py:363
 msgid "temporary message"
 msgstr "tillfälligt meddelande"
 
-#: projects/models.py:280
+#: projects/models.py:364
 msgid ""
 "A temporary message for urgent communication with annotators (e.g., about "
 "maintenance work)"
@@ -360,133 +385,132 @@ msgstr ""
 "Ett tillfälligt meddelande för snabb kommunikation med annoterare (t.ex. om "
 "underhållsarbete)"
 
-#: projects/models.py:281
+#: projects/models.py:365
 msgid "should data be sampled with replacement?"
 msgstr ""
 
-#: projects/models.py:282
-msgid "should disjoint annotation be allowed?"
+#: projects/models.py:366
+msgid "should each annotator work with their own part of data?"
 msgstr ""
 
-#: projects/models.py:283
-msgid "should dataset identifiers be shown?"
+#: projects/models.py:367
+msgid "should data source identifiers be shown?"
 msgstr ""
 
-#: projects/models.py:285
-msgid "to be published at"
+#: projects/models.py:369
+msgid "publishing date"
 msgstr "publiceringsdatum"
 
-#: projects/jinja2/partials/components/modals/guidelines.html:40
-#: projects/models.py:286
-msgid "to be finished at"
-msgstr "slutdatum"
+#: projects/models.py:370
+msgid "expiration date"
+msgstr "utgångsdatum"
 
-#: projects/models.py:287
+#: projects/models.py:371
 msgid "updated at"
 msgstr "uppdateringsdatum"
 
-#: projects/models.py:289
+#: projects/models.py:373
 msgid "collaborators"
 msgstr "medarbetare"
 
-#: projects/models.py:296
+#: projects/models.py:380
 msgid "author"
 msgstr "författare"
 
-#: projects/models.py:299
+#: projects/models.py:383
 msgid "should the project be public?"
 msgstr "ska projektet publiceras?"
 
-#: projects/models.py:300
+#: projects/models.py:384
 msgid "should the annotations be peer reviewed?"
 msgstr ""
 
-#: projects/models.py:301
+#: projects/models.py:385
 msgid "should selecting the labels be allowed?"
 msgstr "ska det vara tillåtet att trycka på etiketter?"
 
-#: projects/models.py:302
+#: projects/models.py:386
 msgid "should submitted labels be disabled?"
 msgstr ""
 
-#: projects/models.py:303
+#: projects/models.py:387
 msgid "maximal number of markers per input"
 msgstr "maximalt antal markörer per inmatning"
 
-#: projects/models.py:304
+#: projects/models.py:388
 msgid "round length"
 msgstr ""
 
-#: projects/models.py:305
+#: projects/models.py:389
 msgid "The number of text snippets consituting one round of the game"
 msgstr ""
 
-#: projects/models.py:306
+#: projects/models.py:390
 msgid "points scope"
 msgstr ""
 
-#: projects/models.py:308
+#: projects/models.py:392
 msgid "The scope of the submitted task"
 msgstr ""
 
-#: projects/models.py:309
+#: projects/models.py:393
 msgid "points' unit"
 msgstr ""
 
-#: projects/models.py:310
+#: projects/models.py:394
 msgid "Number of points per submitted task"
 msgstr ""
 
-#: projects/models.py:311
+#: projects/models.py:395
 msgid "should the project include intro tour?"
 msgstr ""
 
-#: projects/models.py:312
+#: projects/models.py:396
 msgid "WARNING: Intro tours are currently in beta"
 msgstr ""
 
-#: projects/models.py:314
+#: projects/models.py:398
 msgid "Language of this project"
 msgstr ""
 
-#: projects/models.py:317
+#: projects/models.py:401
 msgid "A thumbnail of your project (ignored if not provided)"
 msgstr ""
 
-#: projects/models.py:318
+#: projects/models.py:402
 msgid "summary video"
 msgstr "sammanfattningsvideo"
 
-#: projects/models.py:319
+#: projects/models.py:403
 msgid ""
 "Video introducing people to the annotation task at hand (if applicable)"
 msgstr ""
 
-#: projects/models.py:321
+#: projects/models.py:405
 msgid "A URL for video summary to be embedded (e.g. from YouTube)"
 msgstr ""
 
-#: projects/models.py:454 projects/models.py:526
+#: projects/models.py:580 projects/models.py:665
 msgid "marker unit"
 msgstr "markörenhet"
 
-#: projects/models.py:455
+#: projects/models.py:581
 msgid "marker units"
 msgstr "markörenheter"
 
-#: projects/models.py:457
+#: projects/models.py:583
 msgid "size"
 msgstr "storlek"
 
-#: projects/models.py:458
+#: projects/models.py:584
 msgid "Default (and maximal) number of marker groups in the unit"
 msgstr "Standard (och maximalt) antal markörgrupper per markörenhet"
 
-#: projects/models.py:459
+#: projects/models.py:585
 msgid "minimum required"
 msgstr "minsta nödvändiga"
 
-#: projects/models.py:460
+#: projects/models.py:586
 msgid ""
 "Minimum required number of marker groups in the unit (can't be more than "
 "`size`)"
@@ -494,81 +518,80 @@ msgstr ""
 "Minsta nödvändiga antal markörgrupper per markörenhet (får inte vara mer än "
 "\"storlek\")"
 
-#: projects/models.py:461
+#: projects/models.py:587
 msgid "is rankable?"
 msgstr "är rankbar?"
 
-#: projects/models.py:462
+#: projects/models.py:588
 msgid "Whether annotators should be allowed to rank marker groups in the unit"
 msgstr ""
 "Huruvida annotatorer ska tillåtas att rangordna markörgrupper inom enheten"
 
-#: projects/models.py:469
+#: projects/models.py:595
 msgid "rankable"
 msgstr "rankbar"
 
-#: projects/models.py:471
+#: projects/models.py:597
 msgid "From {} to {}{}"
 msgstr ""
 
-#: projects/models.py:473
+#: projects/models.py:599
 msgid "Exactly {}"
 msgstr ""
 
-#: projects/models.py:481
-#, fuzzy
+#: projects/models.py:612
 msgid "range"
-msgstr "språk"
+msgstr ""
 
-#: projects/models.py:482
+#: projects/models.py:613
 msgid "ranges"
 msgstr ""
 
-#: projects/models.py:484
+#: projects/models.py:615
 msgid "minimal value"
 msgstr ""
 
-#: projects/models.py:485
+#: projects/models.py:616
 msgid "maximal value"
 msgstr ""
 
-#: projects/models.py:486
+#: projects/models.py:617
 msgid "step"
 msgstr ""
 
-#: projects/models.py:490
+#: projects/models.py:621
 msgid "You must specify either a step, a minimal or a maximal value"
 msgstr ""
 
-#: projects/models.py:495
+#: projects/models.py:626
 msgid "Between {} and {}"
 msgstr ""
 
-#: projects/models.py:497
+#: projects/models.py:628
 msgid "From {}"
 msgstr ""
 
-#: projects/models.py:499
+#: projects/models.py:630
 msgid "Up to {}"
 msgstr ""
 
-#: projects/models.py:503 projects/models.py:505
+#: projects/models.py:634 projects/models.py:636
 msgid "step {}"
 msgstr ""
 
-#: projects/models.py:513 projects/models.py:679
+#: projects/models.py:652 projects/models.py:864
 msgid "marker variant"
 msgstr "markörvariant"
 
-#: projects/models.py:516
+#: projects/models.py:655
 msgid "marker template"
 msgstr "markörsmall"
 
-#: projects/models.py:518
+#: projects/models.py:657
 msgid "numeric range"
 msgstr ""
 
-#: projects/models.py:519
+#: projects/models.py:658
 msgid ""
 "\n"
 "            Applicable only if the annotation types are 'integer', 'floating-point number' or 'range'.\n"
@@ -577,29 +600,29 @@ msgid ""
 "            "
 msgstr ""
 
-#: projects/models.py:528
+#: projects/models.py:667
 msgid "order in a unit"
 msgstr "ordning i en markörenhet"
 
-#: projects/models.py:529
+#: projects/models.py:668
 msgid "Order of this marker in the unit"
 msgstr "Ordning av denna markör i enheten"
 
-#: projects/models.py:532
+#: projects/models.py:671
 msgid "Actions associated with this marker"
 msgstr ""
 
-#: projects/models.py:533
+#: projects/models.py:672
 msgid "enable suggestions?"
 msgstr ""
 
-#: projects/models.py:534
+#: projects/models.py:673
 msgid ""
 "Indicates whether Suggestions API should be enabled for this marker (if "
 "endpoint is specified)"
 msgstr ""
 
-#: projects/models.py:537
+#: projects/models.py:676
 msgid ""
 "\n"
 "            Custom endpoint for the Suggestions API (by default the one from the marker template is used).\n"
@@ -607,67 +630,67 @@ msgid ""
 "            "
 msgstr ""
 
-#: projects/models.py:545
+#: projects/models.py:684
 msgid ""
 "Customized color for the annotated text span (color of the marker template "
 "by default)"
 msgstr ""
 
-#: projects/models.py:547
+#: projects/models.py:686
 msgid ""
 "Keyboard shortcut for annotating a piece of text with this marker (shortcut "
 "of the marker template by default"
 msgstr ""
 
-#: projects/models.py:548
+#: projects/models.py:687
 msgid "annotation type"
 msgstr ""
 
-#: projects/models.py:549
+#: projects/models.py:688
 msgid "The type of annotations made using this marker"
 msgstr "typ av annoteringar som kan göras med markören"
 
-#: projects/models.py:651
+#: projects/models.py:827
 msgid "marker context menu item"
 msgstr "markörssnabbmenyalternativ"
 
-#: projects/models.py:652
+#: projects/models.py:828
 msgid "marker context menu items"
 msgstr "markörssnabbmenyalternativ"
 
-#: projects/models.py:656
+#: projects/models.py:832
 msgid "verbose name"
 msgstr ""
 
-#: projects/models.py:657
+#: projects/models.py:833
 msgid "verbose name in data explorer"
 msgstr ""
 
-#: projects/models.py:658
+#: projects/models.py:834
 msgid "field name in logs"
 msgstr ""
 
-#: projects/models.py:659 projects/models.py:948 projects/models.py:950
+#: projects/models.py:835 projects/models.py:1215 projects/models.py:1217
 msgid "If applicable"
 msgstr "Om tillämpligt"
 
-#: projects/models.py:676
+#: projects/models.py:855
 msgid "marker restriction"
 msgstr "markörbegränsning"
 
-#: projects/models.py:677
+#: projects/models.py:856
 msgid "marker restrictions"
 msgstr "markörbegränsningar"
 
-#: projects/models.py:680
+#: projects/models.py:865
 msgid "restriction kind"
 msgstr "typ av begränsning"
 
-#: projects/models.py:685
+#: projects/models.py:866
 msgid "restriction value"
 msgstr "begränsningsvärde"
 
-#: projects/models.py:686
+#: projects/models.py:867
 msgid ""
 "e.g., if restriction kind is '<=' and value is '3', this creates a "
 "restriction '<= 3'"
@@ -675,227 +698,233 @@ msgstr ""
 "t.ex. om begränsningstypen är '<=' och värdet är '3' skapar detta en "
 "begränsning '<= 3'"
 
-#: projects/models.py:695
-msgid "project datum"
-msgstr ""
-
-#: projects/models.py:696 projects/models.py:708
-msgid "project data"
-msgstr ""
-
-#: projects/models.py:704
+#: projects/models.py:895
 msgid "data access log"
 msgstr "dataåtkomstlogg"
 
-#: projects/models.py:705
+#: projects/models.py:896
 msgid "data access logs"
 msgstr "dataåtkomstloggar"
 
-#: projects/models.py:707
+#: projects/models.py:898
 msgid "user"
 msgstr "användare"
 
-#: projects/models.py:709 projects/models.py:773
+#: projects/models.py:901 projects/models.py:985
 msgid "datapoint ID"
 msgstr ""
 
-#: projects/models.py:710 projects/models.py:774
+#: projects/models.py:902 projects/models.py:986
 msgid "As stored in the original dataset"
 msgstr "Som lagrat i den ursprungliga datamängden"
 
-#: projects/models.py:711
+#: projects/models.py:903
 msgid "flags"
 msgstr "flaggor"
 
-#: projects/models.py:712
-msgid "Internal behavior flags"
-msgstr "Interna beteendeflaggor"
+#: projects/models.py:904
+msgid "Additional information provided by the annotator"
+msgstr ""
 
-#: projects/models.py:713
+#: projects/models.py:905
 msgid "is submitted?"
 msgstr "är inskickade?"
 
-#: projects/models.py:714
+#: projects/models.py:906
 msgid ""
 "Indicates whether the datapoint was successfully submitted by an annotator"
 msgstr "Anger om datapunkten har skickats in av en annotator "
 
-#: projects/models.py:715
+#: projects/models.py:907
 msgid "is skipped?"
 msgstr "är överhoppad?"
 
-#: projects/models.py:716
+#: projects/models.py:908
 msgid "Indicates whether the datapoint was skipped by an annotator"
 msgstr ""
 
-#: projects/models.py:724
+#: projects/models.py:919
 msgid "pre-marker"
 msgstr "förmarkör"
 
-#: projects/models.py:725
+#: projects/models.py:920
 msgid "pre-markers"
 msgstr "förmarkörer"
 
-#: projects/models.py:729
+#: projects/models.py:924
 msgid "static tokens"
 msgstr ""
 
-#: projects/models.py:730
+#: projects/models.py:925
 msgid "Comma-separated tokens that should be highlighted with a marker"
 msgstr ""
 
-#: projects/models.py:736
+#: projects/models.py:938
 msgid "relation variant"
 msgstr "relationsvariant"
 
-#: projects/models.py:739
+#: projects/models.py:941
 msgid "relation template"
 msgstr "relationsvarianter"
 
-#: projects/models.py:741
+#: projects/models.py:943
 msgid ""
 "Keyboard shortcut for marking a piece of text with this relation (shortcut "
 "of the relation template by default)"
 msgstr ""
 
-#: projects/models.py:744
+#: projects/models.py:946
 msgid ""
 "How should the relation be visualized? (representation of the relation "
 "template by default)"
 msgstr ""
 
-#: projects/models.py:769
+#: projects/models.py:981
 msgid "context"
 msgstr "kontext"
 
-#: projects/models.py:770
+#: projects/models.py:982
 msgid "contexts"
 msgstr "kontexter"
 
-#: projects/models.py:775 projects/models.py:812
+#: projects/models.py:987 projects/models.py:1057
 msgid "content"
 msgstr ""
 
-#: projects/models.py:797
+#: projects/models.py:1016
 msgid "annotation batch"
 msgstr ""
 
-#: projects/models.py:798
+#: projects/models.py:1017
 msgid "annotation batches"
 msgstr ""
 
-#: projects/models.py:809
+#: projects/models.py:1054
 msgid "input"
 msgstr ""
 
-#: projects/models.py:810
+#: projects/models.py:1055
 msgid "inputs"
 msgstr ""
 
-#: projects/models.py:816 projects/models.py:873 projects/models.py:971
+#: projects/models.py:1061 projects/models.py:1134
 msgid "marker group order in the unit"
 msgstr ""
 
-#: projects/models.py:817 projects/models.py:874 projects/models.py:972
+#: projects/models.py:1062 projects/models.py:1135 projects/models.py:1242
 msgid "At the submission time"
 msgstr "Vid inlämningstiden"
 
-#: projects/models.py:859
+#: projects/models.py:1120
 msgid "label"
 msgstr "etikett"
 
-#: projects/models.py:860
+#: projects/models.py:1121
 msgid "labels"
 msgstr "etiketter"
 
-#: projects/models.py:862
+#: projects/models.py:1123
 msgid "start position"
 msgstr "startposition"
 
-#: projects/models.py:863
+#: projects/models.py:1124
 msgid "Character-wise start position in the text"
 msgstr "Startposition i texten karaktärsmässigt"
 
-#: projects/models.py:864
+#: projects/models.py:1125
 msgid "end position"
 msgstr "slutposition"
 
-#: projects/models.py:865
+#: projects/models.py:1126
 msgid "Character-wise end position in the text"
 msgstr "Slutposition i texten karaktärsmässigt"
 
-#: projects/models.py:867
+#: projects/models.py:1128
 msgid "extra information"
 msgstr "extra information"
 
-#: projects/models.py:870 projects/models.py:968
+#: projects/models.py:1131 projects/models.py:1238
 msgid "was undone?"
 msgstr "ångrades"
 
-#: projects/models.py:871 projects/models.py:969
+#: projects/models.py:1132 projects/models.py:1239
 msgid "Indicates whether the annotator used 'Undo' button"
 msgstr "Indikerar om annoteraren använde 'Ångra'-knappen "
 
-#: projects/models.py:934
+#: projects/models.py:1201
 msgid "label review"
 msgstr "etikettgranskning"
 
-#: projects/models.py:935
+#: projects/models.py:1202
 msgid "label reviews"
 msgstr "etikettgranskningar"
 
-#: projects/models.py:938
+#: projects/models.py:1205
 msgid "is a match?"
 msgstr ""
 
-#: projects/models.py:939
+#: projects/models.py:1206
 msgid "Indicates whether the reviewed and original labels match"
 msgstr ""
 
-#: projects/models.py:941
+#: projects/models.py:1208
 msgid "ambiguity?"
 msgstr ""
 
-#: projects/models.py:945
+#: projects/models.py:1212
 msgid "Decided automatically to inform a decision maker"
 msgstr ""
 
-#: projects/models.py:947 projects/models.py:949
+#: projects/models.py:1214 projects/models.py:1216
 msgid "start position of the review label"
 msgstr ""
 
-#: projects/models.py:952
+#: projects/models.py:1219
 msgid "is impossible?"
 msgstr ""
 
-#: projects/models.py:953
+#: projects/models.py:1220
 msgid ""
 "Indicates whether the reviewer marked the datapoint as impossible wrt. "
 "guidelines"
 msgstr ""
 
-#: projects/models.py:962
+#: projects/models.py:1232
 msgid "label relation"
 msgstr ""
 
-#: projects/models.py:963
+#: projects/models.py:1233
 msgid "label relations"
 msgstr ""
 
-#: projects/models.py:1015
+#: projects/models.py:1241
+msgid "relation cluster"
+msgstr "relationskluster"
+
+#: projects/models.py:1292
 msgid "a project-specific user profile"
 msgstr ""
 
-#: projects/models.py:1016
+#: projects/models.py:1293
 msgid "project specific user profiles"
 msgstr "projektspecifika användarprofiler"
 
-#: projects/models.py:1018
+#: projects/models.py:1295
 msgid "points in total"
 msgstr ""
 
-#: projects/models.py:1051
+#: projects/models.py:1331
 msgid "level"
+msgstr ""
+
+#: projects/jinja2/partials/_great_job.html:6
+msgid "You have finished this task"
+msgstr "Du har slutfört denna uppgift"
+
+#: projects/jinja2/partials/_great_job.html:9
+msgid ""
+"Thank you for the participation, we are very grateful for your contribution "
+"to the research!"
 msgstr ""
 
 #: projects/jinja2/partials/_navbar.html:17
@@ -922,10 +951,6 @@ msgstr "undersökningar"
 msgid "profile"
 msgstr "profil"
 
-#: projects/jinja2/partials/_navbar.html:67 users/jinja2/users/settings.html:4
-msgid "settings"
-msgstr "inställningar"
-
 #: projects/jinja2/partials/_navbar.html:72
 msgid "data explorer"
 msgstr ""
@@ -942,6 +967,14 @@ msgstr "översättning"
 msgid "logout"
 msgstr "logga ut"
 
+#: projects/jinja2/partials/_no_data.html:6
+msgid "Unfortunately, we found no data to be annotated"
+msgstr ""
+
+#: projects/jinja2/partials/_no_data.html:8
+msgid "Please, contact the project responsible to sort things out."
+msgstr ""
+
 #: projects/jinja2/partials/_open_projects.html:12
 msgid "Currently there are no more active open tasks!"
 msgstr ""
@@ -952,20 +985,40 @@ msgid ""
 "join to one of the open tasks in the respective tab"
 msgstr ""
 
-#: projects/jinja2/partials/_project.html:31
+#: projects/jinja2/partials/_project.html:35
+msgid "to be published"
+msgstr "att bli publicerad"
+
+#: projects/jinja2/partials/_project.html:37
 msgid "expired"
 msgstr ""
 
-#: projects/jinja2/partials/_project.html:33
+#: projects/jinja2/partials/_project.html:39
 msgid "finishes"
 msgstr ""
 
-#: projects/jinja2/partials/_project.html:52
+#: projects/jinja2/partials/_project.html:58
 msgid "leave"
 msgstr "lämna"
 
-#: projects/jinja2/partials/_project.html:54
+#: projects/jinja2/partials/_project.html:60
 msgid "join"
+msgstr ""
+
+#: projects/jinja2/partials/_quick_links.html:2
+msgid "quick links"
+msgstr ""
+
+#: projects/jinja2/partials/_quick_links.html:5
+msgid "create a new data source"
+msgstr "skapa en ny datakälla"
+
+#: projects/jinja2/partials/_quick_links.html:6
+msgid "my projects (admin)"
+msgstr "mina projekt (admin)"
+
+#: projects/jinja2/partials/_quick_links.html:7
+msgid "create a new project"
 msgstr ""
 
 #: projects/jinja2/partials/_shared_projects.html:3
@@ -1043,39 +1096,39 @@ msgstr "vår GitHub-repository"
 msgid "project manager guide on YouTube"
 msgstr "projektledareguide på YouTube"
 
-#: projects/jinja2/partials/_welcome.html:33
+#: projects/jinja2/partials/_welcome.html:34
 msgid ""
 "Thank you for joining Textinator! Your annotation or evaluation efforts will"
 " most certainly help in advancing Natural Language Processing (NLP) beyond "
 "its current limits."
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:36
+#: projects/jinja2/partials/_welcome.html:37
 msgid "If you are here to help <u>annotating</u>, here are some tips:"
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:38
+#: projects/jinja2/partials/_welcome.html:39
 msgid ""
 "If you are unfamiliar with Textinator or with NLP annotations in general, we"
 " have prepared {} to help you in starting this journey"
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:38
+#: projects/jinja2/partials/_welcome.html:39
 msgid "a couple of short YouTube videos"
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:39
+#: projects/jinja2/partials/_welcome.html:40
 msgid ""
 "If you have signed up to take part in a specific annotation effort, please "
 "click on the {} in the menu above. If you don't see your project there, "
 "please contact your project manager."
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:40
+#: projects/jinja2/partials/_welcome.html:41
 msgid "\"My Tasks\" tab"
 msgstr "fliken \"Mina uppgifter\""
 
-#: projects/jinja2/partials/_welcome.html:41
+#: projects/jinja2/partials/_welcome.html:42
 msgid ""
 "If you have signed up out of curiosity and willingness to help, huge thank "
 "you! We are very grateful and honored to have you on board! Please click on "
@@ -1083,57 +1136,52 @@ msgid ""
 "public."
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:41
+#: projects/jinja2/partials/_welcome.html:42
 msgid "\"Open Tasks\" tab"
 msgstr "fliken \"Öppna uppgifter\""
 
-#: projects/jinja2/partials/_welcome.html:41
-#: projects/jinja2/partials/_welcome.html:50
+#: projects/jinja2/partials/_welcome.html:42
+#: projects/jinja2/partials/_welcome.html:51
 msgid ""
 "We urge you to read the instructions carefully to check that you understand "
 "them and are indeed eligible to take part. Please contact the project "
 "responsible if any questions arise."
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:46
+#: projects/jinja2/partials/_welcome.html:47
 msgid "If you are here to help <u>evaluating</u>, here are some other tips:"
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:48
+#: projects/jinja2/partials/_welcome.html:49
 msgid ""
 "If you have signed up to take part in a specific evaluation effort, please "
 "click on the {} and see if your survey is ready If you don't see your "
 "survey, please contact your project manager."
 msgstr ""
 
-#: projects/jinja2/partials/_welcome.html:49
 #: projects/jinja2/partials/_welcome.html:50
+#: projects/jinja2/partials/_welcome.html:51
 msgid "\"Survey\" tab"
 msgstr "fliken \"Undersökningar\""
 
-#: projects/jinja2/partials/_welcome.html:50
+#: projects/jinja2/partials/_welcome.html:51
 msgid ""
 "If you have signed up out of curiosity, please click on the {} and see if "
 "there are any surveys open to general public."
 msgstr ""
 
-#: projects/jinja2/partials/components/areas/actions.html:3
+#: projects/jinja2/partials/components/areas/actions.html:4
 msgid "actions"
 msgstr "åtgärder"
 
-#: projects/jinja2/partials/components/areas/actions.html:12
+#: projects/jinja2/partials/components/areas/actions.html:13
 #: projects/jinja2/partials/components/modals/flag.html:22
 msgid "submit"
 msgstr "skicka in"
 
-#: projects/jinja2/partials/components/areas/actions.html:17
+#: projects/jinja2/partials/components/areas/actions.html:18
 msgid "new text"
 msgstr "en ny text"
-
-#: projects/jinja2/partials/components/areas/actions.html:21
-#: static/scripts/labeler.js:2267
-msgid "editor"
-msgstr ""
 
 #: projects/jinja2/partials/components/areas/editing.html:3
 msgid "editing"
@@ -1171,39 +1219,51 @@ msgstr ""
 "Beskriv gärna problem som du upptäckte, t.ex., konstig formattering, "
 "felaktiga meningar, toma texter osv."
 
-#: projects/jinja2/partials/components/modals/guidelines.html:16
-msgid "Follow the UI intro tour"
+#: projects/jinja2/partials/components/modals/guidelines.html:15
+msgid "No guidelines are provided"
 msgstr ""
 
 #: projects/jinja2/partials/components/modals/guidelines.html:20
-msgid "contact information"
-msgstr "kontaktinformation"
+msgid "Follow the UI intro tour"
+msgstr ""
 
-#: projects/jinja2/partials/components/modals/guidelines.html:25
+#: projects/jinja2/partials/components/modals/guidelines.html:24
+msgid "project details"
+msgstr "projektdetaljer"
+
+#: projects/jinja2/partials/components/modals/guidelines.html:30
 msgid "responsible"
 msgstr "ansvarig"
 
-#: projects/jinja2/partials/components/modals/guidelines.html:29
+#: projects/jinja2/partials/components/modals/guidelines.html:36
 msgid "contact email"
 msgstr "kontakt e-post"
 
-#: projects/jinja2/partials/components/modals/guidelines.html:34
-msgid "published at"
-msgstr "publiceringsdatum"
+#: projects/jinja2/partials/components/modals/guidelines.html:42
+msgid "published"
+msgstr "publicerades"
 
-#: static/scripts/labeler.js:2255
+#: projects/jinja2/partials/components/modals/guidelines.html:48
+msgid "will be expired"
+msgstr ""
+
+#: static/scripts/labeler.js:2205
 msgid "stop editing"
 msgstr "sluta redigera"
+
+#: static/scripts/labeler.js:2217
+msgid "editor"
+msgstr ""
 
 #: users/models.py:11
 msgid "profiles"
 msgstr "profiler"
 
-#: users/jinja2/users/settings.html:8 users/models.py:14
+#: users/jinja2/users/settings.html:14 users/models.py:14
 msgid "preferred language"
 msgstr "föredraget språk"
 
-#: users/jinja2/users/settings.html:22 users/models.py:15
+#: users/jinja2/users/settings.html:28 users/models.py:15
 msgid "fluent in"
 msgstr ""
 
@@ -1211,9 +1271,13 @@ msgstr ""
 msgid "Comma-separated list of language codes, compliant with RFC 5646"
 msgstr ""
 
-#: users/jinja2/users/settings.html:36
+#: users/jinja2/users/settings.html:42
 msgid "save"
 msgstr "spara"
+
+#: users/jinja2/users/settings.html:47
+msgid "user details"
+msgstr ""
 
 #~ msgid "Project-specific markers"
 #~ msgstr "Projektspecifika markörer"
@@ -1369,3 +1433,21 @@ msgstr "spara"
 
 #~ msgid "step: {}"
 #~ msgstr ""
+
+#~ msgid "should disjoint annotation be allowed?"
+#~ msgstr ""
+
+#~ msgid "should dataset identifiers be shown?"
+#~ msgstr ""
+
+#~ msgid "project datum"
+#~ msgstr ""
+
+#~ msgid "project data"
+#~ msgstr ""
+
+#~ msgid "Internal behavior flags"
+#~ msgstr "Interna beteendeflaggor"
+
+#~ msgid "contact information"
+#~ msgstr "kontaktinformation"

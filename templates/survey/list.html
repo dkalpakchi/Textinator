@@ -8,12 +8,12 @@
     {% for survey in surveys %}
       {% if survey.id in started_surveys %}
         {% if started_surveys|get_by_key:survey.id %}
-          <li><a href="{{ started_surveys|get_by_key:survey.id }}">{% trans "Continue the Survey"%} {{survey.name}}</a></li>
+          {% include 'survey/partials/_survey.html' with url=started_surveys|get_by_key:survey.id action=_('continue') survey=survey %}
         {% else %}
-          <li><a href="{{ survey.get_absolute_url }}">{% trans "Take the Survey"%} {{survey.name}}</a></li>
+          {% include 'survey/partials/_survey.html' with url=survey.get_absolute_url action=_('take') survey=survey %}
         {% endif %}
       {% else %}
-        <li><a href="{{ survey.get_absolute_url }}">{% trans "Take the Survey"%} {{survey.name}}</a></li>
+        {% include 'survey/partials/_survey.html' with url=survey.get_absolute_url action=_('take') survey=survey %}
       {% endif %}
     {% endfor %}
   </div>

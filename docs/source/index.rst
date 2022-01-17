@@ -3,20 +3,32 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Textinator |release| documentation!
+.. image:: logo.png
+  :width: 400
+  :alt: Textinator's logo
+
+|release| documentation
 ===============================================
 
-**Textinator** is an open-source highly-customizable annotation and evaluation tool for Natural Language Processing (NLP) tasks. The tool offers a web interface with a user-friendly UI and supports a number of NLP tasks out-of-the-box:
+**Textinator** is an open-source internationalized highly-customizable annotation and evaluation tool for Natural Language Processing (NLP) tasks. The tool offers a web interface with a user-friendly UI and supports a number of NLP tasks out-of-the-box:
 
 * Question Answering
 * Question Answering with Complexity Ranking
+* Multiple Choice Question Answering
+* Multiple Choice Question Answering with Complexity Ranking
 * Named Entity Recognition
 * Pronoun Resolution
 * Co-reference Chain Resolution
 * Machine Translation
-* Text Classification
 
-Textinator offers multiple levels of customization depending on the user's coding skills. For instance, one could define custom labels for any classification or marking task without any coding skills at all. [EXPAND FURTHER!]
+Textinator is currently localized for 4 languages (presented in an alphabetical order): 
+
+- English
+- Russian
+- Swedish
+- Ukrainian
+
+We are constantly working to improve available localizations and extend them to new languages. If you are willing to help, please visit our Github repository.
 
 .. toctree::
    :maxdepth: 2

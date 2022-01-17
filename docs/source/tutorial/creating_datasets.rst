@@ -106,31 +106,61 @@ What server is compatible with Texts API?
 
 Texts API is pretty simple and requires your server to support 4 GET requests:
 
-/get_datapoint -- takes 'key' as a GET argument and returns the following JSON object 
-	.. code-block:: json
+.. code-block:: http
+    
+    GET /get_datapoint?key=your-key HTTP/1.1
 
-	    {
-	        "text": "text-for-the-given-key"
-	    }
-/get_random_datapoint -- returns the following JSON object 
-	.. code-block:: json
+*Response*
 
-	    {
-        	"key": "key-for-the-random-datapoint",
-        	"text": "text-for-the-key-above"
-	    }
-/size -- returns the following JSON object
-	.. code-block:: json
+.. code-block:: json
 
-	    {
-        	"size": "size-of-your-dataset"
-	    }
-/get_source_name -- takes 'key' as a GET argument and returns the name of the source for the datapoint (e.g., a file name)
-	.. code-block:: json
+    {
+        "text": "text-for-your-key"
+    }
 
-	    {
-	        "name": "source-name-for-the-datapoint-under-the-given-key"
-	    }
+------------
+
+.. code-block:: http
+    
+    GET /get_random_datapoint HTTP/1.1
+
+
+*Response*
+
+.. code-block:: json
+
+    {
+      	"key": "key-for-the-random-datapoint",
+      	"text": "text-for-the-key-above"
+    }
+
+------------
+
+.. code-block:: http
+    
+    GET /size HTTP/1.1
+
+*Response*
+
+.. code-block:: json
+
+    {
+      	"size": "size-of-your-dataset"
+    }
+
+------------
+
+.. code-block:: http
+    
+    GET /get_source_name?key=your-key HTTP/1.1
+
+*Response*
+
+.. code-block:: json
+
+    {
+        "name": "source-name-for-the-datapoint-under-your-key"
+    }
 
 
 A simple example Flask server is provided in the `example_texts_api folder in the GitHub repository <https://github.com/dkalpakchi/Textinator/tree/master/example_texts_api>`_.
