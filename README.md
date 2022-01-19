@@ -23,16 +23,23 @@ To stop container AND take down the DB, run:
 We recommend using nginx-gunicorn-docker setup. A more extensive tutorial is on its way.
 
 ## Contributing
-Want to contribute to Textinator? Awesome, we are very grateful for that! There are multiple ways to contribute:
+Want to contribute to Textinator? Awesome, we are very grateful for that! There are multiple ways to contribute.
 
-1. Find and report bugs
-2. Suggest an enhancement
-3. Write automated tests
-4. Help translating Textinator into new languages
+### Find and report bugs
+We are very grateful for every bug that you manage to spot! Please open a new GitHub issue and use [a template for a bug report](https://github.com/dkalpakchi/Textinator/issues/new?assignees=&labels=&template=bug_report.md&title=)
+
+### Suggest an enhancement
+If you have an idea on how to make Textinator better, please suggest it via opening [a feature request](https://github.com/dkalpakchi/Textinator/issues/new?assignees=&labels=&template=feature_request.md&title=). Let's discuss it and maybe your feature will make it to the next release of Textinator!
+
+### Help translating Textinator into new languages
+If you want to help localize Textinator to a new language, please open [a translation request](https://github.com/dkalpakchi/Textinator/issues/new?assignees=&labels=&template=translation-request.md&title=) and we'll take it from there.
+
+### Write automated tests
+Currently Textinator is mostly tested manually, so we would be very grateful for any kinds of tests: unit tests, integration tests or interaction tests. Please open a GitHub issue, assign it a *testing* label and describe what kind of tests you are willing to do.
 
 ## Developer guide
 
-Our API documentation is available at our official documentation: 
+A good starting place for familiarizing yourself with a codebase is via our [API documentation](https://textinator.readthedocs.io/en/latest/api.html). The documentation for developers is an ongoing effort, but some established workflows are described below.
 
 ### Working with static translations
 We use Babel:
