@@ -91,6 +91,10 @@ AUTHENTICATION_BACKENDS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 ROOT_URLCONF = 'Textinator.urls'
+ROOT_URLPATH = ''
+# If you want Textinator to be under suburl, e.g. /textinator/projects instead of /project, 
+#   change ROOT_URLPATH as follows.
+# ROOT_URLPATH = 'textinator/' # needs to have a trailing slash
 
 TEMPLATES = [
     {
@@ -168,7 +172,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # TODO: make it more elegant
-LOGOUT_REDIRECT_URL = '/textinator/accounts/login'
+LOGOUT_REDIRECT_URL = '/{}accounts/login'.format(ROOT_URLPATH)
 
 
 # Caches
@@ -221,8 +225,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'node_modules')
 ]
-STATIC_URL = '/textinator/static/'
-MEDIA_URL = '/textinator/media/'
+STATIC_URL = '/{}static/'.format(ROOT_URLPATH)
+MEDIA_URL = '/{}media/'.format(ROOT_URLPATH)
 STATIC_ROOT = 'static_cdn'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -282,7 +286,7 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [
 
         # Url that gets reversed (Permissions can be added)
-        {"name": _("Back to the site"),  "url": '/textinator'}#reverse('projects:index')},
+        {"name": _("Back to the site"),  "url": '/{}'.format(ROOT_URLPATH)}#reverse('projects:index')},
     ],
     "language_chooser": True,
 }
@@ -365,4 +369,4 @@ ANNOTATION_TYPES = [
     ('range', 'Range')
 ]
 
-LOGIN_URL = '/textinator/accounts/login/'
+LOGIN_URL = '/{}accounts/login/'.format(ROOT_URLPATH)

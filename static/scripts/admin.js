@@ -1,6 +1,7 @@
 function customFileBrowser(field_name, url, type, win) {
   // var url = "{{ fb_url }}?pop=4&type=" + type;
-  var url = "/textinator/admin/filebrowser/browse/?pop=2&type=" + type;
+  var root = document.querySelector("body").getAttribute("root");
+      url = "/" + root + "admin/filebrowser/browse/?pop=2&type=" + type;
 
   tinyMCE.activeEditor.windowManager.open(
       {

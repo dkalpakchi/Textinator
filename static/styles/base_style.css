@@ -10,7 +10,7 @@ body .container:first-of-type {
   font-family: 'ROBOTECH GP';
   font-style: normal;
   font-weight: normal;
-  src: local('ROBOTECH GP'), url('/textinator/static/styles/webfonts/ROBOTECH GP.ttf') format('ttf');
+  src: local('ROBOTECH GP'), url('./webfonts/ROBOTECH GP.ttf') format('ttf');
 }
 
 .no-margin {
@@ -615,21 +615,6 @@ label.help.is-danger {
   -webkit-transform: scaleX(-1);
   transform: scaleX(-1);
 }
-
-/**
- * FontAwesome extensions
- */
-.fa-newspaper-plus:before {
-  content: '';
-  height: 100%;       /* Fill parent */
-  width: 100%;
-  position: absolute;
-  left: 0;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  background-image: url('/textinator/static/images/fontawesome-ext/newspaper-plus.png');
-}
-
 
 /** 
  * Other library fixes

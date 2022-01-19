@@ -8,7 +8,7 @@ Check out some introductory resources:
 ## Try out Textinator on your own machine
 First you will need to [install Docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/). Afterwards just follow these steps:
 1. Build and run container in the background mode: `docker-compose up -d --build`
-2. Go to `http://localhost:8000/textinator` in the browser of your choice
+2. Go to `http://localhost:8000/` in the browser of your choice
 
 To stop container, run:
 `docker-compose stop`

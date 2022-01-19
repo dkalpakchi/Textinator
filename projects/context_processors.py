@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db.models import Q
+
 from projects.models import Project, UserProfile
 
 
@@ -23,5 +25,6 @@ def common_user_variables(request):
             "user_projects": request.user.project_set.all(),
             "shared_before": shared_before,
             "recently_shared": recently_shared,
-            'participations': request.user.participations.exclude(Q(author=request.user) | Q(pk__in=shared_ids)).all()
+            'participations': request.user.participations.exclude(Q(author=request.user) | Q(pk__in=shared_ids)).all(),
+            "root_url": settings.ROOT_URLPATH
         }

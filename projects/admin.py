@@ -552,5 +552,5 @@ admin.site.register(Permission)
 admin.site.site_header = 'Textinator Admin'
 admin.site.site_title = 'Textinator Admin'
 
-admin.site.site_url = '/textinator'
+admin.site.site_url = '/{}'.format(settings.ROOT_URLPATH)
 

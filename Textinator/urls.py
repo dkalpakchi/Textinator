@@ -31,7 +31,7 @@ paths = [
     path('admin/filebrowser/', site.urls),
     path('admin/', admin.site.urls),
     path('accounts/register/',
-        RegistrationView.as_view(success_url='/textinator/'),
+        RegistrationView.as_view(success_url='/{}'.format(settings.ROOT_URLPATH)),
         name='django_registration_register'),
     path('accounts/', include('django_registration.backends.one_step.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
@@ -53,6 +53,6 @@ if 'rosetta' in settings.INSTALLED_APPS:
     ]
 
 urlpatterns = [
-    path('textinator/', include(paths))
+    path(settings.ROOT_URLPATH, include(paths))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

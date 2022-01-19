@@ -30,7 +30,7 @@
     <script type="text/javascript" src="{{ static('scripts/script.js') }}"></script>
     {% block custom_scripts %}{% endblock %}
   </head>
-  <body is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
+  <body root='{{root_url}}' is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
     {% include 'partials/_navbar.html' %}
     <div class="container is-fluid">
       {% block content %}{% endblock %}
