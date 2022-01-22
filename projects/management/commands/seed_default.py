@@ -75,7 +75,7 @@ def create_data():
         relation_mapping[idx] = obj.pk
 
         for first, second in pairs:
-            mp = MarkerPair.objects.create(
+            mp, _ = MarkerPair.objects.get_or_create(
                 first_id=marker_mapping[first],
                 second_id=marker_mapping[second]
             )
@@ -102,6 +102,10 @@ def create_data():
 
         if spec.get('relations'):
             spec['relations'] = [relation_mapping[x] for x in spec['relations']]
+
+        if spec.get("actions"):
+            for x in spec["actions"]:
+                x["marker_id"] = marker_mapping[x["marker_id"]]
 
         obj, is_created = TaskTypeSpecification.objects.get_or_create(
             task_type=task_type, 

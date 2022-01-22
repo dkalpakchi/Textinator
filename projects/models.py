@@ -176,7 +176,7 @@ class MarkerAction(CommonModel):
         )) # What types? So far found: boolean, range
 
     def __str__(self):
-        return self.name
+        return self.description
 
     def to_json(self, dt_format=None):
         res = super(MarkerAction, self).to_json(dt_format=dt_format)

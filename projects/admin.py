@@ -214,6 +214,7 @@ class ProjectForm(forms.ModelForm):
             try:
                 spec_obj = TaskTypeSpecification.objects.get(task_type=instance.task_type)
                 spec = spec_obj.config
+                marker_map = {}
                 for mspec in spec["markers"]:
                     m = Marker.objects.get(pk=mspec["id"])
                     if mspec.get("unit_id"):
@@ -225,10 +226,19 @@ class ProjectForm(forms.ModelForm):
 
                     if mspec.get("restrictions"):
                         mv.add_restrictions(mspec["restrictions"])
+                    marker_map[mspec["id"]] = mv
 
                 for rel_id in spec.get("relations", []):
                     r = Relation.objects.get(pk=rel_id)
                     RelationVariant.objects.create(relation=r, project=instance)
+
+                for aspec in spec.get("actions", []):
+                    aspec["action"] = MarkerAction.objects.get(name=aspec["name"])
+                    aspec["marker"] = marker_map[aspec["marker_id"]]
+                    del aspec["name"]
+                    del aspec["marker_id"]
+                    MarkerContextMenuItem.objects.get_or_create(**aspec)
+
             except TaskTypeSpecification.DoesNotExist:
                 pass
 

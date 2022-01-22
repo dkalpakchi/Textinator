@@ -363,7 +363,8 @@
           return btn;
         }
 
-        var short = markedSpan.getAttribute('data-s');
+        var code = markedSpan.getAttribute('data-s');
+        var short = code.substring(0, code.lastIndexOf("_"));
         var div = document.createElement('div');
         var subset = Object.assign({}, plugins[short], plugins[undefined]);
 
@@ -384,7 +385,8 @@
           content: div,
           interactive: true,
           trigger: 'manual',
-          placement: "bottom"
+          placement: "bottom",
+          theme: 'translucent'
         });
 
         markedSpan.addEventListener('contextmenu', function(event) {
@@ -1456,7 +1458,8 @@
       changeRelation: function(obj, fromId, toId) {
         var objId = obj.id,
             il = obj.getAttribute('data-i'),
-            short = obj.getAttribute('data-s'),
+            code = obj.getAttribute('data-s'),
+            short = code.substring(0, code.lastIndexOf("_"));
             fromRel = relations[fromId],
             toRel = relations[toId],
             // a relation map, which is initially identity, but might become smth else if anything is deleted
@@ -2024,8 +2027,6 @@
 
       inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
       inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
-
-      console.log(inputFormData);
 
       if (labelerModule.hasNewInfo(inputFormData)) {
         labelerModule.getMarkerTypes().forEach(function(x) {

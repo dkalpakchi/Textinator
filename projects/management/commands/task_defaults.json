@@ -125,13 +125,20 @@
         {"id": 3, "anno_type": "m-span"},
         {"id": 4, "anno_type": "m-span"}
       ],
-      "relations": [1]
+      "relations": [1],
+      "actions": [
+        {"marker_id": 3, "name": "change_rel", "verbose": "Change a relation"},
+        {"marker_id": 4, "name": "change_rel", "verbose": "Change a relation"}
+      ]
     },
     "corr": {
       "markers": [
         {"id": 9, "anno_type": "m-span"}
       ],
-      "relations": [2]
+      "relations": [2],
+      "actions": [
+        {"marker_id": 9, "name": "change_rel", "verbose": "Change a relation"}
+      ]
     },
     "mt": {
       "markers": [
