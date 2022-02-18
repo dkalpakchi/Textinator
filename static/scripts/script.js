@@ -113,8 +113,6 @@ $(document).ready(function() {
     });
   }
 
-  bulmaSlider.attach();
-
   $('[data-id="accordion"]').accordion({
     collapsible: true,
     active: false

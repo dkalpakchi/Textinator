@@ -86,11 +86,6 @@ class MarkerVariantInline(CommonNestedStackedInline):
     exclude = ('custom_suggestion_endpoint', 'are_suggestions_enabled',)
 
 
-class LevelInline(CommonNestedStackedInline):
-    model = Level
-    extra = 0
-
-
 class PreMarkerInline(CommonNestedStackedInline):
     model = PreMarker
     extra = 0

@@ -4,8 +4,8 @@ msgstr ""
 "Project-Id-Version: django\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-12 00:37+1000\n"
-"PO-Revision-Date: 2021-12-23 12:35+0000\n"
-"Last-Translator: Dmytro Kalpakchi <dmytroka@kth.se>\n"
+"PO-Revision-Date: 2022-02-18 07:28+0000\n"
+"Last-Translator:   <mail@textinator.se>\n"
 "Language-Team: \n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
@@ -42,7 +42,7 @@ msgstr "Jazzmin Version"
 
 #: templates/admin/base.html:325
 msgid "Copyright"
-msgstr ""
+msgstr "Авторське право"
 
 #: templates/admin/base.html:325
 msgid "All rights reserved."
@@ -77,10 +77,12 @@ msgid ""
 "This object doesn't have a change history. It probably wasn't added via this"
 " admin site."
 msgstr ""
+"Цей об’єкт не має історії змін. Ймовірно, він не був доданий через цей сайт "
+"адміністратора. "
 
 #: templates/admin/popup_response.html:5
 msgid "Popup closing..."
-msgstr ""
+msgstr "Спливаюче вікно закривається..."
 
 #: templates/admin_doc/template_filter_index.html:37
 #: templates/admin_doc/view_index.html:49
@@ -88,6 +90,7 @@ msgstr ""
 msgid ""
 "View function: <code>%(full_name)s</code>. Name: <code>%(url_name)s</code>."
 msgstr ""
+"Функція view: <code>%(full_name)s</code>. Назва: <code>%(url_name)s</code>."
 
 #: templates/includes/carousel.html:4 templates/includes/collapsible.html:2
 #: templates/includes/horizontal_tabs.html:2
@@ -100,6 +103,8 @@ msgid ""
 "Please enter your old password, for security's sake, and then enter your new"
 " password twice so we can verify you typed it in correctly."
 msgstr ""
+"Будь ласка, введіть свій старий пароль, з міркувань безпеки, а потім уведіть"
+" ваш новий пароль двічі, щоб ми могли перевірити його правильне введення."
 
 #: templatetags/jazzmin.py:439
 #, python-brace-format

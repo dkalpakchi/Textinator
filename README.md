@@ -22,6 +22,22 @@ To stop container AND take down the DB, run:
 ## Running Textinator in production
 We recommend using nginx-gunicorn-docker setup. A more extensive tutorial is on its way.
 
+## Internationalization
+
+The software is developed in English.
+
+Full translation is available for these languages (in alphabetical order):
+
+* [x] Russian thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
+* [x] Ukrainian thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
+
+Partial translation is available for these languages (in alphabetical order):
+* [x] Swedish (61%) thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
+
+Upcoming languages
+* Dutch
+* Spanish
+
 ## Contributing
 Want to contribute to Textinator? Check out our [Contribution guidelines](https://github.com/dkalpakchi/Textinator/blob/master/CONTRIBUTING.md).
 

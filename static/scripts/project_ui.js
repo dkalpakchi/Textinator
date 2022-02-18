@@ -91,4 +91,6 @@ $(document).ready(function() {
   /**
    * - Modals handling
    */
+
+   bulmaSlider.attach();
 });

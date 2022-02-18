@@ -385,13 +385,6 @@ class Project(CommonModel):
     allow_selecting_labels = models.BooleanField(_("should selecting the labels be allowed?"), default=False)
     disable_submitted_labels = models.BooleanField(_("should submitted labels be disabled?"), default=True)
     max_markers_per_input = models.PositiveIntegerField(_("maximal number of markers per input"), null=True, blank=True) # TODO: obsolete?
-    round_length = models.PositiveIntegerField(_("round length"), null=True, blank=True,
-        help_text=_("The number of text snippets consituting one round of the game"))
-    points_scope = models.CharField(_("points scope"), max_length=2,
-        choices=[('n', 'No points'), ('i', 'Per input'), ('l', 'Per label')],
-        help_text=_("The scope of the submitted task"))
-    points_unit = models.PositiveIntegerField(_("points' unit"), default=1,
-        help_text=_("Number of points per submitted task"))
     has_intro_tour = models.BooleanField(_("should the project include intro tour?"), default=False,
         help_text=_("WARNING: Intro tours are currently in beta"))
     language = models.CharField(_("language"), max_length=10, choices=settings.LANGUAGES,
@@ -676,7 +669,7 @@ class MarkerVariant(CommonModel):
         help_text=_(
             """
             Custom endpoint for the Suggestions API (by default the one from the marker template is used).
-            Activates only if suggestions are enabled and the endpoint.
+            Activates only if suggestions are enabled.
             """
         )
     )
@@ -1292,47 +1285,17 @@ class UserProfile(CommonModel):
         verbose_name = _('a project-specific user profile')
         verbose_name_plural = _('project specific user profiles')
 
-    points = models.FloatField(_("points in total"), default=0.0)
-    asking_time = models.IntegerField(default=0) # total asking time [OBSOLETE]
-    timed_questions = models.IntegerField(default=0) # might be that some questions were not timed (like the first bunch of questions) [OBSOLETE]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profiles')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='participant_profiles')
-
-    def level(self):
-        return Level.objects.filter(points__lte=self.points).order_by("-number")[0]
-
-    @property
-    def aat(self):
-        """
-        Average asking time
-        """
-        return round(self.asking_time / self.timed_questions, 1) if self.asking_time > 0 and self.timed_questions > 0 else None
 
     @property
     def accepted(self):
         return LabelReview.objects.filter(original__user=self.user).count()
-
-    @property
-    def peer_points(self):
-        return self.accepted / 2
 
     def reviewed(self):
         return LabelReview.objects.filter(user=self.user).count()
 
     def __str__(self):
         return self.user.username
-
-
-class Level(CommonModel):
-    """
-    **NOTE**: this functionality is currently inactive and is a candidate for removal/overhaul in future releases.
-    """
-    class Meta:
-        verbose_name = _('level')
-
-    number = models.IntegerField()
-    title = models.CharField(max_length=50)
-    points = models.IntegerField()
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
 
 
