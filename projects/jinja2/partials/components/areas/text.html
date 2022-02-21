@@ -25,7 +25,7 @@
       {% if dp_info.source_formatting == 'md' %}
         {{text|to_markdown}}
       {% elif dp_info.source_formatting == 'ft' %}
-        {{text|to_formattted_text|safe}}
+        {{text|to_formatted_text|safe}}
       {% else %}
         {{text|wrap_paragraph|safe}}
       {% endif %}

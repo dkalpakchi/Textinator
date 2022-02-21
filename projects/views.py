@@ -363,10 +363,6 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             text = render_to_string('partials/_great_job.html')
         else:
             text = apply_premarkers(proj, dp_info.text)
-            if dp_info.source_formatting == 'md':
-                text = to_markdown(text)
-            elif dp_info.source_formatting == 'ft':
-                text = to_formatted_text(text)
 
         ctx = {
             'text': text,
