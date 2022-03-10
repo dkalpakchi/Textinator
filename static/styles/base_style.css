@@ -10,7 +10,7 @@ body .container:first-of-type {
   font-family: 'ROBOTECH GP';
   font-style: normal;
   font-weight: normal;
-  src: local('ROBOTECH GP'), url('./webfonts/ROBOTECH GP.ttf') format('ttf');
+  src: local('ROBOTECH GP'), url('/static/styles/webfonts/ROBOTECH GP.ttf');
 }
 
 .no-margin {

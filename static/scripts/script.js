@@ -89,12 +89,16 @@ $(document).ready(function() {
     $(this).toggleClass('is-active');
   })
 
-  $( "#sortable" ).sortable();
-  $( "#sortable" ).disableSelection();
-
-  $('form').validate({
-    errorClass: "help is-danger"
-  });
+  if ($.prototype.sortable !== undefined) {
+    $( "#sortable" ).sortable();
+    $( "#sortable" ).disableSelection();  
+  }
+  
+  if ($.prototype.validate !== undefined) {
+    $('form').validate({
+      errorClass: "help is-danger"
+    });
+  }
 
   $('input[type!="hidden"]').each(function() {
     if ($(this).attr('data-required') == "true") {
@@ -113,8 +117,10 @@ $(document).ready(function() {
     });
   }
 
-  $('[data-id="accordion"]').accordion({
-    collapsible: true,
-    active: false
-  });
+  if ($.prototype.accordion !== undefined) {
+    $('[data-id="accordion"]').accordion({
+      collapsible: true,
+      active: false
+    });
+  }
 });

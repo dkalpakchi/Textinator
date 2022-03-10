@@ -1,7 +1,8 @@
-python /usr/src/Textinator/manage.py migrate --noinput
-python /usr/src/Textinator/manage.py collectstatic --noinput
-python /usr/src/Textinator/manage.py seed_default
-python /usr/src/Textinator/manage.py update_translation_fields projects
-python /usr/src/Textinator/manage.py update_marker_actions
-python /usr/src/Textinator/manage.py createsuperuser --noinput
-python /usr/src/Textinator/manage.py runserver 0.0.0.0:8000
+npm install --prefix /home/tt/Textinator
+python /home/tt/Textinator/manage.py migrate --noinput
+python /home/tt/Textinator/manage.py collectstatic --noinput
+python /home/tt/Textinator/manage.py seed_default
+python /home/tt/Textinator/manage.py update_translation_fields projects
+python /home/tt/Textinator/manage.py update_marker_actions
+python /home/tt/Textinator/manage.py createsuperuser --noinput
+python /home/tt/Textinator/manage.py runserver 0.0.0.0:8000

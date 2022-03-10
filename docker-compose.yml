@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/usr/src/Textinator/
+      - .:/home/tt/Textinator/
     ports:
       - 8000:8000
     env_file:
