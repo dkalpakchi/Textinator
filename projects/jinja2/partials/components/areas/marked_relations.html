@@ -1,19 +1,21 @@
-<article id="markedRelationsArea" class="marked relations message">
-  <div class="message-header">
-    <p>Marked Relations</p>
-    <div class="text-right">
-      <a id='prevRelation' class="no-decoration"><span class="icon is-small"><i class="fas fa-angle-left"></i></span></a>
-      <span id='relationId'>0</span>
-      <a id='nextRelation' class="no-decoration"><span class="icon is-small"><i class="fas fa-angle-right"></i></span></a>
+{% if project.relations.count() > 0 %}
+  <article id="markedRelationsArea" class="marked relations message">
+    <div class="message-header">
+      <p>Marked Relations</p>
+      <div class="text-right">
+        <a id='prevRelation' class="no-decoration"><span class="icon is-small"><i class="fas fa-angle-left"></i></span></a>
+        <span id='relationId'>0</span>
+        <a id='nextRelation' class="no-decoration"><span class="icon is-small"><i class="fas fa-angle-right"></i></span></a>
+      </div>
     </div>
-  </div>
-  <div class="message-body">
-    <div id="relations"></div>
-    <a id='removeRelation' class="button is-fullwidth">
-      <span class="icon">
-        <i class="fas fa-trash-alt"></i>
-      </span>
-      <span>Remove relation</span>
-    </a>
-  </div>
-</article>
+    <div class="message-body">
+      <div id="relations"></div>
+      <a id='removeRelation' class="button is-fullwidth">
+        <span class="icon">
+          <i class="fas fa-trash-alt"></i>
+        </span>
+        <span>Remove relation</span>
+      </a>
+    </div>
+  </article>
+{% endif %}

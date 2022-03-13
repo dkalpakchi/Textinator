@@ -11,6 +11,7 @@
       </ul>
       {{ _("On top of that, if you want to help developing Textinator further (which we would be immensely happy about!), here is the {}").format('<a href="https://github.com/dkalpakchi/Textinator">{}</a>'.format(_("our GitHub repository"))|safe) }}.
     </div>
+    {% include 'partials/_quick_links.html' %}
     {% include 'partials/_text_language_switcher.html' %}
   {% elif user.is_staff %}
     <div class="content">

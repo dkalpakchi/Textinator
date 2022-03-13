@@ -1,14 +1,16 @@
-<article id="relationsArea" class="relations message">
-  <div class="message-header">
-    <p>{{ _("relations")|capitalize }}</p>
-  </div>
-  <div class="message-body">
-    <div class="field is-grouped is-grouped-multiline">
-      {% for relation in project.relations.all() %}
-        <div class="control">
-          {{relation|display_relation}}
-        </div>
-      {% endfor %}
+{% if project.relations.count() > 0 %}
+  <article id="relationsArea" class="relations message">
+    <div class="message-header">
+      <p>{{ _("relations")|capitalize }}</p>
     </div>
-  </div>
-</article>
+    <div class="message-body">
+      <div class="field is-grouped is-grouped-multiline">
+        {% for relation in project.relations.all() %}
+          <div class="control">
+            {{relation|display_relation}}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+{% endif %}

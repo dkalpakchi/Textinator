@@ -3,10 +3,12 @@
     <div class="column is-half">
       {% include 'partials/components/areas/text.html' %}
     </div>
-    <div class="column">
+    <div class="column is-half">
       {% include 'partials/components/areas/reminders.html' %}
       {% if dp_info.source_id %}
+        {% include 'partials/components/areas/marked_relations.html' %}
         {% include 'partials/components/areas/markers.html' %}
+        {% include 'partials/components/areas/relations.html' %}
       {% endif %}
       {% include 'partials/components/areas/actions.html' %}
     </div>

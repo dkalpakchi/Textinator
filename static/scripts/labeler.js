@@ -431,13 +431,48 @@
       return cnt;
     }
 
-    function resizeSVG() {
-      var  svg = document.getElementById("relations").querySelector('svg');
-      // Get the bounds of the SVG content
-      var  bbox = svg.getBBox();
-      // Update the width and height using the size of the contents
-      svg.setAttribute("width", bbox.x + bbox.width + bbox.x);
-      svg.setAttribute("height", bbox.y + bbox.height + bbox.y);
+    // Adapted rom https://benclinkinbeard.com/d3tips/make-any-chart-responsive-with-one-function/
+    function responsifySVG(svg) {
+      // container will be the DOM element
+      // that the svg is appended to
+      // we then measure the container
+      // and find its aspect ratio
+      const container = d3.select(svg.node().parentNode),
+            width = parseInt(svg.style('width'), 10),
+            height = parseInt(svg.style('height'), 10),
+            aspect = width / height;
+
+      console.log(width)
+      console.log(height)
+     
+      // set viewBox attribute to the initial size
+      // control scaling with preserveAspectRatio
+      // resize svg on inital page load
+      svg.attr('viewBox', `0 0 ${width} ${height}`)
+        .attr('preserveAspectRatio', 'xMinYMid')
+        .call(resize);
+     
+      // add a listener so the chart will be resized
+      // when the window resizes
+      // multiple listeners for the same event type
+      // requires a namespace, i.e., 'click.foo'
+      // api docs: https://goo.gl/F3ZCFr
+      d3.select(window).on(
+        'resize.' + container.attr('id'), 
+        resize
+      );
+     
+      // this is the code that resizes the chart
+      // it will be called on load
+      // and in response to window resizes
+      // gets the width of the container
+      // and resizes the svg to fill it
+      // while maintaining a consistent aspect ratio
+      function resize() {
+        const w = parseInt(container.style('width'));
+        svg.attr('width', w);
+        svg.attr('height', Math.round(w / aspect));
+      }
     }
 
     function getLabelText(obj) {
@@ -1017,9 +1052,9 @@
           /* Relations */
           var svg = d3.select("#relations")
             .append("svg")
-              // .attr('viewBox', '0,0,300,400')
               .attr("width", "100%")
-              .attr("height", "100%");
+              .attr("height", "250px")
+              .call(responsifySVG);
           
           // TODO: this marker should be visible w.r.t. the target node
           svg.append("svg:defs").append("svg:marker")
@@ -1143,8 +1178,8 @@
 
               var svgBbox = document.querySelector('svg').getBoundingClientRect();
 
-              var mx = svgBbox.width / 2 - bbox.width / 4;
-              var my = svgBbox.height / 2 - bbox.height / 2;
+              var mx = svgBbox.width / 2;
+              var my = svgBbox.height / 2;
 
               group.attr("transform", "translate(" + mx + ", " + my + ")");
             }
@@ -1291,7 +1326,6 @@
             .attr('class', '');
 
           $('#relationId').text(id);
-          resizeSVG();
         }
         currentRelationId = id;
       },
@@ -1452,7 +1486,6 @@
           // Dispatch the event.
           document.dispatchEvent(event);
           this.updateMarkAllCheckboxes()
-          resizeSVG();
         }
       },
       changeRelation: function(obj, fromId, toId) {
@@ -1589,7 +1622,6 @@
         const event = new Event(RELATION_CHANGE_EVENT);
         // Dispatch the event.
         document.dispatchEvent(event);
-        resizeSVG();
       },
       labelDeleteHandler: function(e) {
         // when a delete button on any label is clicked

@@ -333,7 +333,6 @@ textarea {
 }
 
 .tag.arrow {
-  display: table-cell;
   font-weight: bold;
 }
 
@@ -351,20 +350,16 @@ textarea {
 }
 
 .marked.relations {
-  height: 50vh;
+  height: 40vh;
 }
 
 .marked.relations .message-body {
-  height: 84%;
-}
-
-.marked.relations.message, #relations {
   height: 100%;
 }
 
 #relations {
-  max-height: 400px;
-  overflow-y: scroll;
+  width: 100%;
+  overflow: hidden;
 }
 
 .small.container {
