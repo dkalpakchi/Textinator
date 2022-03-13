@@ -43,7 +43,7 @@ def display_relation(rel):
     <div class="relation tags has-addons" data-b="{{rel.between}}" data-d="{{rel.direction}}" data-r="{{rel.id}}"
         data-shortcut="{{rel.shortcut|upper}}">
       <span class="tag arrow is-grey">&#8594;</span>
-      <span class="tag is-black">{{rel.name}}</span>
+      <span data-role="name" class="tag is-black">{{rel.name}}</span>
       {% if rel.shortcut %}
         <span class="tag is-dark">{{rel.shortcut|upper}}</span>
       {% endif %}

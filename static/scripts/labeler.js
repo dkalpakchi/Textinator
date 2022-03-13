@@ -441,9 +441,6 @@
             width = parseInt(svg.style('width'), 10),
             height = parseInt(svg.style('height'), 10),
             aspect = width / height;
-
-      console.log(width)
-      console.log(height)
      
       // set viewBox attribute to the initial size
       // control scaling with preserveAspectRatio
@@ -499,6 +496,14 @@
       markedSpan.setAttribute('data-scope', obj.getAttribute('data-scope'));
       markedSpan.setAttribute('style', 'background-color:' + color + '; color:' + textColor + ";");
       return markedSpan
+    }
+
+    function checkForMultiplePossibleRelations(relationsArea, relCode) {
+      var relBetween = relationsArea.querySelectorAll("[data-b]"),
+          numRelations = Array.from(relBetween)
+            .map((x) => x.getAttribute('data-b').indexOf(relCode) > -1)
+            .reduce((x, y) => x + y);
+      return numRelations > 1;
     }
 
     return {
@@ -569,7 +574,7 @@
             } else if (isLabel(target)) {
               if (control.allowSelectingLabels) {
                 var $target = $(target);
-                if ($target.prop('in_relation')) {
+                if ($target.prop('in_relation') && !$target.prop("multiple_possible_relations")) {
                   control.showRelationGraph(
                     parseInt(target.querySelector('[data-m="r"]').textContent)
                   );
@@ -1077,9 +1082,6 @@
           var svg = d3.select("#relations svg"),
               radius = 10;
 
-          svg
-            .attr("height", "85%");
-
           svg.selectAll('g')
             .attr('class', 'hidden');
 
@@ -1191,7 +1193,7 @@
           }
           finalizeSimulation();
 
-          $("#relationId").text(currentRelationId);
+          this.showRelationGraph(currentRelationId);
         }
       },
       drawList: function(data) {
@@ -1235,7 +1237,7 @@
               .attr("x", function(d) { return d.x + radius * 1.3; })
               .attr("y", function(d) { return d.y + 0.5 * radius; });
 
-          $("#relationId").text(currentRelationId);
+          this.showRelationGraph(currentRelationId);
         }
       },
       getAvailableRelationIds: function() {
@@ -1325,7 +1327,7 @@
           d3.select('g#' + relations[id]['graphId'])
             .attr('class', '');
 
-          $('#relationId').text(id);
+          $('#relationId').text(id + " - " + relations[id]['name']);
         }
         currentRelationId = id;
       },
@@ -1335,7 +1337,9 @@
         var $parts = $('.selector span.tag.active'),
             between = obj.getAttribute('data-b').split('|').map(x => x.split('-:-')),
             direction = obj.getAttribute('data-d'),
-            rule = obj.getAttribute('data-r');
+            rule = obj.getAttribute('data-r'),
+            relName = obj.querySelector('[data-role="name"]').innerText,
+            control = this;
 
         if ($parts.length >= 2) {
           var nodes = {},
@@ -1345,11 +1349,15 @@
             $parts[i].id = 'rl_' + lastNodeInRelationId;
             lastNodeInRelationId++;
 
-            $($parts[i]).prop('in_relation', true);
+            var jqPi = $($parts[i]);
+            jqPi.prop('in_relation', true);
 
             // strip marker variant part
             var s = $parts[i].getAttribute('data-s');
             s = s.substring(0, s.lastIndexOf("_"));
+
+            jqPi.prop("multiple_possible_relations", 
+              checkForMultiplePossibleRelations(control.relationsArea, s));
 
             if (!nodes.hasOwnProperty(s)) {
               nodes[s] = [];
@@ -1423,6 +1431,7 @@
               'rule': rule,
               'between': sketches[i].between,
               'links': [],
+              'name': relName,
               'd3': {
                 'nodes': sketches[i].nodes,
                 'links': sketches[i].links,
@@ -1456,7 +1465,7 @@
               this.drawNetwork({
                 'id': "n" + startId + "__" + (j - 1),
                 'nodes': Array.prototype.concat.apply([], Object.values(sketches[i].nodes)),
-                'links': [].concat(sketches[i].links) // necessary since d3 changes the structure of links
+                'links': [].concat(sketches[i].links), // necessary since d3 changes the structure of links
               }, (from != null && to != null && direction != '2'))
             } else if (this.drawingType[rule] == 'l') {
               this.drawList({
@@ -1468,12 +1477,18 @@
             for (var s in sketches[i].nodes) {
               var snodes = sketches[i].nodes[s];
               snodes.forEach(function(x) {
-                var relSpan = document.createElement('span');
-                relSpan.setAttribute('data-m', 'r');
-                relSpan.className = "rel";
-                relSpan.textContent = lastRelationId;
-                x.dom.appendChild(relSpan);
-                x.dom.classList.remove('active')
+                var relSpan = x.dom.querySelector('[data-m]');
+
+                if (utils.isDefined(relSpan)) {
+                  relSpan.textContent = "+";
+                } else {
+                  var relSpan = document.createElement('span');
+                  relSpan.setAttribute('data-m', 'r');
+                  relSpan.className = "rel";
+                  relSpan.textContent = lastRelationId;
+                  x.dom.appendChild(relSpan);
+                }
+                x.dom.classList.remove('active');
                 $(x.dom).prop('selected', false);
               });
             }
