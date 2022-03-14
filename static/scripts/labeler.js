@@ -506,6 +506,20 @@
       return numRelations > 1;
     }
 
+    function createRelationSwitcher(relationIds) {
+      var btns = document.createElement("div");
+      btns.className = "buttons are-small";
+
+      for (var i = 0, len = relationIds.length; i < len; i++) {
+        var btn = document.createElement("button");
+        btn.className = "button";
+        btn.setAttribute('data-rel', relationIds[i]);
+        btn.textContent = relationIds[i];
+        btns.appendChild(btn);
+      }
+      return btns;
+    }
+
     return {
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
@@ -588,6 +602,10 @@
                   }
                 }
               }
+            } else if (target.hasAttribute('data-rel')) {
+              control.showRelationGraph(
+                parseInt(target.getAttribute('data-rel'))
+              );
             }
           }, false);
 
@@ -1480,7 +1498,23 @@
                 var relSpan = x.dom.querySelector('[data-m]');
 
                 if (utils.isDefined(relSpan)) {
+                  if (utils.isDefined($(relSpan).prop("rels"))) {
+                    var rr = $(relSpan).prop("rels");
+                    rr.push(lastRelationId);
+                    $(relSpan).prop("rels", rr);
+                  } else {
+                    $(relSpan).prop("rels", [relSpan.textContent, lastRelationId]);
+                  }
                   relSpan.textContent = "+";
+
+                  var content = createRelationSwitcher($(relSpan).prop("rels"));
+
+                  const instance = tippy(relSpan, {
+                    content: content,
+                    interactive: true,
+                    placement: "bottom",
+                    theme: 'translucent'
+                  });
                 } else {
                   var relSpan = document.createElement('span');
                   relSpan.setAttribute('data-m', 'r');
