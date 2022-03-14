@@ -197,6 +197,7 @@ class Exporter:
         for batch in batches:
             labels = batch.label_set
             inputs = batch.input_set
+            relations = batch.labelrelation_set
 
             if labels.count() or inputs.count():
                 context_id = inputs.first().context_id if inputs.count() else labels.first().context_id
@@ -207,8 +208,18 @@ class Exporter:
                     }
 
                 ann = {}
+                exclude_labels = set()
+                if relations.count():
+                    ann["relations"] = []
+                    for r in relations.all():
+                        ann["relations"].append(r.to_minimal_json())
+                        exclude_labels.add(r.first_label)
+                        exclude_labels.add(r.second_label)
+
                 if labels.count():
-                    ann["labels"] = [l.to_minimal_json() for l in labels.all()]
+                    ann["labels"] = [l.to_minimal_json() for l in labels.all() if l not in exclude_labels]
+                    if not ann["labels"]:
+                        del ann["labels"]
 
                 if inputs.count():
                     ann["inputs"] = [i.to_minimal_json() for i in inputs.all()]

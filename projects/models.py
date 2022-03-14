@@ -302,6 +302,14 @@ class Relation(CommonModel):
     def __str__(self):
         return self.__dict__['name']
 
+    def to_minimal_json(self, dt_format=None):
+        res = super(Relation, self).to_json(dt_format=dt_format)
+        res.update({
+            'name': self.name,
+            'direction': self.direction
+        })
+        return res
+
     def to_json(self, dt_format=None):
         res = super(Relation, self).to_json(dt_format=dt_format)
         res.update({
@@ -1249,6 +1257,16 @@ class LabelRelation(CommonModel):
             return "{} <-- {}".format(self.first_label.text, self.second_label.text)
         else:
             return "{} --- {}".format(self.first_label.text, self.second_label.text)
+
+    def to_minimal_json(self, dt_format=None):
+        res = super(LabelRelation, self).to_json(dt_format=dt_format)
+        res.update({
+            'rule': self.rule.to_minimal_json(),
+            'first': self.first_label.to_minimal_json(),
+            'second': self.second_label.to_minimal_json(),
+            'cluster': self.cluster,
+        })
+        return res
 
     def to_short_json(self, dt_format=None):
         res = super(LabelRelation, self).to_json(dt_format=dt_format)
