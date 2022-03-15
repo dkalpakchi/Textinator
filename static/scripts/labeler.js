@@ -29,8 +29,14 @@
       });
       return o;
     },
-    title(string) {
+    title: function(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
+    },
+    arrayEquals: function(a, b) {
+      return Array.isArray(a) &&
+          Array.isArray(b) &&
+          a.length === b.length &&
+          a.every((val, index) => val === b[index]);
     }
   };
 
@@ -722,7 +728,10 @@
 
           if (utils.isDefined(this.relationsArea)) {
             this.relationsArea.addEventListener('click', function(e) {
-              control.markRelation(getClosestRelation(e.target));
+              var relMarker = getClosestRelation(e.target);
+
+              if (utils.isDefined(relMarker))
+                control.markRelation(relMarker);
             }, false);
           }
 
@@ -1360,6 +1369,61 @@
             control = this;
 
         if ($parts.length >= 2) {
+          var allInRelation = true,
+              rels = [],
+              sameRels = [];
+          for (var i = 0, len = $parts.length; i < len; i++) {
+            var $p = $($parts[i]);
+            allInRelation = allInRelation && $p.prop("in_relation");
+            rels.push($p.find('[data-m]').prop("rels"));
+          }
+          
+          // linear scan to check that the same relation is not attempted to be created
+          if (allInRelation) {
+            var relsLength = rels.length,
+                ptr = new Array(relsLength),
+                isLast = false;
+            ptr.fill(0)
+
+            while (true) {
+              var cur = rels.map((x, i) => x[ptr[i]]);
+
+              if (new Set(cur).size == 1) {
+                // all same, advance all pointers
+                sameRels.push(rels[ptr[0]]);
+                for (var j = 0; j < relsLength; j++) {
+                  if (ptr[j] + 1 < rels[j].length) {
+                    ptr[j]++;
+                  }
+                }
+              } else {
+                var arrMax = Math.max(...cur);
+                for (var j = 0; j < relsLength; j++) {
+                  if (cur[ptr[j]] < arrMax && ptr[j] + 1 < rels[j].length) {
+                    ptr[j]++;
+                  }
+                }
+              }
+
+              if (isLast) break;
+
+              var candLast = true;
+              for (var j = 0; j < relsLength; j++) {
+                candLast = candLast && (ptr[j] + 1 == rels[j].length);
+              }
+              isLast = candLast;
+            }
+          }
+          
+          for (var j = 0, len = sameRels.length; j < len; j++) {
+            var ind = sameRels[j];
+
+            if (relations[ind]['rule'] == rule && 
+                relations[ind]['name'] == relName) {
+              return;
+            }
+          }
+
           var nodes = {},
               links = [];
           var startId = lastNodeInRelationId;
@@ -1502,8 +1566,6 @@
                     var rr = $(relSpan).prop("rels");
                     rr.push(lastRelationId);
                     $(relSpan).prop("rels", rr);
-                  } else {
-                    $(relSpan).prop("rels", [relSpan.textContent, lastRelationId]);
                   }
                   relSpan.textContent = "+";
 
@@ -1520,6 +1582,7 @@
                   relSpan.setAttribute('data-m', 'r');
                   relSpan.className = "rel";
                   relSpan.textContent = lastRelationId;
+                  $(relSpan).prop("rels", [lastRelationId]);
                   x.dom.appendChild(relSpan);
                 }
                 x.dom.classList.remove('active');
