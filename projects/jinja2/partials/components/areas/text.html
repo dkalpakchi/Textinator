@@ -17,9 +17,6 @@
   </div>
   {% set all_text_markers=project.markervariant_set.filter(anno_type='free-text').count() == project.markervariant_set.count() %}
   <div class="selector element content message-body{% if all_text_markers %} broad{% endif %}" data-s="{% if dp_info.source_id is not none and not dp_info.is_empty %}{{dp_info.source_id}}{% endif %}" data-dp="{% if dp_info.id is not none and not dp_info.is_empty %}{{dp_info.id}}{% endif %}" data-f="{{dp_info.is_empty}}">
-    <div class="json">
-      {"hello": "world"}
-    </div>
     {% if dp_info.no_data %}
       {% include 'partials/_no_data.html' %}
     {% elif dp_info.is_empty %}

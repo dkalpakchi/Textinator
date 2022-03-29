@@ -72,10 +72,21 @@
     },
     'DialJSL': {
       "type": "object",
-      "properties"
-      'files': [],
-      'folders': [],
-      'key': ''
+      "properties": {
+        'files': {
+          "type": "array", 
+          "items": {
+            "type": "string"
+          }
+        },
+        'folders': {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        'key': "string"
+      }
     }
   }
 

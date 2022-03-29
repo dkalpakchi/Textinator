@@ -35,6 +35,7 @@ from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
 from .export import Exporter
 from .view_helpers import *
+from .datasources import TextDatapoint
 
 from Textinator.jinja2 import to_markdown, to_formatted_text
 
@@ -362,7 +363,13 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         if dp_info.is_empty:
             text = render_to_string('partials/_great_job.html')
         else:
-            text = apply_premarkers(proj, dp_info.text)
+            if type(dp_info.text) == TextDatapoint:
+                text = render_to_string('partials/components/areas/dialogue_text.html', {
+                    'dp_info': dp_info
+                })
+            else:
+                text = dp_info.text
+            text = apply_premarkers(proj, text).strip()
 
         ctx = {
             'text': text,

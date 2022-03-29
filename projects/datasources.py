@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import jsonlines
 import random
 import string
 from pathlib import Path
@@ -10,6 +11,25 @@ from django.conf import settings
 
 class AbsentSpecError(Exception):
     pass
+
+
+class TextDatapoint:
+    def __init__(self, text=None, meta=None):
+        self.__text = text or []
+        self.__meta = meta or []
+
+    def add_datapoint(self, text, meta):
+        self.__text.append(text.strip() if text else text)
+        self.__meta.append(meta)
+
+    def get_text(self, idx):
+        return self.__text[idx]
+
+    def get_meta(self, idx):
+        return self.__meta[idx]
+
+    def iterator(self):
+        return zip(self.__text, self.__meta)
 
 
 class AbstractDataSource:
@@ -284,18 +304,18 @@ class DialJSLSource(AbstractDataSource):
                         break
 
                 if found_folder:
-                    self.__files.extend(Path(found_folder).rglob('*.json'))
+                    self.__files.extend(Path(found_folder).rglob('*.jsonl'))
 
         for fname in self.__files:
-            # we need to have jsonl reading here + 
-            d = json.load(open(fname))
-            if type(d) == list:
-                for el in d:
-                    # this is all in-memory, of course
-                    # TODO: think of fixing
-                    self._add_datapoint(el[self.get_spec('key')])
-            elif type(d) == dict:
-                self._add_datapoint(d[self.get_spec('key')])
+            dp = TextDatapoint()
+            with jsonlines.open(fname) as reader:
+                for d in reader:
+                    try:
+                        txt = d.pop(self.get_spec("key"))
+                        dp.add_datapoint(txt, d)
+                    except KeyError:
+                        dp.add_datapoint(None, d)
+            self._add_datapoint(dp)
             self.__mapping.append(os.path.basename(fname))
 
     def get_random_datapoint(self):

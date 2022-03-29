@@ -459,7 +459,7 @@ class Project(CommonModel):
                 if ds_instance[dp_id] is not None:
                     return DatapointInfo(
                         dp_id,                                  # the point's id in the datasource
-                        ds_def.postprocess(ds_instance[dp_id]).strip(),  # a post-processed random datapoint from the chosen dataset
+                        ds_def.postprocess(ds_instance[dp_id]), # a post-processed random datapoint from the chosen dataset
                         ds_instance,                            # instantiated DataSource of a specific type
                         ds_def                                  # DataSource
                     )
@@ -544,7 +544,7 @@ class Project(CommonModel):
 
             return DatapointInfo(
                 dp_id,                          # the point's id in the datasource
-                postprocess(dp).strip(),        # a post-processed random datapoint from the chosen dataset
+                postprocess(dp),                # a post-processed random datapoint from the chosen dataset
                 ds,                             # instantiated DataSource of a specific type
                 DataSource.objects.get(pk=idx)  # DataSource id
             )

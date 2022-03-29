@@ -1,0 +1,8 @@
+{% for text, meta in dp_info.text.iterator() %}
+	<div class="item">
+		{% if text %}
+			<p>{{text.strip()}}</p>
+		{% endif %}
+		<p>{{meta}}</p>
+	</div>
+{% endfor %}
