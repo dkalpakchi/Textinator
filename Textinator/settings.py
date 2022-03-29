@@ -230,6 +230,13 @@ MEDIA_URL = '/{}media/'.format(ROOT_URLPATH)
 STATIC_ROOT = 'static_cdn'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+UPLOAD_DIR = os.path.join(MEDIA_ROOT, 'uploads')
+
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT)
+
+if not os.path.exists(UPLOAD_DIR):
+    os.mkdir(UPLOAD_DIR)
 
 # Django Sass
 SASS_PROCESSOR_ROOT = os.path.join(BASE_DIR, 'static')
@@ -350,6 +357,7 @@ DATASOURCE_TYPES = [
     ('PlainText', 'Plain text'),
     ('TextFile', 'Plain text file(s)'),
     ('Json', 'JSON file(s)'),
+    ('DialJSL', 'Dialogue JSON lines'),
     ('TextsAPI', 'Texts API')
 ]
 

@@ -207,7 +207,6 @@ class JsonSource(AbstractDataSource):
         return self.__mapping[int(dp_id)]
 
 
-
 class TextsAPISource(AbstractDataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
@@ -244,3 +243,65 @@ class TextsAPISource(AbstractDataSource):
             return data['name']
         else:
             return ""
+
+
+class DialJSLSource(AbstractDataSource):
+    def __init__(self, spec_data):
+        super().__init__(spec_data)
+
+        self._required_keys = ['key']
+        self._aux_keys = [('files',), ('folders',)]
+        self.check_constraints()
+
+        self.__mapping = []
+
+        if self.get_spec('username'):
+            self.__allowed_dirs = map(lambda x: x.format(username=self.get_spec('username')), settings.DATA_DIRS)
+        else:
+            fmt = string.Formatter()
+            self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
+
+        self.__files = []
+        if self.get_spec('files'):
+            for fname in self.get_spec('files'):
+                found_file = None
+                for d in self.__allowed_dirs:
+                    cand_file = os.path.join(d, fname)
+                    if os.path.exists(cand_file) and os.path.isfile(cand_file):
+                        found_file = cand_file
+                        break
+
+                if found_file:
+                    self.__files.append(found_file)
+
+        if self.get_spec('folders'):
+            for folder in self.get_spec('folders'):
+                found_folder = None
+                for d in self.__allowed_dirs:
+                    cand_folder = os.path.join(d, folder)
+                    if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
+                        found_folder = cand_folder
+                        break
+
+                if found_folder:
+                    self.__files.extend(Path(found_folder).rglob('*.json'))
+
+        for fname in self.__files:
+            # we need to have jsonl reading here + 
+            d = json.load(open(fname))
+            if type(d) == list:
+                for el in d:
+                    # this is all in-memory, of course
+                    # TODO: think of fixing
+                    self._add_datapoint(el[self.get_spec('key')])
+            elif type(d) == dict:
+                self._add_datapoint(d[self.get_spec('key')])
+            self.__mapping.append(os.path.basename(fname))
+
+    def get_random_datapoint(self):
+        idx = random.randint(0, self.size() - 1)
+        return idx, self[idx]
+
+    def get_source_name(self, dp_id):
+        # we know dp_id is for sure an integer
+        return self.__mapping[int(dp_id)]

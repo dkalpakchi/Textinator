@@ -14,6 +14,11 @@
     },
     'TextsAPI': {
       'endpoint': ''
+    },
+    'DialJSL': {
+      'files': [],
+      'folders': [],
+      'key': ''
     }
   }
 
@@ -65,6 +70,13 @@
         "key": "string"
       }
     },
+    'DialJSL': {
+      "type": "object",
+      "properties"
+      'files': [],
+      'folders': [],
+      'key': ''
+    }
   }
 
   function updateSchema(option) {
