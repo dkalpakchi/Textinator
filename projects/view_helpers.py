@@ -19,7 +19,7 @@ class BatchInfo:
         self.ranges = json.loads(data['ranges'])
         self.text_markers = json.loads(data['text_markers'])
         self.datapoint = str(data['datapoint'])
-        self.input_context = data.get('input_context')
+        self.context = data.get('context')
 
         try:
             self.project = Project.objects.get(pk=proj)
@@ -42,33 +42,32 @@ class BatchInfo:
         ]
 
 
+def get_or_create_ctx(batch_info, ctx_cache):
+    if ctx_cache:
+        ctx = retrieve_by_hash(batch_info.context, Context, ctx_cache)
+        if not ctx:
+            ctx = Context.objects.create(
+                datasource=batch_info.data_source,
+                datapoint=batch_info.datapoint,
+                content=batch_info.context
+            )
+            ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
+    else:
+        ctx, _ = Context.objects.get_or_create(
+            datasource=batch_info.data_source,
+            datapoint=batch_info.datapoint,
+            content=batch_info.context
+        )
+    return ctx
+
+
 def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
     saved_labels = 0
 
     if chunk.get('marked', False) and (not chunk.get('deleted', False)) and chunk.get('updated', True):
         ctx_cache, label_cache = caches
 
-        # First check for the "context", there may be 2 cases:
-        # a) the context is the whole text, in which case it's already created as input_context previously and will be just retrieved from cache
-        # b) the context is something other than the whole text, in which case it will be created here
-        if 'context' in chunk and type(chunk['context']) == str:
-            if ctx_cache:
-                ctx = retrieve_by_hash(chunk['context'], Context, ctx_cache)
-                if not ctx:
-                    ctx = Context.objects.create(
-                        datasource=batch_info.data_source,
-                        datapoint=batch_info.datapoint,
-                        content=chunk['context']
-                    )
-                    ctx_cache.set(ctx.content_hash, ctx.pk, 600)
-            else:
-                ctx, _ = Context.objects.get_or_create(
-                    datasource=batch_info.data_source,
-                    datapoint=batch_info.datapoint,
-                    content=chunk['context']
-                )
-        else:
-            ctx = None
+        ctx = get_or_create_ctx(batch_info, ctx_cache)
 
         try:
             if (not 'label' in chunk) or (type(chunk['label']) != str):
@@ -113,24 +112,6 @@ def render_editing_board(project, user):
         'project': project
     })
 
-def get_or_create_ctx_by_input_context(batch_info, ctx_cache):
-    if ctx_cache:
-        ctx = retrieve_by_hash(batch_info.input_context, Context, ctx_cache)
-        if not ctx:
-            ctx = Context.objects.create(
-                datasource=batch_info.data_source,
-                datapoint=batch_info.datapoint,
-                content=batch_info.input_context
-            )
-            ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
-    else:
-        ctx, _ = Context.objects.get_or_create(
-            datasource=batch_info.data_source,
-            datapoint=batch_info.datapoint,
-            content=batch_info.input_context
-        )
-    return ctx
-
 
 def process_inputs(batch, batch_info, short_text_markers=None, long_text_markers=None,
     numbers=None, ranges=None, ctx_cache=None):
@@ -146,7 +127,7 @@ def process_inputs(batch, batch_info, short_text_markers=None, long_text_markers
     if any(inputs):
         new_inputs = [x for x in inputs if x]
 
-        ctx = get_or_create_ctx_by_input_context(batch_info, ctx_cache)
+        ctx = get_or_create_ctx(batch_info, ctx_cache)
         
         mv = {}
         for inp_type in new_inputs:
@@ -214,7 +195,7 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                     marker_groups[prefix][mv_code].append(v)
 
         if len([a for x in marker_groups.values() for y in x.values() for a in y]) > 0:
-            ctx = get_or_create_ctx_by_input_context(batch_info, ctx_cache)
+            ctx = get_or_create_ctx(batch_info, ctx_cache)
 
             mv_map = {}
             for i, (prefix, v) in enumerate(marker_groups.items()):
@@ -260,7 +241,7 @@ def process_text_markers(batch, batch_info, text_markers=None, ctx_cache=None):
     sent_text_markers = text_markers or batch_info.text_markers
     
     if sent_text_markers:
-        ctx = get_or_create_ctx_by_input_context(batch_info, ctx_cache)
+        ctx = get_or_create_ctx(batch_info, ctx_cache)
 
         mv = {}
         for tm_code in sent_text_markers:

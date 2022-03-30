@@ -265,13 +265,13 @@ textarea {
   resize: none;
 }
 
-.text .message-body {
+.text > .message-body {
   height: 50vh;
   overflow-y: scroll;
   text-align: justify;
 }
 
-.text .message-body.broad {
+.text > .message-body.broad {
   height: 85vh;
 }
 

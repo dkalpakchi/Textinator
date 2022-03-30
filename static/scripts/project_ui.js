@@ -92,5 +92,33 @@ $(document).ready(function() {
    * - Modals handling
    */
 
-   bulmaSlider.attach();
+  bulmaSlider.attach();
+
+
+  tippy('[data-meta]', {
+    content: function(x) {
+      var table = document.createElement('table'),
+          tbody = document.createElement('tbody'),
+          data = JSON.parse(x.querySelector('script').innerText);
+
+      for (var x in data) {
+        var row = document.createElement('tr'),
+            keyCell = document.createElement('td'),
+            valueCell = document.createElement('td');
+        keyCell.innerText = x;
+        if (Array.isArray(data[x]))
+          valueCell.innerText = data[x].join("\n");
+        else
+          valueCell.innerText = data[x];
+        row.appendChild(keyCell);
+        row.appendChild(valueCell);
+        tbody.appendChild(row);
+      }
+      table.appendChild(tbody);
+      return table;
+    },
+    interactive: true,
+    placement: "bottom",
+    trigger: 'click'
+  });
 });

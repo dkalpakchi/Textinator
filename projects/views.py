@@ -338,10 +338,16 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                 pass
 
             try:
-                DataAccessLog.objects.get_or_create(
-                    user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
-                    is_submitted=False, is_skipped=False
-                )
+                if proj.sampling_with_replacement:
+                    DataAccessLog.objects.get_or_create(
+                        user=u, datapoint=str(dp_info.id), 
+                        project=proj, datasource=d
+                    )
+                else:
+                    DataAccessLog.objects.get_or_create(
+                        user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
+                        is_submitted=False, is_skipped=False
+                    )
             except DataAccessLog.MultipleObjectsReturned:
                 alogs = DataAccessLog.objects.filter(
                     user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
@@ -364,9 +370,15 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             text = render_to_string('partials/_great_job.html')
         else:
             if type(dp_info.text) == TextDatapoint:
+                users = list(set([x['username'] for x in dp_info.text.meta if 'username' in x]))
                 text = render_to_string('partials/components/areas/dialogue_text.html', {
-                    'dp_info': dp_info
+                    'dp_info': dp_info,
+                    'cmap': {
+                        users[0]: 'info',
+                        users[1]: 'primary'
+                    }
                 })
+                dp_info.is_dialogue = True
             else:
                 text = dp_info.text
             text = apply_premarkers(proj, text).strip()
@@ -620,13 +632,19 @@ def new_article(request, proj):
     if dp_info.is_empty:
         text = render_to_string('partials/_great_job.html')
     else:
-        # log the new one
         data_source = DataSource.objects.get(pk=dp_info.source_id)
-        DataAccessLog.objects.create(
-            user=request.user, datapoint=str(dp_info.id), 
-            project=project, datasource=data_source,
-            is_submitted=False, is_skipped=False
-        )
+        if batch_info.project.sampling_with_replacement:
+            DataAccessLog.objects.get_or_create(
+                user=request.user, datapoint=str(dp_info.id), 
+                project=project, datasource=data_source
+            )
+        else:
+            # log the new one
+            DataAccessLog.objects.create(
+                user=request.user, datapoint=str(dp_info.id), 
+                project=project, datasource=data_source,
+                is_submitted=False, is_skipped=False
+            )
 
         text = apply_premarkers(project, dp_info.text)
 

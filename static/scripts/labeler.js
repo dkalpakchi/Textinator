@@ -126,14 +126,14 @@
             } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || LINE_ENDING_TAGS.includes(prev.tagName)) {
               // if there is a label, need to remove the possible relation label before calculating textContent
               var res = removeRelationIds(prev);
-              len += prev.textContent.length;
+              len += prev.innerText.trim().length;
               if (LINE_ENDING_TAGS.includes(prev.tagName))
                 len += 1; // +1 because P is replaced by '\n'
               addRelationIds(res);
-            } else {
-              len += prev.textContent.length;
+            } else if (prev.tagName != 'SCRIPT') {
+              len += prev.innerText.trim().length;
             }
-          } else if (prev.nodeType == 3) {
+          } else if (prev.nodeType == 3 && prev.wholeText.trim()) {
             len += prev.length
           }
           prev = onlyElements ? prev.previousElementSibling : prev.previousSibling
@@ -142,6 +142,7 @@
       }
 
       var textLength = getPrevLength(node.previousSibling);
+
       var enclosingLabel = getEnclosingLabel(node);
       if (enclosingLabel != null && enclosingLabel != node)
         textLength += getPrevLength(enclosingLabel.previousSibling);
@@ -220,9 +221,9 @@
     }
 
     function getEnclosingParagraph(node) {
-      while (!["UL", "BODY", "P"].includes(node.tagName))
+      while (!["UL", "BODY", "P", "ARTICLE"].includes(node.tagName))
         node = node.parentNode;
-      return (["P", "UL"].includes(node.tagName)) ? node : null;
+      return (["P", "UL", "ARTICLE"].includes(node.tagName)) ? node : null;
     }
 
     function mergeWithNeighbors(node) {
@@ -579,7 +580,18 @@
         })
       },
       getContextText: function() {
-        return this.selectorArea == null ? "" : this.selectorArea.textContent.trim()
+        var $sel = $(this.selectorArea),
+            $relNum = $sel.find('[data-m="r"]'),
+            $delBtn = $sel.find('button.delete'),
+            $meta = $sel.find('[data-meta]');
+        $relNum.hide();
+        $delBtn.hide();
+        $meta.hide();
+        var ct = this.selectorArea == null ? "" : this.selectorArea.innerText.trim()
+        $relNum.show();
+        $delBtn.show();
+        $meta.show();
+        return ct;
       },
       initEvents: function() {
         // event delegation
@@ -836,7 +848,6 @@
         chunk['id'] = labelId;
         chunk['label'] = node.getAttribute('data-s');
         chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
-        chunk['context'] = resetText; // was relevant when we had different context sizes
         chunk['start'] = previousTextLength(node, false);
         chunk['end'] = chunk['start'] + node.textContent.length;
         chunks.push(chunk);
@@ -879,7 +890,6 @@
             chunk['range'] = group[0].cloneRange();
             chunk['range'].setEnd(group[N-1].endContainer, group[N-1].endOffset);
 
-            chunk['context'] = resetText; // was relevant when we had different context sizes
             chunk['lengthBefore'] = previousTextLength(chunk['range'].startContainer);
 
             chunk['start'] = chunk['range'].startOffset;
@@ -895,6 +905,8 @@
             } else {
               chunks[N-1] = chunk;
             }
+
+            console.log(chunk);
           }
         } else {
           var chunk = this.getActiveChunk();
@@ -2165,7 +2177,7 @@
       var inputFormData = $inputForm.serializeObject();
 
       // if there's an input form field, then create input_context
-      inputFormData['input_context'] = labelerModule.getContextText();
+      inputFormData['context'] = labelerModule.getContextText();
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());
 

@@ -26,6 +26,8 @@
         {{text|to_markdown}}
       {% elif dp_info.source_formatting == 'ft' %}
         {{text|to_formatted_text|safe}}
+      {% elif dp_info.is_dialogue %}
+        {{text|safe}}
       {% else %}
         {{text|wrap_paragraph|safe}}
       {% endif %}

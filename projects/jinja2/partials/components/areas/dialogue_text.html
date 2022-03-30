@@ -1,8 +1,19 @@
 {% for text, meta in dp_info.text.iterator() %}
-	<div class="item">
-		{% if text %}
-			<p>{{text.strip()}}</p>
-		{% endif %}
-		<p>{{meta}}</p>
-	</div>
+  <article class="message{% if 'username' in meta %} is-{{ cmap[meta['username']] }}{% endif %}">
+    <div class="message-body">
+      <button class="button" data-meta>
+        <span class="icon is-small">
+          <script type="application/json">
+            {{meta|tojson}}
+          </script>
+          <i class="fas fa-info"></i>
+        </span>
+      </button>
+      {% if text %}
+        <i>{{meta['username']}}</i>: {{text.strip()}}
+      {% else %}
+        <i>{{meta['username']}}: No message</i>
+      {% endif %}
+    </div>
+  </article>
 {% endfor %}

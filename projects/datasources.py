@@ -31,6 +31,10 @@ class TextDatapoint:
     def iterator(self):
         return zip(self.__text, self.__meta)
 
+    @property
+    def meta(self):
+        return self.__meta
+
 
 class AbstractDataSource:
     def __init__(self, spec_data):
