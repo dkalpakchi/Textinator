@@ -265,14 +265,34 @@ textarea {
   resize: none;
 }
 
+.text {
+  display: flex;
+  -webkit-flex-flow: column;
+      -ms-flex-flow: column;
+          flex-flow: column;
+  height: 100%;
+}
+
 .text > .message-body {
   height: 50vh;
+  -webkit-flex-grow: 1;
+          flex-grow: 1;
   overflow-y: scroll;
   text-align: justify;
 }
 
 .text > .message-body.broad {
   height: 85vh;
+}
+
+.text .message-body.utterance {
+  position: relative;
+}
+
+.text .message-body.utterance button {
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .achievements {
@@ -533,6 +553,11 @@ label.error {
 /**
  * Bulma extensions
  */
+
+.is-tiny {
+  font-size: 0.55rem;
+}
+
 .tag.is-warndark {
   background-color: #946c00;
   color: #fff;

@@ -43,7 +43,7 @@
 
   var labelerModule = (function() {
     const RELATION_CHANGE_EVENT = 'labeler_relationschange';
-    const LINE_ENDING_TAGS = ["P", "UL", "BLOCKQUOTE", "H1", "H2", "H3", "H4", "H5", "H6"];
+    const LINE_ENDING_TAGS = ["P", "UL", "BLOCKQUOTE", "H1", "H2", "H3", "H4", "H5", "H6", "ARTICLE"];
 
     var chunks = [], // the array of all chunks of text marked with a label, but not submitted yet
         relations = {}, // a map from relationId to the list of relations constituting it
@@ -95,26 +95,25 @@
       existingNode.parentNode.insertBefore(newNode, existingNode.nextSibling);
     }
 
+    // hide those that will influence innerText
+    function showExtraElements(selectorArea, makeVisible) {
+      var $sel = $(selectorArea),
+          $relNum = $sel.find('[data-m="r"]'),
+          $delBtn = $sel.find('button.delete'),
+          $meta = $sel.find('[data-meta]');
+
+      if (makeVisible) {
+        $relNum.show();
+        $delBtn.show();
+        $meta.show();
+      } else {
+        $relNum.hide();
+        $delBtn.hide();
+        $meta.hide();
+      }
+    }
+
     function previousTextLength(node) {
-      function removeRelationIds(prev) {
-        var markers = prev.querySelectorAll('span[data-m]');
-        var textContent = [];
-        for (var i = 0, len = markers.length; i < len; i++) {
-          textContent.push(markers[i].textContent);
-          markers[i].textContent = "";
-        }
-        return {
-          'markers': markers,
-          'textContent': textContent
-        }
-      }
-
-      function addRelationIds(obj) {
-        for (var i = 0, len = obj.markers.length; i < len; i++) {
-          obj.markers[i].textContent = obj.textContent[i];
-        }
-      }
-
       function getPrevLength(prev, onlyElements) {
         if (onlyElements === undefined) onlyElements = false;
         var len = 0;
@@ -125,12 +124,10 @@
               len += 1
             } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || LINE_ENDING_TAGS.includes(prev.tagName)) {
               // if there is a label, need to remove the possible relation label before calculating textContent
-              var res = removeRelationIds(prev);
               len += prev.innerText.trim().length;
               if (LINE_ENDING_TAGS.includes(prev.tagName))
                 len += 1; // +1 because P is replaced by '\n'
-              addRelationIds(res);
-            } else if (prev.tagName != 'SCRIPT') {
+            } else if (prev.tagName != 'SCRIPT' && prev.tagName != "BUTTON") {
               len += prev.innerText.trim().length;
             }
           } else if (prev.nodeType == 3 && prev.wholeText.trim()) {
@@ -140,6 +137,10 @@
         }
         return len;
       }
+
+      var selectorArea = document.querySelector('.selector');
+
+      showExtraElements(selectorArea, false);
 
       var textLength = getPrevLength(node.previousSibling);
 
@@ -168,6 +169,8 @@
           textLength += getPrevLength(parent.parentNode.previousElementSibling, true) + 1;
         }
       }
+
+      showExtraElements(selectorArea, true);
       return textLength;
     }
 
@@ -194,6 +197,14 @@
         node = node.parentNode;
       }
       return utils.isDefined(node) && node.nodeName == "SPAN" && node.hasAttribute('data-m') && node.getAttribute('data-m') == 'r';
+    }
+
+    function isInsideTippyContent(node) {
+      while (utils.isDefined(node.id) && !node.id.startsWith("tippy")) {
+        if (!utils.isDefined(node)) break;
+        node = node.parentNode;
+      }
+      return utils.isDefined(node.id) && node.id.startsWith("tippy");
     }
 
     function getEnclosingLabel(node) {
@@ -560,7 +571,8 @@
           x => x.getAttribute('data-s')).filter(x => !markersInRelations.includes(x));
         var repr = document.querySelector('#relationRepr');
         if (utils.isDefined(repr)) this.drawingType = JSON.parse(repr.textContent);
-        this.initSvg();
+        if (utils.isDefined(this.relationsArea))
+          this.initSvg();
         this.initEvents();
         this.updateMarkAllCheckboxes();
         this.fixUI();
@@ -580,17 +592,9 @@
         })
       },
       getContextText: function() {
-        var $sel = $(this.selectorArea),
-            $relNum = $sel.find('[data-m="r"]'),
-            $delBtn = $sel.find('button.delete'),
-            $meta = $sel.find('[data-meta]');
-        $relNum.hide();
-        $delBtn.hide();
-        $meta.hide();
+        showExtraElements(this.selectorArea, false);
         var ct = this.selectorArea == null ? "" : this.selectorArea.innerText.trim()
-        $relNum.show();
-        $delBtn.show();
-        $meta.show();
+        showExtraElements(this.selectorArea, true);
         return ct;
       },
       initEvents: function() {
@@ -667,7 +671,7 @@
             else if ("button" in e)  // IE, Opera 
                 isRightMB = e.button == 2;
 
-            if (!isDeleteButton(e.target) && !isRightMB) {
+            if (!isDeleteButton(e.target) && !isInsideTippyContent(e.target) && !isRightMB) {
               labelerModule.updateChunkFromSelection();
             }
           }, false);
@@ -676,8 +680,10 @@
           // adding chunk if a piece of text was selected with a keyboard
           document.addEventListener("keydown", function(e) {
             var selection = window.getSelection();
+
             if (selection && (selection.anchorNode != null)) {
               var isArticleParent = selection.anchorNode.parentNode == document.querySelector('.selector');
+
               if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
                 labelerModule.updateChunkFromSelection();
               }
@@ -905,8 +911,6 @@
             } else {
               chunks[N-1] = chunk;
             }
-
-            console.log(chunk);
           }
         } else {
           var chunk = this.getActiveChunk();
