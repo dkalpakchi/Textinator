@@ -289,7 +289,7 @@ textarea {
   position: relative;
 }
 
-.text .message-body.utterance button {
+.text .message-body.utterance button[data-meta] {
   position: absolute;
   right: 0;
   top: 0;

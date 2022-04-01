@@ -484,7 +484,7 @@ class Project(CommonModel):
             source_cls = DataSource.type2class(source.source_type)
             if source_cls:
                 spec = json.loads(source.spec.replace('\r\n', ' ').replace('\n', ' '))
-                spec['username'] = user.username
+                spec['username'] = self.author.username
                 ds_instance = source_cls(spec)
                 datasources.append((ds_instance, source.postprocess, source.pk))
 

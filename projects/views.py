@@ -339,10 +339,16 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
             try:
                 if proj.sampling_with_replacement:
-                    DataAccessLog.objects.get_or_create(
+                    dal = DataAccessLog.objects.get(
                         user=u, datapoint=str(dp_info.id), 
                         project=proj, datasource=d
                     )
+                    if not dal:
+                        dal = DataAccessLog.objects.create(
+                            user=u, datapoint=str(dp_info.id), 
+                            project=proj, datasource=d,
+                            is_submitted=False, is_skipped=False
+                        )   
                 else:
                     DataAccessLog.objects.get_or_create(
                         user=u, project=proj, datasource=d, datapoint=str(dp_info.id),

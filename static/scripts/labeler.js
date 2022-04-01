@@ -671,7 +671,7 @@
             else if ("button" in e)  // IE, Opera 
                 isRightMB = e.button == 2;
 
-            if (!isDeleteButton(e.target) && !isInsideTippyContent(e.target) && !isRightMB) {
+            if (!isDeleteButton(e.target) && !isRightMB) {
               labelerModule.updateChunkFromSelection();
             }
           }, false);
@@ -919,6 +919,7 @@
         }
       },
       mark: function(obj, max_markers) {
+        // TODO: marking from meta information!
         if (chunks.length > 0 && activeLabels < max_markers) {
           var chunk = this.getActiveChunk();
 
