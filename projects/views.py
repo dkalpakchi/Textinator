@@ -337,30 +337,31 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                 print("DataSource does not exist")
                 pass
 
-            try:
-                if proj.sampling_with_replacement:
+            if proj.sampling_with_replacement:
+                try:
                     dal = DataAccessLog.objects.get(
                         user=u, datapoint=str(dp_info.id), 
                         project=proj, datasource=d
                     )
-                    if not dal:
-                        dal = DataAccessLog.objects.create(
-                            user=u, datapoint=str(dp_info.id), 
-                            project=proj, datasource=d,
-                            is_submitted=False, is_skipped=False
-                        )   
-                else:
+                except DataAccessLog.DoesNotExist:
+                    dal = DataAccessLog.objects.create(
+                        user=u, datapoint=str(dp_info.id), 
+                        project=proj, datasource=d,
+                        is_submitted=False, is_skipped=False
+                    )   
+            else:
+                try:
                     DataAccessLog.objects.get_or_create(
                         user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
                         is_submitted=False, is_skipped=False
                     )
-            except DataAccessLog.MultipleObjectsReturned:
-                alogs = DataAccessLog.objects.filter(
-                    user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
-                    is_submitted=False, is_skipped=False
-                ).order_by('-dt_created').all()
-                for al in alogs[1:]:
-                    al.delete()
+                except DataAccessLog.MultipleObjectsReturned:
+                    alogs = DataAccessLog.objects.filter(
+                        user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
+                        is_submitted=False, is_skipped=False
+                    ).order_by('-dt_created').all()
+                    for al in alogs[1:]:
+                        al.delete()
 
             try:
                 logs = DataAccessLog.objects.filter(user=u, project=proj, datasource=d, is_submitted=True).count()
