@@ -207,6 +207,14 @@
       return utils.isDefined(node.id) && node.id.startsWith("tippy");
     }
 
+    function isAncestor(node, ancestorCand) {
+      while (node != ancestorCand) {
+        if (!utils.isDefined(node)) break;
+        node = node.parentNode;
+      }
+      return node == ancestorCand;
+    }
+
     function getEnclosingLabel(node) {
       while (isLabel(node.parentNode)) {
         if (!utils.isDefined(node)) break;
@@ -678,13 +686,13 @@
 
           // TODO: might be potentially rewritten?
           // adding chunk if a piece of text was selected with a keyboard
-          document.addEventListener("keydown", function(e) {
+          document.addEventListener("keyup", function(e) {
             var selection = window.getSelection();
 
             if (selection && (selection.anchorNode != null)) {
-              var isArticleParent = selection.anchorNode.parentNode == document.querySelector('.selector');
+              var isArticleAncestor = isAncestor(selection.anchorNode, control.selectorArea);
 
-              if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleParent) {
+              if (e.shiftKey && e.which >= 37 && e.which <= 40 && isArticleAncestor) {
                 labelerModule.updateChunkFromSelection();
               }
             }
@@ -885,6 +893,8 @@
           }
           if (group)
             groups.push(group)
+
+          console.log(groups)
 
           for (var i = 0; i < groups.length; i++) {
             var chunk = {},
