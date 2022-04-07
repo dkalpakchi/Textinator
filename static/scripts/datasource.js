@@ -18,7 +18,8 @@
     'DialJSL': {
       'files': [],
       'folders': [],
-      'key': ''
+      'key': '',
+      'meta': []
     }
   }
 
@@ -85,7 +86,13 @@
             "type": "string"
           }
         },
-        'key': "string"
+        'key': "string",
+        'meta': {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

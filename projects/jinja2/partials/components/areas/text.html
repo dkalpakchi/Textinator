@@ -9,6 +9,16 @@
       </span>
       <span id="textLabels"></span>
     </span>
+
+    {% if dp_info.source_spec.get('meta') %}
+      <button id="meta" class="button is-small is-primary">
+        <span class="icon is-small">
+          <i class="fas fa-external-link-alt"></i>
+        </span>
+        <span>Open metadata</span>
+      </button>
+    {% endif %}
+
     <a id="flagTextButton" class="no-decoration is-pulled-right">
       <span class="icon is-small">
         <i class="fas fa-flag"></i>

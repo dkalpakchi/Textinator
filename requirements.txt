@@ -28,3 +28,4 @@ django-scientific-survey==0.1.1
 django-modeltranslation==0.17.3
 django-guardian==2.4.0
 jsonlines==3.0.0
+python-magic==0.4.25

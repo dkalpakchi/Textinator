@@ -1,3 +1,5 @@
+import json
+
 class DatapointInfo:
     def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, is_empty=False, no_data=False, is_dialogue=False):
         self.id = dp_id
@@ -14,9 +16,14 @@ class DatapointInfo:
         else:
             self.source_id, self.source_formatting = None, None
 
+        self.source_spec = json.loads(ds_def.spec)
+
         self.is_empty = is_empty
         self.no_data = no_data
         self.is_dialogue = is_dialogue
+
+        if ds.meta_proc:
+            self.meta = ds.meta_proc
 
     def to_json(self):
         return {

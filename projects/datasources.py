@@ -6,11 +6,44 @@ import random
 import string
 from pathlib import Path
 
+import magic
+
 from django.conf import settings
 
 
 class AbsentSpecError(Exception):
     pass
+
+
+class MetadataProcessor:
+    def __init__(self, folders, owner_username):
+        if owner_username:
+            self.__allowed_dirs = map(lambda x: x.format(username=owner_username), settings.DATA_DIRS)
+        else:
+            fmt = string.Formatter()
+            self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
+
+        self.__images = []
+
+        for folder in folders:
+            found_folder = None
+            for d in self.__allowed_dirs:
+                cand_folder = os.path.join(d, folder)
+                if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
+                    found_folder = cand_folder
+                    break
+
+            if found_folder:
+                ff = Path(found_folder)
+
+                for f in ff.rglob('*'):
+                    mime = magic.from_file(f, mime=True)
+                    if mime.startswith('image'):
+                        self.__images.append(f)
+
+    @property
+    def images(self):
+        return self.__images
 
 
 class TextDatapoint:
@@ -321,6 +354,11 @@ class DialJSLSource(AbstractDataSource):
                         dp.add_datapoint(None, d)
             self._add_datapoint(dp)
             self.__mapping.append(os.path.basename(fname))
+
+        if self.get_spec('meta'):
+            self.meta_proc = MetadataProcessor(self.get_spec('meta'), self.get_spec('username'))
+        else:
+            self.meta_proc = None
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)

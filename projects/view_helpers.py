@@ -1,3 +1,5 @@
+import os
+import string
 import json
 from collections import defaultdict, OrderedDict
 
@@ -159,7 +161,6 @@ def process_chunks_and_relations(batch, batch_info, ctx_cache=None):
             saved_labels += just_saved
 
     for i, rel in enumerate(batch_info.relations):
-        print(batch_info.relations)
         for link in rel['links']:
             source_id, target_id = int(link['s']), int(link['t'])
 
@@ -254,3 +255,4 @@ def process_text_markers(batch, batch_info, text_markers=None, ctx_cache=None):
                 if m.code == tm_code:
                     Label.objects.create(context=ctx, marker=m, batch=batch)
                     break
+
