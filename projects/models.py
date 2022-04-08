@@ -458,10 +458,11 @@ class Project(CommonModel):
                 dp_id = log.datapoint
                 if ds_instance[dp_id] is not None:
                     return DatapointInfo(
-                        dp_id,                                  # the point's id in the datasource
-                        ds_def.postprocess(ds_instance[dp_id]), # a post-processed random datapoint from the chosen dataset
-                        ds_instance,                            # instantiated DataSource of a specific type
-                        ds_def                                  # DataSource
+                        dp_id=dp_id,                                   # the point's id in the datasource
+                        text=ds_def.postprocess(ds_instance[dp_id]),   # a post-processed random datapoint from the chosen dataset
+                        ds=ds_instance,                                # instantiated DataSource of a specific type
+                        ds_def=ds_def,                                 # DataSource
+                        proj_id=self.pk
                     )
             else:
                 log.is_skipped = True
@@ -528,10 +529,10 @@ class Project(CommonModel):
 
                     ds, postprocess, idx = datasources[ds_ind]
         else:
-            return DatapointInfo(no_data=True)
+            return DatapointInfo(no_data=True, proj_id=self.pk)
 
         if finished_all:
-            return DatapointInfo(is_empty=True)
+            return DatapointInfo(is_empty=True, proj_id=self.pk)
         else:
             # get the id of the random datapoint and the datapoint itself
             dp_id, dp = ds.get_random_datapoint()
@@ -543,10 +544,11 @@ class Project(CommonModel):
                     dp_id, dp = ds.get_random_datapoint()
 
             return DatapointInfo(
-                dp_id,                          # the point's id in the datasource
-                postprocess(dp),                # a post-processed random datapoint from the chosen dataset
-                ds,                             # instantiated DataSource of a specific type
-                DataSource.objects.get(pk=idx)  # DataSource id
+                dp_id=dp_id,                            # the point's id in the datasource
+                text=postprocess(dp),                   # a post-processed random datapoint from the chosen dataset
+                ds=ds,                                  # instantiated DataSource of a specific type
+                ds_def=DataSource.objects.get(pk=idx),  # DataSource id
+                proj_id=self.pk
             )
         
     def get_profile_for(self, user):

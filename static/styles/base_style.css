@@ -550,6 +550,29 @@ label.error {
   overflow-y: scroll;
 }
 
+.meta {
+  margin-bottom: 1.5em;
+}
+
+.meta .panel-block {
+  flex-wrap: wrap;
+}
+
+.meta img {
+  object-fit: cover;
+}
+
+.meta .card {
+  margin-right: 1em;
+  margin-bottom: 1em;
+}
+
+.meta .card .card-image,
+.meta .card .card-image .image img {
+  height: 150px;
+}
+
+
 /**
  * Bulma extensions
  */

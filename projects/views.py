@@ -398,6 +398,8 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             'profile': u_profile
         }
 
+        self.request.session['dp_info_{}'.format(proj.pk)] = dp_info.to_json()
+
         tmpl = get_template(os.path.join('projects', 'task_types', '{}.html'.format(proj.task_type)))
         data['task_type_template'] = tmpl.render(ctx, self.request)
         data['marker_actions'] = menu_items
@@ -635,6 +637,7 @@ def new_article(request, proj):
                 )
 
     dp_info = project.data(request.user)
+    request.session['dp_info_{}'.format(proj)] = dp_info.to_json()
 
     if dp_info.is_empty:
         text = render_to_string('partials/_great_job.html')
@@ -912,3 +915,18 @@ def time_report(request, proj):
     # present the option to save the file.
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='time_report.pdf')
+
+
+@login_required
+@require_http_methods(["GET"])
+def project_meta(request, proj):
+    referer = request.META.get("HTTP_REFERER")
+    expected_referer = reverse('projects:detail', kwargs={'pk': proj})
+
+    if referer and referer.endswith(expected_referer):
+        json_dp_info = request.session['dp_info_{}'.format(proj)]
+        return render(request, 'projects/meta.html', {
+            'meta': json_dp_info['meta']
+        })
+    else:
+        raise Http404

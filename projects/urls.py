@@ -11,6 +11,7 @@ urlpatterns = [
     path('<proj>/edit/', views.editing, name="editing"),
     path('<proj>/join', views.join_or_leave_project, name='join_or_leave'),
     path('<proj>/time_report', views.time_report, name='time_report'),
+    path('<proj>/meta', views.project_meta, name='project_meta'),
     path('<proj>/explorer', views.data_explorer, name='data_explorer'),
     path('<proj>/export', views.export, name='data_exporter'),
     path('<proj>/export_generic', views.export_generic, name='data_exporter_generic'),

@@ -39,11 +39,18 @@ class MetadataProcessor:
                 for f in ff.rglob('*'):
                     mime = magic.from_file(f, mime=True)
                     if mime.startswith('image'):
-                        self.__images.append(f)
+                        fs = str(f)
+                        if fs.startswith(settings.MEDIA_ROOT):
+                            self.__images.append("{}{}".format(
+                                settings.MEDIA_URL,
+                                fs.replace(settings.MEDIA_ROOT, "").strip("/")
+                            ))
 
-    @property
-    def images(self):
-        return self.__images
+    def to_json(self):
+        return {
+            'images': [str(x) for x in self.__images]
+        }
+
 
 
 class TextDatapoint:
