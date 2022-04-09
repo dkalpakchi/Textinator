@@ -567,9 +567,13 @@ label.error {
   margin-bottom: 1em;
 }
 
-.meta .card .card-image,
-.meta .card .card-image .image img {
+.meta .card .card-image:not(.video):not(.audio),
+.meta .card .card-image:not(.video):not(.audio) .image img {
   height: 150px;
+}
+
+.meta .card .card-image.video {
+  height: 185px;
 }
 
 

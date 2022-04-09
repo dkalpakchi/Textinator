@@ -3,10 +3,12 @@
 {% block custom_styles %}
   <link rel="stylesheet" href="{{ static('tippy.js/themes/translucent.css') }}">
   <link rel="stylesheet" href="{{ static('tippy.js/dist/tippy.css') }}">
+  <link href="{{ static("video.js/video-js.min.css") }}" rel="stylesheet" />
 {% endblock %}
 
 {% block custom_scripts %}
   <script src="{{ static('medium-zoom/dist/medium-zoom.min.js') }}"></script>
+  <script src="{{ static('scripts/audiojs/audio.min.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -16,20 +18,43 @@
         <p class="panel-heading">{{ key|capitalize }}</p>
         <div class="panel-block">
           {% for item in items %}
-            {% if key == 'images' %}
-              <div class="card">
-                <header class="card-header has-background-dark">
-                  <p class="card-header-title has-text-white">
-                    {{ item.rpartition('/')[-1] }}
-                  </p>
-                </header>
+            <div class="card">
+              <header class="card-header has-background-dark">
+                <p class="card-header-title has-text-white">
+                  {{ item.rpartition('/')[-1] }}
+                </p>
+              </header>
+              {% if key == 'images' %}
                 <div class="card-image">
                   <figure class="image is-4by3">
                     <img src="{{item}}" data-zoomable="true">
                   </figure>
                 </div>
-              </div>
-            {% endif %}
+              {% elif key == 'video' %}
+                <div class="card-image video">
+                  <video
+                    id="my-video"
+                    class="video-js"
+                    controls
+                    preload="auto"
+                    width="320"
+                    height="240"
+                    data-setup="{}"
+                  >
+                    <source src="{{ item }}" type="video/mp4" />
+                    <p class="vjs-no-js">
+                      To view this video please enable JavaScript, and consider upgrading to a
+                      web browser that
+                      <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+                    </p>
+                  </video>
+                </div>
+              {% elif key == 'audio' %}
+                <div class="card-image audio">
+                  <audio src="{{ item }}" preload="auto" />
+                </div>
+              {% endif %}
+            </div>
           {% endfor %}
         </div>
       </nav>
@@ -68,5 +93,9 @@
         event.target.parentNode.className = "image is-4by3"
       }
     )
+
+    audiojs.events.ready(function() {
+      var as = audiojs.createAll();
+    });
   </script>
 {% endblock %}

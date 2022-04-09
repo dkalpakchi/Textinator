@@ -24,6 +24,8 @@ class MetadataProcessor:
             self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
 
         self.__images = []
+        self.__audio = []
+        self.__video = []
 
         for folder in folders:
             found_folder = None
@@ -38,17 +40,31 @@ class MetadataProcessor:
 
                 for f in ff.rglob('*'):
                     mime = magic.from_file(f, mime=True)
+                    fs = str(f)
                     if mime.startswith('image'):
-                        fs = str(f)
                         if fs.startswith(settings.MEDIA_ROOT):
                             self.__images.append("{}{}".format(
+                                settings.MEDIA_URL,
+                                fs.replace(settings.MEDIA_ROOT, "").strip("/")
+                            ))
+                    elif mime.startswith('video'):
+                        if fs.startswith(settings.MEDIA_ROOT):
+                            self.__video.append("{}{}".format(
+                                settings.MEDIA_URL,
+                                fs.replace(settings.MEDIA_ROOT, "").strip("/")
+                            ))
+                    elif mime.startswith('audio'):
+                        if fs.startswith(settings.MEDIA_ROOT):
+                            self.__audio.append("{}{}".format(
                                 settings.MEDIA_URL,
                                 fs.replace(settings.MEDIA_ROOT, "").strip("/")
                             ))
 
     def to_json(self):
         return {
-            'images': [str(x) for x in self.__images]
+            'images': [str(x) for x in self.__images],
+            'video': [str(x) for x in self.__video],
+            'audio': [str(x) for x in self.__audio]
         }
 
 
