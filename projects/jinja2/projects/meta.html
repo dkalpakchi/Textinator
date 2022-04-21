@@ -13,48 +13,55 @@
 
 {% block content %}
   <div class="meta">
-    {% for key, items in meta.items() %}
+    {% for key, group in meta.items() %}
       <nav class="panel is-primary">
         <p class="panel-heading">{{ key|capitalize }}</p>
         <div class="panel-block">
-          {% for item in items %}
-            <div class="card">
-              <header class="card-header has-background-dark">
-                <p class="card-header-title has-text-white">
-                  {{ item.rpartition('/')[-1] }}
-                </p>
-              </header>
-              {% if key == 'images' %}
-                <div class="card-image">
-                  <figure class="image is-4by3">
-                    <img src="{{item}}" data-zoomable="true">
-                  </figure>
-                </div>
-              {% elif key == 'video' %}
-                <div class="card-image video">
-                  <video
-                    id="my-video"
-                    class="video-js"
-                    controls
-                    preload="auto"
-                    width="320"
-                    height="240"
-                    data-setup="{}"
-                  >
-                    <source src="{{ item }}" type="video/mp4" />
-                    <p class="vjs-no-js">
-                      To view this video please enable JavaScript, and consider upgrading to a
-                      web browser that
-                      <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-                    </p>
-                  </video>
-                </div>
-              {% elif key == 'audio' %}
-                <div class="card-image audio">
-                  <audio src="{{ item }}" preload="auto" />
-                </div>
-              {% endif %}
-            </div>
+          {% for subfolder, items in group.items() %}
+            <nav class="panel is-info">
+              <p class="panel-heading is-size-6">{{ subfolder or "Unsorted" }}</p>
+              <div class="panel-block">
+                {% for item in items %}
+                  <div class="card">
+                    <header class="card-header has-background-dark">
+                      <p class="card-header-title has-text-white">
+                        {{ item.rpartition('/')[-1] }}
+                      </p>
+                    </header>
+                    {% if key == 'images' %}
+                      <div class="card-image">
+                        <figure class="image is-4by3">
+                          <img src="{{item}}" data-zoomable="true">
+                        </figure>
+                      </div>
+                    {% elif key == 'video' %}
+                      <div class="card-image video">
+                        <video
+                          id="my-video"
+                          class="video-js"
+                          controls
+                          preload="auto"
+                          width="320"
+                          height="240"
+                          data-setup="{}"
+                        >
+                          <source src="{{ item }}" type="video/mp4" />
+                          <p class="vjs-no-js">
+                            To view this video please enable JavaScript, and consider upgrading to a
+                            web browser that
+                            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+                          </p>
+                        </video>
+                      </div>
+                    {% elif key == 'audio' %}
+                      <div class="card-image audio">
+                        <audio src="{{ item }}" preload="auto" />
+                      </div>
+                    {% endif %}
+                  </div>
+                {%  endfor %}
+              </div>
+            </nav>
           {% endfor %}
         </div>
       </nav>

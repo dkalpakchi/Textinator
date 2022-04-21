@@ -5,7 +5,7 @@
     </div>
     <div class="message-body">
       <div class="field is-grouped is-grouped-multiline">
-        {% for relation in project.relations.all() %}
+        {% for relation in project.relationvariant_set.all() %}
           <div class="control">
             {{relation|display_relation}}
           </div>

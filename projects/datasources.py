@@ -4,6 +4,7 @@ import json
 import jsonlines
 import random
 import string
+from collections import defaultdict
 from pathlib import Path
 
 import magic
@@ -23,9 +24,9 @@ class MetadataProcessor:
             fmt = string.Formatter()
             self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
 
-        self.__images = []
-        self.__audio = []
-        self.__video = []
+        self.__images = defaultdict(list)
+        self.__audio = defaultdict(list)
+        self.__video = defaultdict(list)
 
         for folder in folders:
             found_folder = None
@@ -36,35 +37,43 @@ class MetadataProcessor:
                     break
 
             if found_folder:
-                ff = Path(found_folder)
+                self.__process_dir(Path(found_folder))
 
-                for f in ff.rglob('*'):
-                    mime = magic.from_file(f, mime=True)
-                    fs = str(f)
-                    if mime.startswith('image'):
-                        if fs.startswith(settings.MEDIA_ROOT):
-                            self.__images.append("{}{}".format(
-                                settings.MEDIA_URL,
-                                fs.replace(settings.MEDIA_ROOT, "").strip("/")
-                            ))
-                    elif mime.startswith('video'):
-                        if fs.startswith(settings.MEDIA_ROOT):
-                            self.__video.append("{}{}".format(
-                                settings.MEDIA_URL,
-                                fs.replace(settings.MEDIA_ROOT, "").strip("/")
-                            ))
-                    elif mime.startswith('audio'):
-                        if fs.startswith(settings.MEDIA_ROOT):
-                            self.__audio.append("{}{}".format(
-                                settings.MEDIA_URL,
-                                fs.replace(settings.MEDIA_ROOT, "").strip("/")
-                            ))
+    def __process_dir(self, d, prefix=""):
+        for f in d.iterdir():
+            if f.is_file():
+                self.__process_file(f, prefix)
+            elif f.is_dir():
+                self.__process_dir(f, prefix=os.path.join(prefix, f))
+
+    def __process_file(self, f, prefix=""):
+        mime = magic.from_file(f, mime=True)
+        prefix = Path(prefix).name
+        fs = str(f)
+        if mime.startswith('image'):
+            if fs.startswith(settings.MEDIA_ROOT):
+                self.__images[prefix].append("{}{}".format(
+                    settings.MEDIA_URL,
+                    str(fs.replace(settings.MEDIA_ROOT, "").strip("/"))
+                ))
+        elif mime.startswith('video'):
+            if fs.startswith(settings.MEDIA_ROOT):
+                self.__video[prefix].append("{}{}".format(
+                    settings.MEDIA_URL,
+                    str(fs.replace(settings.MEDIA_ROOT, "").strip("/"))
+                ))
+        elif mime.startswith('audio'):
+            if fs.startswith(settings.MEDIA_ROOT):
+                self.__audio[prefix].append("{}{}".format(
+                    settings.MEDIA_URL,
+                    str(fs.replace(settings.MEDIA_ROOT, "").strip("/"))
+                ))
 
     def to_json(self):
         return {
-            'images': [str(x) for x in self.__images],
-            'video': [str(x) for x in self.__video],
-            'audio': [str(x) for x in self.__audio]
+            'images': self.__images,
+            'video': self.__video,
+            'audio': self.__audio
         }
 
 

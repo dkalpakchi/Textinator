@@ -109,7 +109,7 @@ class Exporter:
                 obj["annotations"] = []
             
             ann = {}
-            inp_marker = inp.marker.name.lower() if inp.marker else "question"
+            inp_marker = (inp.marker.export_name or inp.marker.name_en.lower() or inp.marker.name.lower()) if inp.marker else "question"
             ann[inp_marker] = inp.content
             
             inp_labels = Label.objects.filter(batch=inp.batch).all()
@@ -121,7 +121,7 @@ class Exporter:
                         "text": label.text,
                         "start": label.start,
                         "end": label.end,
-                        "type": label.marker.name,
+                        "type": label.marker.export_name or label.marker.name_en.lower() or label.marker.name.lower(),
                     })
                     if label.extra:
                         ann["choices"][-1]["extra"] = label.extra

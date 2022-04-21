@@ -224,19 +224,19 @@ class Marker(CommonModel):
         return bool(Relation.objects.filter(models.Q(pairs__first=self) | models.Q(pairs__second=self)).all())
 
     def __str__(self):
-        return self.__dict__['name']
+        return self.name
 
     def to_minimal_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
         res.update({
-            'name': self.__dict__['name']
+            'name': self.name
         })
         return res
 
     def to_json(self, dt_format=None):
         res = super(Marker, self).to_json(dt_format=dt_format)
         res.update({
-            'name': self.__dict__['name'],
+            'name': self.name,
             'color': self.color,
             'code': self.code
         })
@@ -300,7 +300,7 @@ class Relation(CommonModel):
         return "|".join([str(p) for p in self.pairs.all()])
 
     def __str__(self):
-        return self.__dict__['name']
+        return self.name
 
     def to_minimal_json(self, dt_format=None):
         res = super(Relation, self).to_json(dt_format=dt_format)
@@ -689,6 +689,8 @@ class MarkerVariant(CommonModel):
         help_text=_("Keyboard shortcut for annotating a piece of text with this marker (shortcut of the marker template by default"))
     anno_type = models.CharField(_("annotation type"), max_length=10, default='m-span', choices=settings.ANNOTATION_TYPES,
         help_text=_("The type of annotations made using this marker"))
+    export_name = models.CharField(_("export name"), max_length=50, blank=True, null=True,
+        help_text=_("The name of the field in the exported JSON file (English name by default)"))
 
     def __init__(self, *args, **kwargs):
         super(MarkerVariant, self).__init__(*args, **kwargs)
@@ -700,6 +702,10 @@ class MarkerVariant(CommonModel):
     @property
     def name(self):
         return self.marker.name
+
+    @property
+    def name_en(self):
+        return self.marker.name_en
 
     @property
     @custom_or_default('marker', 'color')
@@ -807,12 +813,16 @@ class MarkerVariant(CommonModel):
 
     def to_minimal_json(self):
         res = self.marker.to_minimal_json()
+        if self.export_name:
+            res['name'] = self.export_name
         if self.order_in_unit:
             res['order'] = self.order_in_unit
         return res
 
     def to_json(self):
         res = self.marker.to_json()
+        if self.export_name:
+            res['name'] = self.export_name
         res['order'] = self.order_in_unit
         res['code'] = self.code
         return res
@@ -947,6 +957,26 @@ class RelationVariant(CommonModel):
     custom_representation = models.CharField(_("graphical representation type"), max_length=1, null=True, blank=True,
         choices=[('g', _('Graph')), ('l', _('List'))], default='g',
         help_text=_("How should the relation be visualized? (representation of the relation template by default)"))
+
+    @property
+    def name(self):
+        return self.relation.name
+
+    @property
+    def name_en(self):
+        return self.relation.name_en
+
+    @property
+    def between(self):
+        """
+        Returns:
+            str: The string representation of the pairs of markers for which the relation can be annotated.
+        """
+        return self.relation.between
+
+    @property
+    def direction(self):
+        return self.relation.direction
 
     @property
     @custom_or_default('relation', 'shortcut')

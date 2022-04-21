@@ -274,15 +274,11 @@ textarea {
 }
 
 .text > .message-body {
-  height: 50vh;
+  height: 85vh;
   -webkit-flex-grow: 1;
           flex-grow: 1;
   overflow-y: scroll;
   text-align: justify;
-}
-
-.text > .message-body.broad {
-  height: 85vh;
 }
 
 .text .message-body.utterance {
@@ -293,6 +289,10 @@ textarea {
   position: absolute;
   right: 0;
   top: 0;
+}
+
+.text > .footer {
+  height: 20px;
 }
 
 .achievements {

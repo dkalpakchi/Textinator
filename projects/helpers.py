@@ -105,6 +105,7 @@ def custom_or_default(fallback, prop):
     def _inner(func):
         def _inner2(self):
             default = func(self)
+            print("I2", func, fallback, prop)
             if hasattr(self, fallback):
                 return default or getattr(getattr(self, fallback), prop)
             else:
