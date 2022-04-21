@@ -24,12 +24,15 @@ var plugin = function(cfg, labeler) {
     name: config.name,
     verboseName: config.verboseName,
     storage: {},
-    update: 'labeler_relationschange',
+    dispatch: {
+      'labeler_relationschange': 'labeler_relationschange'
+    },
+    subscribe: ['labeler_relationschange'],
     initOnce: false,
     isAllowed: function(obj) {
       // only if it's part of the relation
       return document.querySelector('div.marker[data-s="' + obj.getAttribute('data-s') + '"]')
-                     .getAttribute('data-submittable') == 'false';
+                     .getAttribute('data-indep') == 'false';
     },
     exec: function(label, menuItem) {
       function createOption(val, idx) {

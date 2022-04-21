@@ -12,7 +12,9 @@ var plugin = function(cfg, labeler) {
     min: 0,
     max: 100,
     step: 10,
-    default: 50
+    default: 50,
+    dispatch: {},
+    subscribe: []
   }
 
   function isDefined(x) {
@@ -29,7 +31,8 @@ var plugin = function(cfg, labeler) {
     name: config.name,
     verboseName: config.verboseName,
     storage: {},
-    update: false,
+    dispatch: config.dispatch,
+    subscribe: config.subscribe,
     initOnce: false,
     isAllowed: function(obj) {
       return labeler.markersArea != null;
@@ -48,7 +51,7 @@ var plugin = function(cfg, labeler) {
       sliderInput.setAttribute('value', storage[id]);
       sliderInput.addEventListener('change', function(e) {
         var target = e.target;
-        storage[parseInt(target.getAttribute('data-i'))] = target.value;
+        storage["l" + parseInt(target.getAttribute('data-i'))] = target.value;
       }, false);
 
       tippy(isDefined(menuItem) ? menuItem : label, {

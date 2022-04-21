@@ -998,6 +998,9 @@ class RelationVariant(CommonModel):
 
         super(RelationVariant, self).save(*args, **kwargs)
 
+    def to_minimal_json(self):
+        return self.relation.to_minimal_json()
+
 
 class Context(CommonModel):
     """
@@ -1265,7 +1268,7 @@ class LabelRelation(CommonModel):
         verbose_name = _('label relation')
         verbose_name_plural = _('label relations')
 
-    rule = models.ForeignKey(Relation, on_delete=models.CASCADE)
+    rule = models.ForeignKey(RelationVariant, on_delete=models.CASCADE)
     first_label = models.ForeignKey(Label, related_name='first_label', on_delete=models.CASCADE)
     second_label = models.ForeignKey(Label, related_name='second_label', on_delete=models.CASCADE)
     undone = models.BooleanField(_("was undone?"), default=False,

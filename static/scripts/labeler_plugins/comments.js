@@ -9,9 +9,10 @@ var plugin = function(cfg, labeler) {
   var config = {
     name: "comments",
     verboseName: 'Add a comment',
-    store_for: "label", // one of "label", "relation",
-    update: false,
-    initOnce: false
+    storeFor: "label", // one of "label", "relation",
+    dispatch: {},   // an event to be dispatched on update
+    subscribe: [],
+    sharedBetweenMarkers: false
   }
 
   function isDefined(x) {
@@ -28,8 +29,10 @@ var plugin = function(cfg, labeler) {
     name: config.name,
     verboseName: config.verboseName,
     storage: {},
-    update: config.update,
-    initOnce: config.initOnce,
+    dispatch: config.dispatch,
+    subscribe: config.subscribe,
+    storeFor: config.storeFor,
+    sharedBetweenMarkers: config.sharedBetweenMarkers,
     isAllowed: function(obj) {
       return labeler.markersArea != null;
     },
@@ -37,14 +40,17 @@ var plugin = function(cfg, labeler) {
       var id = label.getAttribute('data-i'),
           storage = this.storage,
           commentInput = document.createElement("input"),
-          scope = undefined;
+          scope = undefined,
+          prefix = undefined;
 
-      if (config.store_for == "label") {
+      if (this.storeFor == "label") {
         scope = "l" + id;
-      } else if (config.store_for == "relation") {
+        prefix = "label";
+      } else if (this.storeFor == "relation") {
         var rel = label.querySelector('[data-m="r"]');
         if (rel) {
           scope = "r" + rel.textContent;
+          prefix = "relation";
         }
       }
 
@@ -55,6 +61,11 @@ var plugin = function(cfg, labeler) {
           var target = e.target;
           storage[target.getAttribute('data-s')] = target.value;
         }, false);
+        commentInput.addEventListener('blur', function(e) {
+          var target = e.target;
+          const event = new Event("labeler_" + prefix + "_blur", {bubbles: true});
+          target.dispatchEvent(event);
+        })
 
         tippy(isDefined(menuItem) ? menuItem : label, {
           content: commentInput,

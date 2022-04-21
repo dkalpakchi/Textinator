@@ -184,7 +184,7 @@
 
     function isMarker(node) {
       return utils.isDefined(node) && node.nodeName == "DIV" && node.hasAttribute('data-s') && node.hasAttribute('data-color') &&
-        node.hasAttribute('data-res') && node.hasAttribute('data-shortcut') && node.hasAttribute('data-submittable');
+        node.hasAttribute('data-res') && node.hasAttribute('data-shortcut') && node.hasAttribute('data-indep');
     }
 
     function isRelation(node) {
@@ -376,14 +376,16 @@
           if (plugin.isAllowed(markedSpan)) {
             plugin.exec(markedSpan, btn);
 
-            if (plugin.update) {
+            if (plugin.subscribe) {
               // TODO: we dispatch event from the document whenever any relation change is occuring
               //       then we catching it here, but it gets overriden for every new markedSpan
-              markedSpan.addEventListener(plugin.update, function (e) {
-                (function(b) {
-                  plugin.exec(e.target, b)
-                })(btn);
-              }, false);
+              plugin.subscribe.forEach(function(event) {
+                markedSpan.addEventListener(event, function (e) {
+                  (function(b) {
+                    plugin.exec(e.target, b)
+                  })(btn);
+                }, false);
+              })
             }
           }
           return btn;
@@ -394,8 +396,8 @@
         var div = document.createElement('div');
         var subset = Object.assign({}, plugins[short], plugins[undefined]);
 
-        for (var k in plugins["initOnce"]) {
-          subset[k] = plugins["initOnce"][k];
+        for (var k in plugins["sharedBetweenMarkers"]) {
+          subset[k] = plugins["sharedBetweenMarkers"][k];
         }
 
         if (Object.keys(subset).length == 0) return;
@@ -406,6 +408,7 @@
           else if (subset[x].verboseName > subset[y].verboseName) return 1;
           else return 0;
         });
+
         for (var name in keys) {
           div.appendChild(createButton(subset[keys[name]]));
         }
@@ -559,7 +562,7 @@
       markersArea: null,
       selectorArea: null,   // the area where the article is
       markerGroupsArea: null,
-      contextMenuPlugins: { "initOnce": [] },
+      contextMenuPlugins: { "sharedBetweenMarkers": {} },
       isMarker: isMarker,
       isLabel: isLabel,
       init: function() {
@@ -588,6 +591,9 @@
         this.initEvents();
         this.updateMarkAllCheckboxes();
         this.fixUI();
+        window.cmp = this.contextMenuPlugins;
+        window.chunks = chunks;
+        window.relations = relations;
       },
       fixUI: function() {
         [this.markersArea, this.markerGroupsArea].forEach(function(area) {
@@ -789,21 +795,23 @@
         var p = Object.assign({}, plugin);
         delete p.name;
         if (!(label in this.contextMenuPlugins)) this.contextMenuPlugins[label] = {};
-        if (plugin.initOnce) {
-          if (!this.contextMenuPlugins["initOnce"].hasOwnProperty(plugin.name))
-            this.contextMenuPlugins["initOnce"][plugin.name] = p; 
+        if (plugin.sharedBetweenMarkers) {
+          if (!this.contextMenuPlugins["sharedBetweenMarkers"].hasOwnProperty(plugin.name))
+            this.contextMenuPlugins["sharedBetweenMarkers"][plugin.name] = p; 
         } else {
           this.contextMenuPlugins[label][plugin.name] = p;
         }
 
-        if (p.update) {
-          document.addEventListener(p.update, function(e) {
-            const event = new Event(p.update);
-            // select all labels and dispatch events
-            document.querySelectorAll('span.tag').forEach(function(x) {
-              x.dispatchEvent(event);
-            });
-          }, false);
+        if (Object.keys(p.dispatch).length > 0) {
+          for (var catchEvent in p.dispatch) {
+            document.addEventListener(catchEvent, function(e) {
+              const event = new Event(p.dispatch[catchEvent]);
+              // select all labels and dispatch events
+              document.querySelectorAll('span.tag').forEach(function(x) {
+                x.dispatchEvent(event);
+              });
+            }, false);
+          }
         }
         pluginsToRegister--;
 
@@ -817,10 +825,10 @@
       },
       disableChunk: function(c) {
         var $el = $('span.tag[data-i="' + c['id'] + '"]');
+        $el.removeAttr("data-i");
         $el.addClass('is-disabled');
         $el.prop('disabled', true);
         $el.find('span[data-m="r"]').remove();
-        c['submittable'] = false;
       },
       disableTextLabels: function() {
         this.textLabelsArea.querySelectorAll('span.tag:not(.is-disabled)').forEach(function(x) {
@@ -833,7 +841,6 @@
         $el.removeClass('is-disabled');
         $el.prop('in_relation', false);
         $el.prop('disabled', false);
-        c['submittable'] = true;
       },
       disableChunks: function(chunksList) {
         // disable given chunks visually
@@ -870,7 +877,8 @@
         chunk['marked'] = true;
         chunk['id'] = labelId;
         chunk['label'] = node.getAttribute('data-s');
-        chunk['submittable'] = marker.getAttribute('data-submittable') === 'true';
+        chunk['submittable'] = true; // whether it is possible to submit
+        chunk['independent'] = marker.getAttribute('data-indep') === 'true';
         chunk['start'] = previousTextLength(node, false);
         chunk['end'] = chunk['start'] + node.textContent.length;
         chunks.push(chunk);
@@ -902,8 +910,6 @@
           }
           if (group)
             groups.push(group)
-
-          console.log(groups)
 
           for (var i = 0; i < groups.length; i++) {
             var chunk = {},
@@ -1019,7 +1025,8 @@
             }
             
             chunk['marked'] = true;
-            chunk['submittable'] = obj.getAttribute('data-submittable') === 'true';
+            chunk['submittable'] = true;
+            chunk['independent'] = obj.getAttribute('data-indep') === 'true';
             chunk['id'] = labelId;
             labelId++;
             activeLabels++;
@@ -1813,9 +1820,11 @@
         if (!utils.isDefined(stringify)) stringify = false;
 
         var markerGroups = utils.isDefined(this.markerGroupsArea) ? $(this.markerGroupsArea).find("form#markerGroups").serializeObject() : {},
-            shortTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('input[type="text"]')) : {},
+            shortTextMarkers = utils.isDefined(this.markersArea) ?
+              utils.serializeHashedObject($(this.markersArea).find('input[type="text"]')) : {},
             submitRelations = [],
-            textMarkers = Array.from(this.textLabelsArea.querySelectorAll('span.tag[data-s]:not(.is-disabled)')).map((x) => x.getAttribute('data-s')),
+            textMarkers = Array.from(this.textLabelsArea.querySelectorAll('span.tag[data-s]:not(.is-disabled)')).map(
+              (x) => x.getAttribute('data-s')),
             numbers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('input[type="number"]')) : {},
             ranges = utils.isDefined(this.markersArea) ?
               utils.serializeHashedObject(
@@ -1827,7 +1836,7 @@
           // if there are any relations, submit only those chunks that have to do with the relations
           submittableChunks = chunks.filter(isInRelations) // defined at the very top of the file
           
-          var nonRelationChunks = chunks.filter(x => !submittableChunks.includes(x));
+          var nonRelationChunks = chunks.filter(x => !submittableChunks.includes(x) && x.submittable);
           for (var i = 0, len = nonRelationChunks.length; i < len; i++) {
             if (nonRelationMarkers.includes(nonRelationChunks[i]['label'])) {
               submittableChunks.push(nonRelationChunks[i]);
@@ -1835,24 +1844,49 @@
           }
         } else {
           // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relations
-          submittableChunks = chunks.filter(function(c) { return c.submittable })
+          submittableChunks = chunks.filter(function(c) { return c.independent && c.submittable })
         }
         
         // add plugin info to chunks
-        for (var i = 0, len = submittableChunks.length; i < len; i++) {
-          submittableChunks[i]['extra'] = {};
-          var plugins = this.contextMenuPlugins[submittableChunks[i].label];
-          for (var name in plugins) {
-            submittableChunks[i]['extra'][name] = plugins[name].storage[submittableChunks[i]['id']] || ''; 
+        var sharedLabelPlugins = {},
+            sharedRelPlugins = {};
+        for (var p in this.contextMenuPlugins["sharedBetweenMarkers"]) {
+          var cp = this.contextMenuPlugins["sharedBetweenMarkers"][p];
+          if (cp.hasOwnProperty("storeFor")) {
+            if (cp.storeFor == "label") {
+              sharedLabelPlugins[p] = cp;
+            } else if (cp.storeFor == "relation") {
+              sharedRelPlugins[p] = cp;
+            }
           }
         }
 
-        submitRelations = submitRelations.concat.apply(submitRelations, Object.values(relations).map(function(x) {
-          return {
-            'links': x['links'],
-            'rule': x['rule']
+        for (var i = 0, len = submittableChunks.length; i < len; i++) {
+          submittableChunks[i]['extra'] = {};
+          var plugins = this.contextMenuPlugins[submittableChunks[i].label];
+
+          for (var name in plugins) {
+            submittableChunks[i]['extra'][name] = plugins[name].storage["l" + submittableChunks[i]['id']] || ''; 
           }
-        }));
+
+          for (var name in sharedLabelPlugins) {
+            submittableChunks[i]['extra'][name] = sharedLabelPlugins[name].storage["l" + submittableChunks[i]['id']] || ''; 
+          }
+        }
+
+        for (var rId in relations) {
+          var relObj = {
+            'links': relations[rId]['links'],
+            'rule': relations[rId]['rule'],
+            "extra": {}
+          }; 
+
+          for (var name in sharedRelPlugins) {
+            relObj['extra'][name] = sharedRelPlugins[name].storage["r" + rId] || ''; 
+          }
+
+          submitRelations.push(relObj);
+        }
 
         return {
           "relations": stringify ? JSON.stringify(submitRelations) : submitRelations,
@@ -1892,6 +1926,7 @@
             // means already submitted, so mark as such
             c.submittable = false;
             c.batch = batch;
+            c.id = null;
           }
         });
         submittableChunks = [];
@@ -1956,6 +1991,9 @@
             },
             success: function(d) {
               control.postSubmitHandler();
+
+              chunks = [];
+
               editingBatch = uuid;
 
               if (!utils.isDefined(originalConfig)) {

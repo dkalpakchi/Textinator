@@ -16,15 +16,14 @@ class DatapointInfo:
         else:
             self.source_id, self.source_formatting = None, None
 
-        self.source_spec = json.loads(ds_def.spec)
+        self.source_spec = json.loads(ds_def.spec) if ds_def else None
 
         self.is_empty = is_empty
         self.no_data = no_data
         self.is_dialogue = is_dialogue
         self.project_id = proj_id
 
-        if ds.meta_proc:
-            self.meta = ds.meta_proc
+        self.meta = ds.meta_proc if ds and ds.meta_proc else None
 
     def to_json(self):
         return {
@@ -35,5 +34,5 @@ class DatapointInfo:
             'source_formatting': self.source_formatting,
             'is_empty': self.is_empty,
             'project_id': self.project_id,
-            'meta': self.meta.to_json()
+            'meta': self.meta.to_json() if self.meta else None
         }
