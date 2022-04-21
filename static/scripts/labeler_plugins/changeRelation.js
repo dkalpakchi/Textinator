@@ -25,6 +25,7 @@ var plugin = function(cfg, labeler) {
     verboseName: config.verboseName,
     storage: {},
     update: 'labeler_relationschange',
+    initOnce: false,
     isAllowed: function(obj) {
       // only if it's part of the relation
       return document.querySelector('div.marker[data-s="' + obj.getAttribute('data-s') + '"]')

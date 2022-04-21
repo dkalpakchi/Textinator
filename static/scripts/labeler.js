@@ -394,6 +394,10 @@
         var div = document.createElement('div');
         var subset = Object.assign({}, plugins[short], plugins[undefined]);
 
+        for (var k in plugins["initOnce"]) {
+          subset[k] = plugins["initOnce"][k];
+        }
+
         if (Object.keys(subset).length == 0) return;
 
         var keys = Object.keys(subset);
@@ -555,7 +559,7 @@
       markersArea: null,
       selectorArea: null,   // the area where the article is
       markerGroupsArea: null,
-      contextMenuPlugins: {},
+      contextMenuPlugins: { "initOnce": [] },
       isMarker: isMarker,
       isLabel: isLabel,
       init: function() {
@@ -785,7 +789,12 @@
         var p = Object.assign({}, plugin);
         delete p.name;
         if (!(label in this.contextMenuPlugins)) this.contextMenuPlugins[label] = {};
-        this.contextMenuPlugins[label][plugin.name] = p;
+        if (plugin.initOnce) {
+          if (!this.contextMenuPlugins["initOnce"].hasOwnProperty(plugin.name))
+            this.contextMenuPlugins["initOnce"][plugin.name] = p; 
+        } else {
+          this.contextMenuPlugins[label][plugin.name] = p;
+        }
 
         if (p.update) {
           document.addEventListener(p.update, function(e) {

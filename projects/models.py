@@ -1273,7 +1273,9 @@ class LabelRelation(CommonModel):
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
     cluster = models.PositiveIntegerField(_("relation cluster"), default=1,
         help_text=_("At the submission time"))
-
+    extra = models.JSONField(_("extra information"), null=True, blank=True,
+        help_text=_("in a JSON format"))
+    
     @property
     def graph(self):
         return str(self)

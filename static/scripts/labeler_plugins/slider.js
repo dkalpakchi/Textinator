@@ -30,6 +30,7 @@ var plugin = function(cfg, labeler) {
     verboseName: config.verboseName,
     storage: {},
     update: false,
+    initOnce: false,
     isAllowed: function(obj) {
       return labeler.markersArea != null;
     },
