@@ -403,7 +403,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         tmpl = get_template(os.path.join('projects', 'task_types', '{}.html'.format(proj.task_type)))
         data['task_type_template'] = tmpl.render(ctx, self.request)
         data['marker_actions'] = menu_items
-        data['relation_repr'] = {r.pk: r.representation for r in proj.relations.all()}
+        data['relation_repr'] = {r.pk: r.representation for r in proj.relationvariant_set.all()}
 
         return data
 
