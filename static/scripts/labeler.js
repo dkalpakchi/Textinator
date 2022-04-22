@@ -1155,6 +1155,9 @@
           svg.selectAll('g')
             .attr('class', 'hidden');
 
+          svg.select('g#' + data.id)
+            .remove();
+
           svg = svg.append("g")
             .attr('id', data.id)
 
@@ -1336,13 +1339,13 @@
         return currentRelationId;
       },
       removeRelation: function(idx, exception) {
+        var control = this;
+
         $('g#' + relations[idx]['graphId']).find('circle[data-id]').each(function(i, d) { 
           var $el = $('#' + d.getAttribute('data-id'));
           if (utils.isDefined(exception) && $el.attr('id') == $(exception).attr('id')) return;
           if ($el.length > 0) {
-            $el.prop('in_relation', false);
-            $el.attr('id', '');
-            $el.find('[data-m="r"]').remove();
+            control.updateRelationSwitcher($el[0], undefined, idx);
           }
         });
         d3.select('g#' + relations[idx]['graphId']).remove();
@@ -1401,6 +1404,65 @@
         }
         currentRelationId = id;
       },
+      updateRelationSwitcher: function(x, relationId, removeId) {
+        var relSpan = undefined;
+        if (x.hasOwnProperty('dom'))
+          relSpan = x.dom.querySelector('[data-m]');
+        else
+          relSpan = x.querySelector('[data-m]');
+
+        if (utils.isDefined(relSpan)) {
+          if (utils.isDefined($(relSpan).prop("rels"))) {
+            var rr = $(relSpan).prop("rels");
+
+            if (utils.isDefined(removeId)) {
+              var idx = rr.indexOf(removeId);
+              if (idx != -1)
+                rr.splice(idx, 1);
+            }
+
+            if (rr.indexOf(relationId) == -1 && utils.isDefined(relationId))
+              rr.push(relationId);
+            $(relSpan).prop("rels", rr);
+
+            if (rr.length > 0)
+              relSpan.textContent = rr.length > 1 ? "+" : rr[0];
+            else {
+              relSpan.textContent = "";
+              var $x = $(x.hasOwnProperty('dom') ? x.dom : x);
+              $x.prop('in_relation', false);
+              $x.attr('id', '')
+              $(relSpan).remove();
+              relSpan = undefined
+            }
+          } else if (utils.isDefined(relationId)) {
+            relSpan.textContent = relationId;  
+            $(relSpan).prop("rels", [relationId]);
+          }
+        } else if (utils.isDefined(relationId)) {
+          var relSpan = document.createElement('span');
+          relSpan.setAttribute('data-m', 'r');
+          relSpan.className = "rel";
+          relSpan.textContent = relationId;
+          x.dom.appendChild(relSpan);
+          $(relSpan).prop("rels", [relationId]);
+        }
+
+        if (utils.isDefined(relSpan)) {
+          var content = createRelationSwitcher($(relSpan).prop("rels"));
+
+          if (relSpan._tippy) {
+            relSpan._tippy.destroy();
+          }
+
+          const instance = tippy(relSpan, {
+            content: content,
+            interactive: true,
+            placement: "bottom",
+            theme: 'translucent'
+          });
+        }
+      },
       markRelation: function(obj) {
         if (!this.checkRestrictions(true)) return;
 
@@ -1409,7 +1471,8 @@
             direction = obj.getAttribute('data-d'),
             rule = obj.getAttribute('data-r'),
             relName = obj.querySelector('[data-role="name"]').innerText,
-            control = this;
+            control = this,
+            newRelationId = lastRelationId;
 
         if ($parts.length >= 2) {
           var allInRelation = true,
@@ -1471,8 +1534,14 @@
               links = [];
           var startId = lastNodeInRelationId;
           $parts.each(function(i) {
-            $parts[i].id = 'rl_' + lastNodeInRelationId;
-            lastNodeInRelationId++;
+            if ($($parts[i]).prop("in_relation")) {
+              var rr = $($parts[i].querySelector('[data-m]')).prop("rels");
+              if (utils.isDefined(rr) && rr.length == 1 && rule == relations[rr[0]].rule)
+                newRelationId = rr[0];
+            } else {
+              $parts[i].id = 'rl_' + lastNodeInRelationId;
+              lastNodeInRelationId++;
+            }
 
             var jqPi = $($parts[i]);
             jqPi.prop('in_relation', true);
@@ -1491,9 +1560,24 @@
               'id': $parts[i].id,
               'name': getLabelText($parts[i]),
               'dom': $parts[i],
-              'color': getComputedStyle($parts[i])["background-color"]
+              'color': getComputedStyle($parts[i])["background-color"],
+              'in_relation': $($parts[i]).prop("in_relation")
             });
+
+            // if relationship is bidirectional and we add the node to an already existing relation,
+            // then also pull all other nodes from the relation
+            if (direction == '2' && newRelationId != lastRelationId) {
+              var otherNodes = relations[newRelationId].d3.nodes[s],
+                  storedIds = nodes[s].map((x) => x.id);
+
+              for (var on in otherNodes) {
+                if (!storedIds.includes(otherNodes[on].id))
+                  nodes[s].push(otherNodes[on]);
+              }
+            }
           });
+
+          console.log(nodes)
 
           var from = null,
               to = null;
@@ -1551,89 +1635,81 @@
             for (var key in sketches[i].nodes) {
               j += sketches[i].nodes[key].length;
             }
-            relations[lastRelationId] = {
-              'graphId': "n" + startId + "__" + (j - 1),
-              'rule': rule,
-              'between': sketches[i].between,
-              'links': [],
-              'name': relName,
-              'd3': {
-                'nodes': sketches[i].nodes,
-                'links': sketches[i].links,
-                'from': from,
-                'to': to,
-                'direction': direction
+
+            if (relations.hasOwnProperty(newRelationId)) {
+              for (var k in sketches[i].nodes) {
+                var nn = sketches[i].nodes[k];
+                for (var a = 0, len_a = nn.length; a < len_a; a++) {
+                  if (!containsIdentical(relations[newRelationId].d3.nodes[k], nn[a])) {
+                    relations[newRelationId].d3.nodes[k].push(nn[a]);
+                  }
+                }
               }
-            };
+
+              for (var a = 0, len_a = sketches[i].links.length; a < len_a; a++) {
+                var nn = sketches[i].links[a];
+                if (!containsIdentical(relations[newRelationId].d3.links, nn)) {
+                  relations[newRelationId].d3.links.push(nn);
+                }
+              }
+            } else {
+              relations[newRelationId] = {
+                'graphId': "n" + startId + "__" + (j - 1),
+                'rule': rule,
+                'between': sketches[i].between,
+                'links': [],
+                'name': relName,
+                'd3': {
+                  'nodes': sketches[i].nodes,
+                  'links': sketches[i].links,
+                  'from': from,
+                  'to': to,
+                  'direction': direction
+                }
+              };
+            }
 
             sketches[i].links.forEach(function(l) {
               var source = document.querySelector('#' + l.source),
                   target = document.querySelector('#' + l.target);
               // if bidirectional, no need to store mirrored relations
-              if (direction == 2 && containsIdentical(relations[lastRelationId]['links'], {
+              if (direction == 2 && containsIdentical(relations[newRelationId]['links'], {
                 's': target.getAttribute('data-i'),
                 't': source.getAttribute('data-i')
               })) return;
 
-              relations[lastRelationId]['links'].push({
+              relations[newRelationId]['links'].push({
                 's': source.getAttribute('data-i'),
                 't': target.getAttribute('data-i')
               })
             });
 
-            if (currentRelationId == null)
-              currentRelationId = 1;
-            else
-              currentRelationId++;
+            currentRelationId = currentRelationId == null ? 1 : newRelationId;
 
             if (!utils.isDefined(this.drawingType[rule]) || this.drawingType[rule] == 'g') {
               this.drawNetwork({
-                'id': "n" + startId + "__" + (j - 1),
-                'nodes': Array.prototype.concat.apply([], Object.values(sketches[i].nodes)),
-                'links': [].concat(sketches[i].links), // necessary since d3 changes the structure of links
+                'id': relations[newRelationId]['graphId'],
+                'nodes': Array.prototype.concat.apply([], Object.values(relations[newRelationId].d3.nodes)),
+                'links': [].concat(relations[newRelationId].d3.links), // necessary since d3 changes the structure of links
               }, (from != null && to != null && direction != '2'))
             } else if (this.drawingType[rule] == 'l') {
               this.drawList({
-                'id': "n" + startId + "__" + (j - 1),
-                'nodes': Array.prototype.concat.apply([], Object.values(sketches[i].nodes))
+                'id': relations[newRelationId]['graphId'],
+                'nodes': Array.prototype.concat.apply([], Object.values(relations[newRelationId].d3.nodes))
               })  
             }
 
             for (var s in sketches[i].nodes) {
               var snodes = sketches[i].nodes[s];
               snodes.forEach(function(x) {
-                var relSpan = x.dom.querySelector('[data-m]');
-
-                if (utils.isDefined(relSpan)) {
-                  if (utils.isDefined($(relSpan).prop("rels"))) {
-                    var rr = $(relSpan).prop("rels");
-                    rr.push(lastRelationId);
-                    $(relSpan).prop("rels", rr);
-                  }
-                  relSpan.textContent = "+";
-
-                  var content = createRelationSwitcher($(relSpan).prop("rels"));
-
-                  const instance = tippy(relSpan, {
-                    content: content,
-                    interactive: true,
-                    placement: "bottom",
-                    theme: 'translucent'
-                  });
-                } else {
-                  var relSpan = document.createElement('span');
-                  relSpan.setAttribute('data-m', 'r');
-                  relSpan.className = "rel";
-                  relSpan.textContent = lastRelationId;
-                  $(relSpan).prop("rels", [lastRelationId]);
-                  x.dom.appendChild(relSpan);
-                }
+                control.updateRelationSwitcher(x, newRelationId);
                 x.dom.classList.remove('active');
                 $(x.dom).prop('selected', false);
               });
             }
 
-            lastRelationId++;
+            if (newRelationId == lastRelationId)
+              lastRelationId++;
             startId = j;
           }
 
@@ -1651,7 +1727,8 @@
             fromRel = relations[fromId],
             toRel = relations[toId],
             // a relation map, which is initially identity, but might become smth else if anything is deleted
-            map = {[fromId]: fromId, [toId]: toId}; 
+            map = {[fromId]: fromId, [toId]: toId},
+            control = this; 
 
         if (utils.isDefined(fromRel) && utils.isDefined(toRel) && fromRel.between.sort().join(',') != toRel.between.sort().join(',')) {
           alert("Cannot move between different kind of relations")
@@ -1677,6 +1754,7 @@
                 'nodes': Array.prototype.concat.apply([], Object.values(fromRel.d3.nodes))
               })
             }
+            relations[fromId] = fromRel;
           } else {
             map = (utils.isDefined(toId) && toId != -1) ? this.removeRelation(fromId, obj) : this.removeRelation(fromId);
             this.showRelationGraph(null);
@@ -1768,6 +1846,10 @@
           obj.querySelector('[data-m="r"]').textContent = map[toId];
 
           this.showRelationGraph(map[toId]);
+
+          relations[toId] = toRel;
+
+          newNodes.forEach((x) => control.updateRelationSwitcher(x, toId, fromId));
         }
 
         // deselect if somone accidentally left clicked on the label

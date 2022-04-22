@@ -161,27 +161,24 @@ def process_chunks_and_relations(batch, batch_info, ctx_cache=None):
             saved_labels += just_saved
 
     for i, rel in enumerate(batch_info.relations):
-        print(rel)
         for link in rel['links']:
-            print(link)
             source_id, target_id = int(link['s']), int(link['t'])
 
-            # try:
-            source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
-            target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
-            # except Label.DoesNotExist:
-            #     continue
+            try:
+                source_label = Label.objects.filter(pk=label_cache.get(source_id, -1)).get()
+                target_label = Label.objects.filter(pk=label_cache.get(target_id, -1)).get()
+            except Label.DoesNotExist:
+                continue
 
-            # try:
-            rule = RelationVariant.objects.filter(pk=rel['rule']).get()
-            # except Relation.DoesNotExist:
-            #     continue
+            try:
+                rule = RelationVariant.objects.filter(pk=rel['rule']).get()
+            except RelationVariant.DoesNotExist:
+                continue
 
             LabelRelation.objects.create(
                 rule=rule, first_label=source_label, second_label=target_label, batch=batch,
                 cluster=i+1, extra=rel['extra']
             )
-            print("DONE")
 
 
 def process_marker_groups(batch, batch_info, ctx_cache=None):
