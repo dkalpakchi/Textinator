@@ -29,8 +29,12 @@ def group2hash(group):
 
 
 class Exporter:
-    def __init__(self, project):
+    def __init__(self, project, config):
         self.__project = project
+        self.__config = {
+            'consolidate_clusters': False
+        }
+        self.__config.update(config)
 
     def _export_corr(self):
         # The problem is that the context exists in every label and if this is the whole text, then it's a problem

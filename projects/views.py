@@ -799,22 +799,12 @@ def async_delete_input(request, proj, inp):
 def export(request, proj):
     try:
         project = Project.objects.get(pk=proj)
-        exporter = Exporter(project)
+        exporter = Exporter(project, config={
+            'consolidate_clusters': request.GET.get('consolidate_clusters') == 'on'
+        })
         return JsonResponse({"data": exporter.export()})
     except Project.DoesNotExist:
         raise Http404
-
-
-@login_required
-@require_http_methods(["GET"])
-def export_generic(request, proj):
-    try:
-        project = Project.objects.get(pk=proj)
-        exporter = Exporter(project)
-        return JsonResponse({"data": exporter._export_generic()})
-    except Project.DoesNotExist:
-        raise Http404
-
 
 @login_required
 @require_http_methods(["POST"])

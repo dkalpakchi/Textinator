@@ -394,13 +394,16 @@
     });
 
     $('a[download]').on('click', function() {
-      var $btn = $(this);
+      var $btn = $(this),
+          $form = $btn.closest('form');
+
       $btn.addClass('is-loading');
       $.ajax({
         method: "GET",
         url: $btn.attr('data-url'),
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
+        data: $form.serializeObject(),
         success: function(data) {
           const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
@@ -411,9 +414,9 @@
           a.addEventListener('click', function(e) {
             setTimeout(function() {
               URL.revokeObjectURL(url);
-              a.removeEventListener('click', clickHandler);
+              // a.removeEventListener('click', clickHandler);
               a.remove();
-              URL.revokeObjectURL(url);
+              // URL.revokeObjectURL(url);
             }, 150);
           }, false);
 

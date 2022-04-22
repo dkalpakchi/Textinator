@@ -327,7 +327,7 @@ textarea {
 }
 
 .selector.element span.tag {
-  border: 1px solid white;
+  border: 2px solid transparent;
 }
 
 .selector.element span.tag:hover {
@@ -335,7 +335,7 @@ textarea {
 }
 
 .selector.element span.tag.active {
-  border: 1px solid black;
+  border: 2px solid black;
   cursor: pointer;
 }
 

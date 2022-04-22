@@ -44,6 +44,7 @@
   var labelerModule = (function() {
     const RELATION_CHANGE_EVENT = 'labeler_relationschange';
     const LINE_ENDING_TAGS = ["P", "UL", "BLOCKQUOTE", "H1", "H2", "H3", "H4", "H5", "H6", "ARTICLE"];
+    const LABEL_CSS_SELECTOR = "span.tag[data-s]"
 
     var chunks = [], // the array of all chunks of text marked with a label, but not submitted yet
         relations = {}, // a map from relationId to the list of relations constituting it
@@ -179,7 +180,7 @@
     }
 
     function isLabel(node) {
-      return utils.isDefined(node) && node.nodeName == "SPAN" && node.classList.contains("tag");
+      return utils.isDefined(node) && node.nodeName == "SPAN" && node.classList.contains("tag") && node.hasAttribute('data-s');
     }
 
     function isMarker(node) {
@@ -653,6 +654,10 @@
             }
           }, false);
 
+          this.markersArea.querySelector("#deselectAllMarkers").addEventListener('click', function(e) {
+            control.textArea.querySelectorAll(LABEL_CSS_SELECTOR).forEach((x) => x.classList.remove('active'));
+          })
+
           this.selectorArea.addEventListener('mouseover', function(e) {
             var target = e.target;
             if (isLabel(target)) {
@@ -1036,6 +1041,18 @@
             activeLabels++;
             chunk['label'] = obj.getAttribute('data-s');
 
+            var $metaInfo = $(markedSpan).siblings('[data-meta]');
+            if ($metaInfo.length > 0) {
+              var $metaScript = $metaInfo.find('script');
+
+              if ($metaScript.length > 0) {
+                var jsonInfo = JSON.parse($metaScript.text());
+                chunk['extra'] = jsonInfo;
+              }
+            }
+
+            console.log(chunk);
+
             clearSelection(); // force clear selection
           }
         }
@@ -1415,18 +1432,25 @@
         else
           relSpan = x.querySelector('[data-m]');
 
+        if (removeId < 0) removeId = undefined;
+
         if (utils.isDefined(relSpan)) {
           if (utils.isDefined($(relSpan).prop("rels"))) {
             var rr = $(relSpan).prop("rels");
 
             if (utils.isDefined(removeId)) {
-              var idx = rr.indexOf(removeId);
+              var idx = rr.indexOf(parseInt(removeId));
               if (idx != -1)
                 rr.splice(idx, 1);
             }
 
-            if (rr.indexOf(relationId) == -1 && utils.isDefined(relationId))
-              rr.push(relationId);
+            if (utils.isDefined(relationId)) {
+              if (parseInt(relationId) < 0) {
+                rr = [];
+              } else if (rr.indexOf(parseInt(relationId)) == -1) {
+                rr.push(relationId);
+              }
+            }
             $(relSpan).prop("rels", rr);
 
             if (rr.length > 0)
@@ -1688,13 +1712,16 @@
                 't': source.getAttribute('data-i')
               })) return;
 
-              relations[newRelationId]['links'].push({
-                's': source.getAttribute('data-i'),
-                't': target.getAttribute('data-i')
-              })
+              var obj = {
+                    's': source.getAttribute('data-i'),
+                    't': target.getAttribute('data-i')
+                  };
+
+              if (!containsIdentical(relations[newRelationId]['links'], obj))
+                relations[newRelationId]['links'].push(obj)
             });
 
-            currentRelationId = currentRelationId == null ? 1 : newRelationId;
+            currentRelationId = newRelationId;
 
             if (!utils.isDefined(this.drawingType[rule]) || this.drawingType[rule] == 'g') {
               this.drawNetwork({
@@ -1860,6 +1887,8 @@
           relations[toId] = toRel;
 
           newNodes.forEach((x) => control.updateRelationSwitcher(x, toId, fromId));
+        } else {
+          newNodes.forEach((x) => control.updateRelationSwitcher(x, toId, fromId));
         }
 
         // deselect if somone accidentally left clicked on the label
@@ -1954,7 +1983,8 @@
         }
 
         for (var i = 0, len = submittableChunks.length; i < len; i++) {
-          submittableChunks[i]['extra'] = {};
+          if (!submittableChunks[i].hasOwnProperty("extra"))
+            submittableChunks[i]['extra'] = {};
           var plugins = this.contextMenuPlugins[submittableChunks[i].label];
 
           for (var name in plugins) {

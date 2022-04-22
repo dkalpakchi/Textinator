@@ -2,6 +2,10 @@
   <article id="markersArea" class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
       <p>{{ _("markers")|capitalize }}</p>
+
+      <a id="deselectAllMarkers" class="no-decoration is-pulled-right is-small button">
+        Deselect all
+      </a>
     </div>
     <div class="message-body">
       {% set grouped_markers = project.free_markers|groupby('anno_type') %}

@@ -16,13 +16,23 @@
   <div class="container is-fluid">
     <div>
       <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
-      <a data-url="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
-      {% if project.task_type != "generic" %}
-        <a data-url="{{ url('projects:data_exporter_generic', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON (generic)</a>
-      {% endif %}
       {% if project.author == user or project.shared_with(user) %}
         <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-warning">Generate a PDF time report</a>
       {% endif %}
+    </div>
+    <div class="mt-5 box">
+      <p class="title">Export settings</p>
+      <form>
+        <div class="field">
+          <div class="control">
+            <label class="checkbox">
+              <input type="checkbox" name="consolidate_clusters">
+              Consolidate clusters
+            </label>
+          </div>
+        </div>
+        <a data-url="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
+      </form>
     </div>
     <div class="mt-5">
       In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_datapoints.count()}} flagged text(s)
