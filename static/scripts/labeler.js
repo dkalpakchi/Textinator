@@ -1577,8 +1577,6 @@
             }
           });
 
-          console.log(nodes)
-
           var from = null,
               to = null;
           if (direction == '0' || direction == '2') {
@@ -1599,6 +1597,11 @@
               'between': between[i]
             }
             if (utils.isDefined(nodes[between[i][from]]) && utils.isDefined(nodes[between[i][to]])) {
+              if (between[i][from] == between[i][to] && nodes[between[i][from]].length < 2) {
+                // can't make a relationship with itself
+                continue;
+              }
+
               if (!sketch.nodes.hasOwnProperty(between[i][from]))
                 sketch.nodes[between[i][from]] = [];
               sketch.nodes[between[i][from]].push.apply(sketch.nodes[between[i][from]], nodes[between[i][from]]);
@@ -1631,6 +1634,7 @@
           }
 
           var j = startId;
+
           for (var i = 0, len = sketches.length; i < len; i++) {
             for (var key in sketches[i].nodes) {
               j += sketches[i].nodes[key].length;
@@ -1641,6 +1645,8 @@
                 var nn = sketches[i].nodes[k];
                 for (var a = 0, len_a = nn.length; a < len_a; a++) {
                   if (!containsIdentical(relations[newRelationId].d3.nodes[k], nn[a])) {
+                    if (!relations[newRelationId].d3.nodes.hasOwnProperty(k))
+                      relations[newRelationId].d3.nodes[k] = [];
                     relations[newRelationId].d3.nodes[k].push(nn[a]);
                   }
                 }
