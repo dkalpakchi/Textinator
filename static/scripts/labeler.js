@@ -370,10 +370,10 @@
     function initContextMenu(markedSpan, plugins) {
       if (Object.values(plugins).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
         function createButton(plugin) {
-          var btn = document.createElement('button');
-          btn.className = "button is-primary is-small is-fullwidth is-rounded is-outlined mb-1";
-          btn.textContent = plugin.verboseName;
           if (plugin.isAllowed(markedSpan)) {
+            var btn = document.createElement('button');
+            btn.className = "button is-primary is-small is-fullwidth is-rounded is-outlined mb-1";
+            btn.textContent = plugin.verboseName;
             plugin.exec(markedSpan, btn);
 
             if (plugin.subscribe) {
@@ -387,8 +387,10 @@
                 }, false);
               })
             }
+            return btn;
+          } else {
+            return null;
           }
-          return btn;
         }
 
         var code = markedSpan.getAttribute('data-s');
@@ -410,7 +412,9 @@
         });
 
         for (var name in keys) {
-          div.appendChild(createButton(subset[keys[name]]));
+          var btn = createButton(subset[keys[name]]);
+          if (btn != null)
+            div.appendChild(btn);
         }
         div.lastChild.classList.remove('mb-1');
 

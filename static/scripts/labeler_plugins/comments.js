@@ -9,10 +9,11 @@ var plugin = function(cfg, labeler) {
   var config = {
     name: "comments",
     verboseName: 'Add a comment',
-    storeFor: "label", // one of "label", "relation",
+    storeFor: "label", // one of "label", "relation"
     dispatch: {},   // an event to be dispatched on update
     subscribe: [],
-    sharedBetweenMarkers: false
+    sharedBetweenMarkers: false,
+    allowSingletons: false // takes effect only if sharedBetweenMarkers is true
   }
 
   function isDefined(x) {
@@ -32,9 +33,13 @@ var plugin = function(cfg, labeler) {
     dispatch: config.dispatch,
     subscribe: config.subscribe,
     storeFor: config.storeFor,
+    allowSingletons: config.allowSingletons,
     sharedBetweenMarkers: config.sharedBetweenMarkers,
     isAllowed: function(obj) {
-      return labeler.markersArea != null;
+      if (this.storeFor == 'relation')
+        return isDefined(obj.querySelector('[data-m]')) || (this.sharedBetweenMarkers && this.allowSingletons);
+      else
+        return true;
     },
     exec: function(label, menuItem) {
       var id = label.getAttribute('data-i'),
@@ -47,16 +52,24 @@ var plugin = function(cfg, labeler) {
         scope = "l" + id;
         prefix = "label";
       } else if (this.storeFor == "relation") {
-        var rel = label.querySelector('[data-m="r"]');
+        var rel = label.querySelector('[data-m="r"]'),
+            prefix = "relation";
         if (rel) {
           scope = "r" + rel.textContent;
-          prefix = "relation";
+        } else if (this.allowSingletons) {
+          scope = "sr" + id;
         }
       }
 
       if (scope !== undefined) {
         commentInput.setAttribute('data-s', scope);
+
+        if (storage["sr" + id] && scope.startsWith('r')) {
+          storage[scope] = storage["sr" + id];
+          delete storage["sr" + id];
+        }
         commentInput.setAttribute('value', storage[scope] || '');
+
         commentInput.addEventListener('change', function(e) {
           var target = e.target;
           storage[target.getAttribute('data-s')] = target.value;
