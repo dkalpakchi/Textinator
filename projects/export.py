@@ -68,7 +68,9 @@ class Exporter:
                             grouped_relations[-1]["relations"]["{}_{}".format(batch, cluster)] = group
                 group = []
 
-            if context_id == -1 or context_id != r.first_label.context_id:
+            if context_id == -1 or (
+                context_id != r.first_label.context_id and
+                context == r.first_label.context.content):
                 if context_id == -1:
                     context_id = r.first_label.context_id
                     context = r.first_label.context.content
