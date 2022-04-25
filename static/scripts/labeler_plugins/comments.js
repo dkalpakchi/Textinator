@@ -36,10 +36,18 @@ var plugin = function(cfg, labeler) {
     allowSingletons: config.allowSingletons,
     sharedBetweenMarkers: config.sharedBetweenMarkers,
     isAllowed: function(obj) {
-      if (this.storeFor == 'relation')
-        return isDefined(obj.querySelector('[data-m]')) || (this.sharedBetweenMarkers && this.allowSingletons);
-      else
+      if (this.storeFor == 'relation') {
+        var relSpan = obj.querySelector('[data-m]'),
+            relSpanDefined = isDefined(relSpan);
+
+        if (relSpanDefined) {
+          return relSpan.textContent != '+';
+        } else {
+          return this.sharedBetweenMarkers && this.allowSingletons;
+        }
+      } else {
         return true;
+      }
     },
     exec: function(label, menuItem) {
       var id = label.getAttribute('data-i'),
