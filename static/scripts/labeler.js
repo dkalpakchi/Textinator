@@ -58,8 +58,6 @@
         resetText = null,    // the text of the loaded article
         pluginsToRegister = 0,
         originalConfig = undefined,
-        markersInRelations = [],
-        nonRelationMarkers = [],
         submittableChunks = []; // chunks to be submitted
 
     function containsIdentical(arr, obj) {
@@ -583,12 +581,6 @@
         resetText = this.getContextText();
         this.allowSelectingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-select') == 'true';
         this.disableSubmittedLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-disable') == 'true';
-        markersInRelations = this.relationsArea == null ? [] :
-          [].concat.apply([], Array.from(this.relationsArea.querySelectorAll('div.relation.tags')).map(
-          x => [].concat.apply([], x.getAttribute('data-b').split('|').map(y => y.split('-:-'))) ));
-        nonRelationMarkers = this.relationsArea == null ? [] :
-          Array.from(this.markersArea.querySelectorAll('div.marker.tags')).map(
-          x => x.getAttribute('data-s')).filter(x => !markersInRelations.includes(x));
         var repr = document.querySelector('#relationRepr');
         if (utils.isDefined(repr)) this.drawingType = JSON.parse(repr.textContent);
         if (utils.isDefined(this.relationsArea))
@@ -1951,22 +1943,8 @@
               utils.serializeHashedObject(
                 $(this.markersArea).find('input[type="range"]').filter((i, x) => $('output[for="' + x.id + '"]').text() != "???")
               ) : {},
-            longTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('textarea')) : {};
-
-        if (Object.values(relations).map(function(x) { return Object.keys(x).length; }).reduce(function(a, b) { return a + b; }, 0) > 0) {
-          // if there are any relations, submit only those chunks that have to do with the relations
-          submittableChunks = chunks.filter(isInRelations) // defined at the very top of the file
-          
-          var nonRelationChunks = chunks.filter(x => !submittableChunks.includes(x) && x.submittable);
-          for (var i = 0, len = nonRelationChunks.length; i < len; i++) {
-            if (nonRelationMarkers.includes(nonRelationChunks[i]['label'])) {
-              submittableChunks.push(nonRelationChunks[i]);
-            }
-          }
-        } else {
-          // if there are no relations, submit only submittable chunks, i.e. independent chunks that should not be a part of any relations
-          submittableChunks = chunks.filter(function(c) { return c.independent && c.submittable })
-        }
+            longTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('textarea')) : {},
+            submittableChunks = chunks.filter((c) => c.submittable );
         
         // add plugin info to chunks
         var sharedLabelPlugins = {},
