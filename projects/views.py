@@ -800,7 +800,8 @@ def export(request, proj):
     try:
         project = Project.objects.get(pk=proj)
         exporter = Exporter(project, config={
-            'consolidate_clusters': request.GET.get('consolidate_clusters') == 'on'
+            'consolidate_clusters': request.GET.get('consolidate_clusters') == 'on',
+            'include_usernames': request.GET.get('include_usernames', False)
         })
         return JsonResponse({"data": exporter.export()})
     except Project.DoesNotExist:

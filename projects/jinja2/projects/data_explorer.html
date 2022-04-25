@@ -23,12 +23,24 @@
     <div class="mt-5 box">
       <p class="title">Export settings</p>
       <form>
-        <div class="field">
-          <div class="control">
-            <label class="checkbox">
-              <input type="checkbox" name="consolidate_clusters">
-              Consolidate clusters
-            </label>
+        <div class="field is-horizontal">
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <label class="checkbox">
+                  <input type="checkbox" name="consolidate_clusters">
+                  Consolidate clusters
+                </label>
+              </div>  
+            </div>
+            <div class="field">
+              <div class="control">
+                <label class="checkbox">
+                  <input type="checkbox" name="include_usernames">
+                  Include annotators' usernames
+                </label>
+              </div>    
+            </div>
           </div>
         </div>
         <a data-url="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>

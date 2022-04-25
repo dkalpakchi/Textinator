@@ -15,7 +15,8 @@ def merge2cluster(group):
     return {
         'type': group[0]['type'],
         'nodes': list(nodes.values()),
-        'extra': group[0]['extra']
+        'extra': group[0]['extra'],
+        "annotator": group[0]['annotator']
     }
 
 def group2hash(group):
@@ -34,7 +35,8 @@ class Exporter:
     def __init__(self, project, config):
         self.__project = project
         self.__config = {
-            'consolidate_clusters': False
+            'consolidate_clusters': False,
+            'include_usernames': False
         }
         self.__config.update(config)
 
@@ -78,7 +80,12 @@ class Exporter:
                     ).exclude(pk__in=list(labels_in_relation))
 
                     if singletons.count():
-                        grouped_relations[-1]["labels"] = [getattr(sng, json_exporter)() for sng in singletons.all()]
+                        grouped_relations[-1]["labels"] = []
+                        for sng in singletons.all():
+                            sng_obj = getattr(sng, json_exporter)()
+                            if self.__config['include_usernames']:
+                                sng_obj['annotator'] = sng.batch.user.username
+                            grouped_relations[-1]["labels"].append(sng_obj)
 
                     labels_in_relation = set()
                 context = r.first_label.context.content
@@ -94,6 +101,8 @@ class Exporter:
             })
             if r.extra:
                 group[-1]["extra"] = r.extra
+            if self.__config['include_usernames']:
+                group[-1]["annotator"] = r.batch.user.username
             batch = r.batch
             cluster = r.cluster
             context_id = r.first_label.context_id
@@ -119,7 +128,12 @@ class Exporter:
             ).exclude(pk__in=list(labels_in_relation))
 
             if singletons.count():
-                grouped_relations[-1]["labels"] = [getattr(sng, json_exporter)() for sng in singletons.all()]
+                grouped_relations[-1]["labels"] = []
+                for sng in singletons.all():
+                    sng_obj = getattr(sng, json_exporter)()
+                    if self.__config['include_usernames']:
+                        sng_obj['annotator'] = sng.batch.user.username
+                    grouped_relations[-1]["labels"].append(sng_obj)
         return grouped_relations
 
     def _export_pronr(self):
