@@ -1043,8 +1043,6 @@
               }
             }
 
-            console.log(chunk);
-
             clearSelection(); // force clear selection
           }
         }
@@ -1289,6 +1287,9 @@
 
           svg.selectAll('g')
             .attr('class', 'hidden');
+
+          svg.select('g#' + data.id)
+            .remove();
 
           svg = svg.append("g")
             .attr('id', data.id)
@@ -1673,8 +1674,10 @@
               }
 
               for (var a = 0, len_a = sketches[i].links.length; a < len_a; a++) {
-                var nn = sketches[i].links[a];
-                if (!containsIdentical(relations[newRelationId].d3.links, nn)) {
+                var nn = sketches[i].links[a],
+                    inv = { 'target': nn['source'], 'source': nn['target'] };
+                if (!containsIdentical(relations[newRelationId].d3.links, nn) &&
+                    !containsIdentical(relations[newRelationId].d3.links, inv)) {
                   relations[newRelationId].d3.links.push(nn);
                 }
               }
