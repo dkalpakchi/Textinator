@@ -1514,6 +1514,7 @@
 
             while (true) {
               var cur = rels.map((x, i) => x[ptr[i]]);
+              var candLast = true;
 
               if (new Set(cur).size == 1) {
                 // all same, advance all pointers
@@ -1522,22 +1523,20 @@
                   if (ptr[j] + 1 < rels[j].length) {
                     ptr[j]++;
                   }
+                  candLast = candLast && (ptr[j] + 1 == rels[j].length);
                 }
               } else {
-                var arrMax = Math.max(...cur);
+                // Advance the minimal pointers
+                var arrMin = Math.min(...cur);
                 for (var j = 0; j < relsLength; j++) {
-                  if (cur[ptr[j]] < arrMax && ptr[j] + 1 < rels[j].length) {
+                  if ((cur[ptr[j]] == arrMin) && (ptr[j] + 1 < rels[j].length)) {
                     ptr[j]++;
                   }
+                  candLast = candLast && (ptr[j] + 1 == rels[j].length);
                 }
               }
 
               if (isLast) break;
-
-              var candLast = true;
-              for (var j = 0; j < relsLength; j++) {
-                candLast = candLast && (ptr[j] + 1 == rels[j].length);
-              }
               isLast = candLast;
             }
           }
