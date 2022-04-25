@@ -381,8 +381,6 @@
               plugin.subscribe.forEach(function(event) {
                 markedSpan.addEventListener(event, function (e) {
                   (function(b) {
-                    console.log(plugin.verboseName + " " + plugin.isAllowed(e.target))
-                    console.log(e.target)
                     if (plugin.isAllowed(e.target)) {
                       plugin.exec(e.target, b)
                       b.classList.remove('is-hidden')

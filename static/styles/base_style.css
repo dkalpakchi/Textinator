@@ -326,33 +326,41 @@ textarea {
   font-size: 2em;
 }
 
-.selector.element span.tag {
-  border: 2px solid transparent;
-}
-
-.selector.element span.tag:hover {
+.selector .tag:hover {
   cursor: pointer;
 }
 
-.selector.element span.tag.active {
+.selector .tag.active {
   border: 2px solid black;
   cursor: pointer;
 }
 
-.selector.element span.tag > span.tag {
+.selector .tag > .tag {
   margin: 0em 0.5em;
 }
 
 .selector .tag {
+  border: 2px solid transparent;
   position: relative;
-  padding-left: 1.25em;
+  padding-left: 1.35em;
 }
 
 .selector .tag .rel {
+  font-size: 0.8em;
+  left: 4px;
   position: absolute;
   top: 0;
-  left: 4px;
-  font-size: 0.8em;
+}
+
+.selector .tag .rel.is-badge {
+  -webkit-border-top-left-radius: 3px;
+          border-top-left-radius: 3px;
+  -webkit-border-top-right-radius: 3px;
+          border-top-right-radius: 3px;
+  height: 100%;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+  top: -0.3em;
 }
 
 .selector.element p:last-child {
