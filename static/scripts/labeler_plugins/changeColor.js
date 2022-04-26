@@ -12,7 +12,8 @@ var plugin = function(cfg, labeler) {
     storeFor: "label", // one of "label", "relation"
     dispatch: {},   // an event to be dispatched on update
     subscribe: [],
-    sharedBetweenMarkers: false
+    sharedBetweenMarkers: false,
+    allowSingletons: false // takes effect only if sharedBetweenMarkers is true
   }
 
   function isDefined(x) {
@@ -78,7 +79,7 @@ var plugin = function(cfg, labeler) {
         if (relSpanDefined) {
           return relSpan.textContent != '+';
         } else {
-          return this.sharedBetweenMarkers;
+          return this.sharedBetweenMarkers && this.allowSingletons;
         }
       } else {
         return true;
@@ -104,18 +105,28 @@ var plugin = function(cfg, labeler) {
               label.setAttribute('style', "background-color: " + c + "; color: " + textColor + ";");
             } else if (control.storeFor == 'relation') {
               var relSpan = label.querySelector('[data-m="r"]');
-              relSpan.classList.add('is-badge');
-              relSpan.setAttribute('style', "background-color: " + c + "; color: " + textColor + ";");
+              if (isDefined(relSpan)) {
+                relSpan.classList.add('is-badge');
+                relSpan.setAttribute('style', "background-color: " + c + "; color: " + textColor + ";");
+              } else if (control.allowSingletons) {
+                label.setAttribute('style', "background-color: " + c + "; color: " + textColor + ";");
+              }       
             }
-          };
+          },
+          defaultColor = 'rgba(255, 255, 255, 1)';
 
-      if (this.storeFor == "relation") {
+      if (this.storeFor == "label") {
+        scope = "l" + id;
+        prefix = "label";
+        defaultColor = label.style.backgroundColor;
+      } else if (this.storeFor == "relation") {
         var rel = label.querySelector('[data-m="r"]'),
             prefix = "relation";
         if (rel) {
           scope = "r" + rel.textContent;
         } else if (this.allowSingletons) {
           scope = "sr" + id;
+          defaultColor = label.style.backgroundColor;
         }
       }
 
@@ -129,14 +140,23 @@ var plugin = function(cfg, labeler) {
         'backgroundColor': '#333',
         'zIndex': 10000,
         'onInput': function() {
-          label._tippy.disable();
-          menuItem._tippy.disable();
+          if (isDefined(label._tippy))
+            label._tippy.disable();
+          if (isDefined(menuItem._tippy))
+            menuItem._tippy.disable();
         },
         'onChange': function() {
-          label._tippy.enable();
-          menuItem._tippy.enable();
-          label._tippy.show();
-          menuItem._tippy.show();
+          if (isDefined(label._tippy) && isDefined(menuItem._tippy)) {
+            label._tippy.enable();
+            menuItem._tippy.enable();
+            label._tippy.show();
+            menuItem._tippy.show();
+          }
+
+          storage[scope] = colorInput.value;
+          
+          const event = new Event("labeler_" + prefix + "_blur", {bubbles: true});
+          document.dispatchEvent(event);
         }
       });
 
@@ -147,31 +167,27 @@ var plugin = function(cfg, labeler) {
           storage[scope] = storage["sr" + id];
           delete storage["sr" + id];
         }
-        colorInput.setAttribute('value', storage[scope] || '');
+
+
+        cpicker.fromString(storage[scope] || defaultColor);
 
         if (colorInput.value)
           updateUI(colorInput.value);
+
+        colorInput.addEventListener('change', function(e) {
+          var target = e.target;
+          storage[target.getAttribute('data-s')] = target.value;
+          updateUI(target.value);
+        });
+
+        tippy(isDefined(menuItem) ? menuItem : label, {
+          content: colorInput,
+          interactive: true,
+          interactiveBorder: 100,
+          placement: "right",
+          trigger: 'click'
+        });
       }
-
-      colorInput.addEventListener('change', function(e) {
-        var target = e.target;
-        updateUI(target.value);
-        storage[target.getAttribute('data-s')] = target.value;
-      });
-      
-      colorInput.addEventListener('blur', function(e) {
-        var target = e.target;
-        const event = new Event("labeler_" + prefix + "_blur", {bubbles: true});
-        target.dispatchEvent(event);
-      })
-
-      tippy(isDefined(menuItem) ? menuItem : label, {
-        content: colorInput,
-        interactive: true,
-        interactiveBorder: 100,
-        placement: "right",
-        trigger: 'click'
-      });
     }
   }
 };

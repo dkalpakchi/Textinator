@@ -76,7 +76,7 @@ var plugin = function(cfg, labeler) {
           storage[scope] = storage["sr" + id];
           delete storage["sr" + id];
         }
-        commentInput.setAttribute('value', storage[scope] || '');
+        commentInput.value = storage[scope] || '';
 
         commentInput.addEventListener('change', function(e) {
           var target = e.target;

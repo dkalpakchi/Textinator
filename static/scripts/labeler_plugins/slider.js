@@ -48,7 +48,7 @@ var plugin = function(cfg, labeler) {
       sliderInput.setAttribute('data-i', id);
       if (!(id in storage))
         storage[id] = config.default
-      sliderInput.setAttribute('value', storage[id]);
+      sliderInput.value = storage[id];
       sliderInput.addEventListener('change', function(e) {
         var target = e.target;
         storage["l" + parseInt(target.getAttribute('data-i'))] = target.value;
