@@ -1606,12 +1606,23 @@
             // if relationship is bidirectional and we add the node to an already existing relation,
             // then also pull all other nodes from the relation
             if (direction == '2' && newRelationId != lastRelationId) {
-              var otherNodes = relations[newRelationId].d3.nodes[s],
-                  storedIds = nodes[s].map((x) => x.id);
+              var storedIds = nodes[s].map((x) => x.id),
+                  otherNodes = relations[newRelationId].d3.nodes;
 
-              for (var on in otherNodes) {
-                if (!storedIds.includes(otherNodes[on].id))
-                  nodes[s].push(otherNodes[on]);
+              for (var ons in otherNodes) {
+                if (!nodes.hasOwnProperty(ons))
+                  nodes[ons] = [];
+
+                if (ons == s) {
+                  for (var i in otherNodes[ons]) {
+                    if (!storedIds.includes(otherNodes[ons][i].id))
+                      nodes[ons].push(otherNodes[ons][i]);
+                  }
+                } else {
+                  for (var i in otherNodes[ons]) {
+                    nodes[ons].push(otherNodes[ons][i]);
+                  }
+                }
               }
             }
           });
@@ -1771,8 +1782,6 @@
             startId = j;
           }
 
-          console.log(rels2remove);
-          console.log(relations);
           for (var i in rels2remove) {
             this.removeRelation(rels2remove[i]);
           }
