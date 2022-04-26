@@ -14,7 +14,6 @@ django-sass-processor==1.1
 Django==3.2.10
 django-chartjs==2.2.1
 beautifulsoup4==4.9.3
-PyYAML==5.3.1
 django-registration==3.1.1
 django-jazzmin==2.4.8
 psycopg2-binary
