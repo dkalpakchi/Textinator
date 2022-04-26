@@ -811,11 +811,21 @@
         if (Object.keys(p.dispatch).length > 0) {
           for (var catchEvent in p.dispatch) {
             document.addEventListener(catchEvent, function(e) {
-              const event = new Event(p.dispatch[catchEvent]);
-              // select all labels and dispatch events
-              document.querySelectorAll('span.tag').forEach(function(x) {
-                x.dispatchEvent(event);
-              });
+              if (Array.isArray(p.dispatch[catchEvent])) {
+                p.dispatch[catchEvent].forEach(function(de) {
+                  const event = new CustomEvent(de, {detail: e.detail});
+                  // select all labels and dispatch events
+                  document.querySelectorAll('span.tag').forEach(function(x) {
+                    x.dispatchEvent(event);
+                  });  
+                })
+              } else {
+                const event = new CustomEvent(p.dispatch[catchEvent]);
+                // select all labels and dispatch events
+                document.querySelectorAll('span.tag').forEach(function(x) {
+                  x.dispatchEvent(event);
+                });
+              }
             }, false);
           }
         }
@@ -1556,13 +1566,17 @@
           }
 
           var nodes = {},
-              links = [];
-          var startId = lastNodeInRelationId;
+              links = [],
+              startId = lastNodeInRelationId,
+              rels2remove = [],
+              candRels = [];
           $parts.each(function(i) {
             if ($($parts[i]).prop("in_relation")) {
               var rr = $($parts[i].querySelector('[data-m]')).prop("rels");
-              if (utils.isDefined(rr) && rr.length == 1 && rule == relations[rr[0]].rule)
+              if (utils.isDefined(rr) && rr.length == 1 && rule == relations[rr[0]].rule) {
                 newRelationId = rr[0];
+                candRels.push(rr[0]);
+              }
             } else {
               $parts[i].id = 'rl_' + lastNodeInRelationId;
               lastNodeInRelationId++;
@@ -1601,6 +1615,14 @@
               }
             }
           });
+
+          if (candRels.length > 1) {
+            newRelationId = Math.min(...candRels);
+            for (var i in candRels) {
+              if (candRels[i] != newRelationId)
+                rels2remove.push(candRels[i]);
+            }
+          }
 
           var from = null,
               to = null;
@@ -1747,6 +1769,12 @@
             if (newRelationId == lastRelationId)
               lastRelationId++;
             startId = j;
+          }
+
+          console.log(rels2remove);
+          console.log(relations);
+          for (var i in rels2remove) {
+            this.removeRelation(rels2remove[i]);
           }
 
           const event = new Event(RELATION_CHANGE_EVENT);

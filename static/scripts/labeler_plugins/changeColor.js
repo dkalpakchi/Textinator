@@ -16,6 +16,9 @@ var plugin = function(cfg, labeler) {
     allowSingletons: false // takes effect only if sharedBetweenMarkers is true
   }
 
+  const COLOR_CHANGE_EVENT = 'labeler_color_change';
+  const COLOR_CHANGED_EVENT = 'labeler_color_changed';
+
   function isDefined(x) {
     return x != null && x !== undefined;
   }
@@ -54,7 +57,55 @@ var plugin = function(cfg, labeler) {
     // Support is flipped twice to prevent erros if
     // it's not defined
     return cache.slice(0,3 + !!$.support.rgba);
-}
+  }
+
+  function getRandomColor(seedString) {
+    var seed = xmur3(seedString),
+        rng = sfc32(seed(), seed(), seed(), seed()),
+        r = Math.floor(rng() * 255),
+        g = Math.floor(rng() * 255),
+        b = Math.floor(rng() * 255);
+
+    return "rgba(" + r + "," + g + "," + b + ", 1)";
+  }
+
+  // taken from https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+  function xmur3(str) {
+    for(var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = h << 13 | h >>> 19;
+    } return function() {
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return (h ^= h >>> 16) >>> 0;
+    }
+  }
+
+  // taken from https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
+  function sfc32(a, b, c, d) {
+    return function() {
+      a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0; 
+      var t = (a + b) | 0;
+      a = b ^ b >>> 9;
+      b = c + (c << 3) | 0;
+      c = (c << 21 | c >>> 11);
+      d = d + 1 | 0;
+      t = t + d | 0;
+      c = c + t | 0;
+      return (t >>> 0) / 4294967296;
+    }
+  }
+
+  // taken from https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
+  function makeSalt(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  }
 
   if (isDefined(cfg)) {
     for (var k in cfg) {
@@ -65,7 +116,9 @@ var plugin = function(cfg, labeler) {
   return {
     name: config.name,
     verboseName: config.verboseName,
-    storage: {},
+    storage: {
+      salt: {}
+    },
     dispatch: config.dispatch,
     subscribe: config.subscribe,
     storeFor: config.storeFor,
@@ -155,7 +208,7 @@ var plugin = function(cfg, labeler) {
 
           storage[scope] = colorInput.value;
           
-          const event = new Event("labeler_" + prefix + "_blur", {bubbles: true});
+          const event = new Event("labeler_" + prefix + "_color_change", {bubbles: true});
           document.dispatchEvent(event);
         }
       });
@@ -168,7 +221,6 @@ var plugin = function(cfg, labeler) {
           delete storage["sr" + id];
         }
 
-
         cpicker.fromString(storage[scope] || defaultColor);
 
         if (colorInput.value)
@@ -178,6 +230,18 @@ var plugin = function(cfg, labeler) {
           var target = e.target;
           storage[target.getAttribute('data-s')] = target.value;
           updateUI(target.value);
+        });
+
+        label.addEventListener(COLOR_CHANGE_EVENT, function(e) {
+          var relSpan = label.querySelector('[data-m="r"]');
+          if (control.storeFor == 'relation' && isDefined(relSpan) && relSpan.textContent == e.detail.sender) {
+            if (!storage.salt.hasOwnProperty(scope))
+              storage.salt[scope] = makeSalt(32);
+            storage[scope] = getRandomColor(relSpan.textContent + storage.salt[scope]);
+
+            const event = new Event(COLOR_CHANGED_EVENT, {bubbles: false});
+            label.dispatchEvent(event);
+          }
         });
 
         tippy(isDefined(menuItem) ? menuItem : label, {

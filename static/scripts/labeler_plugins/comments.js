@@ -54,7 +54,8 @@ var plugin = function(cfg, labeler) {
           storage = this.storage,
           commentInput = document.createElement("input"),
           scope = undefined,
-          prefix = undefined;
+          prefix = undefined,
+          control = this;
 
       if (this.storeFor == "label") {
         scope = "l" + id;
@@ -83,9 +84,15 @@ var plugin = function(cfg, labeler) {
           storage[target.getAttribute('data-s')] = target.value;
         }, false);
         commentInput.addEventListener('blur', function(e) {
-          var target = e.target;
-          const event = new Event("labeler_" + prefix + "_blur", {bubbles: true});
-          target.dispatchEvent(event);
+          var target = e.target,
+              relSpan = label.querySelector('[data-m="r"]');
+
+          const event = new CustomEvent("labeler_" + prefix + "_blur", {
+            detail: {
+              sender: control.storeFor == 'relation' && isDefined(relSpan) ? relSpan.textContent : id
+            }
+          });
+          document.dispatchEvent(event);
         })
 
         tippy(isDefined(menuItem) ? menuItem : label, {
