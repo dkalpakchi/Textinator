@@ -10,15 +10,6 @@
       <span id="textLabels"></span>
     </span>
 
-    {% if dp_info.source_spec and dp_info.source_spec.get('meta') %}
-      <a href="{{ url('projects:project_meta', kwargs={'proj': dp_info.project_id})}}" target="_blank" id="meta" class="button is-small is-primary">
-        <span class="icon is-small">
-          <i class="fas fa-external-link-alt"></i>
-        </span>
-        <span>Open metadata</span>
-      </a>
-    {% endif %}
-
     <a id="flagTextButton" class="no-decoration is-pulled-right">
       <span class="icon is-small">
         <i class="fas fa-flag"></i>

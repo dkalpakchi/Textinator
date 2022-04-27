@@ -181,6 +181,24 @@
       return utils.isDefined(node) && node.nodeName == "SPAN" && node.classList.contains("tag") && node.hasAttribute('data-s');
     }
 
+    function filterSiblings(node, checker) {
+      var prev = node.previousSibling,
+          next = node.nextSibling,
+          res = [];
+
+      while (utils.isDefined(prev)) {
+        if (checker(prev)) res.push(prev);
+        prev = prev.previousSibling;
+      }
+
+      while (utils.isDefined(next)) {
+        if (checker(next)) res.push(next);
+        next = next.nextSibling;
+      }
+
+      return res;
+    }
+
     function isMarker(node) {
       return utils.isDefined(node) && node.nodeName == "DIV" && node.hasAttribute('data-s') && node.hasAttribute('data-color') &&
         node.hasAttribute('data-res') && node.hasAttribute('data-shortcut') && node.hasAttribute('data-indep');
@@ -483,6 +501,9 @@
             height = parseInt(svg.style('height'), 10),
             aspect = width / height;
      
+      console.log(width)
+      console.log(height)
+
       // set viewBox attribute to the initial size
       // control scaling with preserveAspectRatio
       // resize svg on inital page load
@@ -638,8 +659,10 @@
                   if (target.classList.contains('active') && $target.prop('selected')) {
                     target.classList.remove('active');
                     $target.prop('selected', false);
+                    $target.prop('ts', null);
                   } else {
                     target.classList.add('active');
+                    $target.prop('ts', Date.now());
                     $target.prop('selected', true);
                   }
                 }
@@ -651,9 +674,12 @@
             }
           }, false);
 
-          this.markersArea.querySelector("#deselectAllMarkers").addEventListener('click', function(e) {
-            control.textArea.querySelectorAll(LABEL_CSS_SELECTOR).forEach((x) => x.classList.remove('active'));
-          })
+          var deselectActionBtn = this.actionsArea.querySelector("#deselectAllMarkers");
+
+          if (utils.isDefined(deselectActionBtn))
+            deselectActionBtn.addEventListener('click', function(e) {
+              control.textArea.querySelectorAll(LABEL_CSS_SELECTOR).forEach((x) => x.classList.remove('active'));
+            })
 
           this.selectorArea.addEventListener('mouseover', function(e) {
             var target = e.target;
@@ -1021,7 +1047,7 @@
             for (var i = 0; i < marked.length; i++) {
               var checker = marked[i],
                   elements = [];
-              while (checker.classList.contains('tag')) {
+              while (isLabel(checker)) {
                 elements.push(checker);
                 checker = checker.parentNode;
               }
@@ -1154,7 +1180,7 @@
           var svg = d3.select("#relations")
             .append("svg")
               .attr("width", "100%")
-              .attr("height", "250px")
+              .attr("height", "100%")
               .call(responsifySVG);
           
           // TODO: this marker should be visible w.r.t. the target node
@@ -1571,7 +1597,9 @@
               rels2remove = [],
               candRels = [];
           $parts.each(function(i) {
-            if ($($parts[i]).prop("in_relation")) {
+            var $part = $($parts[i]);
+
+            if ($part.prop("in_relation")) {
               var rr = $($parts[i].querySelector('[data-m]')).prop("rels");
               if (utils.isDefined(rr) && rr.length == 1 && rule == relations[rr[0]].rule) {
                 newRelationId = rr[0];
@@ -1582,14 +1610,13 @@
               lastNodeInRelationId++;
             }
 
-            var jqPi = $($parts[i]);
-            jqPi.prop('in_relation', true);
+            $part.prop('in_relation', true);
 
             // strip marker variant part
             var s = $parts[i].getAttribute('data-s');
             s = s.substring(0, s.lastIndexOf("_"));
 
-            jqPi.prop("multiple_possible_relations", 
+            $part.prop("multiple_possible_relations", 
               checkForMultiplePossibleRelations(control.relationsArea, s));
 
             if (!nodes.hasOwnProperty(s)) {
@@ -1599,8 +1626,8 @@
               'id': $parts[i].id,
               'name': getLabelText($parts[i]),
               'dom': $parts[i],
-              'color': getComputedStyle($parts[i])["background-color"],
-              'in_relation': $($parts[i]).prop("in_relation")
+              'ts': $part.prop('ts'),
+              'color': getComputedStyle($parts[i])["background-color"]
             });
 
             // if relationship is bidirectional and we add the node to an already existing relation,
@@ -1670,12 +1697,14 @@
               }
               nodes[between[i][from]].forEach(function(f) {
                 nodes[between[i][to]].forEach(function(t) {
-                  if (f.id != t.id) {
-                    // prevent loops
-                    sketch.links.push({
-                      'source': f.id,
-                      'target': t.id
-                    })
+                  if (direction == '2' || (direction == '0' && f.ts < t.ts) || (direction == '1' && t.ts < f.ts)) {
+                    if (f.id != t.id) {
+                      // prevent loops
+                      sketch.links.push({
+                        'source': f.id,
+                        'target': t.id
+                      })
+                    }
                   }
                 })
               })
@@ -1938,7 +1967,7 @@
       labelDeleteHandler: function(e) {
         // when a delete button on any label is clicked
         e.stopPropagation();
-        var target = e.target,
+        var target = e.target,          // delete button
             parent = target.parentNode, // actual span
             scope = parent.getAttribute('data-scope');
         
@@ -1957,6 +1986,46 @@
           target.remove();
           if (sibling != null)
             sibling.remove();
+
+          var siblings = filterSiblings(parent, isLabel),
+              checker = undefined,
+              elements = [];
+
+          if (siblings) {
+            checker = parent;
+          } else {
+            checker = parent.parentNode;
+            siblings = filterSiblings(checker, isLabel);
+          }
+
+          while (isLabel(checker)) {
+            var cand = checker == parent ? [] : [checker];
+            for (var i in siblings) {
+              cand.push(siblings[i]);
+            }
+
+            if (cand.length > 0)
+              elements.push(cand);
+            
+            checker = checker.parentNode;
+            siblings = []; // do not care about further siblings
+          }
+
+          for (var j = 0, len = elements.length; j < len; j++) {
+            var npTop = 10 + 10 * j,
+                npBot = 10 + 10 * j;
+            for (var i = 0, len2 = elements[j].length; i < len2; i++) {
+              var pTopStr = elements[j][i].style.paddingTop,
+                  pBotStr = elements[j][i].style.paddingBottom,
+                  pTop = parseFloat(pTopStr.slice(0, -2)),
+                  pBot = parseFloat(pBotStr.slice(0, -2));
+                  
+              if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
+                elements[j][i].style.paddingTop = npTop + "px";
+              if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
+                elements[j][i].style.paddingBottom = npBot + "px";
+            }
+          }
 
           if (utils.isDefined(editingBatch)) {
             for (var i = 0, len = chunks.length; i < len; i++) {

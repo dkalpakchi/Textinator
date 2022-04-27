@@ -326,15 +326,6 @@ textarea {
   font-size: 2em;
 }
 
-.selector .tag:hover {
-  cursor: pointer;
-}
-
-.selector .tag.active {
-  border: 2px solid black;
-  cursor: pointer;
-}
-
 .selector .tag > .tag {
   margin: 0em 0.5em;
 }
@@ -343,6 +334,15 @@ textarea {
   border: 2px solid transparent;
   position: relative;
   padding-left: 1.35em;
+}
+
+.selector .tag .tag {
+  border: 2px solid white;
+}
+
+.selector .tag.active {
+  border: 2px solid black !important;
+  cursor: pointer;
 }
 
 .selector .tag .rel {
@@ -394,11 +394,14 @@ textarea {
 }
 
 .marked.relations .message-body {
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 90%;
 }
 
 #relations {
   width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
