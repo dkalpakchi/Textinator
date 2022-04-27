@@ -1,5 +1,7 @@
 ![Textinator logo](https://github.com/dkalpakchi/Textinator/raw/master/docs/source/logo.png "Textinator")
 
+[![DOI](https://zenodo.org/badge/192495914.svg)](https://zenodo.org/badge/latestdoi/192495914)
+
 ## New here?
 Check out some introductory resources:
 - [Documentation](https://textinator.readthedocs.io/en/latest/)
