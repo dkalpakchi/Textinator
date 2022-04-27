@@ -500,9 +500,6 @@
             width = parseInt(svg.style('width'), 10),
             height = parseInt(svg.style('height'), 10),
             aspect = width / height;
-     
-      console.log(width)
-      console.log(height)
 
       // set viewBox attribute to the initial size
       // control scaling with preserveAspectRatio
@@ -614,9 +611,6 @@
         this.initEvents();
         this.updateMarkAllCheckboxes();
         this.fixUI();
-        window.cmp = this.contextMenuPlugins;
-        window.chunks = chunks;
-        window.relations = relations;
       },
       fixUI: function() {
         [this.markersArea, this.markerGroupsArea].forEach(function(area) {
