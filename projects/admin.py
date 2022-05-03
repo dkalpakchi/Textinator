@@ -213,11 +213,14 @@ class ProjectForm(forms.ModelForm):
                 for mspec in spec["markers"]:
                     m = Marker.objects.get(pk=mspec["id"])
                     if mspec.get("unit_id"):
-                        mv = MarkerVariant.objects.create(
+                        mv, is_created = MarkerVariant.objects.get_or_create(
                             marker=m, project=instance, anno_type=mspec["anno_type"], unit_id=mspec["unit_id"]
                         )
                     else:
-                        mv = MarkerVariant.objects.create(marker=m, project=instance, anno_type=mspec["anno_type"])
+                        mv, is_created = MarkerVariant.objects.get_or_create(marker=m, project=instance, anno_type=mspec["anno_type"])
+
+                    if not is_created:
+                        self.mv2del.remove(mv.pk)
 
                     if mspec.get("restrictions"):
                         mv.add_restrictions(mspec["restrictions"])
