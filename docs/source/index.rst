@@ -35,4 +35,5 @@ We are constantly working to improve available localizations and extend them to 
    :caption: Contents:
 
    tutorial
+   devdocs
    api
