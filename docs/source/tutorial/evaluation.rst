@@ -1,4 +1,4 @@
-[Part 6] Setting up human evaluation
+[Part 7] Setting up human evaluation
 ====================================
 
 Textinator also provides rich capabilities for conducting human evaluation about the textual data in the form of surveys. In order to be able to work with surveys, you need to be a staff member and be added to the `evaluation_managers` group (you can check that similar to the how you checked the `project_managers` group earlier in the tutorial).

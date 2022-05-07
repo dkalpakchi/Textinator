@@ -10,4 +10,5 @@ Tutorial
    tutorial/creating_project
    tutorial/data_explorer
    tutorial/custom_annotation
+   tutorial/custom_marker_actions
    tutorial/evaluation

@@ -413,7 +413,10 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             context = self.get_context_data(object=self.object)
             return self.render_to_response(context)
         except Http404:
-            return redirect('projects:join_or_leave', proj=self.object.pk)
+            if hasattr(self, 'object'):
+                return redirect('projects:join_or_leave', proj=self.object.pk)
+            else:
+                raise Http404
 
 
 @login_required

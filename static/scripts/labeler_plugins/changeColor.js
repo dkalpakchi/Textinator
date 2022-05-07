@@ -12,8 +12,7 @@ var plugin = function(cfg, labeler) {
     storeFor: "label", // one of "label", "relation"
     dispatch: {},   // an event to be dispatched on update
     subscribe: [],
-    sharedBetweenMarkers: false,
-    allowSingletons: false // takes effect only if sharedBetweenMarkers is true
+    allowSingletons: false // takes effect only if storeFor = "relation"
   }
 
   const COLOR_CHANGE_EVENT = 'labeler_color_change';
@@ -123,7 +122,6 @@ var plugin = function(cfg, labeler) {
     subscribe: config.subscribe,
     storeFor: config.storeFor,
     allowSingletons: config.allowSingletons,
-    sharedBetweenMarkers: config.sharedBetweenMarkers,
     isAllowed: function(obj) {
       if (this.storeFor == 'relation') {
         var relSpan = obj.querySelector('[data-m]'),
@@ -132,7 +130,7 @@ var plugin = function(cfg, labeler) {
         if (relSpanDefined) {
           return relSpan.textContent != '+';
         } else {
-          return this.sharedBetweenMarkers && this.allowSingletons;
+          return this.allowSingletons;
         }
       } else {
         return true;

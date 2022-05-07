@@ -1,12 +1,12 @@
 {% if project.dt_finish >= now %}
   <div class="columns">
-    <div class="column is-three-quarters">
+    <div class="column is-half">
       {% include 'partials/components/areas/text.html' %}
-      {% include 'partials/components/areas/markers.html' %}
     </div>
-    <div class="column is-one-quarter">
+    <div class="column is-half">
       {% include 'partials/components/areas/actions.html' %}
       {% include 'partials/components/areas/reminders.html' %}
+      {% include 'partials/components/areas/markers.html' %}
     </div>
   </div>
 

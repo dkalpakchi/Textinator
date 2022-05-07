@@ -821,7 +821,7 @@
         var p = Object.assign({}, plugin);
         delete p.name;
         if (!(label in this.contextMenuPlugins)) this.contextMenuPlugins[label] = {};
-        if (plugin.sharedBetweenMarkers) {
+        if (plugin.storeFor == "relation") {
           if (!this.contextMenuPlugins["sharedBetweenMarkers"].hasOwnProperty(plugin.name))
             this.contextMenuPlugins["sharedBetweenMarkers"][plugin.name] = p; 
         } else {
