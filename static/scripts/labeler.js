@@ -757,12 +757,16 @@
             this.markersArea.addEventListener('click', function(e) {
               var target = e.target;
               if (target.nodeName != 'INPUT') {
-                if (target.getAttribute('data-scope') == 'span') {
-                  var mmpi = control.markersArea.getAttribute('data-mmpi');
-                  control.mark(getClosestMarker(target), mmpi);
-                  control.updateMarkAllCheckboxes();
-                } else if (target.getAttribute('data-scope') == 'text') {
-                  control.select(getClosestMarker(target));
+                var marker = getClosestMarker(target);
+
+                if (utils.isDefined(marker)) {
+                  if (marker.getAttribute('data-scope') == 'span') {
+                    var mmpi = control.markersArea.getAttribute('data-mmpi');
+                    control.mark(marker, mmpi);
+                    control.updateMarkAllCheckboxes();
+                  } else if (marker.getAttribute('data-scope') == 'text') {
+                    control.select(marker);
+                  }
                 }
               }
             }, false);
