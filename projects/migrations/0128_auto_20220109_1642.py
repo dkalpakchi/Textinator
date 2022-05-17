@@ -4,13 +4,22 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 
+from collections import defaultdict
+
 
 def reassign_relations(apps, schema_editor):
     Relation = apps.get_model('projects', 'Relation')
     RelationVariant = apps.get_model('projects', 'RelationVariant')
+    LabelRelation = apps.get_model('projects', 'LabelRelation')
     
+    rv_map = defaultdict(dict)
     for r in Relation.objects.all():
-        RelationVariant.objects.create(project=r.project, relation=r)
+        rv = RelationVariant.objects.create(project=r.project, relation=r)
+        rv_map[r.project.pk][r.pk] = rv.pk
+
+    for lr in LabelRelation.objects.all():
+        lr.rule_v_id = rv_map[lr.rule.project.pk][lr.rule.pk]
+        lr.save()
 
 
 class Migration(migrations.Migration):
@@ -78,6 +87,11 @@ class Migration(migrations.Migration):
             model_name='markervariant',
             name='nrange',
             field=models.ForeignKey(blank=True, help_text='If applicable', null=True, on_delete=django.db.models.deletion.SET_NULL, to='projects.range', verbose_name='numeric range'),
+        ),
+        migrations.AddField(
+            model_name='labelrelation',
+            name='rule_v',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='projects.RelationVariant', null=True, blank=True),
         ),
         migrations.RunPython(reassign_relations, migrations.RunPython.noop),
         migrations.AddField(

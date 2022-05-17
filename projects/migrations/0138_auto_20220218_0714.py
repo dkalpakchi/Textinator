@@ -3,6 +3,20 @@
 from django.db import migrations, models
 
 
+def reassign_task_types(apps, schema_editor):
+    Project = apps.get_model('projects', 'Project')
+    
+    # map from legacy task types to the news ones
+    tt_map = {
+        'ranking': 'mcqar'
+    }
+
+    for p in Project.objects.all():
+        if p.task_type in tt_map:
+            p.task_type = tt_map[p.task_type]
+            p.save()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -42,6 +56,7 @@ class Migration(migrations.Migration):
             name='task_type',
             field=models.CharField(choices=[('generic', 'Generic'), ('qa', 'Question Answering'), ('qar', 'Question Answering with Ranking'), ('mcqa', 'Multiple Choice Question Answering'), ('mcqar', 'Multiple Choice Question Answering with Ranking'), ('ner', 'Named Entity Recognition'), ('pronr', 'Pronoun Resolution'), ('corr', 'Coreference Resolution'), ('mt', 'Machine Translation')], max_length=10, verbose_name='type of the annotation task'),
         ),
+        migrations.RunPython(reassign_task_types, migrations.RunPython.noop),
         migrations.DeleteModel(
             name='Level',
         ),

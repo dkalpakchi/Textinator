@@ -388,7 +388,9 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                 dp_info.is_dialogue = True
             else:
                 text = dp_info.text
-            text = apply_premarkers(proj, text).strip()
+
+            if not dp_info.no_data:
+                text = apply_premarkers(proj, text).strip()
 
         ctx = {
             'text': text,
