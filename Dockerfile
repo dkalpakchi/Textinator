@@ -19,12 +19,13 @@ RUN export PATH="$PATH:/home/tt/.local/bin"
 
 RUN mkdir Textinator
 
-COPY ./requirements.txt ./Textinator/
+COPY --chown=tt . ./Textinator/
+
 RUN pip install -r ./Textinator/requirements.txt
 
-# copy project
-# COPY . .
+# for production purposes
+RUN pip install gunicorn
 
-CMD ["export", 'PATH="$PATH:/home/tt/.local/bin"']
+RUN npm install --prefix ./Textinator
 
 ENTRYPOINT sh /home/tt/Textinator/entrypoint.sh

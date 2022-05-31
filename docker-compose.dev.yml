@@ -1,0 +1,6 @@
+services:
+  web:
+    volumes:
+      - .:/home/tt/Textinator/
+    env_file:
+      - ./.env.dev

@@ -7,7 +7,6 @@ db.sqlite3
 media/*
 scrapers
 export_db.sh
-.env
 log/*
 static_cdn/*
 data

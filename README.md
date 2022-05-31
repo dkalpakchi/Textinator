@@ -9,8 +9,9 @@ Check out some introductory resources:
 
 ## Try out Textinator on your own machine
 First you will need to [install Docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/). Afterwards just follow these steps:
-1. Build and run container in the background mode: `docker-compose up -d --build`
-2. Go to `http://localhost:8000/` in the browser of your choice
+1. Clone this repository by running `git clone https://github.com/dkalpakchi/Textinator.git` or download one of the releases and unpack it.
+2. Build and run container in the background mode: `docker-compose up -d --build`
+3. Go to `http://localhost:8000/` in the browser of your choice
 
 To stop container, run:
 `docker-compose stop`
@@ -23,6 +24,13 @@ To stop container AND take down the DB, run:
 
 ## Running Textinator in production
 We recommend using nginx-gunicorn-docker setup. A more extensive tutorial is on its way.
+
+`docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up`
+
+Note that this command will build the Docker image only once and thus will copy the code only once. If you've some changes to the code and want to include them, you'll need to add a `--build` flag at the end of the command above.
+
+## Running Textinator in development mode
+`docker-compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up --build`
 
 ## Internationalization
 
