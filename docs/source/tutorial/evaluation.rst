@@ -44,6 +44,19 @@ An example of the required JSON format is given below (and more examples are ava
       ]
     }
 
+Each answer set should be one of the following types:
+
+- "text" -- provides a textarea for longer texts 
+- "short-text" -- provides a regular HTML input for shorter texts
+- "integer" -- an HTML number input with only integers allowed
+- "float" -- an HTML number input with floats allowed
+- "date" -- a regular text input with date format validation
+- "radio" -- a radio button(s), with values specified in the "choices" argument
+- "select" -- a dropdown using an HTML <select> tag, with values specified in the "choices" argument
+- "select-multiple" -- a checkbox(es) with values specified in the "choices" argument
+
+Note that the "choices" argument in each answer set affects the current answer set only if its type belongs to one of the last three types from the list above.
+
 After you have successfully imported a survey, you can access it via *Surveys tab* (marked with a red rectangle in the screenshot below).
 
 .. image:: images/surveys_tab.png
