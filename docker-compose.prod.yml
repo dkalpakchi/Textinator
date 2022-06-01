@@ -2,3 +2,21 @@ services:
   web:
     env_file:
       - ./.env.prod
+    volumes:
+      - static_volume:/home/tt/Textinator/static_cdn
+      - media_volume:/home/tt/Textinator/media
+    expose:
+      - 8000
+  nginx:
+    build: ./nginx
+    volumes:
+      - static_volume:/home/tt/Textinator/static_cdn
+      - media_volume:/home/tt/Textinator/media
+    ports:
+      - 1337:80
+    depends_on:
+      - web
+
+volumes:
+  static_volume:
+  media_volume:

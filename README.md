@@ -10,27 +10,34 @@ Check out some introductory resources:
 ## Try out Textinator on your own machine
 First you will need to [install Docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/). Afterwards just follow these steps:
 1. Clone this repository by running `git clone https://github.com/dkalpakchi/Textinator.git` or download one of the releases and unpack it.
-2. Build and run container in the background mode: `docker-compose up -d --build`
-3. Go to `http://localhost:8000/` in the browser of your choice
+2. Build and run container in either development or production mode, following the instructions below
 
-To stop container, run:
-`docker-compose stop`
-
-To run container again, run:
-`docker-compose up -d`
-
-To stop container AND take down the DB, run:
-`docker-compose down -v`
-
-## Running Textinator in production
-We recommend using nginx-gunicorn-docker setup. A more extensive tutorial is on its way.
+## Running in production mode
+The recommended solution is to use nginx-gunicorn-docker setup, which we provide for out of the box if you run the following command. **NOTE** Before running the command, please replace the values within the angle brackets (<>) in the `.env.prod` file! Make sure none of those values are published anywhere, since they will compromise the security of your Textinator instance!
 
 `docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up`
 
+Now if you go to `http://localhost:1337`, you should see Textinator's main page.
+
 Note that this command will build the Docker image only once and thus will copy the code only once. If you've some changes to the code and want to include them, you'll need to add a `--build` flag at the end of the command above.
 
-## Running Textinator in development mode
-`docker-compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up --build`
+To stop container, run:
+`docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml stop`
+
+To run container again, run:
+`docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d`
+
+To stop container AND take down the DB, run:
+`docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml down -v`
+
+## Running in development mode
+The development version will run the Django's built-in development server and will also map your local folder to that inside the Docker container, so that the changes in the code are immediately reflected without the need to restart the container. You can start Textinator in the dev mode using the following command.
+
+`docker-compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up`
+
+Now if you go to `http://localhost:8000`, you should see Textinator's main page.
+
+The commands to stop the container and take down the DB are the same as in production mode, but you need to replace `prod` with `dev` everywhere.
 
 ## Internationalization
 

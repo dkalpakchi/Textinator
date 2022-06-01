@@ -20,6 +20,8 @@ RUN export PATH="$PATH:/home/tt/.local/bin"
 RUN mkdir Textinator
 
 COPY --chown=tt . ./Textinator/
+RUN mkdir ./Textinator/static_cdn
+RUN mkdir ./Textinator/media
 
 RUN pip install -r ./Textinator/requirements.txt
 
