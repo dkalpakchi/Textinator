@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-02-18 07:20+0000\n"
+"POT-Creation-Date: 2022-06-02 14:47+0000\n"
 "PO-Revision-Date: 2022-02-18 07:25+0000\n"
 "Last-Translator: <mail@textinator.se>\n"
 "Language: uk\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: Textinator/settings.py:289
+#: Textinator/settings.py:292
 msgid "Back to the site"
 msgstr "Назад на сайт"
 
@@ -43,7 +43,7 @@ msgstr "елементи контекстного меню"
 msgid "project-specific marker"
 msgstr "маркер проекту"
 
-#: projects/admin.py:85 projects/models.py:377
+#: projects/admin.py:85 projects/models.py:385
 msgid "project-specific markers"
 msgstr "маркери проекту"
 
@@ -51,7 +51,7 @@ msgstr "маркери проекту"
 msgid "participant"
 msgstr "учасник"
 
-#: projects/admin.py:97 projects/models.py:375
+#: projects/admin.py:97 projects/models.py:383
 msgid "participants"
 msgstr "учасники"
 
@@ -59,28 +59,28 @@ msgstr "учасники"
 msgid "project-specific relation"
 msgstr "відношення проекту"
 
-#: projects/admin.py:135 projects/models.py:379
+#: projects/admin.py:135 projects/models.py:387
 msgid "project-specific relations"
 msgstr "відношення проекту"
 
-#: projects/admin.py:182 projects/models.py:382
+#: projects/admin.py:182 projects/models.py:390
 msgid "All data sources must be of the same language as the project"
 msgstr "Усі джерела даних мають бути на тій самій мові, що й проект."
 
-#: projects/admin.py:260
+#: projects/admin.py:263
 msgid "task specification"
 msgstr "специфікація завдання"
 
-#: projects/admin.py:263
+#: projects/admin.py:266
 msgid "data"
 msgstr "дані"
 
-#: projects/admin.py:266 projects/jinja2/partials/_navbar.html:67
+#: projects/admin.py:269 projects/jinja2/partials/_navbar.html:67
 #: users/jinja2/users/settings.html:10
 msgid "settings"
 msgstr "налаштування"
 
-#: projects/admin.py:270
+#: projects/admin.py:273
 msgid "administration"
 msgstr "адміністрація"
 
@@ -125,7 +125,7 @@ msgstr "Назва як зазначено у файлі `projects/helpers.py`"
 msgid "data source"
 msgstr "джерело даних"
 
-#: projects/models.py:98 projects/models.py:381
+#: projects/models.py:98 projects/models.py:389
 msgid "data sources"
 msgstr "джерела даних"
 
@@ -141,11 +141,11 @@ msgstr "тип набору даних"
 msgid "specification"
 msgstr "специфікація"
 
-#: projects/models.py:108 projects/models.py:1122
+#: projects/models.py:108 projects/models.py:1165 projects/models.py:1280
 msgid "in a JSON format"
 msgstr "у форматі JSON"
 
-#: projects/models.py:111 projects/models.py:390
+#: projects/models.py:111 projects/models.py:398
 msgid "language"
 msgstr "мова"
 
@@ -173,11 +173,11 @@ msgstr "Чи робити джерело даних доступним для і
 msgid "owner"
 msgstr "власник"
 
-#: projects/models.py:163 projects/models.py:823
+#: projects/models.py:163 projects/models.py:843
 msgid "marker action"
 msgstr "дії з маркером"
 
-#: projects/models.py:164 projects/models.py:663
+#: projects/models.py:164 projects/models.py:673
 msgid "marker actions"
 msgstr "дії з маркером"
 
@@ -226,7 +226,7 @@ msgstr "код"
 msgid "Marker's nickname used internally"
 msgstr "Внутрішня назва маркеру"
 
-#: projects/models.py:200 projects/models.py:676
+#: projects/models.py:200 projects/models.py:686
 msgid "color"
 msgstr "колір"
 
@@ -234,8 +234,8 @@ msgstr "колір"
 msgid "Color for the annotated text span"
 msgstr "Колір анотованого текстового проміжку"
 
-#: projects/models.py:201 projects/models.py:288 projects/models.py:678
-#: projects/models.py:935
+#: projects/models.py:201 projects/models.py:288 projects/models.py:688
+#: projects/models.py:955
 msgid "keyboard shortcut"
 msgstr "гаряча клавіша"
 
@@ -247,7 +247,7 @@ msgstr "Гаряча клавіша для маркування фрагмент
 msgid "Endpoint for the Suggestions API"
 msgstr "URL для Suggestions API"
 
-#: projects/models.py:207 projects/models.py:824
+#: projects/models.py:207 projects/models.py:844
 msgid "marker"
 msgstr "маркер"
 
@@ -268,7 +268,7 @@ msgstr "пари маркерів"
 msgid "relation"
 msgstr "відношення"
 
-#: projects/jinja2/partials/components/areas/relations.html:3
+#: projects/jinja2/partials/components/areas/relations.html:4
 #: projects/models.py:273
 msgid "relations"
 msgstr "відношення"
@@ -293,15 +293,15 @@ msgstr "напрям"
 msgid "Keyboard shortcut for marking a piece of text with this relation"
 msgstr "Гаряча клавіша для маркування фрагментів тексту цим відношенням"
 
-#: projects/models.py:290 projects/models.py:937
+#: projects/models.py:290 projects/models.py:957
 msgid "graphical representation type"
 msgstr "вид графічного відображення"
 
-#: projects/models.py:291 projects/models.py:938
+#: projects/models.py:291 projects/models.py:958
 msgid "Graph"
 msgstr "Граф"
 
-#: projects/models.py:291 projects/models.py:938
+#: projects/models.py:291 projects/models.py:958
 msgid "List"
 msgstr "Список"
 
@@ -309,79 +309,79 @@ msgstr "Список"
 msgid "How should the relation be visualized?"
 msgstr "Як дане відношення має бути відображене?"
 
-#: projects/models.py:329 projects/models.py:330
+#: projects/models.py:337 projects/models.py:338
 msgid "task type specification"
 msgstr "специфікація типу завдання"
 
-#: projects/models.py:331 projects/models.py:368
+#: projects/models.py:339 projects/models.py:376
 msgid "type of the annotation task"
 msgstr "тип анотаційного завдання"
 
-#: projects/models.py:332 projects/models.py:829
+#: projects/models.py:340 projects/models.py:849
 msgid "JSON configuration"
 msgstr "JSON-конфігурація"
 
-#: projects/models.py:344
+#: projects/models.py:352
 msgid "project"
 msgstr "проект"
 
-#: projects/models.py:345
+#: projects/models.py:353
 msgid "projects"
 msgstr "проекти"
 
-#: projects/models.py:352
+#: projects/models.py:360
 msgid "title"
 msgstr "назва"
 
-#: projects/models.py:353
+#: projects/models.py:361
 msgid "short description"
 msgstr "короткий опис"
 
-#: projects/models.py:354
+#: projects/models.py:362
 msgid "Will be displayed on the project card"
 msgstr "Відображатиметься на картці проекту"
 
-#: projects/models.py:355
+#: projects/models.py:363
 msgid "institution"
 msgstr "установа"
 
-#: projects/models.py:356
+#: projects/models.py:364
 msgid "Institution responsible for the project"
 msgstr "Установа, відповідальна за проект"
 
-#: projects/models.py:357
+#: projects/models.py:365
 msgid "supported by"
 msgstr "спонсор"
 
-#: projects/models.py:358
+#: projects/models.py:366
 msgid ""
 "The name of the organization supporting the project financially (if "
 "applicable)"
 msgstr "Назва установи-спонсора проекту (якщо може бути застосовано)"
 
 #: projects/jinja2/partials/components/areas/reminders.html:4
-#: projects/models.py:359
+#: projects/models.py:367
 msgid "guidelines"
 msgstr "вказівки"
 
-#: projects/models.py:360
+#: projects/models.py:368
 msgid "Guidelines for the annotation task"
 msgstr "Вказівки для анотаційного завдання"
 
 #: projects/jinja2/partials/components/areas/reminders.html:3
-#: projects/models.py:361
+#: projects/models.py:369
 msgid "reminders"
 msgstr "нагадування"
 
-#: projects/models.py:362
+#: projects/models.py:370
 msgid "Reminders for essential parts of guidelines (keep them short and on point)"
 msgstr "Нагадування про суттєві частини вказівок (короткі та чіткі)"
 
-#: projects/models.py:363
+#: projects/models.py:371
 msgid "temporary message"
 msgstr "тимчасове повідомлення"
 
-#: projects/models.py:364
+#: projects/models.py:372
 msgid ""
 "A temporary message for urgent communication with annotators (e.g., about"
 " maintenance work)"
@@ -389,111 +389,111 @@ msgstr ""
 "Тимчасове повідомлення для термінового зв'язку з анотаторами (наприклад, "
 "про роботи з технічного обслуговування)"
 
-#: projects/models.py:365
+#: projects/models.py:373
 msgid "should data be sampled with replacement?"
 msgstr "відбирати вибірку з заміною?"
 
-#: projects/models.py:366
+#: projects/models.py:374
 msgid "should each annotator work with their own part of data?"
 msgstr "чи має кожен анотатор працювати над своєю частиною даних?"
 
-#: projects/models.py:367
+#: projects/models.py:375
 msgid "should data source identifiers be shown?"
 msgstr "показувати ідентифікатори джерел даних?"
 
-#: projects/models.py:369
+#: projects/models.py:377
 msgid "publishing date"
 msgstr "дата публікації"
 
-#: projects/models.py:370
+#: projects/models.py:378
 msgid "expiration date"
 msgstr "дата закінчення терміну дії"
 
-#: projects/models.py:371
+#: projects/models.py:379
 msgid "updated at"
 msgstr "дата оновлення"
 
-#: projects/models.py:373
+#: projects/models.py:381
 msgid "collaborators"
 msgstr "співавтори"
 
-#: projects/models.py:380
+#: projects/models.py:388
 msgid "author"
 msgstr "автор"
 
-#: projects/models.py:383
+#: projects/models.py:391
 msgid "should the project be public?"
 msgstr "опублікувати проект?"
 
-#: projects/models.py:384
+#: projects/models.py:392
 msgid "should the annotations be peer reviewed?"
 msgstr "дозволити рецензування анотацій?"
 
 # TODO
-#: projects/models.py:385
+#: projects/models.py:393
 msgid "should selecting the labels be allowed?"
 msgstr "дозволити вибирати ярлики?"
 
 # TODO
-#: projects/models.py:386
+#: projects/models.py:394
 msgid "should submitted labels be disabled?"
 msgstr "відключати збережені ярлики?"
 
-#: projects/models.py:387
+#: projects/models.py:395
 msgid "maximal number of markers per input"
 msgstr "максимальна кількість маркерів на текстовий маркер"
 
-#: projects/models.py:388
+#: projects/models.py:396
 msgid "should the project include intro tour?"
 msgstr "увімкнути ознайомлення з інтерфейсом?"
 
-#: projects/models.py:389
+#: projects/models.py:397
 msgid "WARNING: Intro tours are currently in beta"
 msgstr "ЗАУВАЖЕННЯ: Ознайомлювальні тури наразі в розробці"
 
-#: projects/models.py:391
+#: projects/models.py:399
 msgid "Language of this project"
 msgstr "Мова цього проекту"
 
-#: projects/models.py:394
+#: projects/models.py:402
 msgid "A thumbnail of your project (ignored if not provided)"
 msgstr "Мініатюрне зображення для проекту (ігнорується якщо не надано)"
 
-#: projects/models.py:395
+#: projects/models.py:403
 msgid "summary video"
 msgstr "ознайомлювальне відео"
 
-#: projects/models.py:396
+#: projects/models.py:404
 msgid "Video introducing people to the annotation task at hand (if applicable)"
 msgstr "Відео для ознайомлення з анотаційним завданням (якщо таке є)"
 
-#: projects/models.py:398
+#: projects/models.py:406
 msgid "A URL for video summary to be embedded (e.g. from YouTube)"
 msgstr "URL до відео-резюме (наприклад, з YouTube)"
 
-#: projects/models.py:573 projects/models.py:658
+#: projects/models.py:583 projects/models.py:668
 msgid "marker unit"
 msgstr "маркерний блок"
 
-#: projects/models.py:574
+#: projects/models.py:584
 msgid "marker units"
 msgstr "маркерний блок"
 
-#: projects/models.py:576
+#: projects/models.py:586
 msgid "size"
 msgstr "розмір"
 
-#: projects/models.py:577
+#: projects/models.py:587
 msgid "Default (and maximal) number of marker groups in the unit"
 msgstr ""
 "Кількість маркерних груп у блоці (за замовчуванням та водночас "
 "максимальна)"
 
-#: projects/models.py:578
+#: projects/models.py:588
 msgid "minimum required"
 msgstr "мінімально необхідно"
 
-#: projects/models.py:579
+#: projects/models.py:589
 msgid ""
 "Minimum required number of marker groups in the unit (can't be more than "
 "`size`)"
@@ -501,79 +501,79 @@ msgstr ""
 "Мінімально необхідна кількість маркерних груп у блоці (не може бути "
 "більше, ніж `Розмір`)"
 
-#: projects/models.py:580
+#: projects/models.py:590
 msgid "is rankable?"
 msgstr "ранжується?"
 
-#: projects/models.py:581
+#: projects/models.py:591
 msgid "Whether annotators should be allowed to rank marker groups in the unit"
 msgstr "Чи дозволяється ранжувати маркерні групи у блоці"
 
-#: projects/models.py:588
+#: projects/models.py:598
 msgid "rankable"
 msgstr "ранжоване"
 
-#: projects/models.py:590
+#: projects/models.py:600
 msgid "From {} to {}{}"
 msgstr "Від {} до {}{}"
 
-#: projects/models.py:592
+#: projects/models.py:602
 msgid "Exactly {}"
 msgstr "Рівно {}"
 
-#: projects/models.py:605
+#: projects/models.py:615
 msgid "range"
 msgstr "діапазон"
 
-#: projects/models.py:606
+#: projects/models.py:616
 msgid "ranges"
 msgstr "діапазони"
 
-#: projects/models.py:608
+#: projects/models.py:618
 msgid "minimal value"
 msgstr "мінімальне значення"
 
-#: projects/models.py:609
+#: projects/models.py:619
 msgid "maximal value"
 msgstr "максимальне значення"
 
-#: projects/models.py:610
+#: projects/models.py:620
 msgid "step"
 msgstr "крок"
 
-#: projects/models.py:614
+#: projects/models.py:624
 msgid "You must specify either a step, a minimal or a maximal value"
 msgstr "Або крок, або мінімальне чи максимальне значення має бути вказане"
 
-#: projects/models.py:619
+#: projects/models.py:629
 msgid "Between {} and {}"
 msgstr "Між {} та {}"
 
-#: projects/models.py:621
+#: projects/models.py:631
 msgid "From {}"
 msgstr "З {}"
 
-#: projects/models.py:623
+#: projects/models.py:633
 msgid "Up to {}"
 msgstr "До {}"
 
-#: projects/models.py:627 projects/models.py:629
+#: projects/models.py:637 projects/models.py:639
 msgid "step {}"
 msgstr "крок {}"
 
-#: projects/models.py:645 projects/models.py:857
+#: projects/models.py:655 projects/models.py:877
 msgid "marker variant"
 msgstr "варіант маркера"
 
-#: projects/models.py:648
+#: projects/models.py:658
 msgid "marker template"
 msgstr "шаблон маркера"
 
-#: projects/models.py:650
+#: projects/models.py:660
 msgid "numeric range"
 msgstr "числовий діапазон"
 
-#: projects/models.py:651
+#: projects/models.py:661
 msgid ""
 "\n"
 "            Applicable only if the annotation types are 'integer', "
@@ -592,23 +592,23 @@ msgstr ""
 "ж випадку для типів \"ціле число\" чи \"дробне число\", числовий діапазон"
 " не обмежується."
 
-#: projects/models.py:660
+#: projects/models.py:670
 msgid "order in a unit"
 msgstr "порядок у маркерному блоці"
 
-#: projects/models.py:661
+#: projects/models.py:671
 msgid "Order of this marker in the unit"
 msgstr "Порядок цього маркера у маркерному блоці"
 
-#: projects/models.py:664
+#: projects/models.py:674
 msgid "Actions associated with this marker"
 msgstr "Дії, асоційовані з цим маркером"
 
-#: projects/models.py:665
+#: projects/models.py:675
 msgid "enable suggestions?"
 msgstr "дозволити пропозиції?"
 
-#: projects/models.py:666
+#: projects/models.py:676
 msgid ""
 "Indicates whether Suggestions API should be enabled for this marker (if "
 "endpoint is specified)"
@@ -616,7 +616,7 @@ msgstr ""
 "Вказує чи дозволяється використовувати Suggestions API для цього маркера "
 "(якщо вказано URL)"
 
-#: projects/models.py:669
+#: projects/models.py:679
 msgid ""
 "\n"
 "            Custom endpoint for the Suggestions API (by default the one "
@@ -628,13 +628,13 @@ msgstr ""
 "URL для Suggestions API (URL шаблону за замовчуванням).\n"
 "Активується тільки якщо пропозиції дозволені"
 
-#: projects/models.py:677
+#: projects/models.py:687
 msgid ""
 "Customized color for the annotated text span (color of the marker "
 "template by default)"
 msgstr "Колір аннотованого текстового проміжку (колір шаблону за замовчуванням)"
 
-#: projects/models.py:679
+#: projects/models.py:689
 msgid ""
 "Keyboard shortcut for annotating a piece of text with this marker "
 "(shortcut of the marker template by default"
@@ -642,129 +642,138 @@ msgstr ""
 "Гаряча клавіша для маркування фрагменту тексту цим маркером (гарячі "
 "клавіша з шаблону за замовчуванням"
 
-#: projects/models.py:680
+#: projects/models.py:690
 msgid "annotation type"
 msgstr "тип анотації"
 
-#: projects/models.py:681
+#: projects/models.py:691
 msgid "The type of annotations made using this marker"
 msgstr "Тип анотації, який можна зробити цим маркером"
 
-#: projects/models.py:820
+#: projects/models.py:692
+#, fuzzy
+msgid "export name"
+msgstr "відображувана назва"
+
+#: projects/models.py:693
+msgid "The name of the field in the exported JSON file (English name by default)"
+msgstr ""
+
+#: projects/models.py:840
 msgid "marker context menu item"
 msgstr "елемент контекстного меню маркера"
 
-#: projects/models.py:821
+#: projects/models.py:841
 msgid "marker context menu items"
 msgstr "Елементи контекстного меню маркера"
 
-#: projects/models.py:825
+#: projects/models.py:845
 msgid "verbose name"
 msgstr "відображувана назва"
 
-#: projects/models.py:826
+#: projects/models.py:846
 msgid "verbose name in data explorer"
 msgstr "відображувана назва у Провіднику"
 
-#: projects/models.py:827
+#: projects/models.py:847
 msgid "field name in logs"
 msgstr "назва поля у журналі доступу"
 
-#: projects/models.py:828 projects/models.py:1208 projects/models.py:1210
+#: projects/models.py:848 projects/models.py:1251 projects/models.py:1253
 msgid "If applicable"
 msgstr "Якщо може бути застосовано"
 
-#: projects/models.py:848
+#: projects/models.py:868
 msgid "marker restriction"
 msgstr "обмеження для маркера"
 
-#: projects/models.py:849
+#: projects/models.py:869
 msgid "marker restrictions"
 msgstr "обмеження для маркера"
 
-#: projects/models.py:858
+#: projects/models.py:878
 msgid "restriction kind"
 msgstr "вид обмеження"
 
-#: projects/models.py:859
+#: projects/models.py:879
 msgid "restriction value"
 msgstr "значення обмеження"
 
-#: projects/models.py:860
+#: projects/models.py:880
 msgid ""
 "e.g., if restriction kind is '<=' and value is '3', this creates a "
 "restriction '<= 3'"
 msgstr "наприклад, вид обмеження '<=' та значення '3' створять обмеження '<= 3'"
 
-#: projects/models.py:888
+#: projects/models.py:908
 msgid "data access log"
 msgstr "запис доступу до даних"
 
-#: projects/models.py:889
+#: projects/models.py:909
 msgid "data access logs"
 msgstr "записи доступу до даних"
 
-#: projects/models.py:891
+#: projects/models.py:911
 msgid "user"
 msgstr "користувач"
 
-#: projects/models.py:894 projects/models.py:978
+#: projects/models.py:914 projects/models.py:1021
 msgid "datapoint ID"
 msgstr "ідентифікатор точки даних"
 
-#: projects/models.py:895 projects/models.py:979
+#: projects/models.py:915 projects/models.py:1022
 msgid "As stored in the original dataset"
 msgstr "Як збережено в оригінальному наборі даних"
 
-#: projects/models.py:896
+#: projects/models.py:916
 msgid "flags"
 msgstr "позначки"
 
-#: projects/models.py:897
+#: projects/models.py:917
 msgid "Additional information provided by the annotator"
 msgstr "Додаткова інформація, надана анотатором"
 
-#: projects/models.py:898
+#: projects/models.py:918
 msgid "is submitted?"
 msgstr "надіслане?"
 
-#: projects/models.py:899
+#: projects/models.py:919
 msgid "Indicates whether the datapoint was successfully submitted by an annotator"
 msgstr "Зазначає чи дані по цьому тексту були надіслані анотатором"
 
-#: projects/models.py:900
+#: projects/models.py:920
 msgid "is skipped?"
 msgstr "пропущене?"
 
-#: projects/models.py:901
+#: projects/models.py:921
 msgid "Indicates whether the datapoint was skipped by an annotator"
 msgstr "Зазначає чи був цей текст пропущений анотатором"
 
-#: projects/models.py:912
+#: projects/models.py:932
 msgid "pre-marker"
 msgstr "передмаркер"
 
-#: projects/models.py:913
+#: projects/models.py:933
 msgid "pre-markers"
 msgstr "передмаркери"
 
-#: projects/models.py:917
+#: projects/models.py:937
 msgid "static tokens"
 msgstr "статичні токени"
 
-#: projects/models.py:918
+#: projects/models.py:938
 msgid "Comma-separated tokens that should be highlighted with a marker"
 msgstr "Список токенів (через кому), які потрібно виділити даним маркером"
 
-#: projects/models.py:931
+#: projects/models.py:951
 msgid "relation variant"
 msgstr "варіант відношення"
 
-#: projects/models.py:934
+#: projects/models.py:954
 msgid "relation template"
 msgstr "шаблон відношення"
 
-#: projects/models.py:936
+#: projects/models.py:956
 msgid ""
 "Keyboard shortcut for marking a piece of text with this relation "
 "(shortcut of the relation template by default)"
@@ -772,117 +781,117 @@ msgstr ""
 "Гаряча клавіша для маркування фрагментів тексту цим відношенням (гаряча "
 "клавіша шаблону за замовчуванням"
 
-#: projects/models.py:939
+#: projects/models.py:959
 msgid ""
 "How should the relation be visualized? (representation of the relation "
 "template by default)"
 msgstr "Як візуалізувати це відношення? (Візуалізація з шаблону за замовчуванням)"
 
-#: projects/models.py:974
+#: projects/models.py:1017
 msgid "context"
 msgstr "контекст"
 
-#: projects/models.py:975
+#: projects/models.py:1018
 msgid "contexts"
 msgstr "контексти"
 
-#: projects/models.py:980 projects/models.py:1050
+#: projects/models.py:1023 projects/models.py:1093
 msgid "content"
 msgstr "вміст"
 
-#: projects/models.py:1009
+#: projects/models.py:1052
 msgid "annotation batch"
 msgstr "блок анотації"
 
-#: projects/models.py:1010
+#: projects/models.py:1053
 msgid "annotation batches"
 msgstr "блоки анотації"
 
-#: projects/models.py:1047
+#: projects/models.py:1090
 msgid "input"
 msgstr "введення"
 
-#: projects/models.py:1048
+#: projects/models.py:1091
 msgid "inputs"
 msgstr "введення"
 
-#: projects/models.py:1054 projects/models.py:1127
+#: projects/models.py:1097 projects/models.py:1170
 msgid "marker group order in the unit"
 msgstr "порядок групи у маркерному блоці"
 
-#: projects/models.py:1055 projects/models.py:1128 projects/models.py:1235
+#: projects/models.py:1098 projects/models.py:1171 projects/models.py:1278
 msgid "At the submission time"
 msgstr "Під час надсилання"
 
-#: projects/models.py:1113
+#: projects/models.py:1156
 msgid "label"
 msgstr "ярлик"
 
-#: projects/models.py:1114
+#: projects/models.py:1157
 msgid "labels"
 msgstr "ярлики"
 
-#: projects/models.py:1116
+#: projects/models.py:1159
 msgid "start position"
 msgstr "початкова позиція"
 
-#: projects/models.py:1117
+#: projects/models.py:1160
 msgid "Character-wise start position in the text"
 msgstr "Початкова позиція в тексті за символами"
 
-#: projects/models.py:1118
+#: projects/models.py:1161
 msgid "end position"
 msgstr "кінцева позиція"
 
-#: projects/models.py:1119
+#: projects/models.py:1162
 msgid "Character-wise end position in the text"
 msgstr "Кінцева позиція в тексті за символами"
 
-#: projects/models.py:1121
+#: projects/models.py:1164 projects/models.py:1279
 msgid "extra information"
 msgstr "додаткова інформація"
 
-#: projects/models.py:1124 projects/models.py:1231
+#: projects/models.py:1167 projects/models.py:1274
 msgid "was undone?"
 msgstr "було скасовано?"
 
-#: projects/models.py:1125 projects/models.py:1232
+#: projects/models.py:1168 projects/models.py:1275
 msgid "Indicates whether the annotator used 'Undo' button"
 msgstr "Зазначає чи анотатор натиснув кнопку 'Скасувати'"
 
-#: projects/models.py:1194
+#: projects/models.py:1237
 msgid "label review"
 msgstr "рецензія на ярлик"
 
-#: projects/models.py:1195
+#: projects/models.py:1238
 msgid "label reviews"
 msgstr "рецензії на ярлик"
 
-#: projects/models.py:1198
+#: projects/models.py:1241
 msgid "is a match?"
 msgstr "співпадає?"
 
-#: projects/models.py:1199
+#: projects/models.py:1242
 msgid "Indicates whether the reviewed and original labels match"
 msgstr "Зазначає чи рецензований та оригінальний ярлики співпадають"
 
-#: projects/models.py:1201
+#: projects/models.py:1244
 msgid "ambiguity?"
 msgstr "неоднозначність?"
 
-#: projects/models.py:1205
+#: projects/models.py:1248
 msgid "Decided automatically to inform a decision maker"
 msgstr "Вираховується автоматично для інформування відповідальної особи"
 
-#: projects/models.py:1207 projects/models.py:1209
+#: projects/models.py:1250 projects/models.py:1252
 msgid "start position of the review label"
 msgstr "початкова позиція ярлика рецензії"
 
-#: projects/models.py:1212
+#: projects/models.py:1255
 msgid "is impossible?"
 msgstr "неможливе?"
 
-#: projects/models.py:1213
+#: projects/models.py:1256
 msgid ""
 "Indicates whether the reviewer marked the datapoint as impossible wrt. "
 "guidelines"
@@ -890,23 +899,23 @@ msgstr ""
 "Зазначає чи рецензент позначив точку даних як неможливу стосовно вказівок"
 " до завдання"
 
-#: projects/models.py:1225
+#: projects/models.py:1268
 msgid "label relation"
 msgstr "відношення між ярликами"
 
-#: projects/models.py:1226
+#: projects/models.py:1269
 msgid "label relations"
 msgstr "відношення між ярликами"
 
-#: projects/models.py:1234
+#: projects/models.py:1277
 msgid "relation cluster"
 msgstr "кластер відношення"
 
-#: projects/models.py:1285
+#: projects/models.py:1340
 msgid "a project-specific user profile"
 msgstr "профіль користувача для проекту"
 
-#: projects/models.py:1286
+#: projects/models.py:1341
 msgid "project specific user profiles"
 msgstr "профілі користувача для проекту"
 
@@ -1048,7 +1057,7 @@ msgid "Welcome to Textinator!"
 msgstr "Вітаємо у Textinator!"
 
 #: projects/jinja2/partials/_welcome.html:6
-#: projects/jinja2/partials/_welcome.html:17
+#: projects/jinja2/partials/_welcome.html:18
 msgid ""
 "Thank you for choosing Textinator as your annotation tool! We've got a "
 "bunch of resources to get you started:"
@@ -1057,17 +1066,17 @@ msgstr ""
 "декілька ресурсів, щоб допомогти Вам розпочати:"
 
 #: projects/jinja2/partials/_welcome.html:8
-#: projects/jinja2/partials/_welcome.html:19
+#: projects/jinja2/partials/_welcome.html:20
 msgid "if you prefer reading, here is the {}"
 msgstr "якщо Ви надаєте перевагу читанню, ось {}"
 
 #: projects/jinja2/partials/_welcome.html:8
-#: projects/jinja2/partials/_welcome.html:19
+#: projects/jinja2/partials/_welcome.html:20
 msgid "documentation"
 msgstr "документація"
 
 #: projects/jinja2/partials/_welcome.html:9
-#: projects/jinja2/partials/_welcome.html:20
+#: projects/jinja2/partials/_welcome.html:21
 msgid "if you prefer watching, here is the {}"
 msgstr "якщо Ви надаєте перевагу перегляду відео, ось {}"
 
@@ -1076,7 +1085,7 @@ msgid "admin guide on YouTube"
 msgstr "керівництво адміністратора на YouTube"
 
 #: projects/jinja2/partials/_welcome.html:10
-#: projects/jinja2/partials/_welcome.html:21
+#: projects/jinja2/partials/_welcome.html:22
 msgid "if you prefer exploring on your own, just go for it!"
 msgstr "якщо Ви любити досліджувати самостійно,  вперед!"
 
@@ -1092,11 +1101,11 @@ msgstr ""
 msgid "our GitHub repository"
 msgstr "наш репозиторій на GitHub"
 
-#: projects/jinja2/partials/_welcome.html:20
+#: projects/jinja2/partials/_welcome.html:21
 msgid "project manager guide on YouTube"
 msgstr "керівництво менеджера проекту на YouTube"
 
-#: projects/jinja2/partials/_welcome.html:34
+#: projects/jinja2/partials/_welcome.html:35
 msgid ""
 "Thank you for joining Textinator! Your annotation or evaluation efforts "
 "will most certainly help in advancing Natural Language Processing (NLP) "
@@ -1106,11 +1115,11 @@ msgstr ""
 "оцінювання безсумнівно cприятимуть прогресу методів обробки природної "
 "мови за поточні межі. "
 
-#: projects/jinja2/partials/_welcome.html:37
+#: projects/jinja2/partials/_welcome.html:38
 msgid "If you are here to help <u>annotating</u>, here are some tips:"
 msgstr "Якщо Ви хочете допомогти з <u>аннотацією</u>, ось декілька порад:"
 
-#: projects/jinja2/partials/_welcome.html:39
+#: projects/jinja2/partials/_welcome.html:40
 msgid ""
 "If you are unfamiliar with Textinator or with NLP annotations in general,"
 " we have prepared {} to help you in starting this journey"
@@ -1118,11 +1127,11 @@ msgstr ""
 "Якщо Ви користуєтеся Textinator чи взагалі платформою анотації вперше, ми"
 " приготували {}, щоб допомогти Вам розпочати цю подорож"
 
-#: projects/jinja2/partials/_welcome.html:39
+#: projects/jinja2/partials/_welcome.html:40
 msgid "a couple of short YouTube videos"
 msgstr "декілька коротких відео на YouTube"
 
-#: projects/jinja2/partials/_welcome.html:40
+#: projects/jinja2/partials/_welcome.html:41
 msgid ""
 "If you have signed up to take part in a specific annotation effort, "
 "please click on the {} in the menu above. If you don't see your project "
@@ -1132,11 +1141,11 @@ msgstr ""
 "будь ласка натисніть на {} у меню вище. Якщо Ви не бачите свого проекту, "
 "будь ласка зв'яжіться з менеджером вашого проекту."
 
-#: projects/jinja2/partials/_welcome.html:41
+#: projects/jinja2/partials/_welcome.html:42
 msgid "\"My Tasks\" tab"
 msgstr "вкладка \"Мої завдання\""
 
-#: projects/jinja2/partials/_welcome.html:42
+#: projects/jinja2/partials/_welcome.html:43
 msgid ""
 "If you have signed up out of curiosity and willingness to help, huge "
 "thank you! We are very grateful and honored to have you on board! Please "
@@ -1148,12 +1157,12 @@ msgstr ""
 "натисніть на {} та подивіться чи є якісь анотаційні проекти, відкриті для"
 " загалу."
 
-#: projects/jinja2/partials/_welcome.html:42
+#: projects/jinja2/partials/_welcome.html:43
 msgid "\"Open Tasks\" tab"
 msgstr "вкладка \"Опубліковані завдання\""
 
-#: projects/jinja2/partials/_welcome.html:42
-#: projects/jinja2/partials/_welcome.html:51
+#: projects/jinja2/partials/_welcome.html:43
+#: projects/jinja2/partials/_welcome.html:52
 msgid ""
 "We urge you to read the instructions carefully to check that you "
 "understand them and are indeed eligible to take part. Please contact the "
@@ -1163,11 +1172,11 @@ msgstr ""
 " розумієте та дійсно маєте необхідні кваліфікації для участі. Зверніться "
 "до відповідального за проект, якщо виникнуть запитання. "
 
-#: projects/jinja2/partials/_welcome.html:47
+#: projects/jinja2/partials/_welcome.html:48
 msgid "If you are here to help <u>evaluating</u>, here are some other tips:"
 msgstr "Якщо Ви хочете допомогти з <u>оцінюванням</u>, ось декілька порад"
 
-#: projects/jinja2/partials/_welcome.html:49
+#: projects/jinja2/partials/_welcome.html:50
 msgid ""
 "If you have signed up to take part in a specific evaluation effort, "
 "please click on the {} and see if your survey is ready If you don't see "
@@ -1177,12 +1186,12 @@ msgstr ""
 "натисніть на {} та подивіться чи Ваше опитування наявне. Якщо Ви не "
 "бачите свого опитування, будь ласка зв'яжіться з менеджером проекту"
 
-#: projects/jinja2/partials/_welcome.html:50
 #: projects/jinja2/partials/_welcome.html:51
+#: projects/jinja2/partials/_welcome.html:52
 msgid "\"Survey\" tab"
 msgstr "вкладка \"Опитування\""
 
-#: projects/jinja2/partials/_welcome.html:51
+#: projects/jinja2/partials/_welcome.html:52
 msgid ""
 "If you have signed up out of curiosity, please click on the {} and see if"
 " there are any surveys open to general public."
@@ -1267,11 +1276,11 @@ msgstr "опубліковано"
 msgid "will be expired"
 msgstr "термін дії закінчиться"
 
-#: static/scripts/labeler.js:2206
+#: static/scripts/labeler.js:2635
 msgid "stop editing"
 msgstr "припинити редагування"
 
-#: static/scripts/labeler.js:2218
+#: static/scripts/labeler.js:2647
 msgid "editor"
 msgstr "редактор"
 

@@ -7,19 +7,19 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-02-18 07:20+0000\n"
+"POT-Creation-Date: 2022-06-02 14:47+0000\n"
 "PO-Revision-Date: 2022-02-18 07:22+0000\n"
-"Last-Translator:   <mail@textinator.se>\n"
-"Language-Team: ru <LL@li.org>\n"
+"Last-Translator: <mail@textinator.se>\n"
 "Language: ru\n"
+"Language-Team: ru <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "Generated-By: Babel 2.9.1\n"
-"X-Translated-Using: django-rosetta 0.9.8\n"
 
-#: Textinator/settings.py:289
+#: Textinator/settings.py:292
 msgid "Back to the site"
 msgstr "Назад на сайт"
 
@@ -43,7 +43,7 @@ msgstr "элементы контекстного меню"
 msgid "project-specific marker"
 msgstr "маркер проекта"
 
-#: projects/admin.py:85 projects/models.py:377
+#: projects/admin.py:85 projects/models.py:385
 msgid "project-specific markers"
 msgstr "маркеры проекта"
 
@@ -51,7 +51,7 @@ msgstr "маркеры проекта"
 msgid "participant"
 msgstr "участник"
 
-#: projects/admin.py:97 projects/models.py:375
+#: projects/admin.py:97 projects/models.py:383
 msgid "participants"
 msgstr "участники"
 
@@ -59,28 +59,28 @@ msgstr "участники"
 msgid "project-specific relation"
 msgstr "отношение проекта"
 
-#: projects/admin.py:135 projects/models.py:379
+#: projects/admin.py:135 projects/models.py:387
 msgid "project-specific relations"
 msgstr "отношения проекта"
 
-#: projects/admin.py:182 projects/models.py:382
+#: projects/admin.py:182 projects/models.py:390
 msgid "All data sources must be of the same language as the project"
 msgstr "Все источники данных должны быть на том же языке, что и проект."
 
-#: projects/admin.py:260
+#: projects/admin.py:263
 msgid "task specification"
 msgstr "спецификация задания"
 
-#: projects/admin.py:263
+#: projects/admin.py:266
 msgid "data"
 msgstr "данные"
 
-#: projects/admin.py:266 projects/jinja2/partials/_navbar.html:67
+#: projects/admin.py:269 projects/jinja2/partials/_navbar.html:67
 #: users/jinja2/users/settings.html:10
 msgid "settings"
 msgstr "настройки"
 
-#: projects/admin.py:270
+#: projects/admin.py:273
 msgid "administration"
 msgstr "администрация"
 
@@ -125,7 +125,7 @@ msgstr "Название как указано в файле \"projects/helpers.
 msgid "data source"
 msgstr "источник данных"
 
-#: projects/models.py:98 projects/models.py:381
+#: projects/models.py:98 projects/models.py:389
 msgid "data sources"
 msgstr "источники данных"
 
@@ -141,11 +141,11 @@ msgstr "тип набора данных"
 msgid "specification"
 msgstr "спецификация"
 
-#: projects/models.py:108 projects/models.py:1122
+#: projects/models.py:108 projects/models.py:1165 projects/models.py:1280
 msgid "in a JSON format"
 msgstr "в формате JSON"
 
-#: projects/models.py:111 projects/models.py:390
+#: projects/models.py:111 projects/models.py:398
 msgid "language"
 msgstr "язык"
 
@@ -173,11 +173,11 @@ msgstr "Делать ли источник данных доступным др�
 msgid "owner"
 msgstr "владелец"
 
-#: projects/models.py:163 projects/models.py:823
+#: projects/models.py:163 projects/models.py:843
 msgid "marker action"
 msgstr "действие з маркером"
 
-#: projects/models.py:164 projects/models.py:663
+#: projects/models.py:164 projects/models.py:673
 msgid "marker actions"
 msgstr "действия с маркером"
 
@@ -204,12 +204,15 @@ msgstr "тип фильтра в админ. интерфейсе"
 #: projects/models.py:171
 msgid ""
 "\n"
-"            Specifies the filter type in the data explorer interface (one of 'boolean', 'range').\n"
-"            If empty, then this action will be excluded from data explorer.\n"
+"            Specifies the filter type in the data explorer interface (one"
+" of 'boolean', 'range').\n"
+"            If empty, then this action will be excluded from data "
+"explorer.\n"
 "            "
 msgstr ""
 "\n"
-"Указывает тип фильтра в проводнике (\"булевый\" или \"диапазон\"). Если не заполнено, то это действие будет исключено из проводника."
+"Указывает тип фильтра в проводнике (\"булевый\" или \"диапазон\"). Если "
+"не заполнено, то это действие будет исключено из проводника."
 
 #: projects/models.py:197
 msgid "The display name of the marker (max 50 characters)"
@@ -223,7 +226,7 @@ msgstr "код"
 msgid "Marker's nickname used internally"
 msgstr "Внутреннее название маркера"
 
-#: projects/models.py:200 projects/models.py:676
+#: projects/models.py:200 projects/models.py:686
 msgid "color"
 msgstr "цвет"
 
@@ -231,8 +234,8 @@ msgstr "цвет"
 msgid "Color for the annotated text span"
 msgstr "Цвет аннотированного текстового диапазона"
 
-#: projects/models.py:201 projects/models.py:288 projects/models.py:678
-#: projects/models.py:935
+#: projects/models.py:201 projects/models.py:288 projects/models.py:688
+#: projects/models.py:955
 msgid "keyboard shortcut"
 msgstr "сочетание клавиш"
 
@@ -244,7 +247,7 @@ msgstr "Сочетание клавиш для аннотации кусочка
 msgid "Endpoint for the Suggestions API"
 msgstr "URL для Suggestions API"
 
-#: projects/models.py:207 projects/models.py:824
+#: projects/models.py:207 projects/models.py:844
 msgid "marker"
 msgstr "маркер"
 
@@ -265,7 +268,7 @@ msgstr "пары маркеров"
 msgid "relation"
 msgstr "отношение"
 
-#: projects/jinja2/partials/components/areas/relations.html:3
+#: projects/jinja2/partials/components/areas/relations.html:4
 #: projects/models.py:273
 msgid "relations"
 msgstr "отношения"
@@ -290,15 +293,15 @@ msgstr "направление"
 msgid "Keyboard shortcut for marking a piece of text with this relation"
 msgstr "Сочетание клавиш для маркирование участков текста этим отношением"
 
-#: projects/models.py:290 projects/models.py:937
+#: projects/models.py:290 projects/models.py:957
 msgid "graphical representation type"
 msgstr "вид графического отображения"
 
-#: projects/models.py:291 projects/models.py:938
+#: projects/models.py:291 projects/models.py:958
 msgid "Graph"
 msgstr "Граф"
 
-#: projects/models.py:291 projects/models.py:938
+#: projects/models.py:291 projects/models.py:958
 msgid "List"
 msgstr "Список"
 
@@ -306,192 +309,189 @@ msgstr "Список"
 msgid "How should the relation be visualized?"
 msgstr "Как изображать данное отношение ?"
 
-#: projects/models.py:329 projects/models.py:330
+#: projects/models.py:337 projects/models.py:338
 msgid "task type specification"
 msgstr "спецификация типа задания"
 
-#: projects/models.py:331 projects/models.py:368
+#: projects/models.py:339 projects/models.py:376
 msgid "type of the annotation task"
 msgstr "тип аннотационного задания"
 
-#: projects/models.py:332 projects/models.py:829
+#: projects/models.py:340 projects/models.py:849
 msgid "JSON configuration"
 msgstr "JSON-конфигурация"
 
-#: projects/models.py:344
+#: projects/models.py:352
 msgid "project"
 msgstr "проект"
 
-#: projects/models.py:345
+#: projects/models.py:353
 msgid "projects"
 msgstr "проекты"
 
-#: projects/models.py:352
+#: projects/models.py:360
 msgid "title"
 msgstr "название"
 
-#: projects/models.py:353
+#: projects/models.py:361
 msgid "short description"
 msgstr "краткое описание"
 
-#: projects/models.py:354
+#: projects/models.py:362
 msgid "Will be displayed on the project card"
 msgstr "Будет отображено на карточке проекта"
 
-#: projects/models.py:355
+#: projects/models.py:363
 msgid "institution"
 msgstr "учреждение"
 
-#: projects/models.py:356
+#: projects/models.py:364
 msgid "Institution responsible for the project"
 msgstr "Учреждение, ответственное за проект"
 
-#: projects/models.py:357
+#: projects/models.py:365
 msgid "supported by"
 msgstr "поддерживается"
 
-#: projects/models.py:358
+#: projects/models.py:366
 msgid ""
 "The name of the organization supporting the project financially (if "
 "applicable)"
 msgstr ""
-"Название организации, которая поддерживает проект финансово (если применимо)"
-" "
+"Название организации, которая поддерживает проект финансово (если "
+"применимо) "
 
 #: projects/jinja2/partials/components/areas/reminders.html:4
-#: projects/models.py:359
+#: projects/models.py:367
 msgid "guidelines"
 msgstr "инструкции"
 
-#: projects/models.py:360
+#: projects/models.py:368
 msgid "Guidelines for the annotation task"
 msgstr "Инструкции для аннотационного задания"
 
 #: projects/jinja2/partials/components/areas/reminders.html:3
-#: projects/models.py:361
+#: projects/models.py:369
 msgid "reminders"
 msgstr "напоминания"
 
-#: projects/models.py:362
-msgid ""
-"Reminders for essential parts of guidelines (keep them short and on point)"
+#: projects/models.py:370
+msgid "Reminders for essential parts of guidelines (keep them short and on point)"
 msgstr "Напоминания о ключевых частях указаний (короткие и чёткие)"
 
-#: projects/models.py:363
+#: projects/models.py:371
 msgid "temporary message"
 msgstr "временное сообщение"
 
-#: projects/models.py:364
+#: projects/models.py:372
 msgid ""
-"A temporary message for urgent communication with annotators (e.g., about "
-"maintenance work)"
+"A temporary message for urgent communication with annotators (e.g., about"
+" maintenance work)"
 msgstr ""
 "Временное сообщение для срочной коммуникации с аннотаторами (например, о "
 "техническом обслуживании)"
 
-#: projects/models.py:365
+#: projects/models.py:373
 msgid "should data be sampled with replacement?"
 msgstr "создавать выборку с заменой?"
 
-#: projects/models.py:366
+#: projects/models.py:374
 msgid "should each annotator work with their own part of data?"
 msgstr "должен ли каждый аннотатор работать над своей частью данных?"
 
-#: projects/models.py:367
+#: projects/models.py:375
 msgid "should data source identifiers be shown?"
 msgstr "показывать идентификаторы источника данных?"
 
-#: projects/models.py:369
+#: projects/models.py:377
 msgid "publishing date"
 msgstr "дата публикации"
 
-#: projects/models.py:370
+#: projects/models.py:378
 msgid "expiration date"
 msgstr "дата окончания срока действия"
 
-#: projects/models.py:371
+#: projects/models.py:379
 msgid "updated at"
 msgstr "дата обновления"
 
-#: projects/models.py:373
+#: projects/models.py:381
 msgid "collaborators"
 msgstr "соавторы"
 
-#: projects/models.py:380
+#: projects/models.py:388
 msgid "author"
 msgstr "автор"
 
-#: projects/models.py:383
+#: projects/models.py:391
 msgid "should the project be public?"
 msgstr "опубликовать проект?"
 
-#: projects/models.py:384
+#: projects/models.py:392
 msgid "should the annotations be peer reviewed?"
 msgstr "включить рецензирование аннотаций?"
 
-#: projects/models.py:385
+#: projects/models.py:393
 msgid "should selecting the labels be allowed?"
 msgstr "позволить выбирание ярлыков?"
 
-#: projects/models.py:386
+#: projects/models.py:394
 msgid "should submitted labels be disabled?"
 msgstr "отключать сохранённые ярлыки?"
 
-#: projects/models.py:387
+#: projects/models.py:395
 msgid "maximal number of markers per input"
 msgstr "максимальное количество маркеров на текстовый маркер"
 
-#: projects/models.py:388
+#: projects/models.py:396
 msgid "should the project include intro tour?"
 msgstr "включить ознакомление с интерфейсом?"
 
-#: projects/models.py:389
+#: projects/models.py:397
 msgid "WARNING: Intro tours are currently in beta"
 msgstr "ВНИМАНИЕ: Ознакомительные туры сейчас в разработке"
 
-#: projects/models.py:391
+#: projects/models.py:399
 msgid "Language of this project"
 msgstr "Язык этого проекта"
 
-#: projects/models.py:394
+#: projects/models.py:402
 msgid "A thumbnail of your project (ignored if not provided)"
-msgstr ""
-"Миниатюрное изображение для проекта (игнорируется, если не предоставлено)"
+msgstr "Миниатюрное изображение для проекта (игнорируется, если не предоставлено)"
 
-#: projects/models.py:395
+#: projects/models.py:403
 msgid "summary video"
 msgstr "ознакомительное видео"
 
-#: projects/models.py:396
-msgid ""
-"Video introducing people to the annotation task at hand (if applicable)"
+#: projects/models.py:404
+msgid "Video introducing people to the annotation task at hand (if applicable)"
 msgstr "Видео для ознакомлением с аннотационным заданием (если применимо)"
 
-#: projects/models.py:398
+#: projects/models.py:406
 msgid "A URL for video summary to be embedded (e.g. from YouTube)"
 msgstr "URL для ознакомительного видео (например, на YouTube)"
 
-#: projects/models.py:573 projects/models.py:658
+#: projects/models.py:583 projects/models.py:668
 msgid "marker unit"
 msgstr "маркерный блок"
 
-#: projects/models.py:574
+#: projects/models.py:584
 msgid "marker units"
 msgstr "макерные блоки"
 
-#: projects/models.py:576
+#: projects/models.py:586
 msgid "size"
 msgstr "размер"
 
-#: projects/models.py:577
+#: projects/models.py:587
 msgid "Default (and maximal) number of marker groups in the unit"
 msgstr "Размер маркерных груп в блоке (по умолчанию и максимальный)"
 
-#: projects/models.py:578
+#: projects/models.py:588
 msgid "minimum required"
 msgstr "минимально необходимо"
 
-#: projects/models.py:579
+#: projects/models.py:589
 msgid ""
 "Minimum required number of marker groups in the unit (can't be more than "
 "`size`)"
@@ -499,118 +499,126 @@ msgstr ""
 "Минимально необходимое количество макерных групп в блоке (не может быть "
 "больше, чем `размер`)"
 
-#: projects/models.py:580
+#: projects/models.py:590
 msgid "is rankable?"
 msgstr "можно ранжировать?"
 
-#: projects/models.py:581
+#: projects/models.py:591
 msgid "Whether annotators should be allowed to rank marker groups in the unit"
 msgstr "Разрешается ли ранжировать маркерные группы в блоке"
 
-#: projects/models.py:588
+#: projects/models.py:598
 msgid "rankable"
 msgstr "ранжируемое"
 
-#: projects/models.py:590
+#: projects/models.py:600
 msgid "From {} to {}{}"
 msgstr "С {} до {}{}"
 
-#: projects/models.py:592
+#: projects/models.py:602
 msgid "Exactly {}"
 msgstr "Ровно {}"
 
-#: projects/models.py:605
+#: projects/models.py:615
 msgid "range"
 msgstr "диапазон "
 
-#: projects/models.py:606
+#: projects/models.py:616
 msgid "ranges"
 msgstr "диапазоны"
 
-#: projects/models.py:608
+#: projects/models.py:618
 msgid "minimal value"
 msgstr "минимальное значение"
 
-#: projects/models.py:609
+#: projects/models.py:619
 msgid "maximal value"
 msgstr "максимальное значение"
 
-#: projects/models.py:610
+#: projects/models.py:620
 msgid "step"
 msgstr "шаг"
 
-#: projects/models.py:614
+#: projects/models.py:624
 msgid "You must specify either a step, a minimal or a maximal value"
-msgstr ""
-"Вы должны указать либо шаг, либо минимальное или максимальное значение"
+msgstr "Вы должны указать либо шаг, либо минимальное или максимальное значение"
 
-#: projects/models.py:619
+#: projects/models.py:629
 msgid "Between {} and {}"
 msgstr "Между {} и {}"
 
-#: projects/models.py:621
+#: projects/models.py:631
 msgid "From {}"
 msgstr "От {}"
 
-#: projects/models.py:623
+#: projects/models.py:633
 msgid "Up to {}"
 msgstr "До {}"
 
-#: projects/models.py:627 projects/models.py:629
+#: projects/models.py:637 projects/models.py:639
 msgid "step {}"
 msgstr "шаг {}"
 
-#: projects/models.py:645 projects/models.py:857
+#: projects/models.py:655 projects/models.py:877
 msgid "marker variant"
 msgstr "вариант макера"
 
-#: projects/models.py:648
+#: projects/models.py:658
 msgid "marker template"
 msgstr "шаблон маркера"
 
-#: projects/models.py:650
+#: projects/models.py:660
 msgid "numeric range"
 msgstr "числовой диапазон"
 
-#: projects/models.py:651
+#: projects/models.py:661
 msgid ""
 "\n"
-"            Applicable only if the annotation types are 'integer', 'floating-point number' or 'range'.\n"
-"            If the annotation type is 'range' and no numeric range is specified, the input will range from 0 to 100 by default.\n"
-"            The values will remain unrestricted for 'integer' or 'floating-point number' types.\n"
+"            Applicable only if the annotation types are 'integer', "
+"'floating-point number' or 'range'.\n"
+"            If the annotation type is 'range' and no numeric range is "
+"specified, the input will range from 0 to 100 by default.\n"
+"            The values will remain unrestricted for 'integer' or "
+"'floating-point number' types.\n"
 "            "
 msgstr ""
 "\n"
-"Применимо только для типов аннотации \"целое число\", \"дробное число\" или \"диапазон\".\n"
-"Если выбран тип аннотации \"диапазон\", и числовой диапазон не указан, то числовой диапазон от 0 до 100 будет использован по умолчанию. Для типов \"целое число\" и \"дробное число\", числовой диапазон неограничен по умолчанию."
+"Применимо только для типов аннотации \"целое число\", \"дробное число\" "
+"или \"диапазон\".\n"
+"Если выбран тип аннотации \"диапазон\", и числовой диапазон не указан, то"
+" числовой диапазон от 0 до 100 будет использован по умолчанию. Для типов "
+"\"целое число\" и \"дробное число\", числовой диапазон неограничен по "
+"умолчанию."
 
-#: projects/models.py:660
+#: projects/models.py:670
 msgid "order in a unit"
 msgstr "порядок в блоке"
 
-#: projects/models.py:661
+#: projects/models.py:671
 msgid "Order of this marker in the unit"
 msgstr "Порядок этого макера в блоке"
 
-#: projects/models.py:664
+#: projects/models.py:674
 msgid "Actions associated with this marker"
 msgstr "Действия, ассоциируемые с маркером"
 
-#: projects/models.py:665
+#: projects/models.py:675
 msgid "enable suggestions?"
 msgstr "разрешить предложения?"
 
-#: projects/models.py:666
+#: projects/models.py:676
 msgid ""
 "Indicates whether Suggestions API should be enabled for this marker (if "
 "endpoint is specified)"
 msgstr ""
-"Указывает, разрешить ли Suggestions API для этого маркера (если URL указан)"
+"Указывает, разрешить ли Suggestions API для этого маркера (если URL "
+"указан)"
 
-#: projects/models.py:669
+#: projects/models.py:679
 msgid ""
 "\n"
-"            Custom endpoint for the Suggestions API (by default the one from the marker template is used).\n"
+"            Custom endpoint for the Suggestions API (by default the one "
+"from the marker template is used).\n"
 "            Activates only if suggestions are enabled.\n"
 "            "
 msgstr ""
@@ -618,267 +626,272 @@ msgstr ""
 "URL для Suggestions API (URL шаблона по умолчанию).\n"
 "Активный только если предложения разрешены."
 
-#: projects/models.py:677
+#: projects/models.py:687
 msgid ""
-"Customized color for the annotated text span (color of the marker template "
-"by default)"
-msgstr ""
-"Цвет для аннотированного промежутка текста (цвет шаблона по умолчанию)"
+"Customized color for the annotated text span (color of the marker "
+"template by default)"
+msgstr "Цвет для аннотированного промежутка текста (цвет шаблона по умолчанию)"
 
-#: projects/models.py:679
+#: projects/models.py:689
 msgid ""
-"Keyboard shortcut for annotating a piece of text with this marker (shortcut "
-"of the marker template by default"
+"Keyboard shortcut for annotating a piece of text with this marker "
+"(shortcut of the marker template by default"
 msgstr ""
-"Сочетание клавиш для аннотации промежутка текста этим маркером (сочетание из"
-" шаблона по умолчанию)"
+"Сочетание клавиш для аннотации промежутка текста этим маркером (сочетание"
+" из шаблона по умолчанию)"
 
-#: projects/models.py:680
+#: projects/models.py:690
 msgid "annotation type"
 msgstr "тип аннотации"
 
-#: projects/models.py:681
+#: projects/models.py:691
 msgid "The type of annotations made using this marker"
 msgstr "Тип аннотации, создаваемый этим маркером"
 
-#: projects/models.py:820
+#: projects/models.py:692
+#, fuzzy
+msgid "export name"
+msgstr "отображаемое имя"
+
+#: projects/models.py:693
+msgid "The name of the field in the exported JSON file (English name by default)"
+msgstr ""
+
+#: projects/models.py:840
 msgid "marker context menu item"
 msgstr "элемент контекстного меню маркера"
 
-#: projects/models.py:821
+#: projects/models.py:841
 msgid "marker context menu items"
 msgstr "элементы контекстного меню"
 
-#: projects/models.py:825
+#: projects/models.py:845
 msgid "verbose name"
 msgstr "отображаемое имя"
 
-#: projects/models.py:826
+#: projects/models.py:846
 msgid "verbose name in data explorer"
 msgstr "отображаемое имя в проводнике"
 
-#: projects/models.py:827
+#: projects/models.py:847
 msgid "field name in logs"
 msgstr "название поля в журнале доступа"
 
-#: projects/models.py:828 projects/models.py:1208 projects/models.py:1210
+#: projects/models.py:848 projects/models.py:1251 projects/models.py:1253
 msgid "If applicable"
 msgstr "Если применимо"
 
-#: projects/models.py:848
+#: projects/models.py:868
 msgid "marker restriction"
 msgstr "ограничение для маркера"
 
-#: projects/models.py:849
+#: projects/models.py:869
 msgid "marker restrictions"
 msgstr "ограничения для маркера"
 
-#: projects/models.py:858
+#: projects/models.py:878
 msgid "restriction kind"
 msgstr "тип ограничения"
 
-#: projects/models.py:859
+#: projects/models.py:879
 msgid "restriction value"
 msgstr "значение ограничения"
 
-#: projects/models.py:860
+#: projects/models.py:880
 msgid ""
 "e.g., if restriction kind is '<=' and value is '3', this creates a "
 "restriction '<= 3'"
 msgstr ""
-"например, если тип ограничения  '<=', а значение - \"3\", то будет создано "
-"ограничение  '<= 3'"
+"например, если тип ограничения  '<=', а значение - \"3\", то будет "
+"создано ограничение  '<= 3'"
 
-#: projects/models.py:888
+#: projects/models.py:908
 msgid "data access log"
 msgstr "запись доступа к данным"
 
-#: projects/models.py:889
+#: projects/models.py:909
 msgid "data access logs"
 msgstr "записи доступа к данным"
 
-#: projects/models.py:891
+#: projects/models.py:911
 msgid "user"
 msgstr "пользователь"
 
-#: projects/models.py:894 projects/models.py:978
+#: projects/models.py:914 projects/models.py:1021
 msgid "datapoint ID"
 msgstr "идентификатор точки данных"
 
-#: projects/models.py:895 projects/models.py:979
+#: projects/models.py:915 projects/models.py:1022
 msgid "As stored in the original dataset"
 msgstr "Как сохранено в исходном наборе данных"
 
-#: projects/models.py:896
+#: projects/models.py:916
 msgid "flags"
 msgstr "приметки"
 
-#: projects/models.py:897
+#: projects/models.py:917
 msgid "Additional information provided by the annotator"
 msgstr "Дополнительная информация, предоставляемая аннотатором"
 
-#: projects/models.py:898
+#: projects/models.py:918
 msgid "is submitted?"
 msgstr "сохранено?"
 
-#: projects/models.py:899
-msgid ""
-"Indicates whether the datapoint was successfully submitted by an annotator"
+#: projects/models.py:919
+msgid "Indicates whether the datapoint was successfully submitted by an annotator"
 msgstr "Указывает, была ли точка данных успешно отослана аннотатором"
 
-#: projects/models.py:900
+#: projects/models.py:920
 msgid "is skipped?"
 msgstr "пропущена?"
 
-#: projects/models.py:901
+#: projects/models.py:921
 msgid "Indicates whether the datapoint was skipped by an annotator"
 msgstr "Указывает, была ли точка данных пропущена аннотатором"
 
-#: projects/models.py:912
+#: projects/models.py:932
 msgid "pre-marker"
 msgstr "Предмаркер"
 
-#: projects/models.py:913
+#: projects/models.py:933
 msgid "pre-markers"
 msgstr "Предмаркеры"
 
-#: projects/models.py:917
+#: projects/models.py:937
 msgid "static tokens"
 msgstr "статичные токены"
 
-#: projects/models.py:918
+#: projects/models.py:938
 msgid "Comma-separated tokens that should be highlighted with a marker"
-msgstr ""
-"Список токенов (через запятую), которые нужно выделить данным маркером"
+msgstr "Список токенов (через запятую), которые нужно выделить данным маркером"
 
-#: projects/models.py:931
+#: projects/models.py:951
 msgid "relation variant"
 msgstr "вариант отношения"
 
-#: projects/models.py:934
+#: projects/models.py:954
 msgid "relation template"
 msgstr "вариант отношений"
 
-#: projects/models.py:936
+#: projects/models.py:956
 msgid ""
-"Keyboard shortcut for marking a piece of text with this relation (shortcut "
-"of the relation template by default)"
+"Keyboard shortcut for marking a piece of text with this relation "
+"(shortcut of the relation template by default)"
 msgstr ""
 "Сочетание клавиш для маркироваки промежутков текста этим отношением "
 "(сочетание клавиш из шаблона по умолчанию)"
 
-#: projects/models.py:939
+#: projects/models.py:959
 msgid ""
 "How should the relation be visualized? (representation of the relation "
 "template by default)"
-msgstr ""
-"Как визуализировать это отношение? (визуализация из шаблона по умолчанию)"
+msgstr "Как визуализировать это отношение? (визуализация из шаблона по умолчанию)"
 
-#: projects/models.py:974
+#: projects/models.py:1017
 msgid "context"
 msgstr "контекст"
 
-#: projects/models.py:975
+#: projects/models.py:1018
 msgid "contexts"
 msgstr "контексты"
 
-#: projects/models.py:980 projects/models.py:1050
+#: projects/models.py:1023 projects/models.py:1093
 msgid "content"
 msgstr "содержание"
 
-#: projects/models.py:1009
+#: projects/models.py:1052
 msgid "annotation batch"
 msgstr "аннотационный блок"
 
-#: projects/models.py:1010
+#: projects/models.py:1053
 msgid "annotation batches"
 msgstr "аннотационные блоки"
 
-#: projects/models.py:1047
+#: projects/models.py:1090
 msgid "input"
 msgstr "ввод"
 
-#: projects/models.py:1048
+#: projects/models.py:1091
 msgid "inputs"
 msgstr "вводы"
 
-#: projects/models.py:1054 projects/models.py:1127
+#: projects/models.py:1097 projects/models.py:1170
 msgid "marker group order in the unit"
 msgstr "порядок группы в маркерном блоке"
 
-#: projects/models.py:1055 projects/models.py:1128 projects/models.py:1235
+#: projects/models.py:1098 projects/models.py:1171 projects/models.py:1278
 msgid "At the submission time"
 msgstr "Во время отсылки"
 
-#: projects/models.py:1113
+#: projects/models.py:1156
 msgid "label"
 msgstr "ярлык"
 
-#: projects/models.py:1114
+#: projects/models.py:1157
 msgid "labels"
 msgstr "ярлыки"
 
-#: projects/models.py:1116
+#: projects/models.py:1159
 msgid "start position"
 msgstr "начальная позиция"
 
-#: projects/models.py:1117
+#: projects/models.py:1160
 msgid "Character-wise start position in the text"
 msgstr "Посимвольная начальная позиция в тексте"
 
-#: projects/models.py:1118
+#: projects/models.py:1161
 msgid "end position"
 msgstr "конечная позиция"
 
-#: projects/models.py:1119
+#: projects/models.py:1162
 msgid "Character-wise end position in the text"
 msgstr "Посимвольная конечная позиция в тексте"
 
-#: projects/models.py:1121
+#: projects/models.py:1164 projects/models.py:1279
 msgid "extra information"
 msgstr "дополнительная информация"
 
-#: projects/models.py:1124 projects/models.py:1231
+#: projects/models.py:1167 projects/models.py:1274
 msgid "was undone?"
 msgstr "отменено?"
 
-#: projects/models.py:1125 projects/models.py:1232
+#: projects/models.py:1168 projects/models.py:1275
 msgid "Indicates whether the annotator used 'Undo' button"
 msgstr "Показывает, нажал ли аннотатор на кнопку \"Отменить\""
 
-#: projects/models.py:1194
+#: projects/models.py:1237
 msgid "label review"
 msgstr "рецензия на ярлык"
 
-#: projects/models.py:1195
+#: projects/models.py:1238
 msgid "label reviews"
 msgstr "рецензии на ярлык"
 
-#: projects/models.py:1198
+#: projects/models.py:1241
 msgid "is a match?"
 msgstr "совпадает?"
 
-#: projects/models.py:1199
+#: projects/models.py:1242
 msgid "Indicates whether the reviewed and original labels match"
 msgstr "Показывает, совпадает ли рецензия с исходным ярлыком"
 
-#: projects/models.py:1201
+#: projects/models.py:1244
 msgid "ambiguity?"
 msgstr "неоднозначность?"
 
-#: projects/models.py:1205
+#: projects/models.py:1248
 msgid "Decided automatically to inform a decision maker"
 msgstr "Решается автоматически для информирования лицо, принимающее решения"
 
-#: projects/models.py:1207 projects/models.py:1209
+#: projects/models.py:1250 projects/models.py:1252
 msgid "start position of the review label"
 msgstr "начальная позиция рецензии"
 
-#: projects/models.py:1212
+#: projects/models.py:1255
 msgid "is impossible?"
 msgstr "невозможно?"
 
-#: projects/models.py:1213
+#: projects/models.py:1256
 msgid ""
 "Indicates whether the reviewer marked the datapoint as impossible wrt. "
 "guidelines"
@@ -886,23 +899,23 @@ msgstr ""
 "Указывает, отметил ли рецензент точку данных как невозможную согласно "
 "инструкциям"
 
-#: projects/models.py:1225
+#: projects/models.py:1268
 msgid "label relation"
 msgstr "отношение между ярлыками"
 
-#: projects/models.py:1226
+#: projects/models.py:1269
 msgid "label relations"
 msgstr "отношениz между ярлыками"
 
-#: projects/models.py:1234
+#: projects/models.py:1277
 msgid "relation cluster"
 msgstr "кластер отношения"
 
-#: projects/models.py:1285
+#: projects/models.py:1340
 msgid "a project-specific user profile"
 msgstr "профиль пользователя для проекта"
 
-#: projects/models.py:1286
+#: projects/models.py:1341
 msgid "project specific user profiles"
 msgstr "профили пользователя для проекта"
 
@@ -912,8 +925,8 @@ msgstr "Вы закончили это задание"
 
 #: projects/jinja2/partials/_great_job.html:9
 msgid ""
-"Thank you for the participation, we are very grateful for your contribution "
-"to the research!"
+"Thank you for the participation, we are very grateful for your "
+"contribution to the research!"
 msgstr ""
 "Спасибо за участие, мы очень благодарны за ваш вклад в исследовательскую "
 "работу!"
@@ -964,8 +977,7 @@ msgstr "К сожалению, мы не нашли данных для анно
 
 #: projects/jinja2/partials/_no_data.html:8
 msgid "Please, contact the project responsible to sort things out."
-msgstr ""
-"Пожалуйста, свяжитесь с ответственным за проект для разрешения ситуации."
+msgstr "Пожалуйста, свяжитесь с ответственным за проект для разрешения ситуации."
 
 #: projects/jinja2/partials/_open_projects.html:12
 msgid "Currently there are no more active open tasks!"
@@ -973,8 +985,8 @@ msgstr "На сегодняшний момент открытых активны
 
 #: projects/jinja2/partials/_participations.html:12
 msgid ""
-"Thank you for joining Textinator! You don't have any tasks yet, but you can "
-"join to one of the open tasks in the respective tab"
+"Thank you for joining Textinator! You don't have any tasks yet, but you "
+"can join to one of the open tasks in the respective tab"
 msgstr ""
 "Спасибо, что присоединились к Textinator! У Вас ещё нет заданий, но Вы "
 "можете присоединиться к одному из открытых заданий в соответствующей "
@@ -1043,26 +1055,26 @@ msgid "Welcome to Textinator!"
 msgstr "Добро пожаловать в Textinator!"
 
 #: projects/jinja2/partials/_welcome.html:6
-#: projects/jinja2/partials/_welcome.html:17
+#: projects/jinja2/partials/_welcome.html:18
 msgid ""
-"Thank you for choosing Textinator as your annotation tool! We've got a bunch"
-" of resources to get you started:"
+"Thank you for choosing Textinator as your annotation tool! We've got a "
+"bunch of resources to get you started:"
 msgstr ""
 "Спасибо, что выбрали Textinator как средство аннотации! Мы подготовили "
 "несколько реусрсов, чтобы помочь Вам начать:"
 
 #: projects/jinja2/partials/_welcome.html:8
-#: projects/jinja2/partials/_welcome.html:19
+#: projects/jinja2/partials/_welcome.html:20
 msgid "if you prefer reading, here is the {}"
 msgstr "если вы предпочитаете читать, вот {}"
 
 #: projects/jinja2/partials/_welcome.html:8
-#: projects/jinja2/partials/_welcome.html:19
+#: projects/jinja2/partials/_welcome.html:20
 msgid "documentation"
 msgstr "документация"
 
 #: projects/jinja2/partials/_welcome.html:9
-#: projects/jinja2/partials/_welcome.html:20
+#: projects/jinja2/partials/_welcome.html:21
 msgid "if you prefer watching, here is the {}"
 msgstr "если Вы предпочитаете просмотр видео, вот {}"
 
@@ -1071,116 +1083,116 @@ msgid "admin guide on YouTube"
 msgstr "руководство администратора на YouTube"
 
 #: projects/jinja2/partials/_welcome.html:10
-#: projects/jinja2/partials/_welcome.html:21
+#: projects/jinja2/partials/_welcome.html:22
 msgid "if you prefer exploring on your own, just go for it!"
 msgstr "если Вы предпочитаете исследовать самостоятельно, вперёд!"
 
 #: projects/jinja2/partials/_welcome.html:12
 msgid ""
-"On top of that, if you want to help developing Textinator further (which we "
-"would be immensely happy about!), here is the {}"
+"On top of that, if you want to help developing Textinator further (which "
+"we would be immensely happy about!), here is the {}"
 msgstr ""
-"К тому же, если Вы хотите помочь разрабатывать Textinator (чему мы были бы "
-"безмерно рады!), вот {}"
+"К тому же, если Вы хотите помочь разрабатывать Textinator (чему мы были "
+"бы безмерно рады!), вот {}"
 
 #: projects/jinja2/partials/_welcome.html:12
 msgid "our GitHub repository"
 msgstr "наш репозиторий на GitHub"
 
-#: projects/jinja2/partials/_welcome.html:20
+#: projects/jinja2/partials/_welcome.html:21
 msgid "project manager guide on YouTube"
 msgstr "руководство менеджера проекта на YouTube"
 
-#: projects/jinja2/partials/_welcome.html:34
+#: projects/jinja2/partials/_welcome.html:35
 msgid ""
-"Thank you for joining Textinator! Your annotation or evaluation efforts will"
-" most certainly help in advancing Natural Language Processing (NLP) beyond "
-"its current limits."
+"Thank you for joining Textinator! Your annotation or evaluation efforts "
+"will most certainly help in advancing Natural Language Processing (NLP) "
+"beyond its current limits."
 msgstr ""
 "Спасибо, что присоединились к Textinator! Ваша помощь в аннотации или "
 "оценивании будут безусловно способствовать прогрессу методов обработки "
 "естественного языка (NLP) за текущие пределы."
 
-#: projects/jinja2/partials/_welcome.html:37
+#: projects/jinja2/partials/_welcome.html:38
 msgid "If you are here to help <u>annotating</u>, here are some tips:"
 msgstr "Если Вы здесь для помощи в <u>аннотации</u>, вот несколько советов:"
 
-#: projects/jinja2/partials/_welcome.html:39
+#: projects/jinja2/partials/_welcome.html:40
 msgid ""
-"If you are unfamiliar with Textinator or with NLP annotations in general, we"
-" have prepared {} to help you in starting this journey"
+"If you are unfamiliar with Textinator or with NLP annotations in general,"
+" we have prepared {} to help you in starting this journey"
 msgstr ""
-"Если Вы незнакомы с Textinator или аннотационными платформами в общем, мы "
-"приготовили {}, чтобы помочь Вам начать это путешествие"
+"Если Вы незнакомы с Textinator или аннотационными платформами в общем, мы"
+" приготовили {}, чтобы помочь Вам начать это путешествие"
 
-#: projects/jinja2/partials/_welcome.html:39
+#: projects/jinja2/partials/_welcome.html:40
 msgid "a couple of short YouTube videos"
 msgstr "несколько коротких видео на YouTube"
 
-#: projects/jinja2/partials/_welcome.html:40
-msgid ""
-"If you have signed up to take part in a specific annotation effort, please "
-"click on the {} in the menu above. If you don't see your project there, "
-"please contact your project manager."
-msgstr ""
-"Если Вы зарегистрировались для участия в конкретном аннотационном проекте, "
-"пожалуйста нажмите на {} в меню выше. Если Вы не видите Ваш проект, "
-"свяжитесь с менеджером проекта."
-
 #: projects/jinja2/partials/_welcome.html:41
+msgid ""
+"If you have signed up to take part in a specific annotation effort, "
+"please click on the {} in the menu above. If you don't see your project "
+"there, please contact your project manager."
+msgstr ""
+"Если Вы зарегистрировались для участия в конкретном аннотационном "
+"проекте, пожалуйста нажмите на {} в меню выше. Если Вы не видите Ваш "
+"проект, свяжитесь с менеджером проекта."
+
+#: projects/jinja2/partials/_welcome.html:42
 msgid "\"My Tasks\" tab"
 msgstr "вкладка \"Мои задания\""
 
-#: projects/jinja2/partials/_welcome.html:42
+#: projects/jinja2/partials/_welcome.html:43
 msgid ""
-"If you have signed up out of curiosity and willingness to help, huge thank "
-"you! We are very grateful and honored to have you on board! Please click on "
-"the {} and see if we currently have any annotation efforts, open to general "
-"public."
+"If you have signed up out of curiosity and willingness to help, huge "
+"thank you! We are very grateful and honored to have you on board! Please "
+"click on the {} and see if we currently have any annotation efforts, open"
+" to general public."
 msgstr ""
 "Если Вы зарегистрировались из любопытства и желания помочь, огромное "
-"спасибо! Мы очень благодарны и имеем за честь, что Вы с нами! Пожалуйста, "
-"нажмите на {} и посмотрите есть ли сейчас аннотационные проекты, открытые "
-"для общественности."
+"спасибо! Мы очень благодарны и имеем за честь, что Вы с нами! Пожалуйста,"
+" нажмите на {} и посмотрите есть ли сейчас аннотационные проекты, "
+"открытые для общественности."
 
-#: projects/jinja2/partials/_welcome.html:42
+#: projects/jinja2/partials/_welcome.html:43
 msgid "\"Open Tasks\" tab"
 msgstr "вкладка \"Опубликованные задания\""
 
-#: projects/jinja2/partials/_welcome.html:42
-#: projects/jinja2/partials/_welcome.html:51
+#: projects/jinja2/partials/_welcome.html:43
+#: projects/jinja2/partials/_welcome.html:52
 msgid ""
-"We urge you to read the instructions carefully to check that you understand "
-"them and are indeed eligible to take part. Please contact the project "
-"responsible if any questions arise."
+"We urge you to read the instructions carefully to check that you "
+"understand them and are indeed eligible to take part. Please contact the "
+"project responsible if any questions arise."
 msgstr ""
-"Мы призываем Вас внимательно прочитать инструкции, чтобы убедиться, что Вы "
-"их понимаете и действительно квалифицированы для участия. Пожалуйста, "
+"Мы призываем Вас внимательно прочитать инструкции, чтобы убедиться, что "
+"Вы их понимаете и действительно квалифицированы для участия. Пожалуйста, "
 "свяжитесь с ответственным за проект, если возникнут какие-либо вопросы. "
 
-#: projects/jinja2/partials/_welcome.html:47
+#: projects/jinja2/partials/_welcome.html:48
 msgid "If you are here to help <u>evaluating</u>, here are some other tips:"
 msgstr "Если Вы здесь для помощи в <u>оценивании</u>, вот несколько советов:"
 
-#: projects/jinja2/partials/_welcome.html:49
-msgid ""
-"If you have signed up to take part in a specific evaluation effort, please "
-"click on the {} and see if your survey is ready If you don't see your "
-"survey, please contact your project manager."
-msgstr ""
-"Если Вы зарегистрировались для участия в конкретном оценивании, пожалуйста "
-"нажмите на {} и проверьте готов ли ваш опрос. Если Вы не видите Ваш опрос, "
-"свяжитесь с менеджером проекта."
-
 #: projects/jinja2/partials/_welcome.html:50
+msgid ""
+"If you have signed up to take part in a specific evaluation effort, "
+"please click on the {} and see if your survey is ready If you don't see "
+"your survey, please contact your project manager."
+msgstr ""
+"Если Вы зарегистрировались для участия в конкретном оценивании, "
+"пожалуйста нажмите на {} и проверьте готов ли ваш опрос. Если Вы не "
+"видите Ваш опрос, свяжитесь с менеджером проекта."
+
 #: projects/jinja2/partials/_welcome.html:51
+#: projects/jinja2/partials/_welcome.html:52
 msgid "\"Survey\" tab"
 msgstr "вкладка \"Опросы\""
 
-#: projects/jinja2/partials/_welcome.html:51
+#: projects/jinja2/partials/_welcome.html:52
 msgid ""
-"If you have signed up out of curiosity, please click on the {} and see if "
-"there are any surveys open to general public."
+"If you have signed up out of curiosity, please click on the {} and see if"
+" there are any surveys open to general public."
 msgstr ""
 "Если Вы зарегистрировались из любопытства, пожалуйста нажмите на {} и "
 "посмотрите есть ли опросы, открытые для общественности."
@@ -1228,12 +1240,12 @@ msgstr "В чём проблема с этим текстом?"
 
 #: projects/jinja2/partials/components/modals/flag.html:16
 msgid ""
-"Please describe any problems you experience, e.g. weird formatting, wrong "
-"sentence starts, empty text, etc."
+"Please describe any problems you experience, e.g. weird formatting, wrong"
+" sentence starts, empty text, etc."
 msgstr ""
 "Пожалуйста, опишите любые проблемы, которые Вам повстречались (например, "
-"странное форматирование, неверные начала предложение, отсутствие текста и "
-"т.п.)"
+"странное форматирование, неверные начала предложение, отсутствие текста и"
+" т.п.)"
 
 #: projects/jinja2/partials/components/modals/guidelines.html:15
 msgid "No guidelines are provided"
@@ -1263,11 +1275,11 @@ msgstr "опубликовано"
 msgid "will be expired"
 msgstr "срок действия закончится"
 
-#: static/scripts/labeler.js:2206
+#: static/scripts/labeler.js:2635
 msgid "stop editing"
 msgstr "перестать редактировать"
 
-#: static/scripts/labeler.js:2218
+#: static/scripts/labeler.js:2647
 msgid "editor"
 msgstr "редактор"
 
@@ -1311,48 +1323,61 @@ msgstr "детали пользователя"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "On top of that, if you want to help developing Textinator further (which we "
-#~ "would be immensely happy about!), check out"
+#~ "On top of that, if you want "
+#~ "to help developing Textinator further "
+#~ "(which we would be immensely happy "
+#~ "about!), check out"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you are unfamiliar with Textinator or with NLP annotations in general, we"
-#~ " have prepared"
+#~ "If you are unfamiliar with Textinator"
+#~ " or with NLP annotations in general,"
+#~ " we have prepared"
 #~ msgstr ""
 
 #~ msgid "to help you in starting this journey"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you have signed up to take part in a specific annotation effort, please "
-#~ "check out"
+#~ "If you have signed up to take "
+#~ "part in a specific annotation effort,"
+#~ " please check out"
 #~ msgstr ""
 
 #~ msgid "in the menu above"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you don't see your project there, please contact your project manager."
+#~ "If you don't see your project "
+#~ "there, please contact your project "
+#~ "manager."
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you have signed up out of curiosity and willigness to help, huge thank "
-#~ "you! We are very grateful and honored to have you on board!"
+#~ "If you have signed up out of "
+#~ "curiosity and willigness to help, huge"
+#~ " thank you! We are very grateful "
+#~ "and honored to have you on board!"
 #~ msgstr ""
 
 #~ msgid "Please check out"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "and see if we currently have any annotation efforts, open to general public."
-#~ " We urge you to read the instructions for the annotation task carefully to "
-#~ "check that you understand them and are indeed eligible to take part. Please "
-#~ "contact the project responsible if any questions arise."
+#~ "and see if we currently have any"
+#~ " annotation efforts, open to general "
+#~ "public. We urge you to read the"
+#~ " instructions for the annotation task "
+#~ "carefully to check that you understand"
+#~ " them and are indeed eligible to "
+#~ "take part. Please contact the project"
+#~ " responsible if any questions arise."
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you have signed up to take part in a specific evaluation effort, please "
-#~ "check out"
+#~ "If you have signed up to take "
+#~ "part in a specific evaluation effort,"
+#~ " please check out"
 #~ msgstr ""
 
 #~ msgid "and see if your survey is ready"
@@ -1368,9 +1393,11 @@ msgstr "детали пользователя"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "We urge you to read the instructions carefully to check that you are indeed "
-#~ "eligible to take part. Please contact the responsible for the survey if any "
-#~ "questions arise."
+#~ "We urge you to read the "
+#~ "instructions carefully to check that you"
+#~ " are indeed eligible to take part."
+#~ " Please contact the responsible for "
+#~ "the survey if any questions arise."
 #~ msgstr ""
 
 #~ msgid "step: {}"
@@ -1411,17 +1438,27 @@ msgstr "детали пользователя"
 
 #~ msgid ""
 #~ "\n"
-#~ "            Custom endpoint for the Suggestions API (by default the one from the marker template is used).\n"
-#~ "            Activates only if suggestions are enabled and the endpoint.\n"
+#~ "            Custom endpoint for the "
+#~ "Suggestions API (by default the one "
+#~ "from the marker template is used).\n"
+#~ ""
+#~ "            Activates only if suggestions "
+#~ "are enabled and the endpoint.\n"
 #~ "            "
 #~ msgstr ""
 
 #~ msgid ""
 #~ "\n"
-#~ "            Custom endpoint for the Suggestions API (by default the one from the marker template is used).\n"
-#~ "            Activates only if suggestions are enabled and the endpoint is specified.\n"
+#~ "            Custom endpoint for the "
+#~ "Suggestions API (by default the one "
+#~ "from the marker template is used).\n"
+#~ ""
+#~ "            Activates only if suggestions "
+#~ "are enabled and the endpoint is "
+#~ "specified.\n"
 #~ "            "
 #~ msgstr ""
 
 #~ msgid "points in total"
 #~ msgstr ""
+
