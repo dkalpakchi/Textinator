@@ -10,8 +10,8 @@ fi
 
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
-python manage.py seed_default
 python manage.py update_translation_fields projects
+python manage.py seed_default
 python manage.py update_marker_actions
 python manage.py createsuperuser --noinput
 

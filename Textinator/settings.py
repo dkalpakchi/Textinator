@@ -191,8 +191,8 @@ CACHES = {
 # Codes must be compliant with RFC 5646
 # (see http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry for the whole list of language codes)
 LANGUAGES = [
-    ('nl', 'Dutch'),
     ('en', 'English'),
+    ('nl', 'Dutch'),
     ('ru', 'Russian'),
     ('es', 'Spanish'),
     ('sv', 'Swedish'),
