@@ -13,7 +13,7 @@ services:
       - static_volume:/home/tt/Textinator/static_cdn
       - media_volume:/home/tt/Textinator/media
     ports:
-      - 1337:80
+      - 127.0.0.1:1337:80
     depends_on:
       - web
 

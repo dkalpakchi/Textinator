@@ -90,10 +90,7 @@ AUTHENTICATION_BACKENDS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 ROOT_URLCONF = 'Textinator.urls'
-ROOT_URLPATH = ''
-# If you want Textinator to be under suburl, e.g. /textinator/projects instead of /projects, 
-#   change ROOT_URLPATH as follows.
-# ROOT_URLPATH = 'textinator/' # needs to have a trailing slash
+ROOT_URLPATH = os.environ.get("ROOT_URLPATH", "")
 
 TEMPLATES = [
     {

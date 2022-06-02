@@ -30,6 +30,21 @@ To run container again, run:
 To stop container AND take down the DB, run:
 `docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml down -v`
 
+### Exposing the ports and HTTPS
+By default Textinator's port is `1337` and it is exposed only to the localhost and all requests are handled as HTTP to not impose any particular SSL certificate for handling HTTPS requests. To handle HTTPS, you'll need to set it up on your own server and then just reverse proxy to `http://localhost:1337`.
+
+### Using custom (sub)domain
+It's absolutely possible to use custom domain, but first you need to let Textinator know that your domain is allowed. You can do this by adding your domain(s) to the `DJANGO_ALLOWED_HOSTS` variable in the `.env.prod` file (note that the list of domains is space-separated).
+
+### Serve on a custom URL
+If you have a server with a domain that hosts multiple applications, but you're unable to order subdomains for it, you might want to consider hosting Textinator on a specific URL. This is possible and requires the following steps (for this example we'll assume your custom URL is `mydomain.com/textinator` and we assume that you've already let Textinator know that `mydomain.com` is allowed).
+
+1. Change `ROOT_URLPATH` to `textinator/` (note that the trailing `/` is **mandatory**) in the `.env.prod` file.
+2. Change `location /static/` to `location /textinator/static/` and `location /media/` to `location /textinator/media/` in the `nginx/nginx.conf` file.
+3. Re-route all other URLs:
+	a) If you host Textinator as a part of another server, then let `/textinator` point to `http://localhost:1337`
+	b) If you host a standalone instance of Textinator, change `location /` to `location /textinator/` in the `nginx/nginx.conf`
+
 ## Running in development mode
 The development version will run the Django's built-in development server and will also map your local folder to that inside the Docker container, so that the changes in the code are immediately reflected without the need to restart the container. You can start Textinator in the dev mode using the following command.
 
