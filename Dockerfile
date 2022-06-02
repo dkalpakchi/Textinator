@@ -17,11 +17,11 @@ ENV PYTHONUNBUFFERED 1
 RUN pip install --upgrade pip
 RUN export PATH="$PATH:/home/tt/.local/bin"
 
-RUN mkdir Textinator
+RUN mkdir -p Textinator
 
 COPY --chown=tt . ./Textinator/
-RUN mkdir ./Textinator/static_cdn
-RUN mkdir ./Textinator/media
+RUN mkdir -p ./Textinator/static_cdn
+RUN mkdir -p ./Textinator/media
 
 RUN pip install -r ./Textinator/requirements.txt
 
