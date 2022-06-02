@@ -22,18 +22,21 @@ Now if you go to `http://localhost:1337`, you should see Textinator's main page.
 Note that this command will build the Docker image only once and thus will copy the code only once. If you've some changes to the code and want to include them, you'll need to add a `--build` flag at the end of the command above.
 
 To stop container, run:
+
 `docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml stop`
 
 To run container again, run:
+
 `docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d`
 
 To stop container AND take down the DB, run:
+
 `docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml down -v`
 
 ### Exposing the ports and HTTPS
 By default Textinator's port is `1337` and it is exposed only to the localhost and all requests are handled as HTTP to not impose any particular SSL certificate for handling HTTPS requests. To handle HTTPS, you'll need to set it up on your own server and then just reverse proxy to `http://localhost:1337`.
 
-### Using custom (sub)domain
+### Serve on a custom (sub)domain
 It's absolutely possible to use custom domain, but first you need to let Textinator know that your domain is allowed. You can do this by adding your domain(s) to the `DJANGO_ALLOWED_HOSTS` variable in the `.env.prod` file (note that the list of domains is space-separated).
 
 ### Serve on a custom URL
@@ -44,6 +47,11 @@ If you have a server with a domain that hosts multiple applications, but you're 
 3. Re-route all other URLs:
 	a) If you host Textinator as a part of another server, then let `/textinator` point to `http://localhost:1337`
 	b) If you host a standalone instance of Textinator, change `location /` to `location /textinator/` in the `nginx/nginx.conf`
+
+### Database backup
+We recommend to schedule a cron job to make a backup of the database. For example, making a backup every day at 16:00 would translate into the following cron task (assuming you want to save your dumps into `/home/your_user/textinator_dumps` folder of your server):
+
+`0 16 * * * docker exec -i textinator_db_1 pg_dump textinator > /home/your_user/textinator_dumps/$(date +%s).sql`
 
 ## Running in development mode
 The development version will run the Django's built-in development server and will also map your local folder to that inside the Docker container, so that the changes in the code are immediately reflected without the need to restart the container. You can start Textinator in the dev mode using the following command.

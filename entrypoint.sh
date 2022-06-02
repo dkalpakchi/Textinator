@@ -19,5 +19,5 @@ if [ "$TT_ENV" = "dev" ]; then
 	python manage.py runserver 0.0.0.0:8000
 else
 	mkdir -p -- $PREFIX/log/gunicorn
-	gunicorn --access-logfile log/gunicorn/access_log --error-logfile log/gunicorn/error_log -b 0.0.0.0:8000 Textinator.wsgi
+	gunicorn --access-logfile log/gunicorn/access_log --error-logfile log/gunicorn/error_log -b 0.0.0.0:8000 Textinator.wsgi --timeout 500
 fi
