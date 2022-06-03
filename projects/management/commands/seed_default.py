@@ -160,6 +160,7 @@ def create_data():
                     print("{} does not exist".format(perm))
                     continue
 
+    g, is_created = Group.objects.get_or_create(name="translators")
     for x in ["translators-{}".format(l) for l, _ in settings.LANGUAGES]:
         g, is_created = Group.objects.get_or_create(name=x)
         created += is_created
