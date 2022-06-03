@@ -45,8 +45,8 @@ If you have a server with a domain that hosts multiple applications, but you're 
 1. Change `ROOT_URLPATH` to `textinator/` (note that the trailing `/` is **mandatory**) in the `.env.prod` file.
 2. Change `location /static/` to `location /textinator/static/` and `location /media/` to `location /textinator/media/` in the `nginx/nginx.conf` file.
 3. Re-route all other URLs:
-	a) If you host Textinator as a part of another server, then let `/textinator` point to `http://localhost:1337`
-	b) If you host a standalone instance of Textinator, change `location /` to `location /textinator/` in the `nginx/nginx.conf`
+	- If you host Textinator as a part of another server, then let `/textinator` point to `http://localhost:1337`
+	- If you host a standalone instance of Textinator, change `location /` to `location /textinator/` in the `nginx/nginx.conf`
 
 ### Database backup
 We recommend to schedule a cron job to make a backup of the database. For example, making a backup every day at 16:00 would translate into the following cron task (assuming you want to save your dumps into `/home/your_user/textinator_dumps` folder of your server):
