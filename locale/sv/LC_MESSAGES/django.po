@@ -8,19 +8,20 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2022-06-02 14:47+0000\n"
-"PO-Revision-Date: 2022-01-17 13:44+0000\n"
-"Last-Translator: <mail@textinator.se>\n"
-"Language: sv\n"
+"PO-Revision-Date: 2022-06-03 13:41+0000\n"
+"Last-Translator: Dmytro Kalpakchi <dmytroka@kth.se>\n"
 "Language-Team: sv <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "Generated-By: Babel 2.9.1\n"
+"X-Translated-Using: django-rosetta 0.9.8\n"
 
 #: Textinator/settings.py:292
 msgid "Back to the site"
-msgstr ""
+msgstr "Tillbaka till webbplatsen"
 
 #: projects/admin.py:45
 msgid "restriction"
@@ -64,7 +65,7 @@ msgstr "projektspecifika relationer"
 
 #: projects/admin.py:182 projects/models.py:390
 msgid "All data sources must be of the same language as the project"
-msgstr ""
+msgstr "Alla datakällor måste vara på samma språk som projektet"
 
 #: projects/admin.py:263
 msgid "task specification"
@@ -72,7 +73,7 @@ msgstr "uppgiftsspecifikation "
 
 #: projects/admin.py:266
 msgid "data"
-msgstr ""
+msgstr "data"
 
 #: projects/admin.py:269 projects/jinja2/partials/_navbar.html:67
 #: users/jinja2/users/settings.html:10
@@ -110,7 +111,7 @@ msgstr "namn"
 
 #: projects/models.py:62
 msgid "Verbose name"
-msgstr ""
+msgstr "Utförligt namn"
 
 #: projects/models.py:63
 msgid "helper function name"
@@ -150,15 +151,15 @@ msgstr "språk"
 
 #: projects/models.py:112
 msgid "Language of this data source"
-msgstr ""
+msgstr "Datakällansspråk"
 
 #: projects/models.py:114
 msgid "formatting"
-msgstr ""
+msgstr "formatering"
 
 #: projects/models.py:115
 msgid "text formating of the data source"
-msgstr ""
+msgstr "textformatering av datakällan"
 
 #: projects/models.py:116
 msgid "is public?"
@@ -166,11 +167,11 @@ msgstr "är offentlig?"
 
 #: projects/models.py:117
 msgid "Whether to make data source available to other Textinator users"
-msgstr ""
+msgstr "Om datakällan ska göras tillgänglig för andra Textinator-användare"
 
 #: projects/models.py:118
 msgid "owner"
-msgstr ""
+msgstr "ägare"
 
 #: projects/models.py:163 projects/models.py:843
 msgid "marker action"
@@ -192,7 +193,8 @@ msgstr "filnamn"
 msgid ""
 "a name of the JS plugin file in the `/static/scripts/labeler_plugins` "
 "directory"
-msgstr "namnet på filen med JS-plugin i mappen `/static/scripts/labeler_plugins`"
+msgstr ""
+"namnet på filen med JS-plugin i mappen `/static/scripts/labeler_plugins`"
 
 #: projects/models.py:170
 msgid "type of admin filter"
@@ -201,16 +203,17 @@ msgstr "typ av adminfilter"
 #: projects/models.py:171
 msgid ""
 "\n"
-"            Specifies the filter type in the data explorer interface (one"
-" of 'boolean', 'range').\n"
-"            If empty, then this action will be excluded from data "
-"explorer.\n"
+"            Specifies the filter type in the data explorer interface (one of 'boolean', 'range').\n"
+"            If empty, then this action will be excluded from data explorer.\n"
 "            "
 msgstr ""
+"\n"
+"Anger filtertypen i datautforskarens gränssnitt (ett av 'boolean', 'range').\n"
+"Om den är tom kommer den här åtgärden att uteslutas från datautforskaren."
 
 #: projects/models.py:197
 msgid "The display name of the marker (max 50 characters)"
-msgstr ""
+msgstr "Markörens visningsnamn (max 50 tecken)"
 
 #: projects/models.py:198
 msgid "code"
@@ -226,7 +229,7 @@ msgstr "färg"
 
 #: projects/models.py:200
 msgid "Color for the annotated text span"
-msgstr ""
+msgstr "Färg för den annoterade texten"
 
 #: projects/models.py:201 projects/models.py:288 projects/models.py:688
 #: projects/models.py:955
@@ -235,11 +238,11 @@ msgstr "tangentbordsgenväg"
 
 #: projects/models.py:202
 msgid "Keyboard shortcut for annotating a piece of text with this marker"
-msgstr ""
+msgstr "Kortkommando för att annotera en del av texten med denna markör"
 
 #: projects/models.py:204
 msgid "Endpoint for the Suggestions API"
-msgstr ""
+msgstr "Slutpunkt för Suggestions API"
 
 #: projects/models.py:207 projects/models.py:844
 msgid "marker"
@@ -285,11 +288,11 @@ msgstr "riktning"
 
 #: projects/models.py:289
 msgid "Keyboard shortcut for marking a piece of text with this relation"
-msgstr ""
+msgstr "Kortkommando för att markera en del av texten med denna relation"
 
 #: projects/models.py:290 projects/models.py:957
 msgid "graphical representation type"
-msgstr ""
+msgstr "grafisk representationstyp"
 
 #: projects/models.py:291 projects/models.py:958
 msgid "Graph"
@@ -352,8 +355,7 @@ msgid ""
 "The name of the organization supporting the project financially (if "
 "applicable)"
 msgstr ""
-"Namnet på den organisation som stöder projektet ekonomiskt (om "
-"tillämpligt) "
+"Namnet på den organisation som stöder projektet ekonomiskt (om tillämpligt) "
 
 #: projects/jinja2/partials/components/areas/reminders.html:4
 #: projects/models.py:367
@@ -370,8 +372,10 @@ msgid "reminders"
 msgstr "påminnelser"
 
 #: projects/models.py:370
-msgid "Reminders for essential parts of guidelines (keep them short and on point)"
+msgid ""
+"Reminders for essential parts of guidelines (keep them short and on point)"
 msgstr ""
+"Påminnelser om väsentliga delar av riktlinjer (håll dem korta och korrekta)"
 
 #: projects/models.py:371
 msgid "temporary message"
@@ -379,23 +383,23 @@ msgstr "tillfälligt meddelande"
 
 #: projects/models.py:372
 msgid ""
-"A temporary message for urgent communication with annotators (e.g., about"
-" maintenance work)"
+"A temporary message for urgent communication with annotators (e.g., about "
+"maintenance work)"
 msgstr ""
-"Ett tillfälligt meddelande för snabb kommunikation med annoterare (t.ex. "
-"om underhållsarbete)"
+"Ett tillfälligt meddelande för snabb kommunikation med annoterare (t.ex. om "
+"underhållsarbete)"
 
 #: projects/models.py:373
 msgid "should data be sampled with replacement?"
-msgstr ""
+msgstr "ska data samplas med ersättning?"
 
 #: projects/models.py:374
 msgid "should each annotator work with their own part of data?"
-msgstr ""
+msgstr "ska varje annotator arbeta med sin egen del av data?"
 
 #: projects/models.py:375
 msgid "should data source identifiers be shown?"
-msgstr ""
+msgstr "ska datakällans identifierare visas?"
 
 #: projects/models.py:377
 msgid "publishing date"
@@ -423,7 +427,7 @@ msgstr "ska projektet publiceras?"
 
 #: projects/models.py:392
 msgid "should the annotations be peer reviewed?"
-msgstr ""
+msgstr "ska annoteringar vara peer reviewed?"
 
 #: projects/models.py:393
 msgid "should selecting the labels be allowed?"
@@ -431,7 +435,7 @@ msgstr "ska det vara tillåtet att trycka på etiketter?"
 
 #: projects/models.py:394
 msgid "should submitted labels be disabled?"
-msgstr ""
+msgstr "ska inlämnade etiketter inaktiveras?"
 
 #: projects/models.py:395
 msgid "maximal number of markers per input"
@@ -439,31 +443,34 @@ msgstr "maximalt antal markörer per inmatning"
 
 #: projects/models.py:396
 msgid "should the project include intro tour?"
-msgstr ""
+msgstr "ska projektet ha en introtur?"
 
 #: projects/models.py:397
 msgid "WARNING: Intro tours are currently in beta"
-msgstr ""
+msgstr "VARNING: introturer är för närvarande i beta"
 
 #: projects/models.py:399
 msgid "Language of this project"
-msgstr ""
+msgstr "Projektets språk"
 
 #: projects/models.py:402
 msgid "A thumbnail of your project (ignored if not provided)"
-msgstr ""
+msgstr "En miniatyr av ditt projekt (ignoreras om den inte tillhandahålls)"
 
 #: projects/models.py:403
 msgid "summary video"
 msgstr "sammanfattningsvideo"
 
 #: projects/models.py:404
-msgid "Video introducing people to the annotation task at hand (if applicable)"
+msgid ""
+"Video introducing people to the annotation task at hand (if applicable)"
 msgstr ""
+"Video som introducerar människor till annoteringsuppgiften (om tillämpligt)"
 
 #: projects/models.py:406
 msgid "A URL for video summary to be embedded (e.g. from YouTube)"
 msgstr ""
+"En webbadress för videosammanfattning som ska bäddas in (t.ex. från YouTube)"
 
 #: projects/models.py:583 projects/models.py:668
 msgid "marker unit"
@@ -490,8 +497,8 @@ msgid ""
 "Minimum required number of marker groups in the unit (can't be more than "
 "`size`)"
 msgstr ""
-"Minsta nödvändiga antal markörgrupper per markörenhet (får inte vara mer "
-"än \"storlek\")"
+"Minsta nödvändiga antal markörgrupper per markörenhet (får inte vara mer än "
+"\"storlek\")"
 
 #: projects/models.py:590
 msgid "is rankable?"
@@ -499,7 +506,8 @@ msgstr "är rankbar?"
 
 #: projects/models.py:591
 msgid "Whether annotators should be allowed to rank marker groups in the unit"
-msgstr "Huruvida annotatorer ska tillåtas att rangordna markörgrupper inom enheten"
+msgstr ""
+"Huruvida annotatorer ska tillåtas att rangordna markörgrupper inom enheten"
 
 #: projects/models.py:598
 msgid "rankable"
@@ -507,51 +515,53 @@ msgstr "rankbar"
 
 #: projects/models.py:600
 msgid "From {} to {}{}"
-msgstr ""
+msgstr "Från {} till {}{}"
 
 #: projects/models.py:602
 msgid "Exactly {}"
-msgstr ""
+msgstr "Exakt {}"
 
 #: projects/models.py:615
 msgid "range"
-msgstr ""
+msgstr "intervall"
 
 #: projects/models.py:616
 msgid "ranges"
-msgstr ""
+msgstr "intervaller"
 
 #: projects/models.py:618
 msgid "minimal value"
-msgstr ""
+msgstr "det minsta värdet"
 
 #: projects/models.py:619
 msgid "maximal value"
-msgstr ""
+msgstr "det högsta värdet"
 
 #: projects/models.py:620
 msgid "step"
-msgstr ""
+msgstr "steg"
 
 #: projects/models.py:624
 msgid "You must specify either a step, a minimal or a maximal value"
 msgstr ""
+"Du måste specifiera antingen ett steg eller det minsta eller det högsta "
+"värdet"
 
 #: projects/models.py:629
 msgid "Between {} and {}"
-msgstr ""
+msgstr "Mellan {} och{}"
 
 #: projects/models.py:631
 msgid "From {}"
-msgstr ""
+msgstr "Från {}"
 
 #: projects/models.py:633
 msgid "Up to {}"
-msgstr ""
+msgstr "Upp till {}"
 
 #: projects/models.py:637 projects/models.py:639
 msgid "step {}"
-msgstr ""
+msgstr "steg {}"
 
 #: projects/models.py:655 projects/models.py:877
 msgid "marker variant"
@@ -563,19 +573,20 @@ msgstr "markörsmall"
 
 #: projects/models.py:660
 msgid "numeric range"
-msgstr ""
+msgstr "numerisk intervall"
 
 #: projects/models.py:661
 msgid ""
 "\n"
-"            Applicable only if the annotation types are 'integer', "
-"'floating-point number' or 'range'.\n"
-"            If the annotation type is 'range' and no numeric range is "
-"specified, the input will range from 0 to 100 by default.\n"
-"            The values will remain unrestricted for 'integer' or "
-"'floating-point number' types.\n"
+"            Applicable only if the annotation types are 'integer', 'floating-point number' or 'range'.\n"
+"            If the annotation type is 'range' and no numeric range is specified, the input will range from 0 to 100 by default.\n"
+"            The values will remain unrestricted for 'integer' or 'floating-point number' types.\n"
 "            "
 msgstr ""
+"\n"
+"Tillämpligt endast om anteckningstyperna är  'integer', 'floating-point number' or 'range'.\n"
+"Om anteckningstypen är 'range' och ingen numerisk intervall är specificerat, kommer inmatningen att variera från 0 till 100 som standard.\n"
+"Värdena förblir obegränsade för typerna \"integer' eller 'floating-point number'."
 
 #: projects/models.py:670
 msgid "order in a unit"
@@ -587,55 +598,64 @@ msgstr "Ordning av denna markör i enheten"
 
 #: projects/models.py:674
 msgid "Actions associated with this marker"
-msgstr ""
+msgstr "Åtgärder associerade med denna markör"
 
 #: projects/models.py:675
 msgid "enable suggestions?"
-msgstr ""
+msgstr "aktivera förslag?"
 
 #: projects/models.py:676
 msgid ""
 "Indicates whether Suggestions API should be enabled for this marker (if "
 "endpoint is specified)"
 msgstr ""
+"Anger om Suggestions API ska aktiveras för den här markören (om slutpunkt är"
+" angiven)"
 
 #: projects/models.py:679
 msgid ""
 "\n"
-"            Custom endpoint for the Suggestions API (by default the one "
-"from the marker template is used).\n"
+"            Custom endpoint for the Suggestions API (by default the one from the marker template is used).\n"
 "            Activates only if suggestions are enabled.\n"
 "            "
 msgstr ""
+"\n"
+"Anpassad slutpunkt för Suggestions API (som standard används den från markörmallen).\n"
+"Aktiveras endast om förslag är aktiverade."
 
 #: projects/models.py:687
 msgid ""
-"Customized color for the annotated text span (color of the marker "
-"template by default)"
+"Customized color for the annotated text span (color of the marker template "
+"by default)"
 msgstr ""
+"Anpassad färg för det kommenterade textintervallet (färgen på markörmallen "
+"som standard)"
 
 #: projects/models.py:689
 msgid ""
-"Keyboard shortcut for annotating a piece of text with this marker "
-"(shortcut of the marker template by default"
+"Keyboard shortcut for annotating a piece of text with this marker (shortcut "
+"of the marker template by default"
 msgstr ""
+"Kortkommando för att kommentera en textbit med denna markör (genväg till "
+"markörmallen som standard)"
 
 #: projects/models.py:690
 msgid "annotation type"
-msgstr ""
+msgstr "annoteringstyp"
 
 #: projects/models.py:691
 msgid "The type of annotations made using this marker"
 msgstr "typ av annoteringar som kan göras med markören"
 
 #: projects/models.py:692
-#, fuzzy
 msgid "export name"
-msgstr "namn på datamängd"
+msgstr "exportnamn"
 
 #: projects/models.py:693
-msgid "The name of the field in the exported JSON file (English name by default)"
+msgid ""
+"The name of the field in the exported JSON file (English name by default)"
 msgstr ""
+"Namnet på fältet i den exporterade JSON-filen (engelsk namn som standard)"
 
 #: projects/models.py:840
 msgid "marker context menu item"
@@ -647,15 +667,15 @@ msgstr "markörssnabbmenyalternativ"
 
 #: projects/models.py:845
 msgid "verbose name"
-msgstr ""
+msgstr "utförligt namn"
 
 #: projects/models.py:846
 msgid "verbose name in data explorer"
-msgstr ""
+msgstr "utförligt namn inom datautforskare"
 
 #: projects/models.py:847
 msgid "field name in logs"
-msgstr ""
+msgstr "fältnamn i loggar"
 
 #: projects/models.py:848 projects/models.py:1251 projects/models.py:1253
 msgid "If applicable"
@@ -699,7 +719,7 @@ msgstr "användare"
 
 #: projects/models.py:914 projects/models.py:1021
 msgid "datapoint ID"
-msgstr ""
+msgstr "datapunkts identifierare"
 
 #: projects/models.py:915 projects/models.py:1022
 msgid "As stored in the original dataset"
@@ -711,14 +731,15 @@ msgstr "flaggor"
 
 #: projects/models.py:917
 msgid "Additional information provided by the annotator"
-msgstr ""
+msgstr "Ytterligare information tillhandahållen av annoteraren"
 
 #: projects/models.py:918
 msgid "is submitted?"
 msgstr "är inskickade?"
 
 #: projects/models.py:919
-msgid "Indicates whether the datapoint was successfully submitted by an annotator"
+msgid ""
+"Indicates whether the datapoint was successfully submitted by an annotator"
 msgstr "Anger om datapunkten har skickats in av en annotator "
 
 #: projects/models.py:920
@@ -727,7 +748,7 @@ msgstr "är överhoppad?"
 
 #: projects/models.py:921
 msgid "Indicates whether the datapoint was skipped by an annotator"
-msgstr ""
+msgstr "Indikerar om datapunkten hoppades över av en annotator"
 
 #: projects/models.py:932
 msgid "pre-marker"
@@ -739,11 +760,11 @@ msgstr "förmarkörer"
 
 #: projects/models.py:937
 msgid "static tokens"
-msgstr ""
+msgstr "statiska tokens"
 
 #: projects/models.py:938
 msgid "Comma-separated tokens that should be highlighted with a marker"
-msgstr ""
+msgstr "Kommaseparerade tokens som ska markeras med en markör"
 
 #: projects/models.py:951
 msgid "relation variant"
@@ -755,15 +776,19 @@ msgstr "relationsvarianter"
 
 #: projects/models.py:956
 msgid ""
-"Keyboard shortcut for marking a piece of text with this relation "
-"(shortcut of the relation template by default)"
+"Keyboard shortcut for marking a piece of text with this relation (shortcut "
+"of the relation template by default)"
 msgstr ""
+"Kortkommando för att markera en textbit med denna relation (genväg till "
+"relationsmallen som standard)"
 
 #: projects/models.py:959
 msgid ""
 "How should the relation be visualized? (representation of the relation "
 "template by default)"
 msgstr ""
+"Hur ska relationen visualiseras? (representation av relationsmallen som "
+"standard)"
 
 #: projects/models.py:1017
 msgid "context"
@@ -775,27 +800,27 @@ msgstr "kontexter"
 
 #: projects/models.py:1023 projects/models.py:1093
 msgid "content"
-msgstr ""
+msgstr "innehåll"
 
 #: projects/models.py:1052
 msgid "annotation batch"
-msgstr ""
+msgstr "annoteringsbatch"
 
 #: projects/models.py:1053
 msgid "annotation batches"
-msgstr ""
+msgstr "annoteringsbatcher"
 
 #: projects/models.py:1090
 msgid "input"
-msgstr ""
+msgstr "inmatning"
 
 #: projects/models.py:1091
 msgid "inputs"
-msgstr ""
+msgstr "inmatningar"
 
 #: projects/models.py:1097 projects/models.py:1170
 msgid "marker group order in the unit"
-msgstr ""
+msgstr "markörgruppsordning i enheten"
 
 #: projects/models.py:1098 projects/models.py:1171 projects/models.py:1278
 msgid "At the submission time"
@@ -847,41 +872,43 @@ msgstr "etikettgranskningar"
 
 #: projects/models.py:1241
 msgid "is a match?"
-msgstr ""
+msgstr "är en matchning?"
 
 #: projects/models.py:1242
 msgid "Indicates whether the reviewed and original labels match"
-msgstr ""
+msgstr "Anger om de granskade och originaletiketterna matchar"
 
 #: projects/models.py:1244
 msgid "ambiguity?"
-msgstr ""
+msgstr "tvetydighet?"
 
 #: projects/models.py:1248
 msgid "Decided automatically to inform a decision maker"
-msgstr ""
+msgstr "Beslutade automatiskt att informera en beslutsfattare"
 
 #: projects/models.py:1250 projects/models.py:1252
 msgid "start position of the review label"
-msgstr ""
+msgstr "startposition för recensionsetiketten"
 
 #: projects/models.py:1255
 msgid "is impossible?"
-msgstr ""
+msgstr "är omöjlig?"
 
 #: projects/models.py:1256
 msgid ""
 "Indicates whether the reviewer marked the datapoint as impossible wrt. "
 "guidelines"
 msgstr ""
+"Indikerar om granskaren markerade datapunkten som omöjlig med hänsyn till. "
+"riktlinjer"
 
 #: projects/models.py:1268
 msgid "label relation"
-msgstr ""
+msgstr "etikettsrelation"
 
 #: projects/models.py:1269
 msgid "label relations"
-msgstr ""
+msgstr "etikettsrelationer"
 
 #: projects/models.py:1277
 msgid "relation cluster"
@@ -889,7 +916,7 @@ msgstr "relationskluster"
 
 #: projects/models.py:1340
 msgid "a project-specific user profile"
-msgstr ""
+msgstr "en projektspecifik användarprofil"
 
 #: projects/models.py:1341
 msgid "project specific user profiles"
@@ -901,9 +928,11 @@ msgstr "Du har slutfört denna uppgift"
 
 #: projects/jinja2/partials/_great_job.html:9
 msgid ""
-"Thank you for the participation, we are very grateful for your "
-"contribution to the research!"
+"Thank you for the participation, we are very grateful for your contribution "
+"to the research!"
 msgstr ""
+"Tack för ditt deltagande, vi är mycket tacksamma för ditt bidrag till "
+"forskningen!"
 
 #: projects/jinja2/partials/_navbar.html:17
 msgid "my projects"
@@ -931,7 +960,7 @@ msgstr "profil"
 
 #: projects/jinja2/partials/_navbar.html:72
 msgid "data explorer"
-msgstr ""
+msgstr "datautforskare"
 
 #: projects/jinja2/partials/_navbar.html:82
 msgid "admin"
@@ -947,21 +976,23 @@ msgstr "logga ut"
 
 #: projects/jinja2/partials/_no_data.html:6
 msgid "Unfortunately, we found no data to be annotated"
-msgstr ""
+msgstr "Tyvärr hittade vi inga uppgifter att annotera"
 
 #: projects/jinja2/partials/_no_data.html:8
 msgid "Please, contact the project responsible to sort things out."
-msgstr ""
+msgstr "Vänligen kontakta projektansvarig för att reda ut saker."
 
 #: projects/jinja2/partials/_open_projects.html:12
 msgid "Currently there are no more active open tasks!"
-msgstr ""
+msgstr "För närvarande finns det inga fler aktiva öppna uppgifter!"
 
 #: projects/jinja2/partials/_participations.html:12
 msgid ""
-"Thank you for joining Textinator! You don't have any tasks yet, but you "
-"can join to one of the open tasks in the respective tab"
+"Thank you for joining Textinator! You don't have any tasks yet, but you can "
+"join to one of the open tasks in the respective tab"
 msgstr ""
+"Tack för att du gick med i Textinator! Du har inga uppgifter ännu, men du "
+"kan gå med i någon av de öppna uppgifterna på respektive flik"
 
 #: projects/jinja2/partials/_project.html:35
 msgid "to be published"
@@ -969,11 +1000,11 @@ msgstr "att bli publicerad"
 
 #: projects/jinja2/partials/_project.html:37
 msgid "expired"
-msgstr ""
+msgstr "utgånget"
 
 #: projects/jinja2/partials/_project.html:39
 msgid "finishes"
-msgstr ""
+msgstr "avslutas"
 
 #: projects/jinja2/partials/_project.html:58
 msgid "leave"
@@ -981,11 +1012,11 @@ msgstr "lämna"
 
 #: projects/jinja2/partials/_project.html:60
 msgid "join"
-msgstr ""
+msgstr "ansluta sig"
 
 #: projects/jinja2/partials/_quick_links.html:2
 msgid "quick links"
-msgstr ""
+msgstr "snabblänkar"
 
 #: projects/jinja2/partials/_quick_links.html:5
 msgid "create a new data source"
@@ -997,29 +1028,31 @@ msgstr "mina projekt (admin)"
 
 #: projects/jinja2/partials/_quick_links.html:7
 msgid "create a new project"
-msgstr ""
+msgstr "skapa ett nytt projekt"
 
 #: projects/jinja2/partials/_shared_projects.html:3
 msgid "recently shared"
-msgstr ""
+msgstr "nyligen delat"
 
 #: projects/jinja2/partials/_shared_projects.html:12
 msgid "previously shared"
-msgstr ""
+msgstr "tidigare delat"
 
 #: projects/jinja2/partials/_user_projects.html:12
 msgid ""
 "You have not created any projects so far. If you want to create a new "
 "project now, please click"
 msgstr ""
+"Du har inte skapat några projekt än så länge. Om du vill skapa ett nytt "
+"projekt nu, vänligen trycka"
 
 #: projects/jinja2/partials/_user_projects.html:12
 msgid "here"
-msgstr ""
+msgstr "här"
 
 #: projects/jinja2/partials/_view_button.html:2
 msgid "view"
-msgstr ""
+msgstr "se"
 
 #: projects/jinja2/partials/_welcome.html:2
 msgid "Welcome to Textinator!"
@@ -1028,11 +1061,11 @@ msgstr "Välkommen till Textinator!"
 #: projects/jinja2/partials/_welcome.html:6
 #: projects/jinja2/partials/_welcome.html:18
 msgid ""
-"Thank you for choosing Textinator as your annotation tool! We've got a "
-"bunch of resources to get you started:"
+"Thank you for choosing Textinator as your annotation tool! We've got a bunch"
+" of resources to get you started:"
 msgstr ""
-"Tack för att du har valt Textinator som ditt annoteringsverktyg! Här "
-"kommer några resurser för att hjälpa dig att börja:"
+"Tack för att du har valt Textinator som ditt annoteringsverktyg! Här kommer "
+"några resurser för att hjälpa dig att börja:"
 
 #: projects/jinja2/partials/_welcome.html:8
 #: projects/jinja2/partials/_welcome.html:20
@@ -1060,8 +1093,8 @@ msgstr "om du föredrar att utforska på egen hand, bara gå för det! "
 
 #: projects/jinja2/partials/_welcome.html:12
 msgid ""
-"On top of that, if you want to help developing Textinator further (which "
-"we would be immensely happy about!), here is the {}"
+"On top of that, if you want to help developing Textinator further (which we "
+"would be immensely happy about!), here is the {}"
 msgstr ""
 "Utöver det, om du skulle vilja hjälpa till att utveckla Textinator "
 "ytterligare (vilket vi skulle bli oerhört glada över!), här är {} "
@@ -1076,31 +1109,41 @@ msgstr "projektledareguide på YouTube"
 
 #: projects/jinja2/partials/_welcome.html:35
 msgid ""
-"Thank you for joining Textinator! Your annotation or evaluation efforts "
-"will most certainly help in advancing Natural Language Processing (NLP) "
-"beyond its current limits."
+"Thank you for joining Textinator! Your annotation or evaluation efforts will"
+" most certainly help in advancing Natural Language Processing (NLP) beyond "
+"its current limits."
 msgstr ""
+"Tack för att du gick med i Textinator! Dina annoteringar eller "
+"utvärderingsinsatser kommer med all säkerhet att hjälpa till att utveckla "
+"språkteknologi bortom dess nuvarande gränser."
 
 #: projects/jinja2/partials/_welcome.html:38
 msgid "If you are here to help <u>annotating</u>, here are some tips:"
 msgstr ""
+"Om du är här för att hjälpa till att <u>annotera</u>, här är några tips:"
 
 #: projects/jinja2/partials/_welcome.html:40
 msgid ""
-"If you are unfamiliar with Textinator or with NLP annotations in general,"
-" we have prepared {} to help you in starting this journey"
+"If you are unfamiliar with Textinator or with NLP annotations in general, we"
+" have prepared {} to help you in starting this journey"
 msgstr ""
+"Om du inte är bekant med Textinator eller med annoteraingar för "
+"språkteknologi i allmänhet, har vi förberett {} för att hjälpa dig att "
+"starta denna resa"
 
 #: projects/jinja2/partials/_welcome.html:40
 msgid "a couple of short YouTube videos"
-msgstr ""
+msgstr "ett par korta YouTube-filmer"
 
 #: projects/jinja2/partials/_welcome.html:41
 msgid ""
-"If you have signed up to take part in a specific annotation effort, "
-"please click on the {} in the menu above. If you don't see your project "
-"there, please contact your project manager."
+"If you have signed up to take part in a specific annotation effort, please "
+"click on the {} in the menu above. If you don't see your project there, "
+"please contact your project manager."
 msgstr ""
+"Om du har registrerat dig för att delta i ett specifikt annoteringsarbete, "
+"tryck gärna på {} i menyn ovan. Om du inte ser ditt projekt där, kontakta "
+"din projektledare."
 
 #: projects/jinja2/partials/_welcome.html:42
 msgid "\"My Tasks\" tab"
@@ -1108,11 +1151,15 @@ msgstr "fliken \"Mina uppgifter\""
 
 #: projects/jinja2/partials/_welcome.html:43
 msgid ""
-"If you have signed up out of curiosity and willingness to help, huge "
-"thank you! We are very grateful and honored to have you on board! Please "
-"click on the {} and see if we currently have any annotation efforts, open"
-" to general public."
+"If you have signed up out of curiosity and willingness to help, huge thank "
+"you! We are very grateful and honored to have you on board! Please click on "
+"the {} and see if we currently have any annotation efforts, open to general "
+"public."
 msgstr ""
+"Om du har anmält dig av nyfikenhet och vilja att hjälpa till, ett stort "
+"tack! Vi är mycket tacksamma och hedrade över att ha dig ombord! Klicka på "
+"{} och se om vi för närvarande har några anteckningar, öppna för "
+"allmänheten."
 
 #: projects/jinja2/partials/_welcome.html:43
 msgid "\"Open Tasks\" tab"
@@ -1121,21 +1168,29 @@ msgstr "fliken \"Öppna uppgifter\""
 #: projects/jinja2/partials/_welcome.html:43
 #: projects/jinja2/partials/_welcome.html:52
 msgid ""
-"We urge you to read the instructions carefully to check that you "
-"understand them and are indeed eligible to take part. Please contact the "
-"project responsible if any questions arise."
+"We urge you to read the instructions carefully to check that you understand "
+"them and are indeed eligible to take part. Please contact the project "
+"responsible if any questions arise."
 msgstr ""
+"Vi uppmanar dig att läsa instruktionerna noggrant för att kontrollera att du"
+" förstår dem och verkligen är berättigad att delta. Kontakta den "
+"projektansvarige om några frågor uppstår."
 
 #: projects/jinja2/partials/_welcome.html:48
 msgid "If you are here to help <u>evaluating</u>, here are some other tips:"
 msgstr ""
+"Om du är här för att hjälpa till att <u>utvärdera</u>, här är några andra "
+"tips:"
 
 #: projects/jinja2/partials/_welcome.html:50
 msgid ""
-"If you have signed up to take part in a specific evaluation effort, "
-"please click on the {} and see if your survey is ready If you don't see "
-"your survey, please contact your project manager."
+"If you have signed up to take part in a specific evaluation effort, please "
+"click on the {} and see if your survey is ready If you don't see your "
+"survey, please contact your project manager."
 msgstr ""
+"Om du har registrerat dig för att delta i en specifik utvärderingssatsning, "
+"tryck gärna på {} och se om din undersökning är klar. Om du inte ser din "
+"undersökning, kontakta din projektledare."
 
 #: projects/jinja2/partials/_welcome.html:51
 #: projects/jinja2/partials/_welcome.html:52
@@ -1144,9 +1199,11 @@ msgstr "fliken \"Undersökningar\""
 
 #: projects/jinja2/partials/_welcome.html:52
 msgid ""
-"If you have signed up out of curiosity, please click on the {} and see if"
-" there are any surveys open to general public."
+"If you have signed up out of curiosity, please click on the {} and see if "
+"there are any surveys open to general public."
 msgstr ""
+"Om du har registrerat dig av nyfikenhet, tryck gärna på {} och se om det "
+"finns några undersökningar som är öppna för allmänheten."
 
 #: projects/jinja2/partials/components/areas/actions.html:4
 msgid "actions"
@@ -1191,19 +1248,19 @@ msgstr "Vad är problemet med denna text?"
 
 #: projects/jinja2/partials/components/modals/flag.html:16
 msgid ""
-"Please describe any problems you experience, e.g. weird formatting, wrong"
-" sentence starts, empty text, etc."
+"Please describe any problems you experience, e.g. weird formatting, wrong "
+"sentence starts, empty text, etc."
 msgstr ""
 "Beskriv gärna problem som du upptäckte, t.ex., konstig formattering, "
 "felaktiga meningar, toma texter osv."
 
 #: projects/jinja2/partials/components/modals/guidelines.html:15
 msgid "No guidelines are provided"
-msgstr ""
+msgstr "Inga riktlinjer ges"
 
 #: projects/jinja2/partials/components/modals/guidelines.html:20
 msgid "Follow the UI intro tour"
-msgstr ""
+msgstr "Följ UI-introduktionen"
 
 #: projects/jinja2/partials/components/modals/guidelines.html:24
 msgid "project details"
@@ -1223,7 +1280,7 @@ msgstr "publicerades"
 
 #: projects/jinja2/partials/components/modals/guidelines.html:48
 msgid "will be expired"
-msgstr ""
+msgstr "kommer att löpa ut"
 
 #: static/scripts/labeler.js:2635
 msgid "stop editing"
@@ -1231,7 +1288,7 @@ msgstr "sluta redigera"
 
 #: static/scripts/labeler.js:2647
 msgid "editor"
-msgstr ""
+msgstr "redigerare"
 
 #: users/models.py:11
 msgid "profiles"
@@ -1243,11 +1300,11 @@ msgstr "föredraget språk"
 
 #: users/jinja2/users/settings.html:28 users/models.py:15
 msgid "fluent in"
-msgstr ""
+msgstr "flytande i"
 
 #: users/models.py:16
 msgid "Comma-separated list of language codes, compliant with RFC 5646"
-msgstr ""
+msgstr "Kommaseparerad lista över språkkoder, kompatibel med RFC 5646"
 
 #: users/jinja2/users/settings.html:42
 msgid "save"
@@ -1255,7 +1312,7 @@ msgstr "spara"
 
 #: users/jinja2/users/settings.html:47
 msgid "user details"
-msgstr ""
+msgstr "användarinformation"
 
 #~ msgid "Project-specific markers"
 #~ msgstr "Projektspecifika markörer"
@@ -1270,9 +1327,8 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid ""
-#~ "Minimum required number of markers "
-#~ "groups per unit (can't be more "
-#~ "than `size`)"
+#~ "Minimum required number of markers groups per unit (can't be more than "
+#~ "`size`)"
 #~ msgstr ""
 
 #~ msgid "Order of this marker in the marker group of a unit"
@@ -1300,9 +1356,8 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid ""
-#~ "Specify task types (if any) for "
-#~ "which this marker must be present "
-#~ "(avaiable only to admins)"
+#~ "Specify task types (if any) for which this marker must be present (avaiable "
+#~ "only to admins)"
 #~ msgstr ""
 
 #~ msgid "size of the textual context"
@@ -1327,12 +1382,10 @@ msgstr ""
 #~ msgstr "är fritextinmatning tilllåtet?"
 
 #~ msgid ""
-#~ "Indicates whether a marker should be "
-#~ "instantiated as a label or a "
-#~ "free-text input"
+#~ "Indicates whether a marker should be instantiated as a label or a free-text "
+#~ "input"
 #~ msgstr ""
-#~ "Indikerar huruvida en markör skulle "
-#~ "kunna instantieras som etikett eller var"
+#~ "Indikerar huruvida en markör skulle kunna instantieras som etikett eller var"
 #~ " tillgänglig för fritextinmatning"
 
 #~ msgid "All datasets must of the same language as the project"
@@ -1351,61 +1404,48 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid ""
-#~ "On top of that, if you want "
-#~ "to help developing Textinator further "
-#~ "(which we would be immensely happy "
-#~ "about!), check out"
+#~ "On top of that, if you want to help developing Textinator further (which we "
+#~ "would be immensely happy about!), check out"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you are unfamiliar with Textinator"
-#~ " or with NLP annotations in general,"
-#~ " we have prepared"
+#~ "If you are unfamiliar with Textinator or with NLP annotations in general, we"
+#~ " have prepared"
 #~ msgstr ""
 
 #~ msgid "to help you in starting this journey"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you have signed up to take "
-#~ "part in a specific annotation effort,"
-#~ " please check out"
+#~ "If you have signed up to take part in a specific annotation effort, please "
+#~ "check out"
 #~ msgstr ""
 
 #~ msgid "in the menu above"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you don't see your project "
-#~ "there, please contact your project "
-#~ "manager."
+#~ "If you don't see your project there, please contact your project manager."
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you have signed up out of "
-#~ "curiosity and willigness to help, huge"
-#~ " thank you! We are very grateful "
-#~ "and honored to have you on board!"
+#~ "If you have signed up out of curiosity and willigness to help, huge thank "
+#~ "you! We are very grateful and honored to have you on board!"
 #~ msgstr ""
 
 #~ msgid "Please check out"
 #~ msgstr ""
 
 #~ msgid ""
-#~ "and see if we currently have any"
-#~ " annotation efforts, open to general "
-#~ "public. We urge you to read the"
-#~ " instructions for the annotation task "
-#~ "carefully to check that you understand"
-#~ " them and are indeed eligible to "
-#~ "take part. Please contact the project"
-#~ " responsible if any questions arise."
+#~ "and see if we currently have any annotation efforts, open to general public."
+#~ " We urge you to read the instructions for the annotation task carefully to "
+#~ "check that you understand them and are indeed eligible to take part. Please "
+#~ "contact the project responsible if any questions arise."
 #~ msgstr ""
 
 #~ msgid ""
-#~ "If you have signed up to take "
-#~ "part in a specific evaluation effort,"
-#~ " please check out"
+#~ "If you have signed up to take part in a specific evaluation effort, please "
+#~ "check out"
 #~ msgstr ""
 
 #~ msgid "and see if your survey is ready"
@@ -1421,11 +1461,9 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid ""
-#~ "We urge you to read the "
-#~ "instructions carefully to check that you"
-#~ " are indeed eligible to take part."
-#~ " Please contact the responsible for "
-#~ "the survey if any questions arise."
+#~ "We urge you to read the instructions carefully to check that you are indeed "
+#~ "eligible to take part. Please contact the responsible for the survey if any "
+#~ "questions arise."
 #~ msgstr ""
 
 #~ msgid "step: {}"
@@ -1472,27 +1510,17 @@ msgstr ""
 
 #~ msgid ""
 #~ "\n"
-#~ "            Custom endpoint for the "
-#~ "Suggestions API (by default the one "
-#~ "from the marker template is used).\n"
-#~ ""
-#~ "            Activates only if suggestions "
-#~ "are enabled and the endpoint.\n"
+#~ "            Custom endpoint for the Suggestions API (by default the one from the marker template is used).\n"
+#~ "            Activates only if suggestions are enabled and the endpoint.\n"
 #~ "            "
 #~ msgstr ""
 
 #~ msgid ""
 #~ "\n"
-#~ "            Custom endpoint for the "
-#~ "Suggestions API (by default the one "
-#~ "from the marker template is used).\n"
-#~ ""
-#~ "            Activates only if suggestions "
-#~ "are enabled and the endpoint is "
-#~ "specified.\n"
+#~ "            Custom endpoint for the Suggestions API (by default the one from the marker template is used).\n"
+#~ "            Activates only if suggestions are enabled and the endpoint is specified.\n"
 #~ "            "
 #~ msgstr ""
 
 #~ msgid "points in total"
 #~ msgstr ""
-
