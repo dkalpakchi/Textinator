@@ -1,5 +1,7 @@
 services:
   web:
+    build: 
+      dockerfile: Dockerfile.dev
     volumes:
       - .:/home/tt/Textinator/
     env_file:

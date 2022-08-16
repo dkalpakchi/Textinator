@@ -1353,4 +1353,3 @@ class UserProfile(CommonModel):
     def __str__(self):
         return self.user.username
 
-
