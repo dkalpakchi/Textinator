@@ -601,7 +601,7 @@
         this.selectorArea = this.textArea.querySelector('.selector');
         this.textLabelsArea = this.taskArea.querySelector('#textLabels');
         resetTextHTML = this.selectorArea == null ? "" : this.selectorArea.innerHTML;
-        resetText = this.getContextText();
+        resetText = this.getContextText(true);
         this.allowSelectingLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-select') == 'true';
         this.disableSubmittedLabels = this.markersArea == null ? false : this.markersArea.getAttribute('data-disable') == 'true';
         var repr = document.querySelector('#relationRepr');
@@ -626,9 +626,13 @@
           }
         })
       },
-      getContextText: function() {
+      getContextText: function(forPresentation) {
+        if (forPresentation === undefined) {
+          forPresentation = true;
+        }
+
         showExtraElements(this.selectorArea, false);
-        var ct = this.selectorArea == null ? "" : this.selectorArea.innerText.trim()
+        var ct = this.selectorArea == null ? "" : (forPresentation ? this.selectorArea.innerText.trim() : this.selectorArea.textContent.trim())
         showExtraElements(this.selectorArea, true);
         return ct;
       },
@@ -668,7 +672,8 @@
             }
           }, false);
 
-          var deselectActionBtn = this.actionsArea.querySelector("#deselectAllMarkers");
+          if (utils.isDefined(this.actionsArea))
+            var deselectActionBtn = this.actionsArea.querySelector("#deselectAllMarkers");
 
           if (utils.isDefined(deselectActionBtn))
             deselectActionBtn.addEventListener('click', function(e) {
@@ -809,13 +814,30 @@
             if (target.tagName == "LI" && target.getAttribute('data-mode') == "e") {
               var uuid = target.getAttribute('data-id'),
                   $editingBoard = $("#editingBoard"),
+                  $target = $(target),
                   url = $editingBoard.attr('data-url'),
-                  $list = $editingBoard.find('li');
+                  $list = $editingBoard.find('li'),
+                  clickedOnCurrent = $target.data('restored') !== undefined && $target.data('restored');
+
               $list.removeClass('is-hovered');
-              target.classList.add('is-hovered');
-              
-              if (utils.isDefined(uuid) && utils.isDefined(url)) {
-                control.restoreBatch(uuid, url);
+              if (clickedOnCurrent) {
+                $target.data('restored', false);
+                control.restoreOriginal();
+                control.clearBatch();
+              } else {
+                target.classList.add('is-hovered');
+                $list.each((i, n) => void(($(n).data('restored') !== undefined) && $(n).data('restored', false)));
+                // The code above is a shorthand for this code below. Note that `void` is necessary to force expression to be evaluated
+                // and return `undefined` at the end.
+                // $list.each(function(i, n) {
+                //   if ($(n).data('restored') !== undefined) {
+                //     $(n).data('restored', false);
+                //   }
+                // });
+                if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                  control.restoreBatch(uuid, url);
+                }
+                $target.data('restored', true);
               }
             }
           });
@@ -2201,6 +2223,7 @@
               'uuid': uuid
             },
             success: function(d) {
+              control.clearBatch();
               control.postSubmitHandler();
 
               chunks = [];
@@ -2354,6 +2377,16 @@
           });
         }
       },
+      clearBatch: function() {
+        $(this.markersArea).find('input[type="text"]').each(function(i, x) { 
+          x.removeAttribute('data-h');
+          x.value = '';
+        });
+        $(this.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) {
+          x.removeAttribute('data-h');
+          x.value = '';
+        });
+      },
       restoreOriginal: function() {
         editingBatch = undefined;
         if (utils.isDefined(originalConfig)) {
@@ -2377,7 +2410,7 @@
   $(document).ready(function() {
     labelerModule.init();
     
-    // window.lm = labelerModule;
+    window.lm = labelerModule;
 
     /**
      * Labeler plugins
@@ -2450,7 +2483,7 @@
       var inputFormData = $inputForm.serializeObject();
 
       // if there's an input form field, then create input_context
-      inputFormData['context'] = labelerModule.getContextText();
+      inputFormData['context'] = labelerModule.getContextText(false);
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());
 
@@ -2559,7 +2592,7 @@
           },
           error: function() {
             console.log("ERROR!")
-            el.removeClass('is-loading');
+            $el.removeClass('is-loading');
             $button.attr('disabled', false);
           }
         })
@@ -2646,8 +2679,7 @@
           $target.append($("<span class='icon'><i class='fas fa-edit'></i></span>"));
           $target.append($("<span>" + utils.title(django.gettext("editor")) + "</span>"));
           labelerModule.restoreOriginal();
-          $(labelerModule.markersArea).find('input[type="text"]').each(function(i, x) { $(x).val(''); });
-          $(labelerModule.markerGroupsArea).find('#markerGroups input[type="text"]').each(function(i, x) { $(x).val('') });
+          labelerModule.clearBatch();
         }
       }
     });

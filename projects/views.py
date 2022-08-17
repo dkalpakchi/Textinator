@@ -328,6 +328,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 
         dp_info = proj.data(u)
+        print(dp_info.to_json())
 
         logs = None
         if dp_info.source_id:
@@ -350,18 +351,17 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                         is_submitted=False, is_skipped=False
                     )   
             else:
-                try:
+                if proj.auto_text_switch:
                     DataAccessLog.objects.get_or_create(
                         user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
                         is_submitted=False, is_skipped=False
                     )
-                except DataAccessLog.MultipleObjectsReturned:
-                    alogs = DataAccessLog.objects.filter(
+                else:
+                    print("HERE")
+                    DataAccessLog.objects.get_or_create(
                         user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
-                        is_submitted=False, is_skipped=False
-                    ).order_by('-dt_created').all()
-                    for al in alogs[1:]:
-                        al.delete()
+                        is_skipped=False
+                    )
 
             try:
                 logs = DataAccessLog.objects.filter(user=u, project=proj, datasource=d, is_submitted=True).count()
@@ -631,9 +631,8 @@ def new_article(request, proj):
                     user=request.user, project=project,
                     datasource=data_source, datapoint=str(dp_id), is_skipped=False
                 )
-                if not log.is_submitted:
-                    log.is_skipped = True
-                    log.save()
+                log.is_skipped = True
+                log.save()
             except DataAccessLog.DoesNotExist:
                 DataAccessLog.objects.create(
                     user=request.user, project=project,
@@ -641,17 +640,18 @@ def new_article(request, proj):
                     is_submitted=False, is_skipped=True
                 )
 
-    dp_info = project.data(request.user)
+    dp_info = project.data(request.user, True)
     request.session['dp_info_{}'.format(proj)] = dp_info.to_json()
 
     if dp_info.is_empty:
         text = render_to_string('partials/_great_job.html')
     else:
         data_source = DataSource.objects.get(pk=dp_info.source_id)
-        if batch_info.project.sampling_with_replacement:
+        if project.sampling_with_replacement:
             DataAccessLog.objects.get_or_create(
                 user=request.user, datapoint=str(dp_info.id), 
-                project=project, datasource=data_source
+                project=project, datasource=data_source,
+                is_submitted=False, is_skipped=False
             )
         else:
             # log the new one

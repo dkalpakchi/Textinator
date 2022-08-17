@@ -31,7 +31,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "format": "textarea"
+            "format": "textarea",
           }
         }
       }

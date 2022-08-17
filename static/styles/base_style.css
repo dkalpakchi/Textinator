@@ -262,7 +262,7 @@ pre {
 
 
 textarea {
-  resize: none;
+  resize: vertical;
 }
 
 .text {

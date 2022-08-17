@@ -445,7 +445,7 @@ class Project(CommonModel):
                 proj_id=self.pk
             )
 
-    def data(self, user):
+    def data(self, user, force_switch=False):
         """
         Main method for getting data from the data sources and keeping track of who should annotate what.
 
@@ -470,7 +470,8 @@ class Project(CommonModel):
         log = DataAccessLog.objects.filter(user=user, project=self, is_submitted=False, is_skipped=False).first()
         log2 = DataAccessLog.objects.filter(user=user, project=self, is_submitted=True, is_skipped=False).order_by('-dt_updated').first()
         
-        if log2 and not self.auto_text_switch:
+        if log2 and not self.auto_text_switch and not force_switch:
+            print("MS")
             # Required manual switching --> show the same data source until the annotator requested a new text explicitly
             if log:
                 log.delete()
@@ -483,6 +484,7 @@ class Project(CommonModel):
                 log2.flags = "manual switching: invalid datasource"
                 log2.save()
         elif log:
+            print("AS")
             # Auto switching
             if log.datasource in self.datasources.all():
                 dp_info = self.get_dp_from_log(log, user)
