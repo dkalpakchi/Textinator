@@ -392,6 +392,9 @@ class Project(CommonModel):
     is_peer_reviewed = models.BooleanField(_("should the annotations be peer reviewed?"), default=False)
     allow_selecting_labels = models.BooleanField(_("should selecting the labels be allowed?"), default=False)
     disable_submitted_labels = models.BooleanField(_("should submitted labels be disabled?"), default=True)
+    auto_text_switch = models.BooleanField(_("should annotation texts switch automatically?"), default=True,
+        help_text=_("""Automatic mode involves showing a new text on page refresh if at least one annotation was made on it (default).
+                       If this setting is turned off, the annotator only gets a new text when they choose to click on the 'Get new text' button."""))
     max_markers_per_input = models.PositiveIntegerField(_("maximal number of markers per input"), null=True, blank=True) # TODO: obsolete?
     has_intro_tour = models.BooleanField(_("should the project include intro tour?"), default=False,
         help_text=_("WARNING: Intro tours are currently in beta"))
@@ -426,6 +429,22 @@ class Project(CommonModel):
         """
         return self.markervariant_set.exclude(unit=None).order_by('anno_type')
 
+    def get_dp_from_log(self, log, user):
+        ds_def = log.datasource
+        source_cls = DataSource.type2class(ds_def.source_type)
+        spec = json.loads(ds_def.spec.replace('\r\n', ' ').replace('\n', ' '))
+        spec['username'] = user.username
+        ds_instance = source_cls(spec)
+        dp_id = log.datapoint
+        if ds_instance[dp_id] is not None:
+            return DatapointInfo(
+                dp_id=dp_id,                                   # the point's id in the datasource
+                text=ds_def.postprocess(ds_instance[dp_id]),   # a post-processed random datapoint from the chosen dataset
+                ds=ds_instance,                                # instantiated DataSource of a specific type
+                ds_def=ds_def,                                 # DataSource
+                proj_id=self.pk
+            )
+
     def data(self, user):
         """
         Main method for getting data from the data sources and keeping track of who should annotate what.
@@ -434,6 +453,7 @@ class Project(CommonModel):
 
         - If the annotator has previously requested a datapoint, but neither did any annotation, nor requested a new one, 
           show the very same datapoint again. Otherwise, proceed.
+        - If the annotator did some annotation and the auto text switch is off, show the very same text again. Otherwise, proceed
         - If sampling with replacement is turned off, exclude the previously annotated data. 
         - If disjoint annotation is turned on, then all previously annotated datapoints (by anyone) should be excluded, 
           so that the sets of annotations for each annotator are disjoint. 
@@ -448,24 +468,28 @@ class Project(CommonModel):
             DatapointInfo: The instance holding the information about the datapoint to be annotated
         """
         log = DataAccessLog.objects.filter(user=user, project=self, is_submitted=False, is_skipped=False).first()
-        if log:
+        log2 = DataAccessLog.objects.filter(user=user, project=self, is_submitted=True, is_skipped=False).order_by('-dt_updated').first()
+        
+        if log2 and not self.auto_text_switch:
+            # Required manual switching --> show the same data source until the annotator requested a new text explicitly
+            if log:
+                log.delete()
+
+            if log2.datasource in self.datasources.all():
+                dp_info = self.get_dp_from_log(log2, user)
+                if dp_info: return dp_info
+            else:
+                log2.is_skipped = True
+                log2.flags = "manual switching: invalid datasource"
+                log2.save()
+        elif log:
+            # Auto switching
             if log.datasource in self.datasources.all():
-                ds_def = log.datasource
-                source_cls = DataSource.type2class(ds_def.source_type)
-                spec = json.loads(ds_def.spec.replace('\r\n', ' ').replace('\n', ' '))
-                spec['username'] = user.username
-                ds_instance = source_cls(spec)
-                dp_id = log.datapoint
-                if ds_instance[dp_id] is not None:
-                    return DatapointInfo(
-                        dp_id=dp_id,                                   # the point's id in the datasource
-                        text=ds_def.postprocess(ds_instance[dp_id]),   # a post-processed random datapoint from the chosen dataset
-                        ds=ds_instance,                                # instantiated DataSource of a specific type
-                        ds_def=ds_def,                                 # DataSource
-                        proj_id=self.pk
-                    )
+                dp_info = self.get_dp_from_log(log, user)
+                if dp_info: return dp_info
             else:
                 log.is_skipped = True
+                log.flags = "auto switching: invalid datasource"
                 log.save()
 
         dp_taboo = defaultdict(set)

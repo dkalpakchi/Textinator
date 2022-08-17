@@ -51,7 +51,9 @@ If you have a server with a domain that hosts multiple applications, but you're 
 ### Database backup
 We recommend to schedule a cron job to make a backup of the database. For example, making a backup every day at 16:00 would translate into the following cron task (assuming you want to save your dumps into `/home/your_user/textinator_dumps` folder of your server):
 
-`0 16 * * * docker exec -i textinator_db_1 pg_dump textinator > /home/your_user/textinator_dumps/$(date +%s).sql`
+`0 16 * * * docker exec -i textinator_db_1 pg_dump -U textinator > /home/your_user/textinator_dumps/$(date +\%s).sql`
+
+**NOTE** Escaping (putting `\` before) `%s` is mandatory, since cron interprets `%` as a newline character otherwise.
 
 ## Running in development mode
 The development version will run the Django's built-in development server and will also map your local folder to that inside the Docker container, so that the changes in the code are immediately reflected without the need to restart the container. You can start Textinator in the dev mode using the following command.
