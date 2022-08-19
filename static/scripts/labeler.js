@@ -57,8 +57,7 @@
         resetTextHTML = null,  // the HTML of the loaded article
         resetText = null,    // the text of the loaded article
         pluginsToRegister = 0,
-        originalConfig = undefined,
-        submittableChunks = []; // chunks to be submitted
+        originalConfig = undefined;
 
     function containsIdentical(arr, obj) {
       for (var i in arr) {
@@ -2078,7 +2077,9 @@
               ) : {},
             longTextMarkers = utils.isDefined(this.markersArea) ? utils.serializeHashedObject($(this.markersArea).find('textarea')) : {},
             submittableChunks = chunks.filter((c) => c.submittable );
-        
+
+        console.log(submittableChunks);
+
         // add plugin info to chunks
         var sharedLabelPlugins = {},
             sharedRelPlugins = {};
@@ -2155,14 +2156,13 @@
         activeLabels = 0;
 
         chunks.forEach(function(c) {
-          if (submittableChunks.includes(c)) {
+          if (c.submittable) {
             // means already submitted, so mark as such
             c.submittable = false;
             c.batch = batch;
             c.id = null;
           }
         });
-        submittableChunks = [];
       },
       resetArticle: function() {
         this.selectorArea.innerHTML = resetTextHTML;

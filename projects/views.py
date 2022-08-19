@@ -357,7 +357,6 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                         is_submitted=False, is_skipped=False
                     )
                 else:
-                    print("HERE")
                     DataAccessLog.objects.get_or_create(
                         user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
                         is_skipped=False

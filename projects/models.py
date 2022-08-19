@@ -941,9 +941,9 @@ class DataAccessLog(CommonModel):
         help_text=_("As stored in the original dataset"))
     flags = models.TextField(_("flags"), default="", blank=True,
         help_text=_("Additional information provided by the annotator"))
-    is_submitted = models.BooleanField(_("is submitted?"),
+    is_submitted = models.BooleanField(_("is submitted?"), default=False,
         help_text=_("Indicates whether the datapoint was successfully submitted by an annotator"))
-    is_skipped = models.BooleanField(_("is skipped?"),
+    is_skipped = models.BooleanField(_("is skipped?"), default=False,
         help_text=_("Indicates whether the datapoint was skipped by an annotator"))
 
 

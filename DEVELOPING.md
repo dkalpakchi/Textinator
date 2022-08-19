@@ -24,7 +24,7 @@ First run steps 1 to 4. Next if you need to update your translations, **skip ste
 ### Working with dynamic translations
 We're using django-model-translation for this purpose and the workflow is as follows:
 1. Add your model and desirable fields for translation in `projects/translation.py` and register it in the same file.
-2. Make & apply migrations by running
+2. Make & apply migrations by running (**from the root folder with Textinator code**)
 ```
 docker-compose exec web python /home/tt/Textinator/manage.py makemigrations projects
 docker-compose exec web python /home/tt/Textinator/manage.py migrate projects --noinput
