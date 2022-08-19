@@ -29,9 +29,11 @@
               <span>Open metadata</span>
             </a>
           {% endif %}
-          <a id="deselectAllMarkers" class="no-decoration button">
-            Deselect all markers
-          </a>
+          {% if project.allow_selecting_labels %}
+            <a id="deselectAllMarkers" class="no-decoration button">
+              Deselect all markers
+            </a>
+          {% endif %}
         </div>
       </form>
     </div>

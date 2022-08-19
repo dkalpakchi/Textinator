@@ -328,7 +328,6 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         u_profile = UserProfile.objects.filter(user=u, project=proj).get()
 
         dp_info = proj.data(u)
-        print(dp_info.to_json())
 
         logs = None
         if dp_info.source_id:
