@@ -273,6 +273,9 @@ class Exporter:
 
                     if inputs.count():
                         ann["inputs"] = [i.to_minimal_json() for i in inputs.all()]
+
+                    if self.__config["include_usernames"]:
+                        ann["annotator"] = batch.user.username
                     
                     resp[context_id]["annotations"].append(ann)
 
