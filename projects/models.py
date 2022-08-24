@@ -1,5 +1,6 @@
 import random
 import time
+import sys
 import re
 import string
 import json
@@ -370,7 +371,15 @@ class Project(CommonModel):
         help_text=_("Reminders for essential parts of guidelines (keep them short and on point)"))
     temporary_message = HTMLField(_("temporary message"), null=True, blank=True,
         help_text=_("A temporary message for urgent communication with annotators (e.g., about maintenance work)"))
-    sampling_with_replacement = models.BooleanField(_("should data be sampled with replacement?"), default=False)
+    data_order = models.CharField(
+        _("in what order should the data be presented?"), max_length=2, default='r',
+        choices=[
+            ('os', 'Specified order (sequential datasets)'),
+            ('op', 'Specified order (parallel datasets)'),
+            ('r', 'Random order (without replacement)'),
+            ('rr', 'Random order (with replacement)')
+        ]
+    )
     disjoint_annotation = models.BooleanField(_("should each annotator work with their own part of data?"), default=False)
     show_datasource_identifiers = models.BooleanField(_("should data source identifiers be shown?"), default=False)
     task_type = models.CharField(_("type of the annotation task"), max_length=10, choices=settings.TASK_TYPES)
@@ -413,6 +422,38 @@ class Project(CommonModel):
         super().__init__(*args, **kwargs)
         self._original_task_type = self.task_type
 
+    def is_sampled(self, replacement='*'):
+        """
+        Check if the data order is randomly sampled
+        
+        Args:
+            replacement (str or bool, optional): indicates whether to the check if sampling with replacement (True) or not (False)
+                                                 or that the kind is not important ('*', by default)
+        
+        Returns:
+            bool: Indicator of whether the data is to be sampled (optionally, with or without replacement)
+        """
+        if replacement == '*':
+            return self.data_order in ('rr', 'r')
+        else:
+            return self.data_order == ('rr' if replacement else 'r')
+
+    def is_ordered(self, parallel='*'):
+        """
+        Check if the data order is static
+        
+        Args:
+            parallel (str or bool, optional): indicates whether to check if the dataset order is parallel (True) or sequential (False)
+                                              or that the exact order is not important is not important ('*', by default)
+        
+        Returns:
+            bool: Indicator of whether the data is to be presented in a specified (optionally, with sequential or parallel dataset order)
+        """
+        if parallel == '*':
+            return self.data_order in ('os', 'op')
+        else:
+            return self.data_order == ('op' if parallel else 'os')
+
     @property
     def free_markers(self):
         """
@@ -444,6 +485,20 @@ class Project(CommonModel):
                 ds_def=ds_def,                                 # DataSource
                 proj_id=self.pk
             )
+
+    def instantiate_source(self, datasource):
+        source_cls = DataSource.type2class(datasource.source_type)
+        if source_cls:
+            spec = json.loads(datasource.spec.replace('\r\n', ' ').replace('\n', ' '))
+            spec['username'] = self.author.username
+            ds_instance = source_cls(spec)
+            return {
+                'instance': ds_instance, 
+                'postprocess': datasource.postprocess,
+                'ds_pk': datasource.pk
+            }
+        else:
+            return None
 
     def data(self, user, force_switch=False):
         """
@@ -492,88 +547,160 @@ class Project(CommonModel):
                 log.flags = "auto switching: invalid datasource"
                 log.save()
 
-        dp_taboo = defaultdict(set)
-        if not self.sampling_with_replacement:
-            if self.disjoint_annotation:
-                # TODO: check for race conditions here, could 2 annotators still get the same text?
-                # meaning each user annotates whatever is not annotated
-                logs = DataAccessLog.objects.filter(project=self).all()
-            else:
-                # meaning each user annotates all texts
-                logs = DataAccessLog.objects.filter(project=self, user=user).all()
-            for log in logs:
-                dp_taboo[log.datasource.pk].add(log.datapoint)
-
         datasources = []
         for source in self.datasources.all():
-            source_cls = DataSource.type2class(source.source_type)
-            if source_cls:
-                spec = json.loads(source.spec.replace('\r\n', ' ').replace('\n', ' '))
-                spec['username'] = self.author.username
-                ds_instance = source_cls(spec)
-                datasources.append((ds_instance, source.postprocess, source.pk))
+            source_data = self.instantiate_source(source)
+            if source_data:
+                datasources.append(source_data)
 
         # take a random data point from data
         nds = len(datasources)
 
-        # TODO: introduce data source mixing strategies?
-        # TODO: choose a dataset with a prior inversely proportional to the number of datapoints in them?
-
-        # Currently we choose a dataset D_i with probability |D_i| / N,
-        # where N is the total number of datapoints across datasets
-        # then we choose a datapoint uniformly at random (by default)
-        # So each datapoint can be chosen uniformly at random:
-        # (|D_i| / N) * (1 / |D_i|) = 1 / N
-        sizes = [datasources[i][0].size() for i in range(nds)]
+        sizes = [datasources[i]['instance'].size() for i in range(nds)]
         data_exists = sum(sizes) > 0
+
         if data_exists:
-            priors = [sizes[i] / sum(sizes) for i in range(nds)]
-            priors_cumsum = [sum(priors[:i+1]) for i in range(len(priors))]
+            if self.is_sampled():
+                dp_taboo = defaultdict(set)
+                if self.is_sampled(replacement=False):
+                    if self.disjoint_annotation:
+                        # TODO: check for race conditions here, could 2 annotators still get the same text?
+                        # meaning each user annotates whatever is not annotated
+                        logs = DataAccessLog.objects.filter(project=self).all()
+                    else:
+                        # meaning each user annotates all texts
+                        logs = DataAccessLog.objects.filter(project=self, user=user).all()
+                    for log in logs:
+                        dp_taboo[log.datasource.pk].add(log.datapoint)
+            
+            
+                # TODO: introduce data source mixing strategies?
+                # TODO: choose a dataset with a prior inversely proportional to the number of datapoints in them?
 
-            rnd = random.random()
-            ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
+                # Currently we choose a dataset D_i with probability |D_i| / N,
+                # where N is the total number of datapoints across datasets
+                # then we choose a datapoint uniformly at random (by default)
+                # So each datapoint can be chosen uniformly at random:
+                # (|D_i| / N) * (1 / |D_i|) = 1 / N
+                priors = [sizes[i] / sum(sizes) for i in range(nds)]
+                priors_cumsum = [sum(priors[:i+1]) for i in range(len(priors))]
 
-            ds, postprocess, idx = datasources[ds_ind]
+                rnd = random.random()
+                ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
 
-            ds_ind_taboo, finished_all = set(), False
-            if len(dp_taboo[idx]) >= sizes[ds_ind]:
-                # try to select a new datasource that is not finished yet
-                while len(dp_taboo[idx]) >= sizes[ds_ind]:
-                    # means this datasource is done, add it to the taboo list
-                    ds_ind_taboo.add(ds_ind)
+                ds = datasources[ds_ind]['instance']
+                postprocess = datasources[ds_ind]['postprocess']
+                idx = datasources[ds_ind]['ds_pk']
 
-                    if len(ds_ind_taboo) >= nds:
-                        # means we're done
+                ds_ind_taboo, finished_all = set(), False
+                if len(dp_taboo[idx]) >= sizes[ds_ind]:
+                    # try to select a new datasource that is not finished yet
+                    while len(dp_taboo[idx]) >= sizes[ds_ind]:
+                        # means this datasource is done, add it to the taboo list
+                        ds_ind_taboo.add(ds_ind)
+
+                        if len(ds_ind_taboo) >= nds:
+                            # means we're done
+                            finished_all = True
+                            break
+
+                        while ds_ind in ds_ind_taboo:
+                            rnd = random.random()
+                            ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
+
+                        ds = datasources[ds_ind]['instance']
+                        postprocess = datasources[ds_ind]['postprocess']
+                        idx = datasources[ds_ind]['ds_pk']
+
+                if finished_all:
+                    return DatapointInfo(is_empty=True, proj_id=self.pk)
+                else:
+                    # get the id of the random datapoint and the datapoint itself
+                    dp_id, dp = ds.get_random_datapoint()
+
+                    if idx in dp_taboo:
+                        # get a random DP that is not in taboo list
+                        # NOTE: we stringify all datapoint ids for taboo for the sake of generality
+                        while str(dp_id) in dp_taboo[idx]:
+                            dp_id, dp = ds.get_random_datapoint()
+
+                    return DatapointInfo(
+                        dp_id=dp_id,                            # the point's id in the datasource
+                        text=postprocess(dp),                   # a post-processed random datapoint from the chosen dataset
+                        ds=ds,                                  # instantiated DataSource of a specific type
+                        ds_def=DataSource.objects.get(pk=idx),  # DataSource id
+                        proj_id=self.pk
+                    )
+            else:
+                # means the order is not random
+                last_log = DataAccessLog.objects.filter(user=user, project=self).order_by('-dt_updated').first()
+                is_parallel = self.is_ordered(parallel=True)
+
+                if last_log:
+                    for i, ss in enumerate(datasources):
+                        if ss['ds_pk'] == last_log.datasource.pk:
+                            break
+                    
+                    if i == nds: 
+                        i = 0
+                else:
+                    i = 0 - is_parallel
+
+                if is_parallel:
+                    # Parallel order of datasets, means we attempt to advance equally in all datasets
+                    # So it goes like this: d1, d2, d3, d1, d2, d3                    
+                    next_source_ind = (i+1) % nds
+                else:
+                    # Sequential order, means we exhaust one dataset first, then go the next one
+                    # So it goes like this: d1, d1, d1, d1, d2, d2, d2, d2, d3, d3, d3
+                    next_source_ind = i
+
+                init_source_ind = next_source_ind
+                next_source = datasources[next_source_ind]
+
+                try:
+                    last_next_source_log = DataAccessLog.objects.filter(
+                        user=user, project=self, datasource__pk=next_source['ds_pk']
+                    ).order_by('-dt_updated').first()
+                    if last_next_source_log:
+                        next_key = last_next_source_log.datapoint + 1
+                    else:
+                        next_key = 0
+                except DataAccessLog.DoesNotExist:
+                    next_key = 0
+
+                finished_all = False
+                while next_key >= next_source['instance'].size():
+                    next_source_ind = (next_source_ind+1) % nds
+                    next_source = datasources[next_source_ind]
+                    try:
+                        last_next_source_log = DataAccessLog.objects.filter(
+                            user=user, project=self, datasource__pk=next_source['ds_pk']
+                        ).order_by('-dt_updated').first()
+                        if last_next_source_log:
+                            next_key = last_next_source_log.datapoint + 1
+                        else:
+                            next_key = 0
+                    except DataAccessLog.DoesNotExist:
+                        next_key = 0
+
+                    if next_source_ind == init_source_ind:
+                        # means we made a circle, so all datasets are finished
                         finished_all = True
                         break
 
-                    while ds_ind in ds_ind_taboo:
-                        rnd = random.random()
-                        ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
-
-                    ds, postprocess, idx = datasources[ds_ind]
+                if finished_all:
+                    return DatapointInfo(is_empty=True, proj_id=self.pk)
+                else:
+                    return DatapointInfo(
+                        dp_id=next_key,
+                        text=next_source['postprocess'](next_source['instance'][next_key]),
+                        ds=next_source['instance'],
+                        ds_def=DataSource.objects.get(pk=next_source['ds_pk']),
+                        proj_id=self.pk
+                    )
         else:
             return DatapointInfo(no_data=True, proj_id=self.pk)
-
-        if finished_all:
-            return DatapointInfo(is_empty=True, proj_id=self.pk)
-        else:
-            # get the id of the random datapoint and the datapoint itself
-            dp_id, dp = ds.get_random_datapoint()
-
-            if idx in dp_taboo:
-                # get a random DP that is not in taboo list
-                # NOTE: we stringify all datapoint ids for taboo for the sake of generality
-                while str(dp_id) in dp_taboo[idx]:
-                    dp_id, dp = ds.get_random_datapoint()
-
-            return DatapointInfo(
-                dp_id=dp_id,                            # the point's id in the datasource
-                text=postprocess(dp),                   # a post-processed random datapoint from the chosen dataset
-                ds=ds,                                  # instantiated DataSource of a specific type
-                ds_def=DataSource.objects.get(pk=idx),  # DataSource id
-                proj_id=self.pk
-            )
         
     def get_profile_for(self, user):
         try:
@@ -935,8 +1062,8 @@ class DataAccessLog(CommonModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("user"))
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
-    datapoint = models.CharField(_("datapoint ID"), max_length=64,
-        help_text=_("As stored in the original dataset"))
+    datapoint = models.IntegerField(_("datapoint ID"),
+        help_text=_("As ordered in the original dataset"))
     flags = models.TextField(_("flags"), default="", blank=True,
         help_text=_("Additional information provided by the annotator"))
     is_submitted = models.BooleanField(_("is submitted?"), default=False,

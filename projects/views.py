@@ -337,7 +337,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                 print("DataSource does not exist")
                 pass
 
-            if proj.sampling_with_replacement:
+            if proj.is_sampled(replacement=True):
                 try:
                     dal = DataAccessLog.objects.get(
                         user=u, datapoint=str(dp_info.id), 
@@ -348,7 +348,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                         user=u, datapoint=str(dp_info.id), 
                         project=proj, datasource=d,
                         is_submitted=False, is_skipped=False
-                    )   
+                    )
             else:
                 if proj.auto_text_switch:
                     DataAccessLog.objects.get_or_create(
@@ -645,7 +645,7 @@ def new_article(request, proj):
         text = render_to_string('partials/_great_job.html')
     else:
         data_source = DataSource.objects.get(pk=dp_info.source_id)
-        if project.sampling_with_replacement:
+        if project.is_sampled(replacement=True) or project.is_ordered():
             DataAccessLog.objects.get_or_create(
                 user=request.user, datapoint=str(dp_info.id), 
                 project=project, datasource=data_source,
