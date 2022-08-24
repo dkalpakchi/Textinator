@@ -414,6 +414,12 @@ textarea {
   display: none !important;
 }
 
+.editing .message-body {
+  max-height: 450px;
+  -ms-overflow-y: scroll;
+      overflow-y: scroll;
+}
+
 .tabs span.text {
   align-items: center;
   color: #4a4a4a;
