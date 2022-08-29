@@ -9,8 +9,6 @@ from django.contrib.admin import SimpleListFilter, DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 
-from rangefilter.filter import DateRangeFilter, DateTimeRangeFilter
-
 import nested_admin
 from modeltranslation.admin import TranslationAdmin
 # from guardian.admin import GuardedModelAdmin
@@ -348,7 +346,7 @@ class LabelAdmin(CommonModelAdmin):
        'marker',
        'batch__user',
        'marker__project',
-       ('dt_created', DateTimeRangeFilter),
+       # ('dt_created', DateTimeRangeFilter),
        'undone'
     )
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
