@@ -176,7 +176,7 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
         """Return 7 labels for the x-axis."""
         logs = DataAccessLog.objects.filter(project__id=self.pk)
         submitted_logs = logs.filter(is_submitted=True)
-        skipped_logs = logs.filter(is_skipped=True)
+        skipped_logs = logs.filter(is_skipped=True, is_submitted=False)
         
         self.submitted_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
         self.skipped_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
@@ -565,6 +565,63 @@ def get_batch(request):
     else:
         return JsonResponse({})
 
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_annotations(request, proj):
+    cpk = request.GET.get('c', '')
+    upk = request.GET.get('u', '')
+
+    if cpk and upk:
+        try:
+            inputs = Input.objects.filter(
+                context_id=cpk,
+                marker__project_id=proj,
+                batch__user_id=upk
+            ).order_by('batch_id')
+            labels = Label.objects.filter(
+                context_id=cpk,
+                marker__project_id=proj,
+                batch__user_id=upk
+            ).order_by('batch_id')
+
+            annotations = defaultdict(lambda: defaultdict(list))
+
+            # linear scan
+            i, l = 0, 0
+            i_changed, l_changed = True, True
+            Ni, Nl = len(inputs), len(labels)
+            while i < Ni and l < Nl:
+                i_batch_id = inputs[i].batch_id
+                l_batch_id = labels[l].batch_id
+                
+                if i_changed:
+                    annotations[str(inputs[i].batch)]['inputs'].append(inputs[i].to_minimal_json())
+                    i_changed = False
+                if l_changed:
+                    annotations[str(labels[l].batch)]['labels'].append(labels[l].to_minimal_json())
+                    l_changed = False
+
+                if i_batch_id < l_batch_id:
+                    i += 1
+                    i_changed = True
+                elif i_batch_id > l_batch_id:
+                    l += 1
+                    l_changed = True
+                else:
+                    i += 1
+                    l += 1
+                    i_changed, l_changed = True, True
+
+            return JsonResponse({
+                "annotations": annotations
+            })
+        except Context.DoesNotExist:
+            return JsonResponse({
+                "error": "No such text"
+            }) 
+    else:
+        return JsonResponse({})
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -771,16 +828,20 @@ def data_explorer(request, proj):
             relations = relations.filter(batch__user=request.user)
 
         inputs = Input.objects.filter(marker__project=project)
-        batches = set(list(inputs.values_list('batch', flat=True).distinct())) | set(list(labels.values_list('batch', flat=True).distinct()))
+        batch_ids = set(list(inputs.values_list('batch', flat=True).distinct())) | set(list(labels.values_list('batch', flat=True).distinct()))
         total_relations = relations.count()
+
+        context_ids = set(list(inputs.values_list('context_id', flat=True).distinct())) | set(list(labels.values_list('context_id', flat=True).distinct()))
+        contexts = Context.objects.filter(id__in=context_ids).all()
 
         ctx = {
             'project': project,
             'total_labels': labels.count(),
             'total_relations': total_relations,
             'total_inputs': inputs.count(),
-            'total_batches': len(batches),
-            'flagged_datapoints': flagged_datapoints
+            'total_batches': len(batch_ids),
+            'flagged_datapoints': flagged_datapoints,
+            'contexts': contexts
         }
         return render(request, 'projects/data_explorer.html', ctx)
     else:

@@ -15,6 +15,7 @@ urlpatterns = [
     path('<proj>/explorer', views.data_explorer, name='data_explorer'),
     path('<proj>/export', views.export, name='data_exporter'),
     path('<proj>/explorer/inputs/<inp>/delete', views.async_delete_input, name='async_delete_input'),
+    path("<proj>/get/annotations", views.get_annotations, name="get_annotations"),
     path('profile/<username>/', views.profile, name='profile'),
     path('<pk>/', views.DetailView.as_view(), name='detail'),
     path("<pk>/charts/labels/lengths", views.label_lengths_chart_json, name="label_lengths_chart"),

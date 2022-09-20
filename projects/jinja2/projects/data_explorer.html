@@ -134,5 +134,44 @@
       </article>
     </div>
   {% endif %}
+
+  <div id="textSelector" data-url="{{url('projects:get_annotations', kwargs={'proj': project.pk})}}">
+    <div class="select is-fullwidth">
+      <select id="text">
+        <option value="-1">Select the text</option>
+        {% for c in contexts.all() %}
+          <option value="{{c.pk}}">{{c.content[:100]}}...</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div id="text"></div>
+  </div>
+
+  <div class="columns">
+    <div class="column">
+      <div class="select">
+        <select id='an1'>
+          <option value="-1">Select annotator 1</option>
+          {% for u in project.participants.all() %}
+            <option value="{{u.pk}}">{{u}}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div data-id="an1"></div>
+    </div>
+    <div class="column">
+      <div class="select">
+        <select id='an2'>
+          <option value="-1">Select annotator 2</option>
+          {% for u in project.participants.all() %}
+            <option value="{{u.pk}}">{{u}}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div data-id="an2"></div>
+    </div>
+  </div>
 </div>
 {% endblock %}
