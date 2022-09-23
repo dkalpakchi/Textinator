@@ -595,10 +595,15 @@ def get_annotations(request, proj):
                 l_batch_id = labels[l].batch_id
                 
                 if i_changed:
-                    annotations[str(inputs[i].batch)]['inputs'].append(inputs[i].to_minimal_json())
+                    annotations[str(inputs[i].batch)]['inputs'].append(
+                        inputs[i].to_minimal_json(include_color=True)
+                    )
+                    annotations[str(inputs[i].batch)]['created'] = inputs[i].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
                     i_changed = False
                 if l_changed:
-                    annotations[str(labels[l].batch)]['labels'].append(labels[l].to_minimal_json())
+                    annotations[str(labels[l].batch)]['labels'].append(
+                        labels[l].to_minimal_json(include_color=True)
+                    )
                     l_changed = False
 
                 if i_batch_id < l_batch_id:

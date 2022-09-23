@@ -12,6 +12,14 @@
           seen.add(key);
         return !isDuplicate;
       });
+    },
+    hex2rgb: function(hex) {
+      var m = hex.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+      return {
+        r: parseInt(m[1], 16),
+        g: parseInt(m[2], 16),
+        b: parseInt(m[3], 16)
+      };
     }
   };
 
@@ -62,28 +70,51 @@
     },
     createAnnotationElement: function(ann) {
       var dataTypes = ['inputs', 'labels'];
-      var table = document.createElement('table');
-      table.className = "table";
+      var container = document.createElement('div'),
+          header = document.createElement('header'),
+          headerPart = document.createElement('div'),
+          contentPart = document.createElement('div');
+      container.className = "card";
+      contentPart.className = "card-content";
+      header.className = "card-header";
+      headerPart.className = "card-header-title";
+      headerPart.innerText = ann.created;
+
+      header.appendChild(headerPart);
+      container.appendChild(header);
+
       for (var k in dataTypes) {
         if (utils.isDefined(ann[dataTypes[k]])) {
           for (var i = 0, len = ann[dataTypes[k]].length; i < len; i++) {
-            var markerCell = document.createElement('td'),
-                contentCell = document.createElement('td'),
-                inp = ann[dataTypes[k]][i],
-                tr = document.createElement('tr');
-            markerCell.innerText = inp.marker.name;
+            var marker = document.createElement('div'),
+                content = document.createElement('div'),
+                contentWrapper = document.createElement('div'),
+                inp = ann[dataTypes[k]][i];
+            contentWrapper.className = "content";
+
+            marker.innerText = inp.marker.name;
+            marker.className = "tag";
+            mColor = inp.marker.color;
+            marker.style.background = mColor;
+
+            rgb = utils.hex2rgb(mColor);
+            brightness = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
+            textColor = (brightness > 125) ? 'black' : 'white';
+            marker.style.color = textColor;
 
             if (dataTypes[k] == 'inputs') 
-              contentCell.innerText = inp.content;
+              content.innerText = inp.content;
             else
-              contentCell.innerText = inp.text;
-            tr.appendChild(markerCell);
-            tr.appendChild(contentCell);
-            table.appendChild(tr);
+              content.innerText = inp.text;
+
+            contentWrapper.appendChild(marker);
+            contentWrapper.appendChild(content);
+            contentPart.appendChild(contentWrapper);
           }
         }
       }
-      return table;
+      container.appendChild(contentPart);
+      return container;
     },
     populateAnnotations: function(annotator_key, annotations) {
       var ctx = this,

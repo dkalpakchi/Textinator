@@ -227,11 +227,11 @@ class Marker(CommonModel):
     def __str__(self):
         return self.name
 
-    def to_minimal_json(self, dt_format=None):
+    def to_minimal_json(self, dt_format=None, include_color=False):
         res = super(Marker, self).to_json(dt_format=dt_format)
-        res.update({
-            'name': self.name
-        })
+        res['name'] = self.name
+        if include_color:
+            res['color'] = self.color
         return res
 
     def to_json(self, dt_format=None):
@@ -962,8 +962,8 @@ class MarkerVariant(CommonModel):
     def __str__(self):
         return str(self.marker) + "<{}>".format(self.project.title)
 
-    def to_minimal_json(self):
-        res = self.marker.to_minimal_json()
+    def to_minimal_json(self, include_color=False):
+        res = self.marker.to_minimal_json(include_color=include_color)
         if self.export_name:
             res['name'] = self.export_name
         if self.order_in_unit:
@@ -1263,10 +1263,10 @@ class Input(CommonModel):
     def __str__(self):
         return truncate(self.content, 50)
 
-    def to_minimal_json(self, dt_format=None):
+    def to_minimal_json(self, dt_format=None, include_user=False, include_color=False):
         res = super(Input, self).to_json(dt_format=dt_format)
         res['content'] = self.content
-        res['marker'] = self.marker.to_minimal_json()
+        res['marker'] = self.marker.to_minimal_json(include_color=include_color)
         if self.marker.unit:
             res['group_order'] = self.group_order
         return res
@@ -1356,9 +1356,9 @@ class Label(CommonModel):
         res['context'] = self.context.content
         return res
 
-    def to_minimal_json(self, dt_format=None):
+    def to_minimal_json(self, dt_format=None, include_color=False):
         res = self.to_short_rel_json()
-        res['marker'] = self.marker.to_minimal_json()
+        res['marker'] = self.marker.to_minimal_json(include_color=include_color)
         if self.marker.unit:
             res['group_order'] = self.group_order
         return res
