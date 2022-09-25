@@ -20,6 +20,11 @@
         g: parseInt(m[2], 16),
         b: parseInt(m[3], 16)
       };
+    },
+    removeAllChildren: function(parentNode) {
+      while (parentNode.lastChild) {
+        parentNode.removeChild(parentNode.lastChild);
+      }
     }
   };
 
@@ -27,6 +32,7 @@
     init: function() {
       this.textWidget = document.querySelector('#textSelector');
       this.textSelector = this.textWidget.querySelector('select#text');
+      this.textContentArea = this.textWidget.querySelector('div#text');
       this.annotatorSelectors = {
         'an1': document.querySelector('select#an1'),
         'an2': document.querySelector('select#an2')
@@ -40,6 +46,15 @@
     },
     initEvents: function() {
       var ctx = this;
+      
+      this.textSelector.addEventListener('change', function(e) {
+        var target = e.target;
+
+        if (target.selectedIndex != 0) {
+          ctx.loadText(target.options[target.selectedIndex].value);
+        }
+      });
+
       for (var s in this.annotatorSelectors) {
         this.annotatorSelectors[s].addEventListener('change', function(e) {
           var target = e.target;
@@ -53,18 +68,37 @@
         }, false);
       }
     },
-    loadAnnotations: function(text_id, user_id, annotator_key) {
+    loadText: function(textId) {
       var ctx = this;
       $.ajax({
         method: "GET",
-        url: this.textWidget.getAttribute('data-url'),
+        url: this.textWidget.getAttribute('data-u1'),
         dataType: 'json',
         data: {
-          c: text_id,
-          u: user_id
+          c: textId
         },
         success: function(data) {
-          ctx.populateAnnotations(annotator_key, data.annotations);
+          for (var ann in ctx.annotationAreas) {
+            utils.removeAllChildren(ctx.annotationAreas[ann]);
+          }
+  
+          if (!data.hasOwnProperty("error") && data.hasOwnProperty("context"))
+            ctx.textContentArea.innerText = data.context
+        }
+      })
+    },
+    loadAnnotations: function(textId, userId, annotatorKey) {
+      var ctx = this;
+      $.ajax({
+        method: "GET",
+        url: this.textWidget.getAttribute('data-u2'),
+        dataType: 'json',
+        data: {
+          c: textId,
+          u: userId
+        },
+        success: function(data) {
+          ctx.populateAnnotations(annotatorKey, data.annotations);
         }
       })
     },
@@ -74,7 +108,7 @@
           header = document.createElement('header'),
           headerPart = document.createElement('div'),
           contentPart = document.createElement('div');
-      container.className = "card";
+      container.className = "card mb-2";
       contentPart.className = "card-content";
       header.className = "card-header";
       headerPart.className = "card-header-title";
@@ -116,9 +150,10 @@
       container.appendChild(contentPart);
       return container;
     },
-    populateAnnotations: function(annotator_key, annotations) {
+    populateAnnotations: function(annotatorKey, annotations) {
       var ctx = this,
-          annArea = this.annotationsArea[annotator_key];
+          annArea = this.annotationsArea[annotatorKey];
+      utils.removeAllChildren(annArea);
       for (var key in annotations) {
         var ann = annotations[key];
         annArea.appendChild(ctx.createAnnotationElement(ann));

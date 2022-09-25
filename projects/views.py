@@ -566,7 +566,27 @@ def get_batch(request):
         return JsonResponse({})
 
 @login_required
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET"])
+def get_context(request, proj):
+    cpk = request.GET.get('c', '')
+
+    if cpk:
+        try:
+            c = Context.objects.get(pk=cpk)
+            return JsonResponse({
+                "context": c.content
+            })
+        except Context.DoesNotExist:
+            return JsonResponse({
+                "error": "does_not_exist"
+            })
+    else:
+        return JsonResponse({
+            "error": "does_not_exist"
+        })
+
+@login_required
+@require_http_methods(["GET"])
 def get_annotations(request, proj):
     cpk = request.GET.get('c', '')
     upk = request.GET.get('u', '')
