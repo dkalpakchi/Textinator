@@ -122,11 +122,11 @@
               len += 1
             } else if ((prev.tagName == "SPAN" && prev.classList.contains("tag")) || LINE_ENDING_TAGS.includes(prev.tagName)) {
               // if there is a label, need to remove the possible relation label before calculating textContent
-              len += prev.innerText.trim().length;
+              len += prev.textContent.trim().length;
               if (LINE_ENDING_TAGS.includes(prev.tagName))
                 len += 1; // +1 because P is replaced by '\n'
             } else if (prev.tagName != 'SCRIPT' && prev.tagName != "BUTTON") {
-              len += prev.innerText.trim().length;
+              len += prev.textContent.trim().length;
             }
           } else if (prev.nodeType == 3 && prev.wholeText.trim()) {
             len += prev.length
@@ -135,13 +135,15 @@
         }
         return len;
       }
-
+      
       var selectorArea = document.querySelector('.selector');
 
       showExtraElements(selectorArea, false);
-
+      
+      // account for the same paragraph
       var textLength = getPrevLength(node.previousSibling);
 
+      // account for the previous text of the enclosing label
       var enclosingLabel = getEnclosingLabel(node);
       if (enclosingLabel != null && enclosingLabel != node)
         textLength += getPrevLength(enclosingLabel.previousSibling);
