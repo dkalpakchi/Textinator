@@ -332,8 +332,15 @@ textarea {
 
 .selector .tag {
   border: 2px solid transparent;
+  display: inline;
   position: relative;
   padding-left: 1.35em;
+  white-space: normal;
+}
+
+.selector .tag .delete {
+  margin-top: -0.2rem;
+  vertical-align: middle;
 }
 
 .selector .tag .tag {

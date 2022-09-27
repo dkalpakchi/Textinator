@@ -1064,7 +1064,10 @@
               chunk['range'].insertNode(markedSpan);
             }
 
-            var marked = chunk['range'].commonAncestorContainer.querySelectorAll('span.tag');
+            var marked = chunk['range'].commonAncestorContainer.querySelectorAll('span.tag'),
+                curLineHeight = parseFloat(
+                  window.getComputedStyle(marked[0], null).getPropertyValue("line-height")
+                );
             for (var i = 0; i < marked.length; i++) {
               var checker = marked[i],
                   elements = [];
@@ -1073,13 +1076,17 @@
                 checker = checker.parentNode;
               }
 
-              for (var j = 0, len = elements.length; j < len; j++) {
+              var len = elements.length;
+
+              elements[len-1].style.lineHeight = (curLineHeight + 3 * 5 + 10 * (len-1)) + "px";
+
+              for (var j = 0; j < len; j++) {
                 var pTopStr = elements[j].style.paddingTop,
                     pBotStr = elements[j].style.paddingBottom,
                     pTop = parseFloat(pTopStr.slice(0, -2)),
                     pBot = parseFloat(pBotStr.slice(0, -2)),
-                    npTop = 10 + 10 * j,
-                    npBot = 10 + 10 * j;
+                    npTop = 5 + 5 * j,
+                    npBot = 5 + 5 * j;
                 if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
                   elements[j].style.paddingTop = npTop + "px";
                 if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
@@ -2032,9 +2039,18 @@
             siblings = []; // do not care about further siblings
           }
 
-          for (var j = 0, len = elements.length; j < len; j++) {
-            var npTop = 10 + 10 * j,
-                npBot = 10 + 10 * j;
+          var curLineHeight = parseFloat(
+            window.getComputedStyle(checker, null).getPropertyValue("line-height")
+          );
+
+          var len = elements.length;
+          if (len > 0) {
+            elements[len-1][0].style.lineHeight = (curLineHeight + 3 * 5 + 10 * (len-1)) + "px";
+          }
+
+          for (var j = 0; j < len; j++) {
+            var npTop = 5 + 5 * j,
+                npBot = 5 + 5 * j;
             for (var i = 0, len2 = elements[j].length; i < len2; i++) {
               var pTopStr = elements[j][i].style.paddingTop,
                   pBotStr = elements[j][i].style.paddingBottom,
