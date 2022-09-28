@@ -609,6 +609,15 @@ label.error {
   font-size: 0.55rem;
 }
 
+.is-huge {
+  font-size: 10rem;
+}
+
+.icon.is-huge {
+  height: 10rem;
+  width: 10rem;
+}
+
 .tag.is-warndark {
   background-color: #946c00;
   color: #fff;
@@ -697,6 +706,11 @@ label.help.is-danger {
 .mdi.mdi-flip-h:before {
   -webkit-transform: scaleX(-1);
   transform: scaleX(-1);
+}
+
+.card .card-content .content.is-divided {
+  border-bottom: 1px solid #b5b5b5;
+  padding-bottom: 1.5em;
 }
 
 /** 

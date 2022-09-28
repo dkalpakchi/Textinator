@@ -604,38 +604,54 @@ def get_annotations(request, proj):
                 batch__user_id=upk
             ).order_by('batch_id')
 
-            annotations = defaultdict(lambda: defaultdict(list))
+            print(inputs)
+            print(labels)
 
-            # linear scan
-            i, l = 0, 0
-            i_changed, l_changed = True, True
+            annotations = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+           
             Ni, Nl = len(inputs), len(labels)
-            while i < Ni and l < Nl:
-                i_batch_id = inputs[i].batch_id
-                l_batch_id = labels[l].batch_id
-                
-                if i_changed:
-                    annotations[str(inputs[i].batch)]['inputs'].append(
-                        inputs[i].to_minimal_json(include_color=True)
-                    )
-                    annotations[str(inputs[i].batch)]['created'] = inputs[i].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
-                    i_changed = False
-                if l_changed:
-                    annotations[str(labels[l].batch)]['labels'].append(
-                        labels[l].to_minimal_json(include_color=True)
-                    )
-                    l_changed = False
 
-                if i_batch_id < l_batch_id:
-                    i += 1
-                    i_changed = True
-                elif i_batch_id > l_batch_id:
-                    l += 1
-                    l_changed = True
-                else:
-                    i += 1
-                    l += 1
-                    i_changed, l_changed = True, True
+            if Nl == 0 and Ni == 0:
+                return JsonResponse({})
+            elif Nl == 0:
+                for inp in inputs:
+                    annotations[str(inp.batch)][inp.group_order]['inputs'].append(inp.to_minimal_json(include_color=True))
+                    annotations[str(inp.batch)]['created'] = inp.batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+            elif Ni == 0:
+                for lab in labels:
+                    annotations[str(lab.batch)][lab.group_order]['labels'].append(lab.to_minimal_json(include_color=True))
+                    annotations[str(lab.batch)]['created'] = lab.batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+            else:
+                # linear scan
+                i, l = 0, 0
+                i_changed, l_changed = True, True
+                while i < Ni and l < Nl:
+                    i_batch_id = inputs[i].batch_id
+                    l_batch_id = labels[l].batch_id
+                    
+                    if i_changed:
+                        annotations[str(inputs[i].batch)][inputs[i].group_order]['inputs'].append(
+                            inputs[i].to_minimal_json(include_color=True)
+                        )
+                        annotations[str(inputs[i].batch)]['created'] = inputs[i].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+                        i_changed = False
+                    if l_changed:
+                        annotations[str(labels[l].batch)][labels[l].group_order]['labels'].append(
+                            labels[l].to_minimal_json(include_color=True)
+                        )
+                        annotations[str(labels[l].batch)]['created'] = labels[l].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+                        l_changed = False
+
+                    if i_batch_id < l_batch_id:
+                        i += 1
+                        i_changed = True
+                    elif i_batch_id > l_batch_id:
+                        l += 1
+                        l_changed = True
+                    else:
+                        i += 1
+                        l += 1
+                        i_changed, l_changed = True, True
 
             return JsonResponse({
                 "annotations": annotations

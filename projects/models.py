@@ -893,6 +893,8 @@ class MarkerVariant(CommonModel):
         same_marker_pk.sort()
         return "{}_{}".format(self.marker.code, same_marker_pk.index(self.pk))
 
+    def is_in_unit(self):
+        return bool(self.unit)
 
     def add_restrictions(self, restrictions):
         if type(restrictions) == list:

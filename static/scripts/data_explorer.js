@@ -102,20 +102,13 @@
         }
       })
     },
-    createAnnotationElement: function(ann) {
-      var dataTypes = ['inputs', 'labels'];
-      var container = document.createElement('div'),
-          header = document.createElement('header'),
-          headerPart = document.createElement('div'),
-          contentPart = document.createElement('div');
-      container.className = "card mb-2";
-      contentPart.className = "card-content";
-      header.className = "card-header";
-      headerPart.className = "card-header-title";
-      headerPart.innerText = ann.created;
-
-      header.appendChild(headerPart);
-      container.appendChild(header);
+    createAnnotationElement: function(ann, isDivided) {
+      var dataTypes = ['inputs', 'labels'],
+          groupContainer = document.createElement('div');
+      if (!utils.isDefined(isDivided)) isDivided = false;
+      groupContainer.className = "content";
+      
+      if (isDivided) groupContainer.className += " is-divided";
 
       for (var k in dataTypes) {
         if (utils.isDefined(ann[dataTypes[k]])) {
@@ -143,12 +136,37 @@
 
             contentWrapper.appendChild(marker);
             contentWrapper.appendChild(content);
-            contentPart.appendChild(contentWrapper);
+            groupContainer.appendChild(contentWrapper);
           }
         }
       }
-      container.appendChild(contentPart);
-      return container;
+      return groupContainer;
+    },
+    createAnnotationBatch: function(batch) {
+      var ctx = this;
+      var container = document.createElement('div'),
+          header = document.createElement('header'),
+          headerPart = document.createElement('div'),
+          contentPart = document.createElement('div');
+      container.className = "card mb-2";
+      contentPart.className = "card-content";
+      header.className = "card-header";
+      headerPart.className = "card-header-title";
+      headerPart.innerText = batch.created;
+
+      header.appendChild(headerPart);
+      container.appendChild(header);
+
+      var batchKeys = Object.keys(batch).filter((x) => x != "created"),
+          numBatchKeys = batchKeys.length;
+
+      for (var bi = 0; bi < numBatchKeys; bi++) {
+        contentPart.appendChild(ctx.createAnnotationElement(
+          batch[batchKeys[bi]], bi != numBatchKeys-1
+        ))
+      }
+      container.append(contentPart);
+      return container
     },
     populateAnnotations: function(annotatorKey, annotations) {
       var ctx = this,
@@ -156,7 +174,7 @@
       utils.removeAllChildren(annArea);
       for (var key in annotations) {
         var ann = annotations[key];
-        annArea.appendChild(ctx.createAnnotationElement(ann));
+        annArea.appendChild(ctx.createAnnotationBatch(ann));
       }
     }
   }
