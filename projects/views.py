@@ -604,9 +604,6 @@ def get_annotations(request, proj):
                 batch__user_id=upk
             ).order_by('batch_id')
 
-            print(inputs)
-            print(labels)
-
             annotations = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
            
             Ni, Nl = len(inputs), len(labels)
@@ -617,10 +614,16 @@ def get_annotations(request, proj):
                 for inp in inputs:
                     annotations[str(inp.batch)][inp.group_order]['inputs'].append(inp.to_minimal_json(include_color=True))
                     annotations[str(inp.batch)]['created'] = inp.batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+
+                    if request.user.is_superuser:
+                        annotations[str(inp.batch)]['id'] = inp.batch_id
             elif Ni == 0:
                 for lab in labels:
                     annotations[str(lab.batch)][lab.group_order]['labels'].append(lab.to_minimal_json(include_color=True))
                     annotations[str(lab.batch)]['created'] = lab.batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+
+                    if request.user.is_superuser:
+                        annotations[str(lab.batch)]['id'] = lab.batch_id
             else:
                 # linear scan
                 i, l = 0, 0
@@ -634,12 +637,16 @@ def get_annotations(request, proj):
                             inputs[i].to_minimal_json(include_color=True)
                         )
                         annotations[str(inputs[i].batch)]['created'] = inputs[i].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+                        if request.user.is_superuser:
+                            annotations[str(inputs[i].batch)]['id'] = inputs[i].batch_id
                         i_changed = False
                     if l_changed:
                         annotations[str(labels[l].batch)][labels[l].group_order]['labels'].append(
                             labels[l].to_minimal_json(include_color=True)
                         )
                         annotations[str(labels[l].batch)]['created'] = labels[l].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+                        if request.user.is_superuser:
+                            annotations[str(labels[l].batch)]['id'] = labels[l].batch_id
                         l_changed = False
 
                     if i_batch_id < l_batch_id:

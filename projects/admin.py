@@ -98,6 +98,7 @@ class UserProfileInline(CommonNestedStackedInline):
 
 
 class LabelInline(CommonStackedInline):
+    raw_id_fields = ('context',)
     readonly_fields = CommonStackedInline.readonly_fields + ['text']
     model = Label
     extra = 0
@@ -134,6 +135,7 @@ class RelationVariantInline(CommonNestedStackedInline):
 
 
 class InputInline(CommonStackedInline):
+    raw_id_fields = ('context',)
     model = Input
     extra = 0
 

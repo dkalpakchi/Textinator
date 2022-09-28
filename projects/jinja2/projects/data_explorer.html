@@ -13,89 +13,101 @@
 
 {% block content %}
 <div class="explorer">
-  <div class="container is-fluid">
-    <div>
-      <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
-      {% if project.author == user or project.shared_with(user) %}
-        <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-warning">Generate a PDF time report</a>
-      {% endif %}
-    </div>
-    <div class="mt-5 box">
-      <p class="title">Export settings</p>
-      <form>
-        <div class="field is-horizontal">
-          <div class="field-body">
-            <div class="field">
-              <div class="control">
-                <label class="checkbox">
-                  <input type="checkbox" name="consolidate_clusters">
-                  Consolidate clusters
-                </label>
-              </div>  
-            </div>
-            <div class="field">
-              <div class="control">
-                <label class="checkbox">
-                  <input type="checkbox" name="include_usernames">
-                  Include annotators' usernames
-                </label>
-              </div>    
-            </div>
+  <div>
+    <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
+    <a id="guidelinesButton" class="button is-success">{{ _("guidelines")|title }}</a>
+    {% if project.author == user or project.shared_with(user) %}
+      <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-success">Generate a PDF time report</a>
+    {% endif %}
+  </div>
+  <div class="mt-5 box">
+    <p class="title">Export data</p>
+    <form>
+      <div class="field is-horizontal">
+        <div class="field-body">
+          <div class="field">
+            <div class="control">
+              <label class="checkbox">
+                <input type="checkbox" name="consolidate_clusters">
+                Consolidate clusters
+              </label>
+            </div>  
+          </div>
+          <div class="field">
+            <div class="control">
+              <label class="checkbox">
+                <input type="checkbox" name="include_usernames">
+                Include annotators' usernames
+              </label>
+            </div>    
           </div>
         </div>
-        <a data-url="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
-      </form>
-    </div>
-    <div class="mt-5">
-      In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_datapoints.count()}} flagged text(s)
-    </div>
+      </div>
+      <a data-url="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>
+    </form>
   </div>
 
-  <script type="text/javascript" src="{{ static('highcharts/highcharts.js') }}"></script>
-  <script type="text/javascript" src="{{ static('highcharts/modules/no-data-to-display.js') }}"></script>
-  {% if project.author == user or project.shared_with(user) %}
-    <div class="container columns">
-      <div class="column">
-        <div id="labelLengthsChart" width="300" height="150"></div>
-        <script type="text/javascript">
-          Highcharts.setOptions({lang: {noData: "Not enough data to display"}})
-          $.get('{{ url("projects:label_lengths_chart", kwargs={"pk": project.pk}) }}', function(data) {
-            $("#labelLengthsChart").highcharts(data);
-          });
-        </script>
-      </div>
-      <div class="column">
-        <div id="userTimingChart" width="300" height="150"></div>
-        <script type="text/javascript">
-          $.get('{{ url("projects:user_timing_chart", kwargs={"pk": project.pk}) }}', function(data) {
-            $("#userTimingChart").highcharts(data);
-          });
-        </script>
-      </div>
+
+
+  <article id="statsCollapse" class="message">
+    <div class="message-header">
+      <span class="icon is-small mr-2">
+        <i class="fas fa-chart-bar"></i>
+      </span>
+      Annotation statistics
     </div>
-    <div class="container columns">
-      <div class="column">
-        <div id="userProgressChart" width="300" height="150"></div>
-        <script type="text/javascript">
-          $.get('{{ url("projects:user_progress_chart", kwargs={"pk": project.pk}) }}', function(data) {
-            $("#userProgressChart").highcharts(data);
-          });
-        </script>
+    <div class="message-body">
+      <div class="mt-3 mb-3">
+        In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_datapoints.count()}} flagged text(s)
       </div>
-      <div class="column">
-        <div id="datasourceSizeChart" width="300" height="150"></div>
-        <script type="text/javascript">
-          $.get('{{ url("projects:datasource_size_chart", kwargs={"pk": project.pk}) }}', function(data) {
-            data['series'][0]['showInLegend'] = false;
-            $("#datasourceSizeChart").highcharts(data);
-          });
-        </script>
-      </div>
+
+      <script type="text/javascript" src="{{ static('highcharts/highcharts.js') }}"></script>
+      <script type="text/javascript" src="{{ static('highcharts/modules/no-data-to-display.js') }}"></script>
+      {% if project.author == user or project.shared_with(user) %}
+        <div class="container columns">
+          <div class="column">
+            <div id="labelLengthsChart" width="300" height="150"></div>
+            <script type="text/javascript">
+              Highcharts.setOptions({lang: {noData: "Not enough data to display"}})
+              $.get('{{ url("projects:label_lengths_chart", kwargs={"pk": project.pk}) }}', function(data) {
+                $("#labelLengthsChart").highcharts(data);
+              });
+            </script>
+          </div>
+          <div class="column">
+            <div id="userTimingChart" width="300" height="150"></div>
+            <script type="text/javascript">
+              $.get('{{ url("projects:user_timing_chart", kwargs={"pk": project.pk}) }}', function(data) {
+                $("#userTimingChart").highcharts(data);
+              });
+            </script>
+          </div>
+        </div>
+        <div class="container columns">
+          <div class="column">
+            <div id="userProgressChart" width="300" height="150"></div>
+            <script type="text/javascript">
+              $.get('{{ url("projects:user_progress_chart", kwargs={"pk": project.pk}) }}', function(data) {
+                $("#userProgressChart").highcharts(data);
+              });
+            </script>
+          </div>
+          <div class="column">
+            <div id="datasourceSizeChart" width="300" height="150"></div>
+            <script type="text/javascript">
+              $.get('{{ url("projects:datasource_size_chart", kwargs={"pk": project.pk}) }}', function(data) {
+                data['series'][0]['showInLegend'] = false;
+                $("#datasourceSizeChart").highcharts(data);
+              });
+            </script>
+          </div>
+        </div>
+      {% endif %}
     </div>
-  {% endif %}
+  </article>
 
   {% if flagged_datapoints %}
-    <div class="container is-fluid mb-4">
+    <div class="mb-4">
       <article id="flaggedCollapse" class="message is-danger">
         <div class="message-header">
           <p>
@@ -135,21 +147,22 @@
     </div>
   {% endif %}
 
-  <div class="container is-fluid mb-4">
-    <div id="textSelector" data-u1="{{url('projects:get_context', kwargs={'proj': project.pk})}}" data-u2="{{url('projects:get_annotations', kwargs={'proj': project.pk})}}">
-      <div class="select is-fullwidth">
-        <select id="text">
-          <option value="-1">Select the text</option>
-          {% for c in contexts.all() %}
-            <option value="{{c.pk}}">{{c.content[:100]}}...</option>
-          {% endfor %}
-        </select>
+  <div class="mt5 box">
+    <p class="title">Compare annotations</p>
+    <div class="mb-4">
+      <div id="textWidget" data-u1="{{url('projects:get_context', kwargs={'proj': project.pk})}}" data-u2="{{url('projects:get_annotations', kwargs={'proj': project.pk})}}" {% if request.user.is_superuser %}data-ue="{{url('admin:projects_batch_change', kwargs={'object_id': "!!!"})}}"{% endif %}>
+          <div class="select is-fullwidth">
+          <select id="text">
+            <option value="-1">Select the text</option>
+            {% for c in contexts.all() %}
+              <option value="{{c.pk}}">{{c.content[:175]}}...</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="text"></div>
       </div>
-      <div id="text"></div>
     </div>
-  </div>
 
-  <div class="container is-fluid">
     <div class="columns">
       <div class="column">
         <div class="select is-fullwidth">
@@ -178,4 +191,6 @@
     </div>
   </div>
 </div>
+
+{% include 'partials/components/modals/guidelines.html' %}
 {% endblock %}

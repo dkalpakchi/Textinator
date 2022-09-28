@@ -112,7 +112,8 @@ pre {
   padding: 1.25rem 1.5rem 1.25rem 1.5rem;
 }
 
-.tabs li.is-pulled-right {
+.tabs li.is-pulled-right,
+.card-header .is-pulled-right {
   margin-left: auto;
 }
 

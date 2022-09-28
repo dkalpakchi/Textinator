@@ -25,19 +25,22 @@
       while (parentNode.lastChild) {
         parentNode.removeChild(parentNode.lastChild);
       }
+    },
+    resetSelect: function(sel) {
+      sel.selectedIndex = 0;
     }
   };
 
   var explorer = {
     init: function() {
-      this.textWidget = document.querySelector('#textSelector');
+      this.textWidget = document.querySelector('#textWidget');
       this.textSelector = this.textWidget.querySelector('select#text');
       this.textContentArea = this.textWidget.querySelector('div#text');
       this.annotatorSelectors = {
         'an1': document.querySelector('select#an1'),
         'an2': document.querySelector('select#an2')
       };
-      this.annotationsArea = {
+      this.annotationAreas = {
         'an1': document.querySelector('[data-id="an1"]'),
         'an2': document.querySelector('[data-id="an2"]')
       };
@@ -50,6 +53,8 @@
       this.textSelector.addEventListener('change', function(e) {
         var target = e.target;
 
+        utils.removeAllChildren(ctx.textContentArea);
+
         if (target.selectedIndex != 0) {
           ctx.loadText(target.options[target.selectedIndex].value);
         }
@@ -58,6 +63,8 @@
       for (var s in this.annotatorSelectors) {
         this.annotatorSelectors[s].addEventListener('change', function(e) {
           var target = e.target;
+
+          utils.removeAllChildren(ctx.annotationAreas[target.id]);
 
           if (target.selectedIndex != 0 && ctx.textSelector.selectedIndex != 0) {
             var userSelected = target.options[target.selectedIndex].value,
@@ -80,6 +87,7 @@
         success: function(data) {
           for (var ann in ctx.annotationAreas) {
             utils.removeAllChildren(ctx.annotationAreas[ann]);
+            utils.resetSelect(ctx.annotatorSelectors[ann]);
           }
   
           if (!data.hasOwnProperty("error") && data.hasOwnProperty("context"))
@@ -147,17 +155,35 @@
       var container = document.createElement('div'),
           header = document.createElement('header'),
           headerPart = document.createElement('div'),
+          headerText = document.createElement('span'),
           contentPart = document.createElement('div');
       container.className = "card mb-2";
       contentPart.className = "card-content";
       header.className = "card-header";
       headerPart.className = "card-header-title";
-      headerPart.innerText = batch.created;
+      headerText.innerText = batch.created;
+      headerPart.append(headerText);
 
       header.appendChild(headerPart);
+
+      if (ctx.textWidget.hasAttribute("data-ue") && batch.hasOwnProperty("id")) {
+        var editBatchButton = document.createElement('a'),
+            bicon = document.createElement('i'),
+            btext = document.createElement('span'),
+            url = ctx.textWidget.getAttribute("data-ue").replace("!!!", batch.id);
+        editBatchButton.href = url;
+        editBatchButton.className = "is-pulled-right";
+        editBatchButton.target = "_blank";
+        bicon.className = "fas fa-external-link-alt mr-1";
+        btext.innerText = "Edit";
+        editBatchButton.appendChild(bicon);
+        editBatchButton.appendChild(btext);
+        headerPart.appendChild(editBatchButton);
+      }
+
       container.appendChild(header);
 
-      var batchKeys = Object.keys(batch).filter((x) => x != "created"),
+      var batchKeys = Object.keys(batch).filter((x) => x != "created" && x != 'id'),
           numBatchKeys = batchKeys.length;
 
       for (var bi = 0; bi < numBatchKeys; bi++) {
@@ -170,8 +196,7 @@
     },
     populateAnnotations: function(annotatorKey, annotations) {
       var ctx = this,
-          annArea = this.annotationsArea[annotatorKey];
-      utils.removeAllChildren(annArea);
+          annArea = this.annotationAreas[annotatorKey];
       for (var key in annotations) {
         var ann = annotations[key];
         annArea.appendChild(ctx.createAnnotationBatch(ann));
@@ -192,6 +217,27 @@
       collapsible: true,
       active: false,
       icons: false,
+    });
+
+    $("#statsCollapse").accordion({
+      collapsible: true,
+      active: false,
+      icons: false,
+      heightStyle: 'content'
+    })
+
+    $('#guidelinesButton').on('click', function() {
+      $('.guidelines.modal').addClass('is-active');
+    });
+
+    $('.modal-close').on('click', function() {
+      $('.modal').removeClass('is-active');
+      // $('.countdown svg circle:last-child').trigger('cdAnimate');
+    });
+   
+    $('.modal-background').on('click', function() {
+      $('.modal').removeClass('is-active');
+      // $('.countdown svg circle:last-child').trigger('cdAnimate');
     });
 
     $('a[download]').on('click', function() {
