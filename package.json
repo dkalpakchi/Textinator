@@ -34,5 +34,9 @@
     "shepherd.js": "^3.1.0",
     "tippy.js": "^6.3.7",
     "video.js": "^7.18.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.24.0",
+    "prettier": "2.7.1"
   }
 }
