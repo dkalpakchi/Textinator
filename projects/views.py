@@ -95,10 +95,10 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         labels = Label.objects.filter(marker__project__id=self.pk, undone=False).order_by('dt_created').all()
         self.inputs_by_user = defaultdict(lambda: defaultdict(list))
         self.labels_by_user = defaultdict(lambda: defaultdict(list))
-        for i in inputs:
-            self.inputs_by_user[i.batch.user.username][str(i.batch)].append(i)
-        for l in labels:
-            self.labels_by_user[l.batch.user.username][str(l.batch)].append(l)
+        for inp in inputs:
+            self.inputs_by_user[inp.batch.user.username][str(inp.batch)].append(inp)
+        for lab in labels:
+            self.labels_by_user[lab.batch.user.username][str(lab.batch)].append(lab)
 
         timings = []
         for arr in [self.inputs_by_user, self.labels_by_user]:
@@ -142,15 +142,12 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
                 for u in arr:
                     ll = list(arr[u].items())
                     for b1, b2 in zip(ll[:len(ll)], ll[1:]):                            
-                        try:
-                            l1, l2 = b1[1][0], b2[1][0]
-                            if l1 and l2 and l1.dt_created and l2.dt_created:
-                                timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
-                                if timing > 0 and timing < 120:
-                                    pos = bisect.bisect(self.x_axis, timing)
-                                    data[self.p2i[u]][pos - 1] += 1
-                        except:
-                            pass
+                        l1, l2 = b1[1][0], b2[1][0]
+                        if l1 and l2 and l1.dt_created and l2.dt_created:
+                            timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
+                            if timing > 0 and timing < 120:
+                                pos = bisect.bisect(self.x_axis, timing)
+                                data[self.p2i[u]][pos - 1] += 1
             return data
         else:
             return []

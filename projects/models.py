@@ -130,7 +130,7 @@ class DataSource(CommonModel):
                 text = globals().get(method.helper, lambda x: x)(text)
         return text
 
-    def get(self, idx):
+    def __load_datasource(self, idx):
         source_cls = DataSource.type2class(self.source_type)
         if self.owner:
             spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
@@ -138,16 +138,14 @@ class DataSource(CommonModel):
             ds_instance = source_cls(spec)
         else:
             ds_instance = source_cls(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+        return ds_instance
+
+    def get(self, idx):
+        ds_instance = self.__load_datasource(idx)
         return ds_instance[idx]
 
     def size(self):
-        source_cls = DataSource.type2class(self.source_type)
-        if self.owner:
-            spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
-            spec['username'] = self.owner.username
-            ds_instance = source_cls(spec)
-        else:
-            ds_instance = source_cls(self.spec.replace('\r\n', ' ').replace('\n', ' '))
+        ds_instance = self.__load_datasource(idx)
         return ds_instance.size()
 
     def __str__(self):
@@ -501,6 +499,30 @@ class Project(CommonModel):
         else:
             return None
 
+    def __select_random_datasource(self, priors_cumsum):
+        rnd = random.random()
+        ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
+        return ds_ind
+
+    def __unpack_datasource(self, datasources, ds_ind):
+        ds = datasources[ds_ind]['instance']
+        postprocess = datasources[ds_ind]['postprocess']
+        idx = datasources[ds_ind]['ds_pk']
+        return ds, postprocess, idx
+
+    def __get_next_source_log(self, user, ds_pk):
+        try:
+            last_next_source_log = DataAccessLog.objects.filter(
+                user=user, project=self, datasource__pk=ds_pk
+            ).order_by('-dt_updated').first()
+            if last_next_source_log:
+                next_key = last_next_source_log.datapoint + 1
+            else:
+                next_key = 0
+        except DataAccessLog.DoesNotExist:
+            last_next_source_log, next_key = None, 0
+        return last_next_source_log, next_key
+
     def data(self, user, force_switch=False):
         """
         Main method for getting data from the data sources and keeping track of who should annotate what.
@@ -586,12 +608,8 @@ class Project(CommonModel):
                 priors = [sizes[i] / sum(sizes) for i in range(nds)]
                 priors_cumsum = [sum(priors[:i+1]) for i in range(len(priors))]
 
-                rnd = random.random()
-                ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
-
-                ds = datasources[ds_ind]['instance']
-                postprocess = datasources[ds_ind]['postprocess']
-                idx = datasources[ds_ind]['ds_pk']
+                ds_ind = self.__select_random_datasource(priors_cumsum)
+                ds, postprocess, idx = self.__unpack_datasource(datasources, ds_ind)
 
                 ds_ind_taboo, finished_all = set(), False
                 if len(dp_taboo[idx]) >= sizes[ds_ind]:
@@ -606,12 +624,9 @@ class Project(CommonModel):
                             break
 
                         while ds_ind in ds_ind_taboo:
-                            rnd = random.random()
-                            ds_ind = sum([priors_cumsum[i] <= rnd for i in range(len(priors_cumsum))])
+                            ds_ind = self.__select_random_datasource(priors_cumsum)
 
-                        ds = datasources[ds_ind]['instance']
-                        postprocess = datasources[ds_ind]['postprocess']
-                        idx = datasources[ds_ind]['ds_pk']
+                        ds, postprocess, idx = self.__unpack_datasource(datasources, ds_ind)
 
                 if finished_all:
                     return DatapointInfo(is_empty=True, proj_id=self.pk)
@@ -659,31 +674,17 @@ class Project(CommonModel):
                 init_source_ind = next_source_ind
                 next_source = datasources[next_source_ind]
 
-                try:
-                    last_next_source_log = DataAccessLog.objects.filter(
-                        user=user, project=self, datasource__pk=next_source['ds_pk']
-                    ).order_by('-dt_updated').first()
-                    if last_next_source_log:
-                        next_key = last_next_source_log.datapoint + 1
-                    else:
-                        next_key = 0
-                except DataAccessLog.DoesNotExist:
-                    next_key = 0
+                last_next_source_log, next_key = self.__get_next_source_log(
+                    user, next_source['ds_pk']
+                )
 
                 finished_all = False
                 while next_key >= next_source['instance'].size():
                     next_source_ind = (next_source_ind+1) % nds
                     next_source = datasources[next_source_ind]
-                    try:
-                        last_next_source_log = DataAccessLog.objects.filter(
-                            user=user, project=self, datasource__pk=next_source['ds_pk']
-                        ).order_by('-dt_updated').first()
-                        if last_next_source_log:
-                            next_key = last_next_source_log.datapoint + 1
-                        else:
-                            next_key = 0
-                    except DataAccessLog.DoesNotExist:
-                        next_key = 0
+                    last_next_source_log, next_key = self.__get_next_source_log(
+                        user, next_source['ds_pk']
+                    )
 
                     if next_source_ind == init_source_ind:
                         # means we made a circle, so all datasets are finished

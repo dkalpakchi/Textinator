@@ -55,7 +55,7 @@
 
         utils.removeAllChildren(ctx.textContentArea);
 
-        if (target.selectedIndex != 0) {
+        if (target.selectedIndex !== 0) {
           ctx.loadText(target.options[target.selectedIndex].value);
         }
       });

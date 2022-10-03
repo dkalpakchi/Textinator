@@ -2354,7 +2354,7 @@
                         if (utils.isDefined(minDistId)) {
                           var tagNodes = document.querySelector('span.tag[data-i="' + minDistId + '"]').childNodes;
                           textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
-                          if (numInnerLoops != 0 && utils.isDefined(sameLevelId)) {
+                          if (numInnerLoops !== 0 && utils.isDefined(sameLevelId)) {
                             for (var i = 0; i <= curLabelId; i++) {
                               if (numOverlapping < processed[i]["ov"]) {
                                 processed[i]["closed"] = true;

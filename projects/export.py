@@ -1,5 +1,4 @@
-import json
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from .models import *
 
@@ -20,13 +19,13 @@ def merge2cluster(group):
     }
 
 def group2hash(group):
-    if type(group) == list:
+    if isinstance(group, list):
         group = sorted(group, key=lambda x: x['first']['start'])
         return ";".join(["{}:{}:{}:{}:{}".format(
             x['type'], x['first']['start'], x['first']['end'],
             x['second']['start'], x['second']['end']
         ) for x in group])
-    elif type(group) == dict:
+    elif isinstance(group, dict):
         nodes = sorted(group['nodes'], key=lambda x: x['start'])
         return "{}:{}".format(group['type'], ";".join(["{},{}".format(x['start'], x['end']) for x in nodes]))
 
@@ -144,7 +143,7 @@ class Exporter:
     def _export_qa(self):
         inputs = Input.objects.filter(marker__project=self.__project).order_by('context_id')
 
-        cur_context_id, lab_id = None, 0
+        cur_context_id = None
         resp = []
         obj = None
         for inp in inputs.all():
@@ -154,7 +153,7 @@ class Exporter:
                 obj = {}
                 obj["context"] = inp.context.content
                 obj["annotations"] = []
-            
+
             ann = {}
             inp_marker = (inp.marker.export_name or inp.marker.name_en.lower() or inp.marker.name.lower()) if inp.marker else "question"
             ann[inp_marker] = inp.content

@@ -1,4 +1,3 @@
-import os
 import string
 import json
 from collections import defaultdict, OrderedDict
@@ -72,7 +71,7 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
         ctx = get_or_create_ctx(batch_info, ctx_cache)
 
         try:
-            if (not 'label' in chunk) or (type(chunk['label']) != str):
+            if (not 'label' in chunk) or (not isintance(chunk['label'], str)):
                 return (ctx_cache, label_cache), saved_labels
 
             chunk_label = chunk['label'].strip()

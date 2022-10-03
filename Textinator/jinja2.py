@@ -81,7 +81,7 @@ def lang_translated_name(code):
     return translation.get_language_info(str(code))['name_translated']
 
 def markify(score):
-    if type(score) == int:
+    if isinstance(score, int):
         mapping = [
             ('times', 'danger', '', ''),
             ('check', 'orange', '[', ']'),

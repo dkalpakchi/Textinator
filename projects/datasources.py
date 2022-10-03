@@ -103,9 +103,9 @@ class TextDatapoint:
 
 class AbstractDataSource:
     def __init__(self, spec_data):
-        if type(spec_data) == str:
+        if isinstance(spec_data, str):
             self.__spec = json.loads(spec_data)
-        elif type(spec_data) == dict:
+        elif isinstance(spec_data, dict):
             self.__spec = spec_data
         else:
             self.__spec = json.loads(str(spec_data))
@@ -152,7 +152,7 @@ class AbstractDataSource:
     def __getitem__(self, key):
         try:
             return self.__data[int(key)]
-        except:
+        except ValueError:
             return None
 
 
@@ -208,7 +208,7 @@ class TextFileSource(AbstractDataSource):
                         break
 
                 if found_folder:
-                    for d, subdirs, files in os.walk(found_folder):
+                    for d, _, files in os.walk(found_folder):
                         for f in files:
                             self.__files.append(os.path.join(d, f))
 
@@ -278,12 +278,12 @@ class JsonSource(AbstractDataSource):
 
         for fname in self.__files:
             d = json.load(open(fname))
-            if type(d) == list:
+            if isinstance(d, list):
                 for el in d:
                     # this is all in-memory, of course
                     # TODO: think of fixing
                     self._add_datapoint(el[self.get_spec('key')])
-            elif type(d) == dict:
+            elif isinstance(d, dict):
                 self._add_datapoint(d[self.get_spec('key')])
             self.__mapping.append(os.path.basename(fname))
 
