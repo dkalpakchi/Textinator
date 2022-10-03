@@ -1,7 +1,6 @@
 import json
 import os
 import io
-import random
 import bisect
 import uuid
 from collections import defaultdict
@@ -27,7 +26,7 @@ from reportlab.lib.pagesizes import A4
 from chartjs.views.columns import BaseColumnsHighChartsView
 from chartjs.views.lines import BaseLineChartView
 
-from modeltranslation.translator import translator
+# from modeltranslation.translator import translator
 
 from .models import *
 from .helpers import hash_text, retrieve_by_hash, apply_premarkers
@@ -293,7 +292,6 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
-        cache = caches['default']
         con = DetailView.context_object_name
         proj = data[con]
 

@@ -1,37 +1,41 @@
-;(function($) {
-  $(document).ready(function() {
+(function ($) {
+  $(document).ready(function () {
     $(".survey-description").accordion({
       collapsible: true,
-      active: parseInt($('progress').val(), 10) === 0 ? 0 : false
+      active: parseInt($("progress").val(), 10) === 0 ? 0 : false,
     });
 
-    $('form').validate({
+    $("form").validate({
       errorClass: "error tag is-danger",
-      invalidHandler: function(event, validator) {
+      invalidHandler: function (event, validator) {
         event.preventDefault();
       },
-      errorPlacement: function(label, element) {
-        if (element.parent().prop('tagName') == 'LABEL') {
+      errorPlacement: function (label, element) {
+        if (element.parent().prop("tagName") == "LABEL") {
           element.parent().parent().append(label);
         } else {
           element.parent().append(label);
         }
       },
-      highlight: function(element, errorClass, validClass) {
-        $(element).addClass(errorClass).removeClass(validClass).removeClass('tag is-danger');
+      highlight: function (element, errorClass, validClass) {
+        $(element)
+          .addClass(errorClass)
+          .removeClass(validClass)
+          .removeClass("tag is-danger");
       },
-      unhighlight: function(element, errorClass, validClass) {
+      unhighlight: function (element, errorClass, validClass) {
         $(element).removeClass(errorClass).addClass(validClass);
-      }
+      },
     });
 
-    $('input[type!="hidden"]').each(function() {
-      var isRequired = $(this).siblings('.criterion').attr('data-required') == "true" || 
-                       $(this).parent().siblings('.criterion').attr('data-required') == "true";
+    $('input[type!="hidden"]').each(function () {
+      var isRequired =
+        $(this).siblings(".criterion").attr("data-required") == "true" ||
+        $(this).parent().siblings(".criterion").attr("data-required") == "true";
 
       if (isRequired) {
-        $(this).rules('add', {
-          required: true
+        $(this).rules("add", {
+          required: true,
         });
       }
     });

@@ -1,156 +1,157 @@
-;(function($) {
+(function ($) {
   var templates = {
-    'TextFile': {
-      'files': [],
-      'folders': []
+    TextFile: {
+      files: [],
+      folders: [],
     },
-    'Json': {
-      'files': [],
-      'folders': [],
-      'key': ''
+    Json: {
+      files: [],
+      folders: [],
+      key: "",
     },
-    'PlainText': {
-      'texts': []
+    PlainText: {
+      texts: [],
     },
-    'TextsAPI': {
-      'endpoint': ''
+    TextsAPI: {
+      endpoint: "",
     },
-    'DialJSL': {
-      'files': [],
-      'folders': [],
-      'key': '',
-      'meta': []
-    }
-  }
+    DialJSL: {
+      files: [],
+      folders: [],
+      key: "",
+      meta: [],
+    },
+  };
 
   var schemas = {
-    "PlainText": {
-      'type': 'object',
-      "properties": {
-        "texts": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "textarea",
-          }
-        }
-      }
+    PlainText: {
+      type: "object",
+      properties: {
+        texts: {
+          type: "array",
+          items: {
+            type: "string",
+            format: "textarea",
+          },
+        },
+      },
     },
-    "TextFile": {
-      'type': 'object',
-      "properties": {
-        "files": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+    TextFile: {
+      type: "object",
+      properties: {
+        files: {
+          type: "array",
+          items: {
+            type: "string",
+          },
         },
-        "folders": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
+        folders: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+        },
+      },
     },
-    'Json': {
-      'type': 'object',
-      "properties": {
-        "files": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+    Json: {
+      type: "object",
+      properties: {
+        files: {
+          type: "array",
+          items: {
+            type: "string",
+          },
         },
-        "folders": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        folders: {
+          type: "array",
+          items: {
+            type: "string",
+          },
         },
-        "key": "string"
-      }
+        key: "string",
+      },
     },
-    'DialJSL': {
-      "type": "object",
-      "properties": {
-        'files': {
-          "type": "array", 
-          "items": {
-            "type": "string"
-          }
+    DialJSL: {
+      type: "object",
+      properties: {
+        files: {
+          type: "array",
+          items: {
+            type: "string",
+          },
         },
-        'folders': {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        folders: {
+          type: "array",
+          items: {
+            type: "string",
+          },
         },
-        'key': "string",
-        'meta': {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  }
+        key: "string",
+        meta: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+        },
+      },
+    },
+  };
 
   function updateSchema(option) {
     // NOTE: `spec` everywhere is just the name of the field in the model
     //       if the name changes djang-admin-json-editor, changes the name of JS variable as well
     if (schemas.hasOwnProperty(option)) {
       var schema = schemas[option],
-          element = spec_editor.element;
+        element = spec_editor.element;
       spec_editor.destroy();
-      schema['title'] = ' ';
+      schema["title"] = " ";
       spec_editor = new JSONEditor(element, {
-        'theme': 'bootstrap4',
-        'iconlib': 'fontawesome4',
-        'schema': schema
-      })
+        theme: "bootstrap4",
+        iconlib: "fontawesome4",
+        schema: schema,
+      });
 
-      spec_editor.on('change', function () {
+      spec_editor.on("change", function () {
         var errors = spec_editor.validate();
         if (errors.length) {
-            console.log(errors);
-        }
-        else {
-            var json = spec_editor.getValue();
-            document.getElementById("id_spec").value = JSON.stringify(json);
+          console.log(errors);
+        } else {
+          var json = spec_editor.getValue();
+          document.getElementById("id_spec").value = JSON.stringify(json);
         }
       });
     }
-    return spec_editor
+    return spec_editor;
   }
 
-  $(document).ready(function() {
-    $("#id_source_type").on('select2:select', function(e) {
+  $(document).ready(function () {
+    $("#id_source_type").on("select2:select", function (e) {
       var $target = $(e.target);
-          option = $target.find("option:selected").val();
+      option = $target.find("option:selected").val();
 
-      spec_editor = updateSchema(option);    
+      spec_editor = updateSchema(option);
 
       // defined in django-admin-json-editor
       spec_editor.setValue(templates[option]);
 
-      $('input[name="root[db_type]"]').off('change');
-      $('input[name="root[db_type]"]').on('change', function(e) {
-        if (e.target.value == 'mongodb') {
+      $('input[name="root[db_type]"]').off("change");
+      $('input[name="root[db_type]"]').on("change", function (e) {
+        if (e.target.value == "mongodb") {
           var options = { ...templates[option] };
-          options['db_type'] = e.target.value;
-          options['collection'] = '';
-          options['field'] = '';
-          spec_editor.setValue(options)
-        } else if (['mysql', 'postgresql', 'postgres'].includes(e.target.value)) {
+          options["db_type"] = e.target.value;
+          options["collection"] = "";
+          options["field"] = "";
+          spec_editor.setValue(options);
+        } else if (
+          ["mysql", "postgresql", "postgres"].includes(e.target.value)
+        ) {
           var options = { ...templates[option] };
-          options['db_type'] = e.target.value;
-          options['rand_dp_query'] = '';
-          options['size_query'] = '';
-          spec_editor.setValue(options)
+          options["db_type"] = e.target.value;
+          options["rand_dp_query"] = "";
+          options["size_query"] = "";
+          spec_editor.setValue(options);
         }
-      })
-    })
+      });
+    });
   });
 })(jQuery);

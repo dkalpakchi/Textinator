@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db.models import Q
 
-from projects.models import Project, UserProfile
+from projects.models import Project
 
 
 def common_user_variables(request):

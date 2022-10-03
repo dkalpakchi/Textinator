@@ -1,3 +1,4 @@
+#!/bin/sh
 export PATH="$PATH:/home/tt/.local/bin"
 
 PREFIX=/home/tt/Textinator

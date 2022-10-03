@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 import glob
 import secrets
-from pathlib import Path
 
 from django.utils.translation import gettext_lazy as _
 

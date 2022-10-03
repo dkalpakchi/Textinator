@@ -1,51 +1,51 @@
-$(document).ready(function() {
-  $('div[data-link]').on('click', function(e) {
+$(document).ready(function () {
+  $("div[data-link]").on("click", function (e) {
     e.preventDefault();
-    document.location.href = $(this).attr('data-link');
+    document.location.href = $(this).attr("data-link");
   });
 
   // Check for click events on the navbar burger icon
-  $(".navbar-burger").click(function() {
+  $(".navbar-burger").click(function () {
     // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
     $(".navbar-burger").toggleClass("is-active");
     $(".navbar-menu").toggleClass("is-active");
   });
 
-  var joinFormSubmit = function(e) {
+  var joinFormSubmit = function (e) {
     e.preventDefault();
     e.stopPropagation();
 
-    var $target = $(e.target).closest('a'),
-        $inputForm = $target.find('form'),
-        inputFormData = $inputForm.serializeObject(),
-        $footer = $target.closest('footer');
+    var $target = $(e.target).closest("a"),
+      $inputForm = $target.find("form"),
+      inputFormData = $inputForm.serializeObject(),
+      $footer = $target.closest("footer");
 
     $.ajax({
       method: "POST",
-      url: $inputForm.attr('action'),
+      url: $inputForm.attr("action"),
       dataType: "json",
       data: inputFormData,
-      success: function(data) {
-        if (data['result'] == 'joined') {
-          $target.find('span').text('Leave');
-          $footer.prepend($(data['template']))
+      success: function (data) {
+        if (data["result"] == "joined") {
+          $target.find("span").text("Leave");
+          $footer.prepend($(data["template"]));
         } else {
-          $target.find('span').text('Join');
-          $footer.find('a:first-child').remove();
+          $target.find("span").text("Join");
+          $footer.find("a:first-child").remove();
         }
         $target.blur();
       },
-      error: function() {
-        console.log("ERROR!")
-      }
-    })
-  }
+      error: function () {
+        console.log("ERROR!");
+      },
+    });
+  };
 
-  $('a#joinButton').on('click', joinFormSubmit);
-  
-  $('.intro-button').on('click', function() {
+  $("a#joinButton").on("click", joinFormSubmit);
+
+  $(".intro-button").on("click", function () {
     tour.start();
-  })
+  });
 
   // var countdown = null,
   //     interval = null;
@@ -85,42 +85,42 @@ $(document).ready(function() {
   //   }
   // });
 
-  $('nav .dropdown').on('click', function() {
-    $(this).toggleClass('is-active');
-  })
+  $("nav .dropdown").on("click", function () {
+    $(this).toggleClass("is-active");
+  });
 
   if ($.prototype.sortable !== undefined) {
-    $( "#sortable" ).sortable();
-    $( "#sortable" ).disableSelection();  
+    $("#sortable").sortable();
+    $("#sortable").disableSelection();
   }
-  
+
   if ($.prototype.validate !== undefined) {
-    $('form').validate({
-      errorClass: "help is-danger"
+    $("form").validate({
+      errorClass: "help is-danger",
     });
   }
 
-  $('input[type!="hidden"]').each(function() {
-    if ($(this).attr('data-required') == "true") {
-      $(this).rules('add', {
-        required: true
+  $('input[type!="hidden"]').each(function () {
+    if ($(this).attr("data-required") == "true") {
+      $(this).rules("add", {
+        required: true,
       });
     }
   });
 
   if ($.prototype.masonry !== undefined) {
-    $('.masonry-grid').masonry({
-      itemSelector: '.masonry-grid-item',
+    $(".masonry-grid").masonry({
+      itemSelector: ".masonry-grid-item",
       horizontalOrder: true,
       fitWidth: true,
-      gutter: 14
+      gutter: 14,
     });
   }
 
   if ($.prototype.accordion !== undefined) {
     $('[data-id="accordion"]').accordion({
       collapsible: true,
-      active: false
+      active: false,
     });
   }
 });

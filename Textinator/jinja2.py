@@ -1,4 +1,3 @@
-import re
 import pytz
 import markdown
 from datetime import datetime
@@ -106,7 +105,7 @@ def environment(**options):
     env.globals.update({
         'static': staticfiles_storage.url,
         'url': reverse,
-        'now': pytz.UTC.localize(datetime.now())
+        'now': pytz.UTC.localize(datetime.now(), is_dst=False)
     })
     env.filters['url_path'] = get_path
     env.filters['display_marker'] = display_marker_variant

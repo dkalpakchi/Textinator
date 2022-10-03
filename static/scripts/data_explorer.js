@@ -1,56 +1,55 @@
-;(function() {
+(function () {
   var utils = {
-    isDefined: function(x) {
+    isDefined: function (x) {
       return x != null && x !== undefined;
     },
-    unique: function(arr) {
+    unique: function (arr) {
       const seen = new Set();
-      return arr.filter(function(elem) {
-        const key = elem['start'] + " -- " + elem['end'];
+      return arr.filter(function (elem) {
+        const key = elem["start"] + " -- " + elem["end"];
         var isDuplicate = seen.has(key);
-        if (!isDuplicate)
-          seen.add(key);
+        if (!isDuplicate) seen.add(key);
         return !isDuplicate;
       });
     },
-    hex2rgb: function(hex) {
+    hex2rgb: function (hex) {
       var m = hex.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
       return {
         r: parseInt(m[1], 16),
         g: parseInt(m[2], 16),
-        b: parseInt(m[3], 16)
+        b: parseInt(m[3], 16),
       };
     },
-    removeAllChildren: function(parentNode) {
+    removeAllChildren: function (parentNode) {
       while (parentNode.lastChild) {
         parentNode.removeChild(parentNode.lastChild);
       }
     },
-    resetSelect: function(sel) {
+    resetSelect: function (sel) {
       sel.selectedIndex = 0;
-    }
+    },
   };
 
   var explorer = {
-    init: function() {
-      this.textWidget = document.querySelector('#textWidget');
-      this.textSelector = this.textWidget.querySelector('select#text');
-      this.textContentArea = this.textWidget.querySelector('div#text');
+    init: function () {
+      this.textWidget = document.querySelector("#textWidget");
+      this.textSelector = this.textWidget.querySelector("select#text");
+      this.textContentArea = this.textWidget.querySelector("div#text");
       this.annotatorSelectors = {
-        'an1': document.querySelector('select#an1'),
-        'an2': document.querySelector('select#an2')
+        an1: document.querySelector("select#an1"),
+        an2: document.querySelector("select#an2"),
       };
       this.annotationAreas = {
-        'an1': document.querySelector('[data-id="an1"]'),
-        'an2': document.querySelector('[data-id="an2"]')
+        an1: document.querySelector('[data-id="an1"]'),
+        an2: document.querySelector('[data-id="an2"]'),
       };
 
-      this.initEvents()
+      this.initEvents();
     },
-    initEvents: function() {
+    initEvents: function () {
       var ctx = this;
-      
-      this.textSelector.addEventListener('change', function(e) {
+
+      this.textSelector.addEventListener("change", function (e) {
         var target = e.target;
 
         utils.removeAllChildren(ctx.textContentArea);
@@ -61,70 +60,79 @@
       });
 
       for (var s in this.annotatorSelectors) {
-        this.annotatorSelectors[s].addEventListener('change', function(e) {
-          var target = e.target;
+        this.annotatorSelectors[s].addEventListener(
+          "change",
+          function (e) {
+            var target = e.target;
 
-          utils.removeAllChildren(ctx.annotationAreas[target.id]);
+            utils.removeAllChildren(ctx.annotationAreas[target.id]);
 
-          if (target.selectedIndex !== 0 && ctx.textSelector.selectedIndex !== 0) {
-            var userSelected = target.options[target.selectedIndex].value,
-                textSelected = ctx.textSelector.options[ctx.textSelector.selectedIndex].value;
+            if (
+              target.selectedIndex !== 0 &&
+              ctx.textSelector.selectedIndex !== 0
+            ) {
+              var userSelected = target.options[target.selectedIndex].value,
+                textSelected =
+                  ctx.textSelector.options[ctx.textSelector.selectedIndex]
+                    .value;
 
-            ctx.loadAnnotations(textSelected, userSelected, target.id);
-          }
-        }, false);
+              ctx.loadAnnotations(textSelected, userSelected, target.id);
+            }
+          },
+          false
+        );
       }
     },
-    loadText: function(textId) {
+    loadText: function (textId) {
       var ctx = this;
       $.ajax({
         method: "GET",
-        url: this.textWidget.getAttribute('data-u1'),
-        dataType: 'json',
+        url: this.textWidget.getAttribute("data-u1"),
+        dataType: "json",
         data: {
-          c: textId
+          c: textId,
         },
-        success: function(data) {
+        success: function (data) {
           for (var ann in ctx.annotationAreas) {
             utils.removeAllChildren(ctx.annotationAreas[ann]);
             utils.resetSelect(ctx.annotatorSelectors[ann]);
           }
-  
+
           if (!data.hasOwnProperty("error") && data.hasOwnProperty("context"))
-            ctx.textContentArea.innerText = data.context
-        }
-      })
+            ctx.textContentArea.innerText = data.context;
+        },
+      });
     },
-    loadAnnotations: function(textId, userId, annotatorKey) {
+    loadAnnotations: function (textId, userId, annotatorKey) {
       var ctx = this;
       $.ajax({
         method: "GET",
-        url: this.textWidget.getAttribute('data-u2'),
-        dataType: 'json',
+        url: this.textWidget.getAttribute("data-u2"),
+        dataType: "json",
         data: {
           c: textId,
-          u: userId
+          u: userId,
         },
-        success: function(data) {
+        success: function (data) {
           ctx.populateAnnotations(annotatorKey, data.annotations);
-        }
-      })
+        },
+      });
     },
-    createAnnotationElement: function(ann, isDivided) {
-      var dataTypes = ['inputs', 'labels'],
-          groupContainer = document.createElement('div');
+    createAnnotationElement: function (ann, isDivided) {
+      var dataTypes = ["inputs", "labels"],
+        groupContainer = document.createElement("div");
       if (!utils.isDefined(isDivided)) isDivided = false;
       groupContainer.className = "content";
-      
+
       if (isDivided) groupContainer.className += " is-divided";
 
       for (var k in dataTypes) {
         if (utils.isDefined(ann[dataTypes[k]])) {
           for (var i = 0, len = ann[dataTypes[k]].length; i < len; i++) {
-            var marker = document.createElement('div'),
-                content = document.createElement('div'),
-                contentWrapper = document.createElement('div'),
-                inp = ann[dataTypes[k]][i];
+            var marker = document.createElement("div"),
+              content = document.createElement("div"),
+              contentWrapper = document.createElement("div"),
+              inp = ann[dataTypes[k]][i];
             contentWrapper.className = "content";
 
             marker.innerText = inp.marker.name;
@@ -134,13 +142,11 @@
 
             rgb = utils.hex2rgb(mColor);
             brightness = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
-            textColor = (brightness > 125) ? 'black' : 'white';
+            textColor = brightness > 125 ? "black" : "white";
             marker.style.color = textColor;
 
-            if (dataTypes[k] == 'inputs') 
-              content.innerText = inp.content;
-            else
-              content.innerText = inp.text;
+            if (dataTypes[k] == "inputs") content.innerText = inp.content;
+            else content.innerText = inp.text;
 
             contentWrapper.appendChild(marker);
             contentWrapper.appendChild(content);
@@ -150,13 +156,13 @@
       }
       return groupContainer;
     },
-    createAnnotationBatch: function(batch) {
+    createAnnotationBatch: function (batch) {
       var ctx = this;
-      var container = document.createElement('div'),
-          header = document.createElement('header'),
-          headerPart = document.createElement('div'),
-          headerText = document.createElement('span'),
-          contentPart = document.createElement('div');
+      var container = document.createElement("div"),
+        header = document.createElement("header"),
+        headerPart = document.createElement("div"),
+        headerText = document.createElement("span"),
+        contentPart = document.createElement("div");
       container.className = "card mb-2";
       contentPart.className = "card-content";
       header.className = "card-header";
@@ -166,11 +172,14 @@
 
       header.appendChild(headerPart);
 
-      if (ctx.textWidget.hasAttribute("data-ue") && batch.hasOwnProperty("id")) {
-        var editBatchButton = document.createElement('a'),
-            bicon = document.createElement('i'),
-            btext = document.createElement('span'),
-            url = ctx.textWidget.getAttribute("data-ue").replace("!!!", batch.id);
+      if (
+        ctx.textWidget.hasAttribute("data-ue") &&
+        batch.hasOwnProperty("id")
+      ) {
+        var editBatchButton = document.createElement("a"),
+          bicon = document.createElement("i"),
+          btext = document.createElement("span"),
+          url = ctx.textWidget.getAttribute("data-ue").replace("!!!", batch.id);
         editBatchButton.href = url;
         editBatchButton.className = "is-pulled-right";
         editBatchButton.target = "_blank";
@@ -183,34 +192,38 @@
 
       container.appendChild(header);
 
-      var batchKeys = Object.keys(batch).filter((x) => x != "created" && x != 'id'),
-          numBatchKeys = batchKeys.length;
+      var batchKeys = Object.keys(batch).filter(
+          (x) => x != "created" && x != "id"
+        ),
+        numBatchKeys = batchKeys.length;
 
       for (var bi = 0; bi < numBatchKeys; bi++) {
-        contentPart.appendChild(ctx.createAnnotationElement(
-          batch[batchKeys[bi]], bi != numBatchKeys-1
-        ))
+        contentPart.appendChild(
+          ctx.createAnnotationElement(
+            batch[batchKeys[bi]],
+            bi != numBatchKeys - 1
+          )
+        );
       }
       container.append(contentPart);
-      return container
+      return container;
     },
-    populateAnnotations: function(annotatorKey, annotations) {
+    populateAnnotations: function (annotatorKey, annotations) {
       var ctx = this,
-          annArea = this.annotationAreas[annotatorKey];
+        annArea = this.annotationAreas[annotatorKey];
       for (var key in annotations) {
         var ann = annotations[key];
         annArea.appendChild(ctx.createAnnotationBatch(ann));
       }
-    }
-  }
-  
+    },
+  };
 
-  $(document).ready(function() {
-    explorer.init()
+  $(document).ready(function () {
+    explorer.init();
 
     $("[id^=item-context-]").accordion({
       collapsible: true,
-      active: false
+      active: false,
     });
 
     $("#flaggedCollapse").accordion({
@@ -223,58 +236,64 @@
       collapsible: true,
       active: false,
       icons: false,
-      heightStyle: 'content'
-    })
-
-    $('#guidelinesButton').on('click', function() {
-      $('.guidelines.modal').addClass('is-active');
+      heightStyle: "content",
     });
 
-    $('.modal-close').on('click', function() {
-      $('.modal').removeClass('is-active');
-      // $('.countdown svg circle:last-child').trigger('cdAnimate');
+    $("#guidelinesButton").on("click", function () {
+      $(".guidelines.modal").addClass("is-active");
     });
-   
-    $('.modal-background').on('click', function() {
-      $('.modal').removeClass('is-active');
+
+    $(".modal-close").on("click", function () {
+      $(".modal").removeClass("is-active");
       // $('.countdown svg circle:last-child').trigger('cdAnimate');
     });
 
-    $('a[download]').on('click', function() {
+    $(".modal-background").on("click", function () {
+      $(".modal").removeClass("is-active");
+      // $('.countdown svg circle:last-child').trigger('cdAnimate');
+    });
+
+    $("a[download]").on("click", function () {
       var $btn = $(this),
-          $form = $btn.closest('form');
+        $form = $btn.closest("form");
 
-      $btn.addClass('is-loading');
+      $btn.addClass("is-loading");
       $.ajax({
         method: "GET",
-        url: $btn.attr('data-url'),
-        contentType: 'application/json; charset=utf-8',
-        dataType: 'json',
+        url: $btn.attr("data-url"),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         data: $form.serializeObject(),
-        success: function(data) {
-          const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+        success: function (data) {
+          const blob = new Blob([JSON.stringify(data)], {
+            type: "application/json",
+          });
           const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
+          const a = document.createElement("a");
           a.href = url;
-          a.download = 'export.json';
-          
-          a.addEventListener('click', function(e) {
-            setTimeout(function() {
-              URL.revokeObjectURL(url);
-              // a.removeEventListener('click', clickHandler);
-              a.remove();
-              // URL.revokeObjectURL(url);
-            }, 150);
-          }, false);
+          a.download = "export.json";
 
-          a.click();          
-          $btn.removeClass('is-loading');
+          a.addEventListener(
+            "click",
+            function (e) {
+              setTimeout(function () {
+                URL.revokeObjectURL(url);
+                // a.removeEventListener('click', clickHandler);
+                a.remove();
+                // URL.revokeObjectURL(url);
+              }, 150);
+            },
+            false
+          );
+
+          a.click();
+          $btn.removeClass("is-loading");
         },
-        error: function() {
+        error: function () {
           alert("Error while exporting a file!");
-          $btn.removeClass('is-loading');
-        }
+          $btn.removeClass("is-loading");
+        },
       });
     });
-  })
+  });
 })();

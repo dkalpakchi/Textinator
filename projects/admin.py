@@ -3,7 +3,7 @@ from django.db.models import Q
 from django import forms
 from django.contrib.auth.models import User, Permission
 from django_admin_json_editor import JSONEditorWidget
-from django.contrib.admin import SimpleListFilter, DateFieldListFilter
+from django.contrib.admin import DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 

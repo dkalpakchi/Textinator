@@ -4,11 +4,11 @@
  * author: Dmytro Kalpakchi
  */
 
-var plugin = function(cfg, labeler) {
+var plugin = function (cfg, labeler) {
   var config = {
     name: "change_rel",
-    verboseName: 'Change relation'
-  }
+    verboseName: "Change relation",
+  };
 
   function isDefined(x) {
     return x != null && x !== undefined;
@@ -25,26 +25,31 @@ var plugin = function(cfg, labeler) {
     verboseName: config.verboseName,
     storage: {},
     dispatch: {
-      'labeler_relationschange': 'labeler_relationschange'
+      labeler_relationschange: "labeler_relationschange",
     },
-    subscribe: ['labeler_relationschange'],
+    subscribe: ["labeler_relationschange"],
     initOnce: false,
-    isAllowed: function(obj) {
+    isAllowed: function (obj) {
       // only if it's part of the relation
-      return document.querySelector('div.marker[data-s="' + obj.getAttribute('data-s') + '"]')
-                     .getAttribute('data-indep') == 'false';
+      return (
+        document
+          .querySelector(
+            'div.marker[data-s="' + obj.getAttribute("data-s") + '"]'
+          )
+          .getAttribute("data-indep") == "false"
+      );
     },
-    exec: function(label, menuItem) {
+    exec: function (label, menuItem) {
       function createOption(val, idx) {
-        var option = document.createElement('option');
+        var option = document.createElement("option");
         option.value = idx;
         option.textContent = val;
         return option;
       }
 
-      var select = document.createElement('select'),
-          relSpan = label.querySelector('[data-m="r"]'),
-          relId = isDefined(relSpan) ? parseInt(relSpan.textContent, 10) : -1;
+      var select = document.createElement("select"),
+        relSpan = label.querySelector('[data-m="r"]'),
+        relId = isDefined(relSpan) ? parseInt(relSpan.textContent, 10) : -1;
 
       select.appendChild(createOption("no", -1));
       var lst = labeler.getAvailableRelationIds();
@@ -53,20 +58,24 @@ var plugin = function(cfg, labeler) {
       }
       select.value = relId;
 
-      select.addEventListener('change', function(e) {
-        var target = e.target,
+      select.addEventListener(
+        "change",
+        function (e) {
+          var target = e.target,
             idx = parseInt(target.value, 10);
-        labeler.changeRelation(label, relId, idx);
-        instance.hide();
-      }, false);
+          labeler.changeRelation(label, relId, idx);
+          instance.hide();
+        },
+        false
+      );
 
       const instance = tippy(isDefined(menuItem) ? menuItem : label, {
         content: select,
-        trigger: 'click',
+        trigger: "click",
         interactive: true,
         placement: "right",
-        interactiveBorder: 100
+        interactiveBorder: 100,
       });
-    }
-  }
+    },
+  };
 };
