@@ -20,11 +20,11 @@ Currently Textinator is mostly tested manually, so we would be very grateful for
 
 We follow the ["fork-and-pull" Git workflow](https://github.com/susam/gitpr). The approach can be summarized as follows:
 
-1. Fork the original repository to your own Github account
-2. Clone the project to your machine
-3. Create a branch locally with a descriptive name
-4. Commit changes to the branch
-5. Fix style issues reported by precommit.
-6. Commit again.
-7. Push changes to your fork
-8. Open a PR in the original repository and wait for a code review.
+ 1. Fork the original repository to your own Github account
+ 2. Clone the project to your machine
+ 3. Create a branch locally with a descriptive name
+ 4. Commit changes to the branch
+ 5. Fix style issues reported by precommit.
+ 6. Commit again.
+ 7. Push changes to your fork
+ 8. Open a PR in the original repository and wait for a code review.

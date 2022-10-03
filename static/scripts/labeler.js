@@ -116,7 +116,7 @@
         if (onlyElements === undefined) onlyElements = false;
         var len = 0;
         while (prev != null) {
-          if (prev.nodeType == 1) {
+          if (prev.nodeType === 1) {
             if (prev.tagName == "BR") {
               // if newline
               len += 1
@@ -128,7 +128,7 @@
             } else if (prev.tagName != 'SCRIPT' && prev.tagName != "BUTTON") {
               len += prev.textContent.trim().length;
             }
-          } else if (prev.nodeType == 3 && prev.wholeText.trim()) {
+          } else if (prev.nodeType === 3 && prev.wholeText.trim()) {
             len += prev.length
           }
           prev = onlyElements ? prev.previousElementSibling : prev.previousSibling
@@ -211,7 +211,7 @@
     }
 
     function isRelationIdentifier(node) {
-      if (node.nodeType == 3) {
+      if (node.nodeType === 3) {
         node = node.parentNode;
       }
       return utils.isDefined(node) && node.nodeName == "SPAN" && node.hasAttribute('data-m') && node.getAttribute('data-m') == 'r';
@@ -273,7 +273,7 @@
           element = document.createTextNode("");
       for (var i = 0; i < node.childNodes.length; i++) {
         var child = node.childNodes[i];
-        if (child.nodeType == 3) {
+        if (child.nodeType === 3) {
           element = document.createTextNode(element.data + child.data);
           if (i == node.childNodes.length - 1)
             pieces.push(element);
@@ -285,7 +285,7 @@
       }
 
       if (pieces.length > 1) {
-        if (pieces[0].nodeType == 3 && prev.nodeType == 3)
+        if (pieces[0].nodeType === 3 && prev.nodeType === 3)
           parent.replaceChild(document.createTextNode(prev.data + pieces[0].data), prev);
         else
           parent.insertBefore(pieces[0], next);
@@ -295,7 +295,7 @@
           parent.insertBefore(pieces[i], next)
         }
 
-        if (pieces[pieces.length-1].nodeType == 3 && next.nodeType == 3) {
+        if (pieces[pieces.length-1].nodeType === 3 && next.nodeType === 3) {
           parent.replaceChild(document.createTextNode(pieces[pieces.length-1].data + next.data), next);
         }
         else {
@@ -327,7 +327,7 @@
     function getSelectionFromRange(range, config) {
       if (range.startContainer == range.endContainer) {
         var node = range.startContainer
-        if (node.nodeType == 3) { // Text
+        if (node.nodeType === 3) { // Text
           return node.textContent.slice(range.startOffset, range.endOffset);
         } else {
           return node.textContent;
@@ -338,7 +338,7 @@
             startText = "",
             endText = "";
 
-        if (start.nodeType == 3) {
+        if (start.nodeType === 3) {
           startText += start.textContent.slice(range.startOffset);
         } else {
           for (var i = 0; i < range.startOffset; i++) {
@@ -350,7 +350,7 @@
         }
         if (config.startOnly) return startText;
 
-        if (end.nodeType == 3) {
+        if (end.nodeType === 3) {
           endText += end.textContent.slice(0, range.endOffset);
         } else {
           for (var i = 0; i < range.endOffset; i++) {
@@ -425,7 +425,7 @@
           subset[k] = plugins["sharedBetweenMarkers"][k];
         }
 
-        if (Object.keys(subset).length == 0) return;
+        if (Object.keys(subset).length === 0) return;
 
         var keys = Object.keys(subset);
         keys.sort(function(x, y) {
@@ -526,7 +526,7 @@
       // and resizes the svg to fill it
       // while maintaining a consistent aspect ratio
       function resize() {
-        const w = parseInt(container.style('width'));
+        const w = parseInt(container.style('width'), 10);
         svg.attr('width', w);
         svg.attr('height', Math.round(w / aspect));
       }
@@ -652,7 +652,7 @@
                 var $target = $(target);
                 if ($target.prop('in_relation') && !$target.prop("multiple_possible_relations")) {
                   control.showRelationGraph(
-                    parseInt(target.querySelector('[data-m="r"]').textContent)
+                    parseInt(target.querySelector('[data-m="r"]').textContent, 10)
                   );
                 } else if (!window.getSelection().toString()) {
                   if (target.classList.contains('active') && $target.prop('selected')) {
@@ -668,7 +668,7 @@
               }
             } else if (target.hasAttribute('data-rel')) {
               control.showRelationGraph(
-                parseInt(target.getAttribute('data-rel'))
+                parseInt(target.getAttribute('data-rel'), 10)
               );
             }
           }, false);
@@ -717,9 +717,9 @@
             e = e || window.event;
 
             if ("which" in e)  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
-                isRightMB = e.which == 3; 
+                isRightMB = (e.which === 3); 
             else if ("button" in e)  // IE, Opera 
-                isRightMB = e.button == 2;
+                isRightMB = (e.button === 2);
 
             if (!isDeleteButton(e.target) && !isRightMB) {
               labelerModule.updateChunkFromSelection();
@@ -994,7 +994,7 @@
 
             var N = chunks.length;
             chunk['id'] = labelId;
-            if (N == 0 || (N > 0 && chunks[N-1] !== undefined && chunks[N-1]['marked'])) {
+            if (N === 0 || (N > 0 && chunks[N-1] !== undefined && chunks[N-1]['marked'])) {
               chunks.push(chunk);
             } else {
               chunks[N-1] = chunk;
@@ -1054,7 +1054,7 @@
 
               start = chunk['range'].startContainer;
               if (isRelationIdentifier(start)) {
-                if (start.nodeType == 3)
+                if (start.nodeType === 3)
                   start = start.parentNode;
                 chunk['range'].setStartBefore(start.parentNode);
               }
@@ -1146,7 +1146,7 @@
               var have = inRelation ? 
                 document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"].active:not(.is-disabled)').length :
                 document.querySelectorAll('.selector span.tag[data-s="' + x.getAttribute('data-s') + '"]:not(.is-disabled)').length
-              var needed = parseInt(res[i].slice(2)),
+              var needed = parseInt(res[i].slice(2), 10),
                   restriction = res[i].slice(0, 2),
                   label = x.querySelector('span.tag').textContent;
               if (restriction == 'ge') {
@@ -1437,7 +1437,7 @@
         var keys = Object.keys(relations);
         keys.sort();
         for (var k in keys) {
-          var kk = parseInt(keys[k]);
+          var kk = parseInt(keys[k], 10);
           if (kk > idx) {
             $('g#' + relations[keys[k]]['graphId']).find('circle[data-id]').each(function(i, d) { 
               var $el = $('#' + d.getAttribute('data-id'));
@@ -1501,15 +1501,15 @@
             var rr = $(relSpan).prop("rels");
 
             if (utils.isDefined(removeId)) {
-              var idx = rr.indexOf(parseInt(removeId));
+              var idx = rr.indexOf(parseInt(removeId, 10));
               if (idx != -1)
                 rr.splice(idx, 1);
             }
 
             if (utils.isDefined(relationId)) {
-              if (parseInt(relationId) < 0) {
+              if (parseInt(relationId, 10) < 0) {
                 rr = [];
-              } else if (rr.indexOf(parseInt(relationId)) == -1) {
+              } else if (rr.indexOf(parseInt(relationId, 10)) == -1) {
                 rr.push(relationId);
               }
             }
@@ -1585,7 +1585,7 @@
               var cur = rels.map((x, i) => x[ptr[i]]);
               var candLast = true;
 
-              if (new Set(cur).size == 1) {
+              if (new Set(cur).size === 1) {
                 // all same, advance all pointers
                 sameRels.push(rels[ptr[0]]);
                 for (var j = 0; j < relsLength; j++) {
@@ -1629,7 +1629,7 @@
 
             if ($part.prop("in_relation")) {
               var rr = $($parts[i].querySelector('[data-m]')).prop("rels");
-              if (utils.isDefined(rr) && rr.length == 1 && rule == relations[rr[0]].rule) {
+              if (utils.isDefined(rr) && rr.length === 1 && rule == relations[rr[0]].rule) {
                 newRelationId = rr[0];
                 candRels.push(rr[0]);
               }
@@ -1740,7 +1740,7 @@
             }
           }
 
-          if (sketches.length == 0) {
+          if (sketches.length === 0) {
             alert("No relations could be formed among the selected labels");
             $parts.removeClass('active');
             $parts.prop('selected', false);
@@ -1796,7 +1796,7 @@
               var source = document.querySelector('#' + l.source),
                   target = document.querySelector('#' + l.target);
               // if bidirectional, no need to store mirrored relations
-              if (direction == 2 && containsIdentical(relations[newRelationId]['links'], {
+              if (direction === 2 && containsIdentical(relations[newRelationId]['links'], {
                 's': target.getAttribute('data-i'),
                 't': source.getAttribute('data-i')
               })) return;
@@ -1947,7 +1947,7 @@
           newLinks.forEach(function(l) {
             var source = document.querySelector('#' + l.source),
                 target = document.querySelector('#' + l.target);
-            if (toRel.d3.direction == 2 && containsIdentical(toRel.links, {
+            if (toRel.d3.direction === 2 && containsIdentical(toRel.links, {
               's': target.getAttribute('data-i'),
               't': source.getAttribute('data-i')
             })) return;
@@ -2327,7 +2327,7 @@
                       });
                       
                       var textNode = undefined;
-                      if (numOverlapping == 0) {
+                      if (numOverlapping === 0) {
                         textNode = cnodes[i].childNodes[cnodes[i].childNodes.length-1];
                       } else {
                         var minDistId = undefined,
@@ -2505,8 +2505,8 @@
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());
 
-      inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'));
-      inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'));
+      inputFormData['datasource'] = parseInt(labelerModule.selectorArea.getAttribute('data-s'), 10);
+      inputFormData['datapoint'] = parseInt(labelerModule.selectorArea.getAttribute('data-dp'), 10);
 
       if (labelerModule.hasNewInfo(inputFormData)) {
         labelerModule.getMarkerTypes().forEach(function(x) {
@@ -2522,7 +2522,7 @@
           dataType: "json",
           data: inputFormData,
           success: function(data) {
-            if (data['error'] == false) {
+            if (data['error'] === false) {
               if (data['mode'] == 'r') {
                 if (labelerModule.disableSubmittedLabels)
                   labelerModule.disableChunks(JSON.parse(inputFormData['chunks']));

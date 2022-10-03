@@ -44,7 +44,7 @@ var plugin = function(cfg, labeler) {
 
       var select = document.createElement('select'),
           relSpan = label.querySelector('[data-m="r"]'),
-          relId = isDefined(relSpan) ? parseInt(relSpan.textContent) : -1;
+          relId = isDefined(relSpan) ? parseInt(relSpan.textContent, 10) : -1;
 
       select.appendChild(createOption("no", -1));
       var lst = labeler.getAvailableRelationIds();
@@ -55,7 +55,7 @@ var plugin = function(cfg, labeler) {
 
       select.addEventListener('change', function(e) {
         var target = e.target,
-            idx = parseInt(target.value);
+            idx = parseInt(target.value, 10);
         labeler.changeRelation(label, relId, idx);
         instance.hide();
       }, false);

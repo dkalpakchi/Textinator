@@ -9,7 +9,6 @@ from django.contrib.humanize.templatetags.humanize import NaturalTimeFormatter
 from django.utils.translation import gettext, ngettext
 from django.urls import reverse
 from django.utils import translation
-from django.utils.functional import lazy
 from django.template.loader import get_template
 
 
@@ -103,7 +102,7 @@ def environment(**options):
     extensions.append('jinja2.ext.i18n')
     extensions.append('jinja2.ext.with_')
     options['extensions'] = extensions
-    env = Environment(**options)
+    env = Environment(autoescape=True, **options)
     env.globals.update({
         'static': staticfiles_storage.url,
         'url': reverse,

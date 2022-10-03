@@ -66,7 +66,7 @@
 
           utils.removeAllChildren(ctx.annotationAreas[target.id]);
 
-          if (target.selectedIndex != 0 && ctx.textSelector.selectedIndex != 0) {
+          if (target.selectedIndex !== 0 && ctx.textSelector.selectedIndex !== 0) {
             var userSelected = target.options[target.selectedIndex].value,
                 textSelected = ctx.textSelector.options[ctx.textSelector.selectedIndex].value;
 

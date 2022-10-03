@@ -7,18 +7,16 @@ import uuid
 from collections import defaultdict
 from itertools import chain
 
-from django.http import JsonResponse, Http404, HttpResponse, FileResponse, StreamingHttpResponse
+from django.http import JsonResponse, Http404, FileResponse, StreamingHttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
-from django.template import Context, RequestContext
+from django.template import Context
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.db.models import Q
 from django.urls import reverse
 
 from reportlab.pdfgen import canvas
@@ -73,13 +71,10 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
 
         for source in [self.labels, self.inputs]:
             for l in source:
-                try:
+                if hasattr(l, 'text'):
                     data[self.p2i[l.marker.marker.name]][self.l2i[len(l.text.split())]] += 1
-                except:
-                    try:
-                        data[self.p2i[l.marker.marker.name]][self.l2i[len(l.content.split())]] += 1
-                    except:
-                        pass
+                elif hasattr(l, 'content'):
+                    data[self.p2i[l.marker.marker.name]][self.l2i[len(l.content.split())]] += 1
         return data
 
     def get_context_data(self, **kwargs):

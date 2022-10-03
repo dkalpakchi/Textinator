@@ -1,7 +1,5 @@
 from django.contrib import admin
 from django.db.models import Q
-from django.db.models.fields.related import ManyToOneRel
-from django.db.models.fields import AutoField
 from django import forms
 from django.contrib.auth.models import User, Permission
 from django_admin_json_editor import JSONEditorWidget

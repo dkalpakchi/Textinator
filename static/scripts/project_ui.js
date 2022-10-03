@@ -9,7 +9,7 @@ $(document).ready(function() {
             top = $el.scrollTop();
 
         $el.scroll(function(e) {
-          var pos = $button.css('top') ? parseInt($button.css('top')) : $button.position().top;
+          var pos = $button.css('top') ? parseInt($button.css('top'), 10) : $button.position().top;
           $button.css('top', pos + $el.scrollTop() - top);
           top = $el.scrollTop();
           if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight) {

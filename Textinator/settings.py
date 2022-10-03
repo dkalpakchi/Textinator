@@ -12,8 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import glob
-import uuid
-import random
+import secrets
 from pathlib import Path
 
 from django.utils.translation import gettext_lazy as _
@@ -28,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get("SECRET_KEY", uuid.uuid4().hex[:random.randint(8, 36)])
+SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(secrets.randbelow(28) + 8))
 
 DEBUG = int(os.environ.get("DEBUG", default=0))
 

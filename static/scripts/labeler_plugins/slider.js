@@ -51,7 +51,7 @@ var plugin = function(cfg, labeler) {
       sliderInput.value = storage[id];
       sliderInput.addEventListener('change', function(e) {
         var target = e.target;
-        storage["l" + parseInt(target.getAttribute('data-i'))] = target.value;
+        storage["l" + parseInt(target.getAttribute('data-i'), 10)] = target.value;
       }, false);
 
       tippy(isDefined(menuItem) ? menuItem : label, {

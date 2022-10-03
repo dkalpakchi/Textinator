@@ -1,4 +1,5 @@
 import random
+import secrets
 import time
 import sys
 import re
@@ -215,7 +216,7 @@ class Marker(CommonModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = "{}_{}_{}".format(self.name_en[:3].upper(), str(int(time.time())), random.randint(0, 9999))
+            self.code = "{}_{}_{}".format(self.name_en[:3].upper(), str(int(time.time())), secrets.randbelow(10000))
         super(Marker, self).save(*args, **kwargs)
 
     def is_part_of_relation(self):

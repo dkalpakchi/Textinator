@@ -19,7 +19,7 @@
         initials, charIndex, colourIndex, canvas, context, dataURI;
 
 
-    if (nameSplit.length == 1) {
+    if (nameSplit.length === 1) {
       initials = nameSplit[0] ? nameSplit[0].charAt(0):'?';
     } else {
       initials = nameSplit[0].charAt(0) + nameSplit[1].charAt(0);

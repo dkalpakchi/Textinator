@@ -10,7 +10,10 @@
             let selector_available_select = selector_available.find('select').first();
             let selector_available_filter = selector_available.find('p.selector-filter').first();
 
-            selector_chosen_select.height(selector_available_select.height() + selector_available_filter.outerHeight());
+            selector_chosen_select.height(
+              selector_available_select.height() +
+              selector_available_filter.outerHeight()
+            );
             selector_chosen_select.css('border-top', selector_chosen_select.css('border-bottom'));
         });
     }

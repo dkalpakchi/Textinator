@@ -36,6 +36,36 @@ body .container:first-of-type {
   cursor: pointer;
 }
 
+.logo {
+  font-family: 'ROBOTECH GP';
+  font-size: 5em;
+  letter-spacing: 2px;
+  line-height: 0.4em;
+  margin-bottom: 0.5em;
+}
+
+.logo-spaced {
+  font-family: 'ROBOTECH GP';
+  font-size: 1.5em;
+  letter-spacing: 20px;
+}
+
+.logo a {
+  border-bottom: none;
+  padding: 0;
+}
+
+.small.logo {
+  font-size: 1.5em;
+}
+
+.navbar .logo {
+  font-size: 2em;
+  padding-left: 50px;
+  padding-right: 50px;
+  margin-bottom: 0.17em;
+}
+
 .project.card {
   background: #17a2b8;
   color: white;
@@ -119,36 +149,6 @@ pre {
 
 .tabs li.is-pulled-right a {
   display: inline-block;
-}
-
-.logo {
-  font-family: 'ROBOTECH GP';
-  font-size: 5em;
-  letter-spacing: 2px;
-  line-height: 0.4em;
-  margin-bottom: 0.5em;
-}
-
-.logo-spaced {
-  font-family: 'ROBOTECH GP';
-  font-size: 1.5em;
-  letter-spacing: 20px;
-}
-
-.logo a {
-  border-bottom: none;
-  padding: 0;
-}
-
-.small.logo {
-  font-size: 1.5em;
-}
-
-.navbar .logo {
-  font-size: 2em;
-  padding-left: 50px;
-  padding-right: 50px;
-  margin-bottom: 0.17em;
 }
 
 .navbar.has-bottom-border {

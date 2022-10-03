@@ -1,7 +1,6 @@
 import os
 import json
 import logging
-import random
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
