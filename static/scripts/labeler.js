@@ -1,5 +1,5 @@
 (function () {
-  var utils = {
+  const utils = {
     isDefined: function (x) {
       return x != null && x !== undefined;
     },
@@ -7,13 +7,13 @@
       const seen = new Set();
       return arr.filter(function (elem) {
         const key = elem["start"] + " -- " + elem["end"];
-        var isDuplicate = seen.has(key);
+        let isDuplicate = seen.has(key);
         if (!isDuplicate) seen.add(key);
         return !isDuplicate;
       });
     },
     serializeHashedObject: function (obj) {
-      var o = {};
+      let o = {};
       $(obj).each(function (i, x) {
         if (utils.isDefined(x.value) && x.value != "") {
           if (x.getAttribute("data-h")) {
@@ -41,7 +41,7 @@
     },
   };
 
-  var labelerModule = (function () {
+  const labelerModule = (function () {
     const RELATION_CHANGE_EVENT = "labeler_relationschange";
     const LINE_ENDING_TAGS = [
       "P",
@@ -57,7 +57,7 @@
     ];
     const LABEL_CSS_SELECTOR = "span.tag[data-s]";
 
-    var chunks = [], // the array of all chunks of text marked with a label, but not submitted yet
+    let chunks = [], // the array of all chunks of text marked with a label, but not submitted yet
       relations = {}, // a map from relationId to the list of relations constituting it
       labelId = 0,
       editingBatch = undefined,
@@ -71,9 +71,9 @@
       originalConfig = undefined;
 
     function containsIdentical(arr, obj) {
-      for (var i in arr) {
-        var found = true;
-        for (var k in obj) {
+      for (let i in arr) {
+        let found = true;
+        for (let k in obj) {
           found = found && arr[i].hasOwnProperty(k) && obj[k] == arr[i][k];
           if (!found) break;
         }
@@ -101,13 +101,9 @@
       return range.toString().length;
     }
 
-    function insertAfter(newNode, existingNode) {
-      existingNode.parentNode.insertBefore(newNode, existingNode.nextSibling);
-    }
-
     // hide those that will influence innerText
     function showExtraElements(selectorArea, makeVisible) {
-      var $sel = $(selectorArea),
+      let $sel = $(selectorArea),
         $relNum = $sel.find('[data-m="r"]'),
         $delBtn = $sel.find("button.delete"),
         $meta = $sel.find("[data-meta]");
@@ -126,7 +122,7 @@
     function previousTextLength(node) {
       function getPrevLength(prev, onlyElements) {
         if (onlyElements === undefined) onlyElements = false;
-        var len = 0;
+        let len = 0;
         while (prev != null) {
           if (prev.nodeType === 1) {
             if (prev.tagName == "BR") {
@@ -152,15 +148,15 @@
         return len;
       }
 
-      var selectorArea = document.querySelector(".selector");
+      let selectorArea = document.querySelector(".selector");
 
       showExtraElements(selectorArea, false);
 
       // account for the same paragraph
-      var textLength = getPrevLength(node.previousSibling);
+      let textLength = getPrevLength(node.previousSibling);
 
       // account for the previous text of the enclosing label
-      var enclosingLabel = getEnclosingLabel(node);
+      let enclosingLabel = getEnclosingLabel(node);
       if (enclosingLabel != null && enclosingLabel != node)
         textLength += getPrevLength(enclosingLabel.previousSibling);
 
@@ -171,7 +167,7 @@
       }
 
       // Find previous <p> or <ul>
-      var parent = getEnclosingParagraph(node);
+      let parent = getEnclosingParagraph(node);
 
       if (parent != null && parent.tagName == "UL") textLength += 1; // because <ul> adds a newline character to the beginning of the string
 
@@ -208,7 +204,7 @@
     }
 
     function filterSiblings(node, checker) {
-      var prev = node.previousSibling,
+      let prev = node.previousSibling,
         next = node.nextSibling,
         res = [];
 
@@ -308,14 +304,14 @@
 
     function mergeWithNeighbors(node) {
       // merge the given node with two siblings - used when deleting a label
-      var next = node.nextSibling,
+      let next = node.nextSibling,
         prev = node.previousSibling,
         parent = node.parentNode;
 
-      var pieces = [],
+      let pieces = [],
         element = document.createTextNode("");
-      for (var i = 0; i < node.childNodes.length; i++) {
-        var child = node.childNodes[i];
+      for (let i = 0; i < node.childNodes.length; i++) {
+        let child = node.childNodes[i];
         if (child.nodeType === 3) {
           element = document.createTextNode(element.data + child.data);
           if (i == node.childNodes.length - 1) pieces.push(element);
@@ -335,7 +331,7 @@
         else parent.insertBefore(pieces[0], next);
 
         parent.removeChild(node);
-        for (var i = 1; i < pieces.length - 1; i++) {
+        for (let i = 1; i < pieces.length - 1; i++) {
           parent.insertBefore(pieces[i], next);
         }
 
@@ -348,7 +344,7 @@
           parent.insertBefore(pieces[pieces.length - 1], next);
         }
       } else {
-        var next_data =
+        let next_data =
           next != null && utils.isDefined(next.data) ? next.data : "";
         if (prev == null) {
           parent.replaceChild(
@@ -356,7 +352,7 @@
             node
           );
         } else {
-          var prev_data = utils.isDefined(prev.data) ? prev.data : "";
+          let prev_data = utils.isDefined(prev.data) ? prev.data : "";
           parent.replaceChild(
             document.createTextNode(prev_data + pieces[0].data + next_data),
             prev
@@ -378,7 +374,7 @@
      */
     function getSelectionFromRange(range, config) {
       if (range.startContainer == range.endContainer) {
-        var node = range.startContainer;
+        let node = range.startContainer;
         if (node.nodeType === 3) {
           // Text
           return node.textContent.slice(range.startOffset, range.endOffset);
@@ -386,7 +382,7 @@
           return node.textContent;
         }
       } else {
-        var start = range.startContainer,
+        let start = range.startContainer,
           end = range.endContainer,
           startText = "",
           endText = "";
@@ -394,8 +390,8 @@
         if (start.nodeType === 3) {
           startText += start.textContent.slice(range.startOffset);
         } else {
-          for (var i = 0; i < range.startOffset; i++) {
-            var n = start.childNodes[i];
+          for (let i = 0; i < range.startOffset; i++) {
+            let n = start.childNodes[i];
             if (n != end) {
               startText += n.textContent;
             }
@@ -406,8 +402,8 @@
         if (end.nodeType === 3) {
           endText += end.textContent.slice(0, range.endOffset);
         } else {
-          for (var i = 0; i < range.endOffset; i++) {
-            var n = end.childNodes[i];
+          for (let i = 0; i < range.endOffset; i++) {
+            let n = end.childNodes[i];
             endText += n.textContent;
           }
         }
@@ -426,22 +422,50 @@
 
     // checks if a chunk is in any of the relations
     function isInRelations(c) {
-      for (var key in relations) {
-        var links = relations[key]["links"];
-        for (var i = 0, len = links.length; i < len; i++) {
+      for (let key in relations) {
+        let links = relations[key]["links"];
+        for (let i = 0, len = links.length; i < len; i++) {
           if (links[i].s == c.id || links[i].t == c.id) return key;
         }
       }
       return false;
     }
 
-    function removeAllChildren(node) {
-      while (node.firstChild) {
-        node.removeChild(node.firstChild);
-      }
-    }
-
     function initContextMenu(markedSpan, plugins) {
+      function createButton(plugin) {
+        if (plugin.isAllowed(markedSpan)) {
+          let btn = document.createElement("button");
+          btn.className =
+            "button is-primary is-small is-fullwidth is-rounded is-outlined mb-1";
+          btn.textContent = plugin.verboseName;
+          plugin.exec(markedSpan, btn);
+
+          if (plugin.subscribe) {
+            // TODO: we dispatch event from the document whenever any relation change is occuring
+            //       then we catching it here, but it gets overriden for every new markedSpan
+            plugin.subscribe.forEach(function (event) {
+              markedSpan.addEventListener(
+                event,
+                function (e) {
+                  (function (b) {
+                    if (plugin.isAllowed(e.target)) {
+                      plugin.exec(e.target, b);
+                      b.classList.remove("is-hidden");
+                    } else {
+                      b.classList.add("is-hidden");
+                    }
+                  })(btn);
+                },
+                false
+              );
+            });
+          }
+          return btn;
+        } else {
+          return null;
+        }
+      }
+
       if (
         Object.values(plugins)
           .map(function (x) {
@@ -451,60 +475,26 @@
             return a + b;
           }, 0) > 0
       ) {
-        function createButton(plugin) {
-          if (plugin.isAllowed(markedSpan)) {
-            var btn = document.createElement("button");
-            btn.className =
-              "button is-primary is-small is-fullwidth is-rounded is-outlined mb-1";
-            btn.textContent = plugin.verboseName;
-            plugin.exec(markedSpan, btn);
+        let code = markedSpan.getAttribute("data-s");
+        let short = code.substring(0, code.lastIndexOf("_"));
+        let div = document.createElement("div");
+        let subset = Object.assign({}, plugins[short], plugins[undefined]);
 
-            if (plugin.subscribe) {
-              // TODO: we dispatch event from the document whenever any relation change is occuring
-              //       then we catching it here, but it gets overriden for every new markedSpan
-              plugin.subscribe.forEach(function (event) {
-                markedSpan.addEventListener(
-                  event,
-                  function (e) {
-                    (function (b) {
-                      if (plugin.isAllowed(e.target)) {
-                        plugin.exec(e.target, b);
-                        b.classList.remove("is-hidden");
-                      } else {
-                        b.classList.add("is-hidden");
-                      }
-                    })(btn);
-                  },
-                  false
-                );
-              });
-            }
-            return btn;
-          } else {
-            return null;
-          }
-        }
-
-        var code = markedSpan.getAttribute("data-s");
-        var short = code.substring(0, code.lastIndexOf("_"));
-        var div = document.createElement("div");
-        var subset = Object.assign({}, plugins[short], plugins[undefined]);
-
-        for (var k in plugins["sharedBetweenMarkers"]) {
+        for (let k in plugins["sharedBetweenMarkers"]) {
           subset[k] = plugins["sharedBetweenMarkers"][k];
         }
 
         if (Object.keys(subset).length === 0) return;
 
-        var keys = Object.keys(subset);
+        let keys = Object.keys(subset);
         keys.sort(function (x, y) {
           if (subset[x].verboseName < subset[y].verboseName) return -1;
           else if (subset[x].verboseName > subset[y].verboseName) return 1;
           else return 0;
         });
 
-        for (var name in keys) {
-          var btn = createButton(subset[keys[name]]);
+        for (let name in keys) {
+          let btn = createButton(subset[keys[name]]);
           if (btn != null) div.appendChild(btn);
         }
         div.lastChild.classList.remove("mb-1");
@@ -520,11 +510,11 @@
         markedSpan.addEventListener("contextmenu", function (event) {
           event.preventDefault();
           event.stopPropagation();
-          var targetRect = event.target.getBoundingClientRect();
+          let targetRect = event.target.getBoundingClientRect();
 
           instance.setProps({
             getReferenceClientRect: function () {
-              var half = (targetRect.right - targetRect.left) / 2;
+              let half = (targetRect.right - targetRect.left) / 2;
               return {
                 width: 0,
                 height: 0,
@@ -541,16 +531,10 @@
       }
     }
 
-    function getMarkerForChunk(c) {
-      return document.querySelector(
-        'div.marker.tags[data-s="' + c["label"] + '"]'
-      );
-    }
-
     function countChunksByType() {
-      var cnt = {};
-      for (var c in chunks) {
-        var chunk = chunks[c];
+      let cnt = {};
+      for (let c in chunks) {
+        let chunk = chunks[c];
         if (
           !chunk.hasOwnProperty("batch") &&
           !chunk.submittable &&
@@ -603,22 +587,23 @@
     }
 
     function getLabelText(obj) {
-      var relLabels = {};
-      var relIds = obj.querySelectorAll('span[data-m="r"]');
-      for (var i = 0, len = relIds.length; i < len; i++) {
-        var relSpan = relIds[i];
+      let relLabels = {};
+      let relIds = obj.querySelectorAll('span[data-m="r"]');
+      let relSpan;
+      for (let i = 0, len = relIds.length; i < len; i++) {
+        relSpan = relIds[i];
         relLabels[relSpan.parentNode.id] = relSpan.textContent;
         relSpan.textContent = "";
       }
-      var text = obj.textContent;
-      for (var i = 0, len = relIds.length; i < len; i++) {
+      let text = obj.textContent;
+      for (let i = 0, len = relIds.length; i < len; i++) {
         relSpan.textContent = relLabels[relIds[i].parentNode.id];
       }
       return text;
     }
 
     function createMarkedSpan(obj) {
-      var color = obj.getAttribute("data-color"),
+      let color = obj.getAttribute("data-color"),
         textColor = obj.getAttribute("data-text-color"),
         markedSpan = document.createElement("span");
       markedSpan.className = "tag";
@@ -632,7 +617,7 @@
     }
 
     function checkForMultiplePossibleRelations(relationsArea, relCode) {
-      var relBetween = relationsArea.querySelectorAll("[data-b]"),
+      let relBetween = relationsArea.querySelectorAll("[data-b]"),
         numRelations = Array.from(relBetween)
           .map((x) => x.getAttribute("data-b").indexOf(relCode) > -1)
           .reduce((x, y) => x + y);
@@ -640,11 +625,11 @@
     }
 
     function createRelationSwitcher(relationIds) {
-      var btns = document.createElement("div");
+      let btns = document.createElement("div");
       btns.className = "buttons are-small";
 
-      for (var i = 0, len = relationIds.length; i < len; i++) {
-        var btn = document.createElement("button");
+      for (let i = 0, len = relationIds.length; i < len; i++) {
+        let btn = document.createElement("button");
         btn.className = "button";
         btn.setAttribute("data-rel", relationIds[i]);
         btn.textContent = relationIds[i];
@@ -686,7 +671,7 @@
           this.markersArea == null
             ? false
             : this.markersArea.getAttribute("data-disable") == "true";
-        var repr = document.querySelector("#relationRepr");
+        let repr = document.querySelector("#relationRepr");
         if (utils.isDefined(repr))
           this.drawingType = JSON.parse(repr.textContent);
         if (utils.isDefined(this.relationsArea)) this.initSvg();
@@ -700,7 +685,7 @@
             $(area)
               .find(".control.has-tag-left")
               .each(function (i, x) {
-                var $input = $(x).find("input"),
+                let $input = $(x).find("input"),
                   $tag = $(x).find("span.tag");
 
                 if ($input.length) {
@@ -716,7 +701,7 @@
         }
 
         showExtraElements(this.selectorArea, false);
-        var ct =
+        let ct =
           this.selectorArea == null
             ? ""
             : forPresentation
@@ -728,18 +713,18 @@
       initEvents: function () {
         // event delegation
         if (this.selectorArea != null) {
-          var control = this;
+          let control = this;
           this.textArea.addEventListener(
             "click",
             function (e) {
               e.stopPropagation();
-              var target = e.target;
+              let target = e.target;
               if (isDeleteButton(target)) {
                 control.labelDeleteHandler(e);
                 control.updateMarkAllCheckboxes();
               } else if (isLabel(target)) {
                 if (control.allowSelectingLabels) {
-                  var $target = $(target);
+                  let $target = $(target);
                   if (
                     $target.prop("in_relation") &&
                     !$target.prop("multiple_possible_relations")
@@ -774,13 +759,14 @@
             false
           );
 
+          let deselectActionBtn;
           if (utils.isDefined(this.actionsArea))
-            var deselectActionBtn = this.actionsArea.querySelector(
+            deselectActionBtn = this.actionsArea.querySelector(
               "#deselectAllMarkers"
             );
 
           if (utils.isDefined(deselectActionBtn))
-            deselectActionBtn.addEventListener("click", function (e) {
+            deselectActionBtn.addEventListener("click", function () {
               control.textArea
                 .querySelectorAll(LABEL_CSS_SELECTOR)
                 .forEach((x) => x.classList.remove("active"));
@@ -789,7 +775,7 @@
           this.selectorArea.addEventListener(
             "mouseover",
             function (e) {
-              var target = e.target;
+              let target = e.target;
               if (isLabel(target)) {
                 if (labelerModule.allowSelectingLabels) {
                   e.stopPropagation();
@@ -807,7 +793,7 @@
           this.selectorArea.addEventListener(
             "mouseout",
             function (e) {
-              var target = e.target;
+              let target = e.target;
               if (isLabel(target)) {
                 if (labelerModule.allowSelectingLabels) {
                   e.stopPropagation();
@@ -826,7 +812,7 @@
           this.selectorArea.addEventListener(
             "mouseup",
             function (e) {
-              var isRightMB;
+              let isRightMB;
               e = e || window.event;
 
               if ("which" in e)
@@ -848,10 +834,10 @@
           document.addEventListener(
             "keyup",
             function (e) {
-              var selection = window.getSelection();
+              let selection = window.getSelection();
 
               if (selection && selection.anchorNode != null) {
-                var isArticleAncestor = isAncestor(
+                let isArticleAncestor = isAncestor(
                   selection.anchorNode,
                   control.selectorArea
                 );
@@ -865,20 +851,21 @@
                   labelerModule.updateChunkFromSelection();
                 }
               }
-              var s = String.fromCharCode(e.which).toUpperCase();
+              let s = String.fromCharCode(e.which).toUpperCase();
+              let shortcut;
               if (e.shiftKey) {
-                var shortcut = document.querySelector(
+                shortcut = document.querySelector(
                   '[data-shortcut="SHIFT + ' + s + '"]'
                 );
               } else {
-                var shortcut = document.querySelector(
+                shortcut = document.querySelector(
                   '[data-shortcut="' + s + '"]'
                 );
               }
 
               if (shortcut != null) {
                 if (e.altKey && !e.shiftKey && !e.ctrlKey) {
-                  var input = shortcut.querySelector('input[type="checkbox"]');
+                  let input = shortcut.querySelector('input[type="checkbox"]');
                   if (utils.isDefined(input)) {
                     input.checked = !input.checked;
                     const event = new Event("change", { bubbles: true });
@@ -896,13 +883,13 @@
             this.markersArea.addEventListener(
               "click",
               function (e) {
-                var target = e.target;
+                let target = e.target;
                 if (target.nodeName != "INPUT") {
-                  var marker = getClosestMarker(target);
+                  let marker = getClosestMarker(target);
 
                   if (utils.isDefined(marker)) {
                     if (marker.getAttribute("data-scope") == "span") {
-                      var mmpi = control.markersArea.getAttribute("data-mmpi");
+                      let mmpi = control.markersArea.getAttribute("data-mmpi");
                       control.mark(marker, mmpi);
                       control.updateMarkAllCheckboxes();
                     } else if (marker.getAttribute("data-scope") == "text") {
@@ -918,15 +905,15 @@
               "change",
               function (e) {
                 e.stopPropagation();
-                var target = e.target;
+                let target = e.target;
                 if (target.getAttribute("type") == "checkbox") {
-                  var marker = getClosestMarker(target);
+                  let marker = getClosestMarker(target);
                   control.selectorArea
                     .querySelectorAll(
                       '[data-s="' + marker.getAttribute("data-s") + '"]'
                     )
                     .forEach(function (x) {
-                      var $x = $(x);
+                      let $x = $(x);
                       if (!$x.prop("in_relation") && !$x.prop("disabled")) {
                         if (
                           !target.checked &&
@@ -951,7 +938,7 @@
             this.relationsArea.addEventListener(
               "click",
               function (e) {
-                var relMarker = getClosestRelation(e.target);
+                let relMarker = getClosestRelation(e.target);
 
                 if (utils.isDefined(relMarker)) control.markRelation(relMarker);
               },
@@ -961,14 +948,14 @@
 
           // editing mode events
           document.addEventListener("click", function (e) {
-            var target = e.target;
+            let target = e.target;
 
             // TODO: this relies on us not including any icons in the buttons, which we don't so far
             if (
               target.tagName == "LI" &&
               target.getAttribute("data-mode") == "e"
             ) {
-              var uuid = target.getAttribute("data-id"),
+              let uuid = target.getAttribute("data-id"),
                 $editingBoard = $("#editingBoard"),
                 $target = $(target),
                 url = $editingBoard.attr("data-url"),
@@ -1008,7 +995,7 @@
         }
       },
       register: function (plugin, label) {
-        var p = Object.assign({}, plugin);
+        let p = Object.assign({}, plugin);
         delete p.name;
         if (!(label in this.contextMenuPlugins))
           this.contextMenuPlugins[label] = {};
@@ -1024,7 +1011,7 @@
         }
 
         if (Object.keys(p.dispatch).length > 0) {
-          for (var catchEvent in p.dispatch) {
+          for (let catchEvent in p.dispatch) {
             document.addEventListener(
               catchEvent,
               function (e) {
@@ -1059,7 +1046,7 @@
         pluginsToRegister++;
       },
       disableChunk: function (c) {
-        var $el = $('span.tag[data-i="' + c["id"] + '"]');
+        let $el = $('span.tag[data-i="' + c["id"] + '"]');
         $el.removeAttr("data-i");
         $el.addClass("is-disabled");
         $el.prop("disabled", true);
@@ -1074,14 +1061,14 @@
           });
       },
       enableChunk: function (c) {
-        var $el = $('span.tag[data-i="' + c["id"] + '"]');
+        let $el = $('span.tag[data-i="' + c["id"] + '"]');
         $el.removeClass("is-disabled");
         $el.prop("in_relation", false);
         $el.prop("disabled", false);
       },
       disableChunks: function (chunksList) {
         // disable given chunks visually
-        for (var c in chunksList) {
+        for (let c in chunksList) {
           this.disableChunk(chunksList[c]);
         }
         return chunksList;
@@ -1095,7 +1082,7 @@
       // initialize pre-markers, i.e. mark the specified words with a pre-specified marker
       initPreMarkers: function () {
         labelId = 0;
-        var control = this;
+        let control = this;
         $("article.text span.tag").each(function (i, node) {
           node.setAttribute("data-i", labelId);
           control.updateChunkFromNode(node);
@@ -1106,7 +1093,7 @@
       },
       updateChunkFromNode: function (node) {
         // adding the information about the node, representing a label, to the chunks array
-        var chunk = {},
+        let chunk = {},
           marker = document.querySelector(
             'div.marker.tags[data-s="' + node.getAttribute("data-s") + '"]'
           ),
@@ -1124,17 +1111,17 @@
       updateChunkFromSelection: function () {
         // getting a chunk from the selection; the chunk then either is being added to the chunks array, if the last chunk was submitted
         // or replaces the last chunk if the last chunk was not submitted
-        var selection = window.getSelection();
+        let selection = window.getSelection();
 
         if (selection && !selection.isCollapsed) {
           // group selections:
           //  - a label spanning other labels is selected, they should end up in the same group
           //  - two disjoint spans of text are selected, they should end up in separate groups (possible only in Firefox)
-          var groups = [],
+          let groups = [],
             group = [];
           group.push(selection.getRangeAt(0));
-          for (var i = 1; i < selection.rangeCount; i++) {
-            var last = group[group.length - 1],
+          for (let i = 1; i < selection.rangeCount; i++) {
+            let last = group[group.length - 1],
               cand = selection.getRangeAt(i);
             // NOTE:
             // - can't use `cand.compareBoundaryPoints(Range.END_TO_START, last)` because of delete buttons in the labels
@@ -1150,8 +1137,8 @@
           }
           if (group) groups.push(group);
 
-          for (var i = 0; i < groups.length; i++) {
-            var chunk = {},
+          for (let i = 0; i < groups.length; i++) {
+            let chunk = {},
               group = groups[i],
               N = group.length;
 
@@ -1175,19 +1162,19 @@
             chunk["marked"] = false;
             chunk["label"] = null;
 
-            var N = chunks.length;
+            let Nc = chunks.length;
             chunk["id"] = labelId;
             if (
-              N === 0 ||
-              (N > 0 && chunks[N - 1] !== undefined && chunks[N - 1]["marked"])
+              Nc === 0 ||
+              (Nc > 0 && chunks[Nc - 1] !== undefined && chunks[Nc - 1]["marked"])
             ) {
               chunks.push(chunk);
             } else {
-              chunks[N - 1] = chunk;
+              chunks[Nc - 1] = chunk;
             }
           }
         } else {
-          var chunk = this.getActiveChunk();
+          let chunk = this.getActiveChunk();
           if (utils.isDefined(chunk) && !chunk["marked"])
             this.removeActiveChunk();
         }
@@ -1195,10 +1182,10 @@
       mark: function (obj, max_markers) {
         // TODO: marking from meta information!
         if (chunks.length > 0 && activeLabels < max_markers) {
-          var chunk = this.getActiveChunk();
+          let chunk = this.getActiveChunk();
 
           if (!chunk.marked) {
-            var markedSpan = createMarkedSpan(obj),
+            let markedSpan = createMarkedSpan(obj),
               deleteMarkedBtn = document.createElement("button");
             markedSpan.classList.add("is-medium");
             markedSpan.setAttribute("data-i", chunk["id"]);
@@ -1216,7 +1203,7 @@
               chunk["range"].surroundContents(markedSpan);
               markedSpan.appendChild(deleteMarkedBtn);
             } catch (error) {
-              var nodeAfterEnd = chunk["range"].endContainer.nextSibling;
+              let nodeAfterEnd = chunk["range"].endContainer.nextSibling;
               if (nodeAfterEnd != null && isDeleteButton(nodeAfterEnd)) {
                 while (isLabel(nodeAfterEnd.parentNode)) {
                   nodeAfterEnd = nodeAfterEnd.parentNode;
@@ -1230,10 +1217,10 @@
                 chunk["range"].setEndAfter(nodeAfterEnd);
               }
 
-              var nodeBeforeStart =
+              let nodeBeforeStart =
                 chunk["range"].startContainer.previousSibling;
               if (nodeBeforeStart == null) {
-                var start = chunk["range"].startContainer;
+                let start = chunk["range"].startContainer;
                 while (isLabel(start.parentNode)) {
                   start = start.parentNode;
                 }
@@ -1252,7 +1239,7 @@
               chunk["range"].insertNode(markedSpan);
             }
 
-            var marked =
+            let marked =
                 chunk["range"].commonAncestorContainer.querySelectorAll(
                   "span.tag"
                 ),
@@ -1261,21 +1248,21 @@
                   .getComputedStyle(marked[0], null)
                   .getPropertyValue("line-height")
               );
-            for (var i = 0; i < marked.length; i++) {
-              var checker = marked[i],
+            for (let i = 0; i < marked.length; i++) {
+              let checker = marked[i],
                 elements = [];
               while (isLabel(checker)) {
                 elements.push(checker);
                 checker = checker.parentNode;
               }
 
-              var len = elements.length;
+              let len = elements.length;
 
               elements[len - 1].style.lineHeight =
                 curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
 
-              for (var j = 0; j < len; j++) {
-                var pTopStr = elements[j].style.paddingTop,
+              for (let j = 0; j < len; j++) {
+                let pTopStr = elements[j].style.paddingTop,
                   pBotStr = elements[j].style.paddingBottom,
                   pTop = parseFloat(pTopStr.slice(0, -2)),
                   pBot = parseFloat(pBotStr.slice(0, -2)),
@@ -1296,12 +1283,12 @@
             activeLabels++;
             chunk["label"] = obj.getAttribute("data-s");
 
-            var $metaInfo = $(markedSpan).siblings("[data-meta]");
+            let $metaInfo = $(markedSpan).siblings("[data-meta]");
             if ($metaInfo.length > 0) {
-              var $metaScript = $metaInfo.find("script");
+              let $metaScript = $metaInfo.find("script");
 
               if ($metaScript.length > 0) {
-                var jsonInfo = JSON.parse($metaScript.text());
+                let jsonInfo = JSON.parse($metaScript.text());
                 chunk["extra"] = jsonInfo;
               }
             }
@@ -1316,7 +1303,7 @@
             '[data-s="' + obj.getAttribute("data-s") + '"]'
           )
         ) {
-          var markedSpan = createMarkedSpan(obj),
+          let markedSpan = createMarkedSpan(obj),
             deleteMarkedBtn = document.createElement("button");
           markedSpan.textContent = obj.querySelector(
             "span.tag:first-child"
@@ -1335,15 +1322,15 @@
       checkRestrictions: function (inRelation) {
         if (inRelation === undefined) inRelation = false;
 
-        var markers = document.querySelectorAll(".marker.tags[data-res]");
-        var messages = [];
+        let markers = document.querySelectorAll(".marker.tags[data-res]");
+        let messages = [];
 
-        var satisfied = Array.from(markers).map(function (x, i) {
-          var res = x.getAttribute("data-res").split("&");
+        let satisfied = Array.from(markers).map(function (x) {
+          let res = x.getAttribute("data-res").split("&");
 
-          for (var i = 0, len = res.length; i < len; i++) {
+          for (let i = 0, len = res.length; i < len; i++) {
             if (res[i]) {
-              var have = inRelation
+              let have = inRelation
                 ? document.querySelectorAll(
                     '.selector span.tag[data-s="' +
                       x.getAttribute("data-s") +
@@ -1354,14 +1341,14 @@
                       x.getAttribute("data-s") +
                       '"]:not(.is-disabled)'
                   ).length;
-              var needed = parseInt(res[i].slice(2), 10),
+              let needed = parseInt(res[i].slice(2), 10),
                 restriction = res[i].slice(0, 2),
                 label = x.querySelector("span.tag").textContent;
               if (restriction == "ge") {
                 if (have >= needed) {
                   return true;
                 } else {
-                  var diff = needed - have;
+                  let diff = needed - have;
                   messages.push(
                     "You need at least " +
                       diff +
@@ -1377,7 +1364,7 @@
                 if (have > needed) {
                   return true;
                 } else {
-                  var diff = needed - have + 1;
+                  let diff = needed - have + 1;
                   messages.push(
                     "You need at least " +
                       diff +
@@ -1443,7 +1430,7 @@
           }
         }, markers);
 
-        var numSatisfied = satisfied.reduce(function (acc, val) {
+        let numSatisfied = satisfied.reduce(function (acc, val) {
           return acc + val;
         }, 0);
 
@@ -1455,7 +1442,7 @@
       initSvg: function () {
         if (typeof d3 !== "undefined") {
           /* Relations */
-          var svg = d3
+          let svg = d3
             .select("#relations")
             .append("svg")
             .attr("width", "100%")
@@ -1479,10 +1466,84 @@
         }
       },
       drawNetwork: function (data, arrows) {
+        function ticked(text, link, node, radius) {
+          /* update the simulation */
+          text
+            .attr("x", function (d) {
+              return d.x + radius * 1.2;
+            })
+            .attr("y", function (d) {
+              return d.y;
+            });
+
+          link
+            .attr("x1", function (d) {
+              return d.source.x;
+            })
+            .attr("y1", function (d) {
+              return d.source.y;
+            })
+            .attr("x2", function (d) {
+              let dx = 0.7 * Math.abs(d.target.x - d.source.x);
+              if (d.target.x > d.source.x) {
+                return d.source.x + dx;
+              } else {
+                return d.source.x - dx;
+              }
+            })
+            .attr("y2", function (d) {
+              let dx = 0.7 * Math.abs(d.target.x - d.source.x);
+              let x = null;
+              if (d.target.x > d.source.x) {
+                x = d.source.x + dx;
+              } else {
+                x = d.source.x - dx;
+              }
+
+              let dy =
+                (Math.abs(x - d.source.x) *
+                  Math.abs(d.target.y - d.source.y)) /
+                Math.abs(d.target.x - d.source.x);
+
+              if (d.target.y > d.source.y) {
+                // means arrow down
+                return d.source.y + dy;
+              } else {
+                // means arrow up
+                return d.source.y - dy;
+              }
+            });
+
+          node
+            .attr("cx", function (d) {
+              return d.x;
+            })
+            .attr("cy", function (d) {
+              return d.y;
+            });
+        }
+
+        function finalizeSimulation() {
+          let group = d3.select("g#" + data.id);
+
+          if (!group.empty()) {
+            // let bbox = group.node().getBBox();
+
+            let svgBbox = document
+              .querySelector("svg")
+              .getBoundingClientRect();
+
+            let mx = svgBbox.width / 2;
+            let my = svgBbox.height / 2;
+
+            group.attr("transform", "translate(" + mx + ", " + my + ")");
+          }
+        }
+
         if (typeof d3 !== "undefined") {
           if (arrows === undefined) arrows = false;
 
-          var svg = d3.select("#relations svg"),
+          let svg = d3.select("#relations svg"),
             radius = 10;
 
           svg.selectAll("g").attr("class", "hidden");
@@ -1491,7 +1552,7 @@
 
           svg = svg.append("g").attr("id", data.id);
 
-          var link = svg
+          let link = svg
             .selectAll("line")
             .data(data.links)
             .enter()
@@ -1501,7 +1562,7 @@
           if (arrows) link = link.attr("marker-end", "url(#triangle)");
 
           // Initialize the nodes
-          var node = svg
+          let node = svg
             .selectAll("circle")
             .data(data.nodes)
             .enter()
@@ -1513,14 +1574,14 @@
             .style("fill", function (d) {
               return d.color;
             })
-            .on("mouseover", function (d, i) {
+            .on("mouseover", function (d) {
               $(d.dom).addClass("active");
             })
-            .on("mouseout", function (d, i) {
+            .on("mouseout", function (d) {
               $(d.dom).removeClass("active");
             });
 
-          var text = svg
+          let text = svg
             .selectAll("text")
             .data(data.nodes)
             .enter()
@@ -1530,7 +1591,7 @@
             });
 
           // Let's list the force we wanna apply on the network
-          var simulation = d3
+          let simulation = d3
             .forceSimulation(data.nodes) // Force algorithm is applied to data.nodes
             .force(
               "link",
@@ -1546,82 +1607,9 @@
             .stop();
 
           // This function is run at each iteration of the force algorithm, updating the nodes position.
-          function ticked() {
-            /* update the simulation */
-            text
-              .attr("x", function (d) {
-                return d.x + radius * 1.2;
-              })
-              .attr("y", function (d) {
-                return d.y;
-              });
-
-            link
-              .attr("x1", function (d) {
-                return d.source.x;
-              })
-              .attr("y1", function (d) {
-                return d.source.y;
-              })
-              .attr("x2", function (d) {
-                var dx = 0.7 * Math.abs(d.target.x - d.source.x);
-                if (d.target.x > d.source.x) {
-                  return d.source.x + dx;
-                } else {
-                  return d.source.x - dx;
-                }
-              })
-              .attr("y2", function (d) {
-                var dx = 0.7 * Math.abs(d.target.x - d.source.x);
-                var x = null;
-                if (d.target.x > d.source.x) {
-                  x = d.source.x + dx;
-                } else {
-                  x = d.source.x - dx;
-                }
-
-                var dy =
-                  (Math.abs(x - d.source.x) *
-                    Math.abs(d.target.y - d.source.y)) /
-                  Math.abs(d.target.x - d.source.x);
-
-                if (d.target.y > d.source.y) {
-                  // means arrow down
-                  return d.source.y + dy;
-                } else {
-                  // means arrow up
-                  return d.source.y - dy;
-                }
-              });
-
-            node
-              .attr("cx", function (d) {
-                return d.x;
-              })
-              .attr("cy", function (d) {
-                return d.y;
-              });
-          }
-
-          function finalizeSimulation() {
-            var group = d3.select("g#" + data.id);
-
-            if (!group.empty()) {
-              var bbox = group.node().getBBox();
-
-              var svgBbox = document
-                .querySelector("svg")
-                .getBoundingClientRect();
-
-              var mx = svgBbox.width / 2;
-              var my = svgBbox.height / 2;
-
-              group.attr("transform", "translate(" + mx + ", " + my + ")");
-            }
-          }
 
           for (
-            var i = 0,
+            let i = 0,
               n = Math.ceil(
                 Math.log(simulation.alphaMin()) /
                   Math.log(1 - simulation.alphaDecay())
@@ -1630,7 +1618,7 @@
             ++i
           ) {
             simulation.tick();
-            ticked();
+            ticked(text, link, node, radius);
           }
           finalizeSimulation();
 
@@ -1639,7 +1627,7 @@
       },
       drawList: function (data) {
         if (typeof d3 !== "undefined") {
-          var svg = d3.select("#relations svg"),
+          let svg = d3.select("#relations svg"),
             radius = 10;
 
           svg.selectAll("g").attr("class", "hidden");
@@ -1654,7 +1642,7 @@
           });
 
           // Initialize the nodes
-          var node = svg
+          let node = svg
             .selectAll("circle")
             .data(data.nodes)
             .enter()
@@ -1672,14 +1660,14 @@
             .style("fill", function (d) {
               return d.color;
             })
-            .on("mouseover", function (d, i) {
+            .on("mouseover", function (d) {
               $(d.dom).addClass("active");
             })
-            .on("mouseout", function (d, i) {
+            .on("mouseout", function (d) {
               $(d.dom).removeClass("active");
             });
 
-          var text = svg
+          let text = svg
             .selectAll("text")
             .data(data.nodes)
             .enter()
@@ -1718,19 +1706,19 @@
         if (currentRelationId == null) return currentRelationId;
 
         currentRelationId++;
-        var graphIds = Object.keys(relations);
+        let graphIds = Object.keys(relations);
         if (currentRelationId > graphIds.length) {
           currentRelationId = graphIds.length;
         }
         return currentRelationId;
       },
       removeRelation: function (idx, exception) {
-        var control = this;
+        let control = this;
 
         $("g#" + relations[idx]["graphId"])
           .find("circle[data-id]")
           .each(function (i, d) {
-            var $el = $("#" + d.getAttribute("data-id"));
+            let $el = $("#" + d.getAttribute("data-id"));
             if (
               utils.isDefined(exception) &&
               $el.attr("id") == $(exception).attr("id")
@@ -1742,16 +1730,17 @@
           });
         d3.select("g#" + relations[idx]["graphId"]).remove();
         delete relations[idx];
-        var map = {};
-        var keys = Object.keys(relations);
+        let map = {};
+        let keys = Object.keys(relations);
         keys.sort();
-        for (var k in keys) {
-          var kk = parseInt(keys[k], 10);
+        let k, kk;
+        for (k in keys) {
+          kk = parseInt(keys[k], 10);
           if (kk > idx) {
             $("g#" + relations[keys[k]]["graphId"])
               .find("circle[data-id]")
               .each(function (i, d) {
-                var $el = $("#" + d.getAttribute("data-id"));
+                let $el = $("#" + d.getAttribute("data-id"));
                 if ($el.length > 0) {
                   $el.find('[data-m="r"]').text(kk - 1);
                 }
@@ -1778,14 +1767,14 @@
       },
       removeCurrentRelation: function () {
         this.removeRelation(currentRelationId);
-        var graphIds = Object.keys(relations);
+        let graphIds = Object.keys(relations);
         currentRelationId = graphIds.length > 0 ? graphIds.length : null;
         return currentRelationId;
       },
       showRelationGraph(id) {
         if (id == null || id === undefined) $("#relationId").text(0);
         else {
-          var svg = d3.select("#relations svg");
+          let svg = d3.select("#relations svg");
 
           svg.selectAll("g").attr("class", "hidden");
 
@@ -1796,7 +1785,7 @@
         currentRelationId = id;
       },
       updateRelationSwitcher: function (x, relationId, removeId) {
-        var relSpan = undefined;
+        let relSpan = undefined;
         if (x.hasOwnProperty("dom")) relSpan = x.dom.querySelector("[data-m]");
         else relSpan = x.querySelector("[data-m]");
 
@@ -1804,10 +1793,10 @@
 
         if (utils.isDefined(relSpan)) {
           if (utils.isDefined($(relSpan).prop("rels"))) {
-            var rr = $(relSpan).prop("rels");
+            let rr = $(relSpan).prop("rels");
 
             if (utils.isDefined(removeId)) {
-              var idx = rr.indexOf(parseInt(removeId, 10));
+              let idx = rr.indexOf(parseInt(removeId, 10));
               if (idx != -1) rr.splice(idx, 1);
             }
 
@@ -1824,7 +1813,7 @@
               relSpan.textContent = rr.length > 1 ? "+" : rr[0];
             else {
               relSpan.textContent = "";
-              var $x = $(x.hasOwnProperty("dom") ? x.dom : x);
+              let $x = $(x.hasOwnProperty("dom") ? x.dom : x);
               $x.prop("in_relation", false);
               $x.attr("id", "");
               $(relSpan).remove();
@@ -1835,7 +1824,7 @@
             $(relSpan).prop("rels", [relationId]);
           }
         } else if (utils.isDefined(relationId)) {
-          var relSpan = document.createElement("span");
+          relSpan = document.createElement("span");
           relSpan.setAttribute("data-m", "r");
           relSpan.className = "rel";
           relSpan.textContent = relationId;
@@ -1844,7 +1833,7 @@
         }
 
         if (utils.isDefined(relSpan)) {
-          var content = createRelationSwitcher($(relSpan).prop("rels"));
+          let content = createRelationSwitcher($(relSpan).prop("rels"));
 
           if (relSpan._tippy) {
             relSpan._tippy.destroy();
@@ -1876,7 +1865,7 @@
           var allInRelation = true,
             rels = [],
             sameRels = [];
-          for (var i = 0, len = $parts.length; i < len; i++) {
+          for (let i = 0, len = $parts.length; i < len; i++) {
             var $p = $($parts[i]);
             allInRelation = allInRelation && $p.prop("in_relation");
             rels.push($p.find("[data-m]").prop("rels"));
@@ -1896,7 +1885,7 @@
               if (new Set(cur).size === 1) {
                 // all same, advance all pointers
                 sameRels.push(rels[ptr[0]]);
-                for (var j = 0; j < relsLength; j++) {
+                for (let j = 0; j < relsLength; j++) {
                   if (ptr[j] + 1 < rels[j].length) {
                     ptr[j]++;
                   }
@@ -1905,7 +1894,7 @@
               } else {
                 // Advance the minimal pointers
                 var arrMin = Math.min(...cur);
-                for (var j = 0; j < relsLength; j++) {
+                for (let j = 0; j < relsLength; j++) {
                   if (cur[ptr[j]] == arrMin && ptr[j] + 1 < rels[j].length) {
                     ptr[j]++;
                   }
@@ -1918,7 +1907,7 @@
             }
           }
 
-          for (var j = 0, len = sameRels.length; j < len; j++) {
+          for (let j = 0, len = sameRels.length; j < len; j++) {
             var ind = sameRels[j];
 
             if (
@@ -1980,16 +1969,16 @@
               var storedIds = nodes[s].map((x) => x.id),
                 otherNodes = relations[newRelationId].d3.nodes;
 
-              for (var ons in otherNodes) {
+              for (let ons in otherNodes) {
                 if (!nodes.hasOwnProperty(ons)) nodes[ons] = [];
 
                 if (ons == s) {
-                  for (var i in otherNodes[ons]) {
+                  for (let i in otherNodes[ons]) {
                     if (!storedIds.includes(otherNodes[ons][i].id))
                       nodes[ons].push(otherNodes[ons][i]);
                   }
                 } else {
-                  for (var i in otherNodes[ons]) {
+                  for (let i in otherNodes[ons]) {
                     nodes[ons].push(otherNodes[ons][i]);
                   }
                 }
@@ -1999,7 +1988,7 @@
 
           if (candRels.length > 1) {
             newRelationId = Math.min(...candRels);
-            for (var i in candRels) {
+            for (let i in candRels) {
               if (candRels[i] != newRelationId) rels2remove.push(candRels[i]);
             }
           }
@@ -2017,7 +2006,7 @@
           }
 
           var sketches = [];
-          for (var i = 0, len = between.length; i < len; i++) {
+          for (let i = 0, len = between.length; i < len; i++) {
             var sketch = {
               nodes: {},
               links: [],
@@ -2080,15 +2069,15 @@
 
           var j = startId;
 
-          for (var i = 0, len = sketches.length; i < len; i++) {
-            for (var key in sketches[i].nodes) {
+          for (let i = 0, len = sketches.length; i < len; i++) {
+            for (let key in sketches[i].nodes) {
               j += sketches[i].nodes[key].length;
             }
 
             if (relations.hasOwnProperty(newRelationId)) {
-              for (var k in sketches[i].nodes) {
+              for (let k in sketches[i].nodes) {
                 var nn = sketches[i].nodes[k];
-                for (var a = 0, len_a = nn.length; a < len_a; a++) {
+                for (let a = 0, len_a = nn.length; a < len_a; a++) {
                   if (
                     !containsIdentical(
                       relations[newRelationId].d3.nodes[k],
@@ -2182,7 +2171,7 @@
               });
             }
 
-            for (var s in sketches[i].nodes) {
+            for (let s in sketches[i].nodes) {
               var snodes = sketches[i].nodes[s];
               snodes.forEach(function (x) {
                 control.updateRelationSwitcher(x, newRelationId);
@@ -2195,7 +2184,7 @@
             startId = j;
           }
 
-          for (var i in rels2remove) {
+          for (let i in rels2remove) {
             this.removeRelation(rels2remove[i]);
           }
 
@@ -2438,7 +2427,7 @@
 
           while (isLabel(checker)) {
             var cand = checker == parent ? [] : [checker];
-            for (var i in siblings) {
+            for (let i in siblings) {
               cand.push(siblings[i]);
             }
 
@@ -2460,10 +2449,10 @@
               curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
           }
 
-          for (var j = 0; j < len; j++) {
+          for (let j = 0; j < len; j++) {
             var npTop = 5 + 5 * j,
               npBot = 5 + 5 * j;
-            for (var i = 0, len2 = elements[j].length; i < len2; i++) {
+            for (let i = 0, len2 = elements[j].length; i < len2; i++) {
               var pTopStr = elements[j][i].style.paddingTop,
                 pBotStr = elements[j][i].style.paddingBottom,
                 pTop = parseFloat(pTopStr.slice(0, -2)),
@@ -2477,7 +2466,7 @@
           }
 
           if (utils.isDefined(editingBatch)) {
-            for (var i = 0, len = chunks.length; i < len; i++) {
+            for (let i = 0, len = chunks.length; i < len; i++) {
               if (chunks[i].id == chunkId) {
                 chunks[i]["deleted"] = true;
                 break;
@@ -2536,7 +2525,7 @@
         // add plugin info to chunks
         var sharedLabelPlugins = {},
           sharedRelPlugins = {};
-        for (var p in this.contextMenuPlugins["sharedBetweenMarkers"]) {
+        for (let p in this.contextMenuPlugins["sharedBetweenMarkers"]) {
           var cp = this.contextMenuPlugins["sharedBetweenMarkers"][p];
           if (cp.hasOwnProperty("storeFor")) {
             if (cp.storeFor == "label") {
@@ -2547,17 +2536,17 @@
           }
         }
 
-        for (var i = 0, len = submittableChunks.length; i < len; i++) {
+        for (let i = 0, len = submittableChunks.length; i < len; i++) {
           if (!submittableChunks[i].hasOwnProperty("extra"))
             submittableChunks[i]["extra"] = {};
           var plugins = this.contextMenuPlugins[submittableChunks[i].label];
 
-          for (var name in plugins) {
+          for (let name in plugins) {
             submittableChunks[i]["extra"][name] =
               plugins[name].storage["l" + submittableChunks[i]["id"]] || "";
           }
 
-          for (var name in sharedLabelPlugins) {
+          for (let name in sharedLabelPlugins) {
             submittableChunks[i]["extra"][name] =
               sharedLabelPlugins[name].storage[
                 "l" + submittableChunks[i]["id"]
@@ -2565,14 +2554,14 @@
           }
         }
 
-        for (var rId in relations) {
+        for (let rId in relations) {
           var relObj = {
             links: relations[rId]["links"],
             rule: relations[rId]["rule"],
             extra: {},
           };
 
-          for (var name in sharedRelPlugins) {
+          for (let name in sharedRelPlugins) {
             relObj["extra"][name] =
               sharedRelPlugins[name].storage["r" + rId] || "";
           }
@@ -2610,7 +2599,7 @@
         mergeWithNeighbors(label);
       },
       unmark: function (chunksList) {
-        for (var c in chunksList) {
+        for (let c in chunksList) {
           this.unmarkChunk(chunksList[c]);
         }
       },
@@ -2661,7 +2650,7 @@
         var cnt = countChunksByType();
         $('[data-s] input[type="checkbox"]').prop("disabled", true);
         $('[data-s] input[type="checkbox"]').prop("checked", false);
-        for (var i in cnt) {
+        for (let i in cnt) {
           if (cnt[i] > 0) {
             $('[data-s="' + i + '"] input[type="checkbox"]').prop(
               "disabled",
@@ -2740,7 +2729,7 @@
                 non_unit_markers = d.non_unit_markers,
                 groups = d.groups;
 
-              for (var k in non_unit_markers) {
+              for (let k in non_unit_markers) {
                 for (
                   var i = 0, len = non_unit_markers[k].length;
                   i < len;
@@ -2769,7 +2758,7 @@
               }
 
               // text labels
-              for (var i = 0, len = text_labels.length; i < len; i++) {
+              for (let i = 0, len = text_labels.length; i < len; i++) {
                 var lab = control.markersArea.querySelector(
                   'input[name="' + text_labels[i].marker.code + '"]'
                 );
@@ -2789,7 +2778,7 @@
                 return x["start"] - y["start"];
               });
 
-              for (var i = 0, len = cnodes.length; i < len; i++) {
+              for (let i = 0, len = cnodes.length; i < len; i++) {
                 if (curLabelId < numLabels) {
                   if (
                     acc + cnodes[i].textContent.length >
@@ -2872,7 +2861,7 @@
                             numInnerLoops !== 0 &&
                             utils.isDefined(sameLevelId)
                           ) {
-                            for (var i = 0; i <= curLabelId; i++) {
+                            for (let i = 0; i <= curLabelId; i++) {
                               if (numOverlapping < processed[i]["ov"]) {
                                 processed[i]["closed"] = true;
                               }
@@ -2971,9 +2960,9 @@
      */
     var labelerPluginsDOM = document.querySelector("#labelerPlugins"),
       labelerPlugins = JSON.parse(labelerPluginsDOM.textContent);
-    for (var markerShort in labelerPlugins) {
-      for (var i = 0, len = labelerPlugins[markerShort].length; i < len; i++) {
-        var pluginCfg = labelerPlugins[markerShort][i];
+    for (let markerShort in labelerPlugins) {
+      for (let i = 0, len = labelerPlugins[markerShort].length; i < len; i++) {
+        let pluginCfg = labelerPlugins[markerShort][i];
         $.getScript(
           labelerPluginsDOM.getAttribute("data-url") + pluginCfg["file"],
           (function (cfg, ms) {
