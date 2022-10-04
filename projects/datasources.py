@@ -16,28 +16,55 @@ class AbsentSpecError(Exception):
     pass
 
 
-class MetadataProcessor:
-    def __init__(self, folders, owner_username):
-        if owner_username:
-            self.__allowed_dirs = map(lambda x: x.format(username=owner_username), settings.DATA_DIRS)
+class AllowedDirsMixin:
+    def __init__(self):
+        self.__allowed_dirs = None
+
+    def set_allowed_dirs(self, username):
+        self.__allowed_dirs = None
+        if username:
+            self.__allowed_dirs = map(lambda x: x.format(username=username), settings.DATA_DIRS)
         else:
             fmt = string.Formatter()
             self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
+
+    @property
+    def allowed_dirs(self):
+        return self.__allowed_dirs
+
+    def find_folders(self, folders):
+        found_folders = []
+        for folder in folders:
+            for d in self.__allowed_dirs:
+                cand_folder = os.path.join(d, folder)
+                if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
+                    found_folders.append(cand_folder)
+                    break
+        return found_folders
+    
+    def find_files(self, files):
+        found_files = []
+        for fname in files:
+            for d in self.__allowed_dirs:
+                cand_file = os.path.join(d, fname)
+                if os.path.exists(cand_file) and os.path.isfile(cand_file):
+                    found_files.append(cand_file)
+                    break
+        return found_files
+
+
+class MetadataProcessor(AllowedDirsMixin):
+    def __init__(self, folders, owner_username):
+        self.set_allowed_dirs(owner_username)
 
         self.__images = defaultdict(list)
         self.__audio = defaultdict(list)
         self.__video = defaultdict(list)
 
-        for folder in folders:
-            found_folder = None
-            for d in self.__allowed_dirs:
-                cand_folder = os.path.join(d, folder)
-                if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
-                    found_folder = cand_folder
-                    break
+        found_folders = self.find_folders(folders)
 
-            if found_folder:
-                self.__process_dir(Path(found_folder))
+        for found_folder in found_folders:
+            self.__process_dir(Path(found_folder))
 
     def __process_dir(self, d, prefix=""):
         for f in d.iterdir():
@@ -75,7 +102,6 @@ class MetadataProcessor:
             'video': self.__video,
             'audio': self.__audio
         }
-
 
 
 class TextDatapoint:
@@ -144,12 +170,13 @@ class AbstractDataSource:
         pass
 
     def get_source_name(self, dp_id):
-        return ""
+        pass
 
     def size(self):
         return self.__size
 
     def __getitem__(self, key):
+        print(key)
         try:
             return self.__data[int(key)]
         except ValueError:
@@ -170,7 +197,7 @@ class PlainTextSource(AbstractDataSource):
         return idx, self[idx]
 
 
-class TextFileSource(AbstractDataSource):
+class TextFileSource(AbstractDataSource, AllowedDirsMixin):
     def __init__(self, spec_data):
         super().__init__(spec_data)
 
@@ -179,52 +206,27 @@ class TextFileSource(AbstractDataSource):
 
         self.__mapping = []
 
-        if self.get_spec('username'):
-            self.__allowed_dirs = list(map(lambda x: x.format(username=self.get_spec('username')), settings.DATA_DIRS))
-        else:
-            fmt = string.Formatter()
-            self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
-
+        self.set_allowed_dirs(self.get_spec('username'))
         self.__files = []
         if self.get_spec('files'):
-            for fname in self.get_spec('files'):
-                found_file = None
-                for d in self.__allowed_dirs:
-                    cand_file = os.path.join(d, fname)
-                    if os.path.exists(cand_file) and os.path.isfile(cand_file):
-                        found_file = cand_file
-                        break
+            found_files = self.find_files(self.get_spec('files'))
 
-                if found_file:
-                    self.__files.append(found_file)
+            for found_file in found_files:
+                self.__files.append(found_file)
 
         if self.get_spec('folders'):
-            for folder in self.get_spec('folders'):
-                found_folder = None
-                for d in self.__allowed_dirs:
-                    cand_folder = os.path.join(d, folder)
-                    if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
-                        found_folder = cand_folder
-                        break
+            found_folders = self.find_folders(self.get_spec('folders'))
 
-                if found_folder:
-                    for d, _, files in os.walk(found_folder):
-                        for f in files:
-                            self.__files.append(os.path.join(d, f))
+            for found_folder in found_folders:
+                for d, _, files in os.walk(found_folder):
+                    for f in files:
+                        self.__files.append(os.path.join(d, f))
 
         for fname in self.__files:
-            found_file = None
-            for d in self.__allowed_dirs:
-                cand_file = os.path.join(d, fname)
-                if os.path.exists(cand_file) and os.path.isfile(cand_file):
-                    found_file = cand_file
-                    break
-
-            if found_file:
-                # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
-                with open(found_file, encoding='utf-8-sig') as f:
-                    self._add_datapoint(f.read())
-                    self.__mapping.append(os.path.basename(fname))
+            # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
+            with open(fname, encoding='utf-8-sig') as f:
+                self._add_datapoint(f.read())
+                self.__mapping.append(os.path.basename(fname))
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)
@@ -235,7 +237,7 @@ class TextFileSource(AbstractDataSource):
         return self.__mapping[int(dp_id)]
 
 
-class JsonSource(AbstractDataSource):
+class JsonSource(AbstractDataSource, AllowedDirsMixin):
     def __init__(self, spec_data):
         super().__init__(spec_data)
 
@@ -245,36 +247,19 @@ class JsonSource(AbstractDataSource):
 
         self.__mapping = []
 
-        if self.get_spec('username'):
-            self.__allowed_dirs = map(lambda x: x.format(username=self.get_spec('username')), settings.DATA_DIRS)
-        else:
-            fmt = string.Formatter()
-            self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
-
+        self.set_allowed_dirs(self.get_spec('username'))
         self.__files = []
         if self.get_spec('files'):
-            for fname in self.get_spec('files'):
-                found_file = None
-                for d in self.__allowed_dirs:
-                    cand_file = os.path.join(d, fname)
-                    if os.path.exists(cand_file) and os.path.isfile(cand_file):
-                        found_file = cand_file
-                        break
+            found_files = self.find_files(self.get_spec('files'))
 
-                if found_file:
-                    self.__files.append(found_file)
+            for found_file in found_files:
+                self.__files.append(found_file)
 
         if self.get_spec('folders'):
-            for folder in self.get_spec('folders'):
-                found_folder = None
-                for d in self.__allowed_dirs:
-                    cand_folder = os.path.join(d, folder)
-                    if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
-                        found_folder = cand_folder
-                        break
+            found_folders = self.find_folders(self.get_spec('folders'))
 
-                if found_folder:
-                    self.__files.extend(Path(found_folder).rglob('*.json'))
+            for found_folder in found_folders:
+                self.__files.extend(Path(found_folder).rglob('*.json'))
 
         for fname in self.__files:
             d = json.load(open(fname))
@@ -334,7 +319,7 @@ class TextsAPISource(AbstractDataSource):
             return ""
 
 
-class DialJSLSource(AbstractDataSource):
+class DialJSLSource(AbstractDataSource, AllowedDirsMixin):
     def __init__(self, spec_data):
         super().__init__(spec_data)
 
@@ -344,36 +329,19 @@ class DialJSLSource(AbstractDataSource):
 
         self.__mapping = []
 
-        if self.get_spec('username'):
-            self.__allowed_dirs = map(lambda x: x.format(username=self.get_spec('username')), settings.DATA_DIRS)
-        else:
-            fmt = string.Formatter()
-            self.__allowed_dirs = [d for d in settings.DATA_DIRS if all([tup[1] is None for tup in fmt.parse(d)])]
-
+        self.set_allowed_dirs(self.get_spec('username'))
         self.__files = []
         if self.get_spec('files'):
-            for fname in self.get_spec('files'):
-                found_file = None
-                for d in self.__allowed_dirs:
-                    cand_file = os.path.join(d, fname)
-                    if os.path.exists(cand_file) and os.path.isfile(cand_file):
-                        found_file = cand_file
-                        break
+            found_files = self.find_files(self.get_spec('files'))
 
-                if found_file:
-                    self.__files.append(found_file)
+            for found_file in found_files:
+                self.__files.append(found_file)
 
         if self.get_spec('folders'):
-            for folder in self.get_spec('folders'):
-                found_folder = None
-                for d in self.__allowed_dirs:
-                    cand_folder = os.path.join(d, folder)
-                    if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
-                        found_folder = cand_folder
-                        break
+            found_folders = self.find_folders(self.get_spec('folders'))
 
-                if found_folder:
-                    self.__files.extend(Path(found_folder).rglob('*.jsonl'))
+            for found_folder in found_folders:
+                self.__files.extend(Path(found_folder).rglob('*.jsonl'))
 
         for fname in self.__files:
             dp = TextDatapoint()
