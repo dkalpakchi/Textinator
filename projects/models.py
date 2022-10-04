@@ -127,7 +127,7 @@ class DataSource(CommonModel):
                 text = globals().get(method.helper, lambda x: x)(text)
         return text
 
-    def __load_datasource(self, idx):
+    def __load_datasource(self):
         source_cls = DataSource.type2class(self.source_type)
         if self.owner:
             spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
@@ -138,11 +138,11 @@ class DataSource(CommonModel):
         return ds_instance
 
     def get(self, idx):
-        ds_instance = self.__load_datasource(idx)
+        ds_instance = self.__load_datasource()
         return ds_instance[idx]
 
     def size(self):
-        ds_instance = self.__load_datasource(idx)
+        ds_instance = self.__load_datasource()
         return ds_instance.size()
 
     def __str__(self):

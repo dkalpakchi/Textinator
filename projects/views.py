@@ -1,12 +1,10 @@
-import json
 import os
 import io
 import bisect
 import uuid
 from collections import defaultdict
-from itertools import chain
 
-from django.http import JsonResponse, Http404, FileResponse, StreamingHttpResponse
+from django.http import JsonResponse, Http404, FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
@@ -24,15 +22,14 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 
 from chartjs.views.columns import BaseColumnsHighChartsView
-from chartjs.views.lines import BaseLineChartView
 
 # from modeltranslation.translator import translator
 
-from .models import *
-from .helpers import hash_text, retrieve_by_hash, apply_premarkers
-from .export import Exporter
-from .view_helpers import *
-from .datasources import TextDatapoint
+import projects.models as Tm
+import projects.view_helpers as Tvh
+import projects.datasources as Tds
+import projects.helpers as Th
+import projects.export as Tex
 
 from Textinator.jinja2 import to_markdown, to_formatted_text
 
@@ -51,10 +48,10 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        self.labels = Label.objects.filter(marker__project__id=self.pk, undone=False).all()
-        self.inputs = Input.objects.filter(marker__project__id=self.pk).all()
+        self.labels = Tm.Label.objects.filter(marker__project__id=self.pk, undone=False).all()
+        self.inputs = Tm.Input.objects.filter(marker__project__id=self.pk).all()
         self.x_axis = sorted(set([len(l.text.split()) for l in self.labels]) | set([len(i.content.split()) for i in self.inputs]))
-        self.project = Project.objects.get(pk=self.pk)
+        self.project = Tm.Project.objects.get(pk=self.pk)
         self.participants = self.project.participants.all()
         return self.x_axis
 
@@ -90,8 +87,8 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        inputs = Input.objects.filter(marker__project__id=self.pk).order_by('dt_created').all()
-        labels = Label.objects.filter(marker__project__id=self.pk, undone=False).order_by('dt_created').all()
+        inputs = Tm.Input.objects.filter(marker__project__id=self.pk).order_by('dt_created').all()
+        labels = Tm.Label.objects.filter(marker__project__id=self.pk, undone=False).order_by('dt_created').all()
         self.inputs_by_user = defaultdict(lambda: defaultdict(list))
         self.labels_by_user = defaultdict(lambda: defaultdict(list))
         for inp in inputs:
@@ -119,7 +116,7 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
             if self.x_axis:
                 self.x_axis.append(self.x_axis[-1] + 1)
 
-            self.project = Project.objects.get(pk=self.pk)
+            self.project = Tm.Project.objects.get(pk=self.pk)
             self.participants = self.project.participants.all()
             return self.x_axis
         else:
@@ -165,7 +162,7 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        logs = DataAccessLog.objects.filter(project__id=self.pk)
+        logs = Tm.DataAccessLog.objects.filter(project__id=self.pk)
         submitted_logs = logs.filter(is_submitted=True)
         skipped_logs = logs.filter(is_skipped=True, is_submitted=False)
         
@@ -188,7 +185,7 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
                     i += 1
         self.x_axis = [self.dataset_info[k]['name'] for k in self.dataset_info]
 
-        self.project = Project.objects.get(pk=self.pk)
+        self.project = Tm.Project.objects.get(pk=self.pk)
         self.participants = self.project.participants.all()
         
         return self.x_axis
@@ -250,7 +247,7 @@ class DataSourceSizeJSONView(BaseColumnsHighChartsView):
 
     def get_labels(self):
         """Return 7 labels for the x-axis."""
-        self.project = Project.objects.get(pk=self.pk)
+        self.project = Tm.Project.objects.get(pk=self.pk)
         self.x_axis = list(self.project.datasources.values_list('name', flat=True))
         return self.x_axis
 
@@ -275,7 +272,7 @@ datasource_size_chart_json = DataSourceSizeJSONView.as_view()
 
 # This could potentially be converted into a function view?
 class IndexView(LoginRequiredMixin, generic.ListView):
-    model = Project
+    model = Tm.Project
     template_name = 'projects/index.html'
 
     def get_context_data(self, **kwargs):
@@ -285,7 +282,7 @@ class IndexView(LoginRequiredMixin, generic.ListView):
 
 
 class DetailView(LoginRequiredMixin, generic.DetailView):
-    model = Project
+    model = Tm.Project
     template_name = 'projects/detail.html'
     context_object_name = 'project'
     permission_denied_message = 'you did not confirmed yet. please check your email.'
@@ -299,8 +296,8 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         if not proj.has_participant(u): raise Http404
 
         fallback_languages = (proj.language, u.profile.preferred_language, 'en')
-        Marker.name.fallback_languages = {'default': fallback_languages}
-        Relation.name.fallback_languages = {'default': fallback_languages}
+        Tm.Marker.name.fallback_languages = {'default': fallback_languages}
+        Tm.Relation.name.fallback_languages = {'default': fallback_languages}
 
         # TODO:
         # This is supposed to be an equivalent solution to the above, but
@@ -315,56 +312,56 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         #             descriptor = getattr(model, field_name)
         #             setattr(descriptor, 'fallback_languages', fallback_languages)
 
-        u_profile = UserProfile.objects.filter(user=u, project=proj).get()
+        u_profile = Tm.UserProfile.objects.filter(user=u, project=proj).get()
 
         dp_info = proj.data(u)
 
         logs = None
         if dp_info.source_id:
             try:
-                d = DataSource.objects.get(pk=dp_info.source_id)
-            except DataSource.DoesNotExist:
+                d = Tm.DataSource.objects.get(pk=dp_info.source_id)
+            except Tm.DataSource.DoesNotExist:
                 print("DataSource does not exist")
                 pass
 
             if proj.is_sampled(replacement=True):
                 try:
-                    dal = DataAccessLog.objects.get(
+                    dal = Tm.DataAccessLog.objects.get(
                         user=u, datapoint=str(dp_info.id), 
                         project=proj, datasource=d
                     )
-                except DataAccessLog.DoesNotExist:
-                    dal = DataAccessLog.objects.create(
+                except Tm.DataAccessLog.DoesNotExist:
+                    dal = Tm.DataAccessLog.objects.create(
                         user=u, datapoint=str(dp_info.id), 
                         project=proj, datasource=d,
                         is_submitted=False, is_skipped=False
                     )
             else:
                 if proj.auto_text_switch:
-                    DataAccessLog.objects.get_or_create(
+                    Tm.DataAccessLog.objects.get_or_create(
                         user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
                         is_submitted=False, is_skipped=False
                     )
                 else:
-                    DataAccessLog.objects.get_or_create(
+                    Tm.DataAccessLog.objects.get_or_create(
                         user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
                         is_skipped=False
                     )
 
             try:
-                logs = DataAccessLog.objects.filter(user=u, project=proj, datasource=d, is_submitted=True).count()
-            except DataAccessLog.DoesNotExist:
+                logs = Tm.DataAccessLog.objects.filter(user=u, project=proj, datasource=d, is_submitted=True).count()
+            except Tm.DataAccessLog.DoesNotExist:
                 print("DataAccessLog does not exist")
                 pass
 
-        menu_items, project_markers = {}, MarkerVariant.objects.filter(project=proj)
+        menu_items, project_markers = {}, Tm.MarkerVariant.objects.filter(project=proj)
         for m in project_markers:
-            menu_items[m.marker.code] = [item.to_json() for item in MarkerContextMenuItem.objects.filter(marker=m).all()]
+            menu_items[m.marker.code] = [item.to_json() for item in Tm.MarkerContextMenuItem.objects.filter(marker=m).all()]
 
         if dp_info.is_empty:
             text = render_to_string('partials/_great_job.html')
         else:
-            if type(dp_info.text) == TextDatapoint:
+            if type(dp_info.text) == Tds.TextDatapoint:
                 users = list(set([x['username'] for x in dp_info.text.meta if 'username' in x]))
                 text = render_to_string('partials/components/areas/dialogue_text.html', {
                     'dp_info': dp_info,
@@ -378,7 +375,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                 text = dp_info.text
 
             if not dp_info.no_data:
-                text = apply_premarkers(proj, text).strip()
+                text = Th.apply_premarkers(proj, text).strip()
 
         ctx = {
             'text': text,
@@ -424,7 +421,7 @@ def record_datapoint(request, proj):
             raise Http404
 
         # log the submission
-        dal = DataAccessLog.objects.get(
+        dal = Tm.DataAccessLog.objects.get(
             user=batch_info.user,
             datapoint=batch_info.datapoint,
             project=batch_info.project,
@@ -433,7 +430,7 @@ def record_datapoint(request, proj):
         dal.is_submitted = True
         dal.save()
 
-        batch = Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
+        batch = Tm.Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
 
         process_inputs(batch, batch_info, ctx_cache=ctx_cache)
         process_marker_groups(batch, batch_info, ctx_cache=ctx_cache)
@@ -443,18 +440,18 @@ def record_datapoint(request, proj):
         # editing
         batch_uuid = data.get('batch')
         try:
-            batch = Batch.objects.get(uuid=batch_uuid, user=batch_info.user)
+            batch = Tm.Batch.objects.get(uuid=batch_uuid, user=batch_info.user)
         except Batch.MultipleObjectsReturned:
             return JsonResponse({'error': True})
         
         if batch:
-            batch_inputs = {i.hash: i for i in Input.objects.filter(batch=batch)}
-            batch_labels = {l.hash: l for l in Label.objects.filter(batch=batch)}
+            batch_inputs = {i.hash: i for i in Tm.Input.objects.filter(batch=batch)}
+            batch_labels = {l.hash: l for l in Tm.Label.objects.filter(batch=batch)}
 
             inputs = []
             for input_type, changed_inputs in batch_info.inputs():
                 for name, changed in changed_inputs.items():
-                    if type(changed) == dict:
+                    if isinstance(changed, dict):
                         try:
                             inp = batch_inputs[changed['hash']]
                             if inp.marker.code == name:
@@ -463,11 +460,11 @@ def record_datapoint(request, proj):
                         except KeyError:
                             # smth is wrong
                             pass
-                    elif type(changed) == str:
+                    elif isinstance(changed, str):
                         # we create a new record!
                         try:
-                            data_source = DataSource.objects.get(pk=data['datasource'])
-                        except DataSource.DoesNotExist:
+                            data_source = Tm.DataSource.objects.get(pk=data['datasource'])
+                        except Tm.DataSource.DoesNotExist:
                             data_source = None
                         
                         if data_source:
@@ -479,7 +476,7 @@ def record_datapoint(request, proj):
                             process_inputs(batch, batch_info, **kwargs)
 
             if inputs:
-                Input.objects.bulk_update(inputs, ['content'])
+                Tm.Input.objects.bulk_update(inputs, ['content'])
 
             for chunk in batch_info.chunks:
                 if chunk.get('deleted', False):
@@ -509,7 +506,7 @@ def record_datapoint(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def editing(request, proj):
-    project = get_object_or_404(Project, pk=proj)
+    project = get_object_or_404(Tm.Project, pk=proj)
     return JsonResponse({
         'template': render_editing_board(project, request.user)
     })
@@ -521,8 +518,8 @@ def get_batch(request):
     # TODO: ensure that the request cannot be triggered by external tools
     uuid = request.GET.get('uuid', '')
     if uuid:
-        labels = Label.objects.filter(batch__uuid=uuid)
-        inputs = Input.objects.filter(batch__uuid=uuid)
+        labels = Tm.Label.objects.filter(batch__uuid=uuid)
+        inputs = Tm.Input.objects.filter(batch__uuid=uuid)
 
         context = None
         if labels.count():
@@ -542,7 +539,7 @@ def get_batch(request):
 
         # context['content'] will give us text without formatting,
         # so we simply query the data source one more time to get with formatting
-        ds = DataSource.objects.get(pk=context['ds_id'])
+        ds = Tm.DataSource.objects.get(pk=context['ds_id'])
         context['content'] = to_markdown(ds.postprocess(ds.get(context['dp_id'])).strip())
 
         return JsonResponse({
@@ -562,11 +559,11 @@ def get_context(request, proj):
 
     if cpk:
         try:
-            c = Context.objects.get(pk=cpk)
+            c = Tm.Context.objects.get(pk=cpk)
             return JsonResponse({
                 "context": c.content
             })
-        except Context.DoesNotExist:
+        except Tm.Context.DoesNotExist:
             return JsonResponse({
                 "error": "does_not_exist"
             })
@@ -583,12 +580,12 @@ def get_annotations(request, proj):
 
     if cpk and upk:
         try:
-            inputs = Input.objects.filter(
+            inputs = Tm.Input.objects.filter(
                 context_id=cpk,
                 marker__project_id=proj,
                 batch__user_id=upk
             ).order_by('batch_id')
-            labels = Label.objects.filter(
+            labels = Tm.Label.objects.filter(
                 context_id=cpk,
                 marker__project_id=proj,
                 batch__user_id=upk
@@ -664,7 +661,7 @@ def get_annotations(request, proj):
 @login_required
 @require_http_methods(["GET", "POST"])
 def join_or_leave_project(request, proj):
-    project = get_object_or_404(Project, pk=proj)
+    project = get_object_or_404(Tm.Project, pk=proj)
     current_user = request.user
     if request.method == "POST":
         res = {
@@ -699,7 +696,7 @@ def join_or_leave_project(request, proj):
 @require_http_methods("GET")
 def profile(request, username):
     user = get_object_or_404(User, username=username)
-    profiles = UserProfile.objects.filter(user=user).all()
+    profiles = Tm.UserProfile.objects.filter(user=user).all()
     return render(request, 'projects/profile.html', {
         'total_participated': len(profiles),
         'total_points': sum(map(lambda x: x.points, profiles)),
@@ -711,23 +708,23 @@ def profile(request, username):
 @login_required
 @require_http_methods("POST")
 def new_article(request, proj):
-    project = Project.objects.get(pk=proj)
+    project = Tm.Project.objects.get(pk=proj)
 
     # log the old one
     ds_id = request.POST.get('sId')
     if ds_id:
-        data_source = DataSource.objects.get(pk=ds_id)
+        data_source = Tm.DataSource.objects.get(pk=ds_id)
         dp_id = request.POST.get('dpId')
         if dp_id:
             try:
-                log = DataAccessLog.objects.get(
+                log = Tm.DataAccessLog.objects.get(
                     user=request.user, project=project,
                     datasource=data_source, datapoint=str(dp_id), is_skipped=False
                 )
                 log.is_skipped = True
                 log.save()
-            except DataAccessLog.DoesNotExist:
-                DataAccessLog.objects.create(
+            except Tm.DataAccessLog.DoesNotExist:
+                Tm.DataAccessLog.objects.create(
                     user=request.user, project=project,
                     datasource=data_source, datapoint=str(dp_id), 
                     is_submitted=False, is_skipped=True
@@ -739,22 +736,22 @@ def new_article(request, proj):
     if dp_info.is_empty:
         text = render_to_string('partials/_great_job.html')
     else:
-        data_source = DataSource.objects.get(pk=dp_info.source_id)
+        data_source = Tm.DataSource.objects.get(pk=dp_info.source_id)
         if project.is_sampled(replacement=True) or project.is_ordered():
-            DataAccessLog.objects.get_or_create(
+            Tm.DataAccessLog.objects.get_or_create(
                 user=request.user, datapoint=str(dp_info.id), 
                 project=project, datasource=data_source,
                 is_submitted=False, is_skipped=False
             )
         else:
             # log the new one
-            DataAccessLog.objects.create(
+            Tm.DataAccessLog.objects.create(
                 user=request.user, datapoint=str(dp_info.id), 
                 project=project, datasource=data_source,
                 is_submitted=False, is_skipped=False
             )
 
-        text = apply_premarkers(project, dp_info.text)
+        text = Th.apply_premarkers(project, dp_info.text)
 
         if dp_info.source_formatting == 'md':
             text = to_markdown(text)
@@ -773,7 +770,7 @@ def update_participations(request):
     n = request.GET.get('n', '')
     template = ''
     if n == 'p':
-        open_projects = Project.objects.filter(is_open=True).exclude(participants__in=[request.user]).all()
+        open_projects = Tm.Project.objects.filter(is_open=True).exclude(participants__in=[request.user]).all()
         template = render_to_string('partials/_open_projects.html', {}, request=request)
     elif n == 'o':
         participations = request.user.participations.all()
@@ -789,20 +786,20 @@ def update_participations(request):
 @require_http_methods("POST")
 def undo_last(request, proj):
     user = request.user
-    project = Project.objects.get(pk=proj)
+    project = Tm.Project.objects.get(pk=proj)
 
     try:
-        u_profile = UserProfile.objects.get(user=user, project=project)
+        u_profile = Tm.UserProfile.objects.get(user=user, project=project)
     except UserProfile.DoesNotExist:
         u_profile = None
 
     # find a last relation submitted if any
-    rel_batch = LabelRelation.objects.filter(
+    rel_batch = Tm.LabelRelation.objects.filter(
         batch__user=user, first_label__marker__project=project).order_by('-dt_created').all()[:1].values('batch')
-    last_rels = LabelRelation.objects.filter(batch__in=rel_batch).all()
+    last_rels = Tm.LabelRelation.objects.filter(batch__in=rel_batch).all()
     
-    label_batch = Label.objects.filter(batch__user=user, marker__project=project).order_by('-dt_created').all()[:1].values('batch')
-    last_labels = Label.objects.filter(batch__in=label_batch).all()
+    label_batch = Tm.Label.objects.filter(batch__user=user, marker__project=project).order_by('-dt_created').all()[:1].values('batch')
+    last_labels = Tm.Label.objects.filter(batch__in=label_batch).all()
     
     last_input = ''
 
@@ -849,28 +846,28 @@ def undo_last(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def data_explorer(request, proj):
-    project = Project.objects.filter(pk=proj).get()
+    project = Tm.Project.objects.filter(pk=proj).get()
 
     is_author, is_shared = project.author == request.user, project.shared_with(request.user)
     if is_author or is_shared or project.has_participant(request.user):
         is_admin = is_author or is_shared
     
-        flagged_datapoints = DataAccessLog.objects.filter(project=project).exclude(flags="")
+        flagged_datapoints = Tm.DataAccessLog.objects.filter(project=project).exclude(flags="")
         if not is_admin:
             flagged_datapoints = flagged_datapoints.filter(user=request.user)
 
-        relations = LabelRelation.objects.filter(first_label__marker__project=project, undone=False)
-        labels = Label.objects.filter(marker__project=project, undone=False)
+        relations = Tm.LabelRelation.objects.filter(first_label__marker__project=project, undone=False)
+        labels = Tm.Label.objects.filter(marker__project=project, undone=False)
         if not is_admin:
             labels = labels.filter(batch__user=request.user)
             relations = relations.filter(batch__user=request.user)
 
-        inputs = Input.objects.filter(marker__project=project)
+        inputs = Tm.Input.objects.filter(marker__project=project)
         batch_ids = set(list(inputs.values_list('batch', flat=True).distinct())) | set(list(labels.values_list('batch', flat=True).distinct()))
         total_relations = relations.count()
 
         context_ids = set(list(inputs.values_list('context_id', flat=True).distinct())) | set(list(labels.values_list('context_id', flat=True).distinct()))
-        contexts = Context.objects.filter(id__in=context_ids).all()
+        contexts = Tm.Context.objects.filter(id__in=context_ids).all()
 
         ctx = {
             'project': project,
@@ -890,7 +887,7 @@ def data_explorer(request, proj):
 @require_http_methods(["POST"])
 def async_delete_input(request, proj, inp):
     try:
-        Input.objects.filter(pk=inp).delete()
+        Tm.Input.objects.filter(pk=inp).delete()
     except:
         pass
     return redirect(request.META.get('HTTP_REFERER', '/'))
@@ -900,8 +897,8 @@ def async_delete_input(request, proj, inp):
 @require_http_methods(["GET"])
 def export(request, proj):
     try:
-        project = Project.objects.get(pk=proj)
-        exporter = Exporter(project, config={
+        project = Tm.Project.objects.get(pk=proj)
+        exporter = Tex.Exporter(project, config={
             'consolidate_clusters': request.GET.get('consolidate_clusters') == 'on',
             'include_usernames': request.GET.get('include_usernames', False)
         })
@@ -916,10 +913,10 @@ def flag_text(request, proj):
     dp_id = request.POST.get('dp_id')
     ds_id = request.POST.get('ds_id')
 
-    project = Project.objects.filter(pk=proj).get()
-    data_source = DataSource.objects.get(pk=ds_id)
+    project = Tm.Project.objects.filter(pk=proj).get()
+    data_source = Tm.DataSource.objects.get(pk=ds_id)
 
-    DataAccessLog.objects.create(
+    Tm.DataAccessLog.objects.create(
         user=request.user, datapoint=str(dp_id),
         project=project, datasource=data_source,
         is_submitted=False, is_skipped=True, flags=feedback
@@ -942,7 +939,7 @@ def time_report(request, proj):
             except:
                 pass
 
-    project = Project.objects.filter(pk=proj).get()
+    project = Tm.Project.objects.filter(pk=proj).get()
 
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
@@ -960,8 +957,8 @@ def time_report(request, proj):
     report_name = f'Time report for project "{project.title}"'
     p.drawString(A4[0] / 2 - (14 * PT2MM * len(report_name) / 2), 0.92 * A4[1], report_name)
 
-    inputs = Input.objects.filter(marker__project__id=proj).order_by('dt_created').all()
-    labels = Label.objects.filter(marker__project__id=proj, undone=False).order_by('dt_created').all()
+    inputs = Tm.Input.objects.filter(marker__project__id=proj).order_by('dt_created').all()
+    labels = Tm.Label.objects.filter(marker__project__id=proj, undone=False).order_by('dt_created').all()
     inputs_by_user, labels_by_user = defaultdict(lambda: defaultdict(list)), defaultdict(lambda: defaultdict(list))
     for i in inputs:
         inputs_by_user[i.batch.user.username][str(i.batch)].append(i)

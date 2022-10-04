@@ -1,4 +1,4 @@
-(function () {
+(function ($, d3, tippy, django) {
   const utils = {
     isDefined: function (x) {
       return x != null && x !== undefined;
@@ -1096,8 +1096,8 @@
         let chunk = {},
           marker = document.querySelector(
             'div.marker.tags[data-s="' + node.getAttribute("data-s") + '"]'
-          ),
-          markerText = marker.querySelector("span.tag:first-child");
+          );
+          //markerText = marker.querySelector("span.tag:first-child");
         chunk["lengthBefore"] = 0;
         chunk["marked"] = true;
         chunk["id"] = labelId;
@@ -1219,8 +1219,9 @@
 
               let nodeBeforeStart =
                 chunk["range"].startContainer.previousSibling;
+              let start;
               if (nodeBeforeStart == null) {
-                let start = chunk["range"].startContainer;
+                start = chunk["range"].startContainer;
                 while (isLabel(start.parentNode)) {
                   start = start.parentNode;
                 }
@@ -1642,7 +1643,7 @@
           });
 
           // Initialize the nodes
-          let node = svg
+          svg
             .selectAll("circle")
             .data(data.nodes)
             .enter()
@@ -1667,7 +1668,7 @@
               $(d.dom).removeClass("active");
             });
 
-          let text = svg
+          svg
             .selectAll("text")
             .data(data.nodes)
             .enter()
@@ -1850,7 +1851,7 @@
       markRelation: function (obj) {
         if (!this.checkRestrictions(true)) return;
 
-        var $parts = $(".selector span.tag.active"),
+        let $parts = $(".selector span.tag.active"),
           between = obj
             .getAttribute("data-b")
             .split("|")
@@ -1862,25 +1863,25 @@
           newRelationId = lastRelationId;
 
         if ($parts.length >= 2) {
-          var allInRelation = true,
+          let allInRelation = true,
             rels = [],
             sameRels = [];
           for (let i = 0, len = $parts.length; i < len; i++) {
-            var $p = $($parts[i]);
+            let $p = $($parts[i]);
             allInRelation = allInRelation && $p.prop("in_relation");
             rels.push($p.find("[data-m]").prop("rels"));
           }
 
           // linear scan to check that the same relation is not attempted to be created
           if (allInRelation) {
-            var relsLength = rels.length,
+            let relsLength = rels.length,
               ptr = new Array(relsLength),
               isLast = false;
             ptr.fill(0);
 
-            while (true) {
-              var cur = rels.map((x, i) => x[ptr[i]]);
-              var candLast = true;
+            while (!isLast) {
+              let cur = rels.map((x, i) => x[ptr[i]]);
+              let candLast = true;
 
               if (new Set(cur).size === 1) {
                 // all same, advance all pointers
@@ -1893,7 +1894,7 @@
                 }
               } else {
                 // Advance the minimal pointers
-                var arrMin = Math.min(...cur);
+                let arrMin = Math.min(...cur);
                 for (let j = 0; j < relsLength; j++) {
                   if (cur[ptr[j]] == arrMin && ptr[j] + 1 < rels[j].length) {
                     ptr[j]++;
@@ -1908,7 +1909,7 @@
           }
 
           for (let j = 0, len = sameRels.length; j < len; j++) {
-            var ind = sameRels[j];
+            let ind = sameRels[j];
 
             if (
               relations[ind]["rule"] == rule &&
@@ -1918,16 +1919,15 @@
             }
           }
 
-          var nodes = {},
-            links = [],
+          let nodes = {},
             startId = lastNodeInRelationId,
             rels2remove = [],
             candRels = [];
           $parts.each(function (i) {
-            var $part = $($parts[i]);
+            let $part = $($parts[i]);
 
             if ($part.prop("in_relation")) {
-              var rr = $($parts[i].querySelector("[data-m]")).prop("rels");
+              let rr = $($parts[i].querySelector("[data-m]")).prop("rels");
               if (
                 utils.isDefined(rr) &&
                 rr.length === 1 &&
@@ -1944,7 +1944,7 @@
             $part.prop("in_relation", true);
 
             // strip marker variant part
-            var s = $parts[i].getAttribute("data-s");
+            let s = $parts[i].getAttribute("data-s");
             s = s.substring(0, s.lastIndexOf("_"));
 
             $part.prop(
@@ -1966,7 +1966,7 @@
             // if relationship is bidirectional and we add the node to an already existing relation,
             // then also pull all other nodes from the relation
             if (direction == "2" && newRelationId != lastRelationId) {
-              var storedIds = nodes[s].map((x) => x.id),
+              let storedIds = nodes[s].map((x) => x.id),
                 otherNodes = relations[newRelationId].d3.nodes;
 
               for (let ons in otherNodes) {
@@ -1993,7 +1993,7 @@
             }
           }
 
-          var from = null,
+          let from = null,
             to = null;
           if (direction == "0" || direction == "2") {
             // first -> second or bidirectional
@@ -2005,9 +2005,9 @@
             to = 0;
           }
 
-          var sketches = [];
+          let sketches = [];
           for (let i = 0, len = between.length; i < len; i++) {
-            var sketch = {
+            let sketch = {
               nodes: {},
               links: [],
               between: between[i],
@@ -2067,7 +2067,7 @@
             return;
           }
 
-          var j = startId;
+          let j = startId;
 
           for (let i = 0, len = sketches.length; i < len; i++) {
             for (let key in sketches[i].nodes) {
@@ -2076,7 +2076,7 @@
 
             if (relations.hasOwnProperty(newRelationId)) {
               for (let k in sketches[i].nodes) {
-                var nn = sketches[i].nodes[k];
+                let nn = sketches[i].nodes[k];
                 for (let a = 0, len_a = nn.length; a < len_a; a++) {
                   if (
                     !containsIdentical(
@@ -2092,11 +2092,11 @@
               }
 
               for (
-                var a = 0, len_a = sketches[i].links.length;
+                let a = 0, len_a = sketches[i].links.length;
                 a < len_a;
                 a++
               ) {
-                var nn = sketches[i].links[a],
+                let nn = sketches[i].links[a],
                   inv = { target: nn["source"], source: nn["target"] };
                 if (
                   !containsIdentical(relations[newRelationId].d3.links, nn) &&
@@ -2123,7 +2123,7 @@
             }
 
             sketches[i].links.forEach(function (l) {
-              var source = document.querySelector("#" + l.source),
+              let source = document.querySelector("#" + l.source),
                 target = document.querySelector("#" + l.target);
               // if bidirectional, no need to store mirrored relations
               if (
@@ -2135,7 +2135,7 @@
               )
                 return;
 
-              var obj = {
+              let obj = {
                 s: source.getAttribute("data-i"),
                 t: target.getAttribute("data-i"),
               };
@@ -2172,7 +2172,7 @@
             }
 
             for (let s in sketches[i].nodes) {
-              var snodes = sketches[i].nodes[s];
+              let snodes = sketches[i].nodes[s];
               snodes.forEach(function (x) {
                 control.updateRelationSwitcher(x, newRelationId);
                 x.dom.classList.remove("active");
@@ -2195,15 +2195,15 @@
         }
       },
       changeRelation: function (obj, fromId, toId) {
-        var objId = obj.id,
+        let objId = obj.id,
           il = obj.getAttribute("data-i"),
           code = obj.getAttribute("data-s"),
-          short = code.substring(0, code.lastIndexOf("_"));
-        (fromRel = relations[fromId]),
-          (toRel = relations[toId]),
+          short = code.substring(0, code.lastIndexOf("_")),
+          fromRel = relations[fromId],
+          toRel = relations[toId],
           // a relation map, which is initially identity, but might become smth else if anything is deleted
-          (map = { [fromId]: fromId, [toId]: toId }),
-          (control = this);
+          map = { [fromId]: fromId, [toId]: toId },
+          control = this;
 
         if (
           utils.isDefined(fromRel) &&
@@ -2214,8 +2214,9 @@
           return;
         }
 
+        let newNodes;
         if (utils.isDefined(fromRel)) {
-          var newNodes = fromRel.d3.nodes[short].filter(function (x) {
+          newNodes = fromRel.d3.nodes[short].filter(function (x) {
             return x.id == objId;
           });
           fromRel.links = fromRel.links.filter(function (x) {
@@ -2269,7 +2270,7 @@
           // means obj was in no relation previously
           obj.id = "rl_" + lastNodeInRelationId;
           lastNodeInRelationId++;
-          var relSpan = obj.querySelector('span[data-m="r"]');
+          let relSpan = obj.querySelector('span[data-m="r"]');
           if (relSpan == null) {
             relSpan = document.createElement("span");
             relSpan.setAttribute("data-m", "r");
@@ -2279,7 +2280,7 @@
           }
 
           $(obj).prop("in_relation", true);
-          var newNodes = [
+          newNodes = [
             {
               id: obj.id,
               name: getLabelText(obj),
@@ -2290,7 +2291,7 @@
         }
 
         if (utils.isDefined(toRel)) {
-          var newLinks = [];
+          let newLinks = [];
           if (toRel.between[toRel.d3.to] == short) {
             toRel.d3.nodes[toRel.between[toRel.d3.from]].forEach(function (f) {
               newNodes.forEach(function (t) {
@@ -2321,7 +2322,7 @@
           toRel.d3.nodes[short] = toRel.d3.nodes[short].concat(newNodes);
 
           newLinks.forEach(function (l) {
-            var source = document.querySelector("#" + l.source),
+            let source = document.querySelector("#" + l.source),
               target = document.querySelector("#" + l.target);
             if (
               toRel.d3.direction === 2 &&
@@ -2393,20 +2394,20 @@
       labelDeleteHandler: function (e) {
         // when a delete button on any label is clicked
         e.stopPropagation();
-        var target = e.target, // delete button
+        let target = e.target, // delete button
           parent = target.parentNode, // actual span
           scope = parent.getAttribute("data-scope");
 
         if (scope == "text") {
           parent.remove();
         } else if (scope == "span") {
-          var sibling = target.nextSibling,
+          let sibling = target.nextSibling,
             chunkId = parent.getAttribute("data-i"),
             chunk2del = chunks.filter(function (x) {
               return x.id == chunkId;
             }); // the span with a relation number (if any)
 
-          var rel = isInRelations(chunk2del[0]);
+          let rel = isInRelations(chunk2del[0]);
           if (rel) {
             this.changeRelation(parent, rel, null);
           }
@@ -2414,7 +2415,7 @@
           target.remove();
           if (sibling != null) sibling.remove();
 
-          var siblings = filterSiblings(parent, isLabel),
+          let siblings = filterSiblings(parent, isLabel),
             checker = undefined,
             elements = [];
 
@@ -2426,7 +2427,7 @@
           }
 
           while (isLabel(checker)) {
-            var cand = checker == parent ? [] : [checker];
+            let cand = checker == parent ? [] : [checker];
             for (let i in siblings) {
               cand.push(siblings[i]);
             }
@@ -2437,23 +2438,23 @@
             siblings = []; // do not care about further siblings
           }
 
-          var curLineHeight = parseFloat(
+          let curLineHeight = parseFloat(
             window
               .getComputedStyle(checker, null)
               .getPropertyValue("line-height")
           );
 
-          var len = elements.length;
+          let len = elements.length;
           if (len > 0) {
             elements[len - 1][0].style.lineHeight =
               curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
           }
 
           for (let j = 0; j < len; j++) {
-            var npTop = 5 + 5 * j,
+            let npTop = 5 + 5 * j,
               npBot = 5 + 5 * j;
             for (let i = 0, len2 = elements[j].length; i < len2; i++) {
-              var pTopStr = elements[j][i].style.paddingTop,
+              let pTopStr = elements[j][i].style.paddingTop,
                 pBotStr = elements[j][i].style.paddingBottom,
                 pTop = parseFloat(pTopStr.slice(0, -2)),
                 pBot = parseFloat(pBotStr.slice(0, -2));
@@ -2485,7 +2486,7 @@
       getSubmittableDict: function (stringify) {
         if (!utils.isDefined(stringify)) stringify = false;
 
-        var markerGroups = utils.isDefined(this.markerGroupsArea)
+        let markerGroups = utils.isDefined(this.markerGroupsArea)
             ? $(this.markerGroupsArea)
                 .find("form#markerGroups")
                 .serializeObject()
@@ -2523,10 +2524,10 @@
         console.log(submittableChunks);
 
         // add plugin info to chunks
-        var sharedLabelPlugins = {},
+        let sharedLabelPlugins = {},
           sharedRelPlugins = {};
         for (let p in this.contextMenuPlugins["sharedBetweenMarkers"]) {
-          var cp = this.contextMenuPlugins["sharedBetweenMarkers"][p];
+          let cp = this.contextMenuPlugins["sharedBetweenMarkers"][p];
           if (cp.hasOwnProperty("storeFor")) {
             if (cp.storeFor == "label") {
               sharedLabelPlugins[p] = cp;
@@ -2539,7 +2540,7 @@
         for (let i = 0, len = submittableChunks.length; i < len; i++) {
           if (!submittableChunks[i].hasOwnProperty("extra"))
             submittableChunks[i]["extra"] = {};
-          var plugins = this.contextMenuPlugins[submittableChunks[i].label];
+          let plugins = this.contextMenuPlugins[submittableChunks[i].label];
 
           for (let name in plugins) {
             submittableChunks[i]["extra"][name] =
@@ -2555,7 +2556,7 @@
         }
 
         for (let rId in relations) {
-          var relObj = {
+          let relObj = {
             links: relations[rId]["links"],
             rule: relations[rId]["rule"],
             extra: {},
@@ -2591,7 +2592,7 @@
         };
       },
       unmarkChunk: function (c) {
-        var label = document.querySelector(
+        let label = document.querySelector(
           'span.tag[data-i="' + c["id"] + '"]'
         );
         label.querySelector("span").remove();
@@ -2637,7 +2638,7 @@
         this.updateMarkAllCheckboxes();
       },
       undo: function (batches) {
-        var control = this;
+        let control = this;
         chunks.forEach(function (c) {
           if (batches.includes(c.batch)) {
             if (control.disableSubmittedLabels) {
@@ -2647,7 +2648,7 @@
         });
       },
       updateMarkAllCheckboxes: function () {
-        var cnt = countChunksByType();
+        let cnt = countChunksByType();
         $('[data-s] input[type="checkbox"]').prop("disabled", true);
         $('[data-s] input[type="checkbox"]').prop("checked", false);
         for (let i in cnt) {
@@ -2694,7 +2695,7 @@
         ];
       },
       restoreBatch: function (uuid, url) {
-        var control = this;
+        let control = this;
         if (utils.isDefined(url)) {
           $.ajax({
             method: "GET",
@@ -2724,18 +2725,17 @@
               control.selectorArea.innerHTML = d.context.content;
               control.restart();
 
-              var span_labels = d.span_labels,
+              let span_labels = d.span_labels,
                 text_labels = d.text_labels,
-                non_unit_markers = d.non_unit_markers,
-                groups = d.groups;
+                non_unit_markers = d.non_unit_markers;
 
               for (let k in non_unit_markers) {
                 for (
-                  var i = 0, len = non_unit_markers[k].length;
+                  let i = 0, len = non_unit_markers[k].length;
                   i < len;
                   i++
                 ) {
-                  var el = non_unit_markers[k][i],
+                  let el = non_unit_markers[k][i],
                     inp;
                   if (k == "lfree_text")
                     inp = control.markersArea.querySelector(
@@ -2759,7 +2759,7 @@
 
               // text labels
               for (let i = 0, len = text_labels.length; i < len; i++) {
-                var lab = control.markersArea.querySelector(
+                let lab = control.markersArea.querySelector(
                   'input[name="' + text_labels[i].marker.code + '"]'
                 );
                 if (lab) {
@@ -2768,7 +2768,7 @@
               }
 
               // span labels logic
-              var acc = 0,
+              let acc = 0,
                 curLabelId = 0,
                 numLabels = span_labels.length,
                 cnodes = control.selectorArea.childNodes,
@@ -2785,15 +2785,15 @@
                     span_labels[curLabelId]["start"]
                   ) {
                     // we found an element to mark
-                    var innerAcc = acc,
+                    let innerAcc = acc,
                       numInnerLoops = 0,
                       cnodeLength = cnodes[i].textContent.length;
                     while (
                       curLabelId < numLabels &&
                       span_labels[curLabelId]["end"] <= acc + cnodeLength
                     ) {
-                      var areOverlapping = processed.map(function (x) {
-                          var s1 = span_labels[curLabelId],
+                      let areOverlapping = processed.map(function (x) {
+                          let s1 = span_labels[curLabelId],
                             s2 = span_labels[x["id"]];
                           return (
                             (s1["start"] >= s2["start"] &&
@@ -2813,17 +2813,17 @@
                         closed: false,
                       });
 
-                      var textNode = undefined;
+                      let textNode = undefined;
                       if (numOverlapping === 0) {
                         textNode =
                           cnodes[i].childNodes[cnodes[i].childNodes.length - 1];
                       } else {
-                        var minDistId = undefined,
+                        let minDistId = undefined,
                           minDist = Infinity,
                           sameLevelDist = Infinity,
                           sameLevelId = undefined;
                         areOverlapping.forEach(function (x, i) {
-                          var label = span_labels[processed[i]["id"]],
+                          let label = span_labels[processed[i]["id"]],
                             dist =
                               Math.abs(
                                 label["end"] - span_labels[curLabelId]["end"]
@@ -2853,7 +2853,7 @@
                         });
 
                         if (utils.isDefined(minDistId)) {
-                          var tagNodes = document.querySelector(
+                          let tagNodes = document.querySelector(
                             'span.tag[data-i="' + minDistId + '"]'
                           ).childNodes;
                           textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
@@ -2891,10 +2891,10 @@
 
                       window.getSelection().addRange(range);
                       control.updateChunkFromSelection();
-                      var activeChunk = control.getActiveChunk();
+                      let activeChunk = control.getActiveChunk();
                       activeChunk["hash"] = span_labels[curLabelId]["hash"];
                       activeChunk["updated"] = false;
-                      var code = span_labels[curLabelId]["marker"]["code"];
+                      let code = span_labels[curLabelId]["marker"]["code"];
                       control.mark(
                         control.markersArea.querySelector(
                           '.marker[data-s="' + code + '"]'
@@ -2958,7 +2958,7 @@
     /**
      * Labeler plugins
      */
-    var labelerPluginsDOM = document.querySelector("#labelerPlugins"),
+    let labelerPluginsDOM = document.querySelector("#labelerPlugins"),
       labelerPlugins = JSON.parse(labelerPluginsDOM.textContent);
     for (let markerShort in labelerPlugins) {
       for (let i = 0, len = labelerPlugins[markerShort].length; i < len; i++) {
@@ -2967,6 +2967,7 @@
           labelerPluginsDOM.getAttribute("data-url") + pluginCfg["file"],
           (function (cfg, ms) {
             return function () {
+              // plugin variable will be defined in each of plugin files
               labelerModule.register(plugin(cfg, labelerModule), ms);
             };
           })(pluginCfg, markerShort)
@@ -2981,7 +2982,7 @@
     // undo last relation/label if the button is clicked
     $("#undoLast").on("click", function (e) {
       e.preventDefault();
-      var $target = $("#undoLast");
+      let $target = $("#undoLast");
 
       $.ajax({
         method: "POST",
@@ -2996,7 +2997,7 @@
         success: function (data) {
           labelerModule.undo(data.batch);
 
-          var $submitted = $("#submittedTotal"),
+          let $submitted = $("#submittedTotal"),
             $submittedToday = $("#submittedToday");
 
           $submitted.text(data["submitted"]);
@@ -3024,10 +3025,9 @@
       // check if restrictions are violated
       if (!labelerModule.checkRestrictions()) return;
 
-      var $inputForm = $("#inputForm"),
-        $inputBlock = $inputForm.closest("article");
+      let $inputForm = $("#inputForm");
 
-      var inputFormData = $inputForm.serializeObject();
+      let inputFormData = $inputForm.serializeObject();
 
       // if there's an input form field, then create input_context
       inputFormData["context"] = labelerModule.getContextText(false);
@@ -3053,7 +3053,7 @@
 
         $.ajax({
           method: "POST",
-          url: inputForm.action,
+          url: $inputForm.attr('action'),
           dataType: "json",
           data: inputFormData,
           success: function (data) {
@@ -3120,11 +3120,11 @@
     });
 
     function getNewText(confirmationCallback, $button) {
-      var confirmation = confirmationCallback();
+      let confirmation = confirmationCallback();
       $button.attr("disabled", true);
 
       if (confirmation) {
-        var $el = $(".selector.element");
+        let $el = $(".selector.element");
         $el.addClass("is-loading");
 
         $.ajax({
@@ -3140,15 +3140,15 @@
             // update text, source id and datapoint id
             $el.attr("data-s", d.dp_info.source_id);
             $el.attr("data-dp", d.dp_info.id);
-            var dpName = $("#dpName");
+            let dpName = $("#dpName");
             if (dpName.text()) {
               dpName.text("(" + d.dp_info.source_name + ")");
             }
 
-            var $selector = $(labelerModule.selectorArea);
+            let $selector = $(labelerModule.selectorArea);
 
             if (d.dp_info.is_empty) {
-              var $text = $selector.closest("article.text");
+              let $text = $selector.closest("article.text");
               if ($text) {
                 $text.removeClass("text");
               }
@@ -3187,13 +3187,13 @@
     $("#getNewArticle").on("click", function (e) {
       e.preventDefault();
 
-      var $button = $(this);
+      let $button = $(this);
 
       if ($button.attr("disabled")) return;
 
       // TODO: should I also count relations here?
       getNewText(function () {
-        var confirmationText =
+        let confirmationText =
           "All your unsubmitted labels will be removed. Are you sure?";
         return labelerModule.countUnsubmittedChunks() > 0
           ? confirm(confirmationText)
@@ -3205,12 +3205,12 @@
     $("#finishRound").on("click", function (e) {
       e.preventDefault();
 
-      var $button = $(this);
+      let $button = $(this);
 
       if ($button.attr("disabled")) return;
 
       getNewText(function () {
-        var confirmationText =
+        let confirmationText =
           "Are you sure that you have completed the task to the best of your ability?";
         return confirm(confirmationText);
       }, $button);
@@ -3233,17 +3233,17 @@
 
     $("#editingModeButton").on("click", function (e) {
       e.preventDefault();
-      var $target = $(e.target).closest("a"),
+      let $target = $(e.target).closest("a"),
         mode = $target.attr("data-mode");
 
-      var isOk =
+      let isOk =
         mode != "o" ||
         confirm(
           "Any unsaved annotations on the current text will be lost. Proceed?"
         );
 
       if (isOk) {
-        var $lastCol = $(labelerModule.taskArea).find(".column:last");
+        let $lastCol = $(labelerModule.taskArea).find(".column:last");
 
         if (mode == "o") {
           $.ajax({
@@ -3288,4 +3288,4 @@
       }
     });
   });
-})();
+})(window.jQuery, window.d3, window.tippy, window.django);

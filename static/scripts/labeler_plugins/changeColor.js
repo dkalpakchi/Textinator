@@ -6,7 +6,7 @@
  */
 
 var plugin = function (cfg, labeler) {
-  var config = {
+  let config = {
     name: "change_color",
     verboseName: "Change color",
     storeFor: "label", // one of "label", "relation"
@@ -24,9 +24,10 @@ var plugin = function (cfg, labeler) {
 
   // taken from https://gist.github.com/THEtheChad/1297590/c67e4e44b190252e9bddb44183341027bdbf6e74
   function parseColor(color) {
-    var cache,
-      p = parseInt, // Use p as a byte saving reference to parseInt
-      color = color.replace(/\s/g, ""); // Remove all spaces
+    let cache,
+      p = parseInt; // Use p as a byte saving reference to parseInt
+    
+    color = color.replace(/\s/g, ""); // Remove all spaces
 
     // Checks for 6 digit hex and converts string to integer
     if ((cache = /#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})/.exec(color)))
@@ -41,14 +42,14 @@ var plugin = function (cfg, labeler) {
     // Checks for rgba and converts string to
     // integer/float using unary + operator to save bytes
     else if (
-      (cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(
+      (cache = /rgba\((\d+),(\d+),(\d+),(\d+|\d+.\d+)\)/.exec(
         color
       ))
     )
       cache = [+cache[1], +cache[2], +cache[3], +cache[4]];
     // Checks for rgb and converts string to
     // integer/float using unary + operator to save bytes
-    else if ((cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(color)))
+    else if ((cache = /rgb\((\d+),(\d+),(\d+)\)/.exec(color)))
       cache = [+cache[1], +cache[2], +cache[3]];
     // Otherwise throw an exception to make debugging easier
     else throw color + " is not supported by $.parseColor";
@@ -74,7 +75,8 @@ var plugin = function (cfg, labeler) {
 
   // taken from https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
   function xmur3(str) {
-    for (var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
+    let h = 1779033703 ^ str.length; 
+    for (let i = 0; i < str.length; i++) {
       h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
       h = (h << 13) | (h >>> 19);
     }
@@ -92,7 +94,7 @@ var plugin = function (cfg, labeler) {
       b >>>= 0;
       c >>>= 0;
       d >>>= 0;
-      var t = (a + b) | 0;
+      let t = (a + b) | 0;
       a = b ^ (b >>> 9);
       b = (c + (c << 3)) | 0;
       c = (c << 21) | (c >>> 11);
@@ -105,18 +107,18 @@ var plugin = function (cfg, labeler) {
 
   // taken from https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
   function makeSalt(length) {
-    var result = "";
-    var characters =
+    let result = "";
+    let characters =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    var charactersLength = characters.length;
-    for (var i = 0; i < length; i++) {
+    let charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
   }
 
   if (isDefined(cfg)) {
-    for (var k in cfg) {
+    for (let k in cfg) {
       config[k] = cfg[k];
     }
   }
@@ -133,7 +135,7 @@ var plugin = function (cfg, labeler) {
     allowSingletons: config.allowSingletons,
     isAllowed: function (obj) {
       if (this.storeFor == "relation") {
-        var relSpan = obj.querySelector("[data-m]"),
+        let relSpan = obj.querySelector("[data-m]"),
           relSpanDefined = isDefined(relSpan);
 
         if (relSpanDefined) {
@@ -146,7 +148,7 @@ var plugin = function (cfg, labeler) {
       }
     },
     exec: function (label, menuItem) {
-      var colorInput = document.createElement("input"),
+      let colorInput = document.createElement("input"),
         cpicker = new JSColor(colorInput, { format: "rgba" }),
         control = this,
         id = label.getAttribute("data-i"),
@@ -154,12 +156,12 @@ var plugin = function (cfg, labeler) {
         scope = undefined,
         prefix = undefined,
         updateUI = function (c) {
-          var rgb = parseColor(c);
+          let rgb = parseColor(c);
 
           // https://www.w3.org/TR/AERT/#color-contrast
           // https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color
-          var brightness = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
-          var textColor = brightness > 125 ? "black" : "white";
+          let brightness = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+          let textColor = brightness > 125 ? "black" : "white";
 
           if (control.storeFor == "label") {
             label.setAttribute(
@@ -189,8 +191,8 @@ var plugin = function (cfg, labeler) {
         prefix = "label";
         defaultColor = label.style.backgroundColor;
       } else if (this.storeFor == "relation") {
-        var rel = label.querySelector('[data-m="r"]'),
-          prefix = "relation";
+        let rel = label.querySelector('[data-m="r"]');
+        prefix = "relation";
         if (rel) {
           scope = "r" + rel.textContent;
         } else if (this.allowSingletons) {
@@ -242,13 +244,13 @@ var plugin = function (cfg, labeler) {
         if (colorInput.value) updateUI(colorInput.value);
 
         colorInput.addEventListener("change", function (e) {
-          var target = e.target;
+          let target = e.target;
           storage[target.getAttribute("data-s")] = target.value;
           updateUI(target.value);
         });
 
         label.addEventListener(COLOR_CHANGE_EVENT, function (e) {
-          var relSpan = label.querySelector('[data-m="r"]');
+          let relSpan = label.querySelector('[data-m="r"]');
           if (
             control.storeFor == "relation" &&
             isDefined(relSpan) &&

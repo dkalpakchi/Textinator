@@ -6,7 +6,7 @@
  */
 
 var plugin = function (cfg, labeler) {
-  var config = {
+  let config = {
     name: "comments",
     verboseName: "Add a comment",
     storeFor: "label", // one of "label", "relation"
@@ -20,7 +20,7 @@ var plugin = function (cfg, labeler) {
   }
 
   if (isDefined(cfg)) {
-    for (var k in cfg) {
+    for (let k in cfg) {
       config[k] = cfg[k];
     }
   }
@@ -35,7 +35,7 @@ var plugin = function (cfg, labeler) {
     allowSingletons: config.allowSingletons,
     isAllowed: function (obj) {
       if (this.storeFor == "relation") {
-        var relSpan = obj.querySelector("[data-m]"),
+        let relSpan = obj.querySelector("[data-m]"),
           relSpanDefined = isDefined(relSpan);
 
         if (relSpanDefined) {
@@ -48,7 +48,7 @@ var plugin = function (cfg, labeler) {
       }
     },
     exec: function (label, menuItem) {
-      var id = label.getAttribute("data-i"),
+      let id = label.getAttribute("data-i"),
         storage = this.storage,
         commentInput = document.createElement("input"),
         scope = undefined,
@@ -59,8 +59,8 @@ var plugin = function (cfg, labeler) {
         scope = "l" + id;
         prefix = "label";
       } else if (this.storeFor == "relation") {
-        var rel = label.querySelector('[data-m="r"]'),
-          prefix = "relation";
+        let rel = label.querySelector('[data-m="r"]');
+        prefix = "relation";
         if (rel) {
           scope = "r" + rel.textContent;
         } else if (this.allowSingletons) {
@@ -80,14 +80,13 @@ var plugin = function (cfg, labeler) {
         commentInput.addEventListener(
           "change",
           function (e) {
-            var target = e.target;
+            let target = e.target;
             storage[target.getAttribute("data-s")] = target.value;
           },
           false
         );
-        commentInput.addEventListener("blur", function (e) {
-          var target = e.target,
-            relSpan = label.querySelector('[data-m="r"]');
+        commentInput.addEventListener("blur", function () {
+          let relSpan = label.querySelector('[data-m="r"]');
 
           const event = new CustomEvent("labeler_" + prefix + "_blur", {
             detail: {

@@ -5,7 +5,7 @@
  */
 
 var plugin = function (cfg, labeler) {
-  var config = {
+  let config = {
     name: "change_rel",
     verboseName: "Change relation",
   };
@@ -15,7 +15,7 @@ var plugin = function (cfg, labeler) {
   }
 
   if (isDefined(cfg)) {
-    for (var k in cfg) {
+    for (let k in cfg) {
       config[k] = cfg[k];
     }
   }
@@ -41,19 +41,19 @@ var plugin = function (cfg, labeler) {
     },
     exec: function (label, menuItem) {
       function createOption(val, idx) {
-        var option = document.createElement("option");
+        let option = document.createElement("option");
         option.value = idx;
         option.textContent = val;
         return option;
       }
 
-      var select = document.createElement("select"),
+      let select = document.createElement("select"),
         relSpan = label.querySelector('[data-m="r"]'),
         relId = isDefined(relSpan) ? parseInt(relSpan.textContent, 10) : -1;
 
       select.appendChild(createOption("no", -1));
-      var lst = labeler.getAvailableRelationIds();
-      for (var k in lst) {
+      let lst = labeler.getAvailableRelationIds();
+      for (let k in lst) {
         select.appendChild(createOption(lst[k], lst[k]));
       }
       select.value = relId;
@@ -61,7 +61,7 @@ var plugin = function (cfg, labeler) {
       select.addEventListener(
         "change",
         function (e) {
-          var target = e.target,
+          let target = e.target,
             idx = parseInt(target.value, 10);
           labeler.changeRelation(label, relId, idx);
           instance.hide();

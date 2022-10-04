@@ -1,54 +1,55 @@
-#flaggedCollapse .message-body, #flaggedCollapse table {
-    background-color: #feecf0;
+#flaggedCollapse .message-body,
+#flaggedCollapse table {
+  background-color: #feecf0;
 }
 
 .explorer.container .select,
 .explorer.container select {
-    width: 100%;
+  width: 100%;
 }
 
 .explorer .context {
-    text-align: justify !important;
+  text-align: justify !important;
 }
 
 ol li {
-    margin-bottom: 1em;
+  margin-bottom: 1em;
 }
 
 div.alternative.tags {
-    display: block;
+  display: block;
 }
 
 div.alternative.tags span.tags {
-    margin-bottom: 0.1em;
+  margin-bottom: 0.1em;
 }
 
 .context.message {
-    margin-bottom: 2em;
+  margin-bottom: 2em;
 }
 
 span.tag:hover {
-    cursor: default;
+  cursor: default;
 }
 
 .loading {
   font-size: 1em;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-weight: 800;
   text-align: left;
   span {
     display: inline-block;
-    margin: 0 -.05em;
+    margin: 0 -0.05em;
   }
 }
 
 .loading03 {
   span {
-    margin: 0 -.075em;
-    animation: loading03 .7s infinite alternate;
+    margin: 0 -0.075em;
+    animation: loading03 0.7s infinite alternate;
     @for $i from 1 through 6 {
-      &:nth-child(#{$i+1}) {
-        animation-delay: #{$i*.1}s;
+      &:nth-child(#{$i + 1}) {
+        animation-delay: #{$i * 0.1}s;
       }
     }
   }
@@ -59,6 +60,6 @@ span.tag:hover {
     transform: scale(1);
   }
   100% {
-    transform: scale(.8);
+    transform: scale(0.8);
   }
 }

@@ -101,7 +101,8 @@ def environment(**options):
     extensions.append('jinja2.ext.i18n')
     extensions.append('jinja2.ext.with_')
     options['extensions'] = extensions
-    env = Environment(autoescape=True, **options)
+    options['autoescape'] = True
+    env = Environment(**options)
     env.globals.update({
         'static': staticfiles_storage.url,
         'url': reverse,

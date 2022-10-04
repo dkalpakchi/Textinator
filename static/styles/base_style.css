@@ -7,10 +7,10 @@ body .container:first-of-type {
 }
 
 @font-face {
-  font-family: 'ROBOTECH GP';
+  font-family: "ROBOTECH GP";
   font-style: normal;
   font-weight: normal;
-  src: url('./webfonts/ROBOTECH GP.ttf');
+  src: url("./webfonts/ROBOTECH GP.ttf");
 }
 
 .no-margin {
@@ -37,7 +37,7 @@ body .container:first-of-type {
 }
 
 .logo {
-  font-family: 'ROBOTECH GP';
+  font-family: "ROBOTECH GP";
   font-size: 5em;
   letter-spacing: 2px;
   line-height: 0.4em;
@@ -45,7 +45,7 @@ body .container:first-of-type {
 }
 
 .logo-spaced {
-  font-family: 'ROBOTECH GP';
+  font-family: "ROBOTECH GP";
   font-size: 1.5em;
   letter-spacing: 20px;
 }
@@ -79,14 +79,14 @@ body .container:first-of-type {
 }
 
 .project.card .card-footer-item {
-  -webkit-user-select: none;  
-  -moz-user-select: none;    
-  -ms-user-select: none;      
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 
 .project.card .card-content {
-  padding:  1rem 1.5rem
+  padding: 1rem 1.5rem;
 }
 
 .project.card table tr td:first-child {
@@ -102,7 +102,8 @@ body .container:first-of-type {
   color: gray;
 }
 
-.text-language-switcher form, .text-language-switcher span {
+.text-language-switcher form,
+.text-language-switcher span {
   float: left;
 }
 
@@ -135,7 +136,7 @@ pre {
   flex-grow: 1;
   flex-shrink: 0;
   justify-content: center;
-  padding: .75rem;
+  padding: 0.75rem;
 }
 
 .notification.has-even-padding {
@@ -195,7 +196,10 @@ pre {
   text-align: justify;
 }
 
-.participations, .open-projects, .my-projects, .shared-projects {
+.participations,
+.open-projects,
+.my-projects,
+.shared-projects {
   flex-wrap: wrap;
 }
 
@@ -207,10 +211,9 @@ pre {
   border: 2px solid black;
 }
 
-
 /* QTimer */
 .countdown {
-  font-family: 'Lato', Tahoma, Geneva, sans-serif;
+  font-family: "Lato", Tahoma, Geneva, sans-serif;
   font-size: 1.3em;
   position: relative;
   margin: auto;
@@ -261,7 +264,6 @@ pre {
   }
 }
 
-
 textarea {
   resize: vertical;
 }
@@ -269,15 +271,15 @@ textarea {
 .text {
   display: flex;
   -webkit-flex-flow: column;
-      -ms-flex-flow: column;
-          flex-flow: column;
+  -ms-flex-flow: column;
+  flex-flow: column;
   height: 100%;
 }
 
 .text > .message-body {
   height: 85vh;
   -webkit-flex-grow: 1;
-          flex-grow: 1;
+  flex-grow: 1;
   overflow-y: scroll;
   text-align: justify;
 }
@@ -306,7 +308,8 @@ textarea {
   overflow-y: scroll;
 }
 
-.marker.tags:hover, .relation.tags:hover {
+.marker.tags:hover,
+.relation.tags:hover {
   cursor: pointer;
 }
 
@@ -362,9 +365,9 @@ textarea {
 
 .selector .tag .rel.is-badge {
   -webkit-border-top-left-radius: 3px;
-          border-top-left-radius: 3px;
+  border-top-left-radius: 3px;
   -webkit-border-top-right-radius: 3px;
-          border-top-right-radius: 3px;
+  border-top-right-radius: 3px;
   height: 100%;
   padding-left: 0.2em;
   padding-right: 0.2em;
@@ -425,7 +428,7 @@ textarea {
 .editing .message-body {
   max-height: 450px;
   -ms-overflow-y: scroll;
-      overflow-y: scroll;
+  overflow-y: scroll;
 }
 
 .tabs span.text {
@@ -434,7 +437,7 @@ textarea {
   display: inline-block;
   justify-content: center;
   margin-bottom: -1px;
-  padding: .5em 1em;
+  padding: 0.5em 1em;
   vertical-align: top;
 }
 
@@ -473,7 +476,7 @@ textarea {
 }
 
 .is-grey {
-  background: rgba(0, 0, 0, 0.1)
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .explorer {
@@ -510,10 +513,11 @@ textarea {
 
 .explorer .datapoint.relation ul > li:before {
   content: counter(list, digits) ") ";
-  counter-increment: list; 
+  counter-increment: list;
 }
 
-.reminders ul, .reminders ol {
+.reminders ul,
+.reminders ol {
   margin-left: 1em;
 }
 
@@ -601,7 +605,6 @@ label.error {
   height: 185px;
 }
 
-
 /**
  * Bulma extensions
  */
@@ -630,21 +633,22 @@ label.error {
 }
 
 .tag.is-orange {
-  background-color: #E9A72F;
+  background-color: #e9a72f;
   color: #fff;
 }
 
 .control.has-tag-left .select select {
-    padding-left: 7em;
+  padding-left: 7em;
 }
 
-.control.has-tag-left .tag, .control.has-tag-right .tag {
-    pointer-events: none;
-    position: absolute;
-    left: 7px;
-    top: 7px;
-    width: fit-content;
-    z-index: 4;
+.control.has-tag-left .tag,
+.control.has-tag-right .tag {
+  pointer-events: none;
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  width: fit-content;
+  z-index: 4;
 }
 
 .control.has-tag-left textarea {
@@ -663,17 +667,17 @@ label.help.is-danger {
 .button.is-hovering {
   width: 40px;
   -webkit-justify-content: left;
-          justify-content: left;
+  justify-content: left;
   overflow: hidden;
   transition: width 0.3s ease-in-out;
 }
 
 .button.is-hovering .icon:first-child:not(:last-child) {
-  margin-left: calc(-.3em - 1px);
+  margin-left: calc(-0.3em - 1px);
 }
 
 .button.is-hovering .icon:first-child:not(:last-child):hover {
-  margin-left: calc(-.5em - 1px);
+  margin-left: calc(-0.5em - 1px);
 }
 
 .button.is-hovering:hover {
@@ -683,9 +687,9 @@ label.help.is-danger {
 .is-group {
   display: flex;
   -webkit-align-items: center;
-          align-items: center;
+  align-items: center;
   -webkit-justify-content: space-between;
-          justify-content: space-between;
+  justify-content: space-between;
 }
 
 .is-group span {
@@ -701,7 +705,7 @@ label.help.is-danger {
 }
 
 .has-text-darkyellow {
-  color: #F6BE00;
+  color: #f6be00;
 }
 
 .mdi.mdi-flip-h:before {
@@ -719,8 +723,9 @@ label.help.is-danger {
  */
 
 /* Fix integration of django-nested-admin with jazzmin */
-.nested.card-header, .nested.card-body {
-  border: 1px solid rgba(0,0,0,.125)
+.nested.card-header,
+.nested.card-body {
+  border: 1px solid rgba(0, 0, 0, 0.125);
 }
 
 .is-marker-fullwidth {

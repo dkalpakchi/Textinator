@@ -1,27 +1,31 @@
 .submit-row {
-    bottom: 0;
-    left: 0;
-    margin: 0 !important;
-    position: fixed;
-    width: 100%;
-    width: -moz-available;          /* WebKit-based browsers will ignore this. */
-    width: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
-    width: fill-available;
+  bottom: 0;
+  left: 0;
+  margin: 0 !important;
+  position: fixed;
+  width: 100%;
+  width: -moz-available; /* WebKit-based browsers will ignore this. */
+  width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
+  width: fill-available;
 }
 
 div[data-theme="bootstrap4"] .card-title {
-    float: none !important;
+  float: none !important;
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice {
-    color: black !important;
-    padding-left: 27px !important;
+.select2-container--default
+  .select2-selection--multiple
+  .select2-selection__choice {
+  color: black !important;
+  padding-left: 27px !important;
 }
 
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    top: 4px !important;
+.select2-container--default
+  .select2-selection--single
+  .select2-selection__arrow {
+  top: 4px !important;
 }
 
 .select2.select2-container.select2-container--default {
-    width: 100% !important;
+  width: 100% !important;
 }

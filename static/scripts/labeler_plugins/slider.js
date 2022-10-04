@@ -6,7 +6,7 @@
  */
 
 var plugin = function (cfg, labeler) {
-  var config = {
+  let config = {
     name: "slider",
     verboseName: "Add a score",
     min: 0,
@@ -22,7 +22,7 @@ var plugin = function (cfg, labeler) {
   }
 
   if (isDefined(cfg)) {
-    for (var k in cfg) {
+    for (let k in cfg) {
       config[k] = cfg[k];
     }
   }
@@ -38,7 +38,7 @@ var plugin = function (cfg, labeler) {
       return labeler.markersArea != null;
     },
     exec: function (label, menuItem) {
-      var id = label.getAttribute("data-i"),
+      let id = label.getAttribute("data-i"),
         storage = this.storage,
         sliderInput = document.createElement("input");
       sliderInput.setAttribute("type", "range");
@@ -51,7 +51,7 @@ var plugin = function (cfg, labeler) {
       sliderInput.addEventListener(
         "change",
         function (e) {
-          var target = e.target;
+          let target = e.target;
           storage["l" + parseInt(target.getAttribute("data-i"), 10)] =
             target.value;
         },
