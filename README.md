@@ -1,6 +1,7 @@
 ![Textinator logo](https://github.com/dkalpakchi/Textinator/raw/master/docs/source/logo.png "Textinator")
 
 [![DOI](https://zenodo.org/badge/192495914.svg)](https://zenodo.org/badge/latestdoi/192495914)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1ac2ba5f4bc14883a02cd395df913859)](https://www.codacy.com/gh/dkalpakchi/Textinator/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dkalpakchi/Textinator&amp;utm_campaign=Badge_Grade)
 
 ## New here?
 
