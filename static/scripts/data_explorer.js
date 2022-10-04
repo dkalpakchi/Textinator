@@ -1,5 +1,5 @@
-(function () {
-  var utils = {
+(function ($) {
+  const utils = {
     isDefined: function (x) {
       return x != null && x !== undefined;
     },
@@ -7,13 +7,13 @@
       const seen = new Set();
       return arr.filter(function (elem) {
         const key = elem["start"] + " -- " + elem["end"];
-        var isDuplicate = seen.has(key);
+        let isDuplicate = seen.has(key);
         if (!isDuplicate) seen.add(key);
         return !isDuplicate;
       });
     },
     hex2rgb: function (hex) {
-      var m = hex.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+      let m = hex.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
       return {
         r: parseInt(m[1], 16),
         g: parseInt(m[2], 16),
@@ -30,7 +30,7 @@
     },
   };
 
-  var explorer = {
+  const explorer = {
     init: function () {
       this.textWidget = document.querySelector("#textWidget");
       this.textSelector = this.textWidget.querySelector("select#text");
@@ -47,10 +47,10 @@
       this.initEvents();
     },
     initEvents: function () {
-      var ctx = this;
+      let ctx = this;
 
       this.textSelector.addEventListener("change", function (e) {
-        var target = e.target;
+        let target = e.target;
 
         utils.removeAllChildren(ctx.textContentArea);
 
@@ -59,11 +59,11 @@
         }
       });
 
-      for (var s in this.annotatorSelectors) {
+      for (let s in this.annotatorSelectors) {
         this.annotatorSelectors[s].addEventListener(
           "change",
           function (e) {
-            var target = e.target;
+            let target = e.target;
 
             utils.removeAllChildren(ctx.annotationAreas[target.id]);
 
@@ -71,7 +71,7 @@
               target.selectedIndex !== 0 &&
               ctx.textSelector.selectedIndex !== 0
             ) {
-              var userSelected = target.options[target.selectedIndex].value,
+              let userSelected = target.options[target.selectedIndex].value,
                 textSelected =
                   ctx.textSelector.options[ctx.textSelector.selectedIndex]
                     .value;
@@ -84,7 +84,7 @@
       }
     },
     loadText: function (textId) {
-      var ctx = this;
+      let ctx = this;
       $.ajax({
         method: "GET",
         url: this.textWidget.getAttribute("data-u1"),
@@ -93,7 +93,7 @@
           c: textId,
         },
         success: function (data) {
-          for (var ann in ctx.annotationAreas) {
+          for (let ann in ctx.annotationAreas) {
             utils.removeAllChildren(ctx.annotationAreas[ann]);
             utils.resetSelect(ctx.annotatorSelectors[ann]);
           }
@@ -104,7 +104,7 @@
       });
     },
     loadAnnotations: function (textId, userId, annotatorKey) {
-      var ctx = this;
+      let ctx = this;
       $.ajax({
         method: "GET",
         url: this.textWidget.getAttribute("data-u2"),
@@ -119,17 +119,17 @@
       });
     },
     createAnnotationElement: function (ann, isDivided) {
-      var dataTypes = ["inputs", "labels"],
+      let dataTypes = ["inputs", "labels"],
         groupContainer = document.createElement("div");
       if (!utils.isDefined(isDivided)) isDivided = false;
       groupContainer.className = "content";
 
       if (isDivided) groupContainer.className += " is-divided";
 
-      for (var k in dataTypes) {
+      for (let k in dataTypes) {
         if (utils.isDefined(ann[dataTypes[k]])) {
-          for (var i = 0, len = ann[dataTypes[k]].length; i < len; i++) {
-            var marker = document.createElement("div"),
+          for (let i = 0, len = ann[dataTypes[k]].length; i < len; i++) {
+            let marker = document.createElement("div"),
               content = document.createElement("div"),
               contentWrapper = document.createElement("div"),
               inp = ann[dataTypes[k]][i];
@@ -137,12 +137,12 @@
 
             marker.innerText = inp.marker.name;
             marker.className = "tag";
-            mColor = inp.marker.color;
+            let mColor = inp.marker.color;
             marker.style.background = mColor;
 
-            rgb = utils.hex2rgb(mColor);
-            brightness = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
-            textColor = brightness > 125 ? "black" : "white";
+            let rgb = utils.hex2rgb(mColor);
+            let brightness = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
+            let textColor = brightness > 125 ? "black" : "white";
             marker.style.color = textColor;
 
             if (dataTypes[k] == "inputs") content.innerText = inp.content;
@@ -157,8 +157,8 @@
       return groupContainer;
     },
     createAnnotationBatch: function (batch) {
-      var ctx = this;
-      var container = document.createElement("div"),
+      let ctx = this;
+      let container = document.createElement("div"),
         header = document.createElement("header"),
         headerPart = document.createElement("div"),
         headerText = document.createElement("span"),
@@ -176,7 +176,7 @@
         ctx.textWidget.hasAttribute("data-ue") &&
         batch.hasOwnProperty("id")
       ) {
-        var editBatchButton = document.createElement("a"),
+        let editBatchButton = document.createElement("a"),
           bicon = document.createElement("i"),
           btext = document.createElement("span"),
           url = ctx.textWidget.getAttribute("data-ue").replace("!!!", batch.id);
@@ -192,12 +192,12 @@
 
       container.appendChild(header);
 
-      var batchKeys = Object.keys(batch).filter(
+      let batchKeys = Object.keys(batch).filter(
           (x) => x != "created" && x != "id"
         ),
         numBatchKeys = batchKeys.length;
 
-      for (var bi = 0; bi < numBatchKeys; bi++) {
+      for (let bi = 0; bi < numBatchKeys; bi++) {
         contentPart.appendChild(
           ctx.createAnnotationElement(
             batch[batchKeys[bi]],
@@ -209,10 +209,10 @@
       return container;
     },
     populateAnnotations: function (annotatorKey, annotations) {
-      var ctx = this,
+      let ctx = this,
         annArea = this.annotationAreas[annotatorKey];
-      for (var key in annotations) {
-        var ann = annotations[key];
+      for (let key in annotations) {
+        let ann = annotations[key];
         annArea.appendChild(ctx.createAnnotationBatch(ann));
       }
     },
@@ -275,7 +275,7 @@
 
           a.addEventListener(
             "click",
-            function (e) {
+            function () {
               setTimeout(function () {
                 URL.revokeObjectURL(url);
                 // a.removeEventListener('click', clickHandler);
@@ -296,4 +296,4 @@
       });
     });
   });
-})();
+})(window.$);

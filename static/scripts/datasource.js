@@ -1,5 +1,5 @@
-(function ($) {
-  var templates = {
+(function ($, spec_editor, JSONEditor) {
+  let templates = {
     TextFile: {
       files: [],
       folders: [],
@@ -23,7 +23,7 @@
     },
   };
 
-  var schemas = {
+  let schemas = {
     PlainText: {
       type: "object",
       properties: {
@@ -101,7 +101,7 @@
     // NOTE: `spec` everywhere is just the name of the field in the model
     //       if the name changes djang-admin-json-editor, changes the name of JS variable as well
     if (schemas.hasOwnProperty(option)) {
-      var schema = schemas[option],
+      let schema = schemas[option],
         element = spec_editor.element;
       spec_editor.destroy();
       schema["title"] = " ";
@@ -126,8 +126,8 @@
 
   $(document).ready(function () {
     $("#id_source_type").on("select2:select", function (e) {
-      var $target = $(e.target);
-      option = $target.find("option:selected").val();
+      let $target = $(e.target);
+      let option = $target.find("option:selected").val();
 
       spec_editor = updateSchema(option);
 
@@ -145,7 +145,7 @@
         } else if (
           ["mysql", "postgresql", "postgres"].includes(e.target.value)
         ) {
-          var options = { ...templates[option] };
+          let options = { ...templates[option] };
           options["db_type"] = e.target.value;
           options["rand_dp_query"] = "";
           options["size_query"] = "";
@@ -154,4 +154,4 @@
       });
     });
   });
-})(jQuery);
+})(window.$, window.spec_editor, window.JSONEditor);

@@ -1,7 +1,7 @@
 .submit-row {
   bottom: 0;
   left: 0;
-  margin: 0 !important;
+  margin: 0;
   position: fixed;
   width: 100%;
   width: -moz-available; /* WebKit-based browsers will ignore this. */
@@ -13,19 +13,15 @@ div[data-theme="bootstrap4"] .card-title {
   float: none !important;
 }
 
-.select2-container--default
-  .select2-selection--multiple
-  .select2-selection__choice {
-  color: black !important;
-  padding-left: 27px !important;
+.select2-container--default  .select2-selection--multiple .select2-selection__choice {
+  color: black;
+  padding-left: 27px;
 }
 
-.select2-container--default
-  .select2-selection--single
-  .select2-selection__arrow {
-  top: 4px !important;
+.select2-container--default .select2-selection--single  .select2-selection__arrow {
+  top: 4px;
 }
 
 .select2.select2-container.select2-container--default {
-  width: 100% !important;
+  width: 100%;
 }

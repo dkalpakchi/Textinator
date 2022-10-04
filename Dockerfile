@@ -14,7 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # install dependencies
-RUN pip install --upgrade pip
+RUN pip install --upgrade pip==22.2.2
 RUN export PATH="$PATH:/home/tt/.local/bin"
 
 RUN mkdir -p Textinator
@@ -26,7 +26,7 @@ RUN mkdir -p ./Textinator/media
 RUN pip install -r ./Textinator/requirements.txt
 
 # for production purposes
-RUN pip install gunicorn
+RUN pip install gunicorn==20.1.0
 
 RUN npm install --prefix ./Textinator
 
