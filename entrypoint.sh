@@ -5,6 +5,8 @@ PREFIX=/home/tt/Textinator
 
 cd $PREFIX
 
+/usr/bin/supervisord -c $PREFIX/memcached.conf
+
 if [ "$TT_ENV" = "dev" ]; then
 	npm install --prefix $PREFIX
 fi

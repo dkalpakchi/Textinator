@@ -3,24 +3,33 @@ import secrets
 import time
 import sys
 import string
+import logging
 import json
+import uuid
 import hashlib
 from collections import defaultdict
 
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.core.cache import caches
+from django.db.models import signals
 
 from tinymce import HTMLField
 from filebrowser.fields import FileBrowseField
 from colorfield.fields import ColorField
+from model_clone import CloneMixin
+from model_clone.utils import create_copy_of_instance
 
 from .datasources import *
 from .helpers import *
 from .model_helpers import *
+
+
+logger = logging.getLogger(__name__)
 
 
 class CommonModel(models.Model):
@@ -341,7 +350,7 @@ class TaskTypeSpecification(CommonModel):
         return "Specification for {}".format(dct[self.task_type])
 
 
-class Project(CommonModel):
+class Project(CloneMixin, CommonModel):
     """
     Holds a **definition** of each Textinator project.
     """
@@ -352,9 +361,10 @@ class Project(CommonModel):
         permissions = (
             ('view_this_project', 'Can view this project'),
         )
+    
+    _clone_m2m_fields = ['markers', 'relations', 'datasources']
 
-
-    title = models.CharField(_("title"), max_length=50)
+    title = models.CharField(_("title"), max_length=100)
     short_description = models.TextField(_("short description"), max_length=1000, default="",
         help_text=_("Will be displayed on the project card"))
     institution = models.CharField(_("institution"), max_length=500, null=True, blank=True,
@@ -412,7 +422,6 @@ class Project(CommonModel):
         help_text=_("Video introducing people to the annotation task at hand (if applicable)"))
     video_remote = models.URLField(max_length=200, null=True, blank=True,
         help_text=_("A URL for video summary to be embedded (e.g. from YouTube)"))
-
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -791,7 +800,7 @@ class Range(CommonModel):
         return res
 
 
-class MarkerVariant(CommonModel):
+class MarkerVariant(CloneMixin, CommonModel):
     """
     Holds a **project-specific definition** for a previously defined `Marker`.
     This model allows the project manager to customize a previously defined marker by:
@@ -803,6 +812,8 @@ class MarkerVariant(CommonModel):
     class Meta:
         unique_together = (('project', 'marker', 'unit'),)
         verbose_name = _("marker variant")
+
+    _clone_m2o_or_o2m_fields = ['label_set', 'input_set']
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE, verbose_name=_("marker template"))
@@ -1210,8 +1221,19 @@ class Batch(CommonModel):
     def __str__(self):
         return str(self.uuid)
 
+    @transaction.atomic
+    def make_clone(self, attrs=None, using=None):
+        models_cache = caches['default']
+        mapped_pk = models_cache.get(self.uuid.hex)
+        if mapped_pk is None:
+            self_clone = create_copy_of_instance(self, attrs=attrs, using=using)
+            models_cache.set(self.uuid.hex, self_clone.pk, 60)
+        else:
+            self_clone = Batch.objects.get(pk=mapped_pk)
+        return self_clone
 
-class Input(CommonModel):
+
+class Input(CloneMixin, CommonModel):
     """
     Holds an **instantiation** of a `Marker` that does not require specifying the start-end boundaries
     of the text. This mostly concerns the cases when a user provides an input via HTML `<input>` tag.
@@ -1241,6 +1263,8 @@ class Input(CommonModel):
     class Meta:
         verbose_name = _('input')
         verbose_name_plural = _('inputs')
+
+    _clone_m2o_or_o2m_fields = ['batch']
 
     content = models.TextField(_("content"))
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
@@ -1289,7 +1313,7 @@ class Input(CommonModel):
         return res
 
 
-class Label(CommonModel):
+class Label(CloneMixin, CommonModel):
     """
     Holds an **instantiation** of a `Marker` that requires specifying the start-end boundaries
     of the text or is **NOT** provided via HTML `<input>` tag.
@@ -1307,6 +1331,8 @@ class Label(CommonModel):
     class Meta:
         verbose_name = _('label')
         verbose_name_plural = _('labels')
+
+    _clone_m2o_or_o2m_fields = ['batch']
 
     start = models.PositiveIntegerField(_("start position"), null=True,
         help_text=_("Character-wise start position in the text"))
@@ -1380,6 +1406,16 @@ class Label(CommonModel):
     def __str__(self):
         return self.text
 
+def delete_batch_if_empty(sender, **kwargs):
+    try:
+        batch = kwargs['instance'].batch
+        if not batch.label_set.all() and not batch.input_set.all():
+            batch.delete()
+    except Batch.DoesNotExist:
+        logger.warning("Tried to delete batch, but didn't find it")
+
+signals.post_delete.connect(delete_batch_if_empty, sender=Label, dispatch_uid='project.models.label_delete_batches')
+signals.post_delete.connect(delete_batch_if_empty, sender=Input, dispatch_uid='project.models.input_delete_batches')
 
 class LabelReview(CommonModel):
     """

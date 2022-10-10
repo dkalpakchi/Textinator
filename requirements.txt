@@ -18,7 +18,7 @@ django-registration==3.1.2
 django-jazzmin==2.4.8
 psycopg2-binary
 jinja2==3.0.3
-python-memcached
+pymemcache==3.5.2
 django-colorfield==0.4.5
 django-nested-admin==3.3.3
 Babel==2.9.1
@@ -28,3 +28,4 @@ django-modeltranslation==0.17.3
 django-guardian==2.4.0
 jsonlines==3.0.0
 python-magic==0.4.25
+django-clone==3.0.6

@@ -133,7 +133,7 @@ class RelationVariantInline(CommonNestedStackedInline):
 
 
 class InputInline(CommonStackedInline):
-    raw_id_fields = ('context',)
+    raw_id_fields = ('context', 'batch', 'marker')
     model = Input
     extra = 0
 
@@ -246,6 +246,13 @@ class ProjectForm(forms.ModelForm):
         return instance
 
 
+def clone_project(modeladmin, request, queryset):
+    for proj in queryset:
+        proj.make_clone({
+            "title": "[CLONE] {}".format(proj.title)
+        })
+clone_project.short_description = "Clone the project"
+
 @admin.register(Project)
 class ProjectAdmin(nested_admin.NestedModelAdmin):
     _list_filter = [
@@ -279,6 +286,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
     exclude = ('is_peer_reviewed',)
     user_can_access_owned_objects_only = True
     user_owned_objects_field = 'author'
+    actions = [clone_project]
 
     def get_form(self, request, *args, **kwargs):
         form = super(ProjectAdmin, self).get_form(request, *args, **kwargs)

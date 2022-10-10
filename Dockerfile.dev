@@ -1,13 +1,14 @@
 # pull official base image
-FROM python:3.9.6-alpine
+FROM python:alpine3.16
 
 # install psycopg2 dependencies and other dependencies
 RUN apk update \
-    && apk add build-base postgresql-dev gcc python3-dev musl-dev git jpeg-dev zlib-dev gettext libsass nodejs npm
+    && apk add build-base postgresql-dev gcc python3-dev musl-dev git jpeg-dev zlib-dev gettext libsass nodejs npm memcached supervisor busybox-extras
 
 RUN adduser -D tt
 USER tt
 WORKDIR /home/tt
+RUN mkdir -p cache
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -27,5 +28,7 @@ RUN mkdir -p ./Textinator/media
 RUN pip install -r ./Textinator/requirements.txt
 
 RUN npm install --prefix ./Textinator
+
+COPY --chown=tt ./memcached.conf ./Textinator/memcached.conf
 
 ENTRYPOINT sh /home/tt/Textinator/entrypoint.sh
