@@ -23,6 +23,10 @@ from reportlab.lib.pagesizes import A4
 
 from chartjs.views.columns import BaseColumnsHighChartsView
 
+import nbformat
+import papermill
+#from notebook import notebookapp
+
 # from modeltranslation.translator import translator
 
 import projects.models as Tm
@@ -1020,3 +1024,28 @@ def project_meta(request, proj):
         })
     else:
         raise Http404
+
+@login_required
+@require_http_methods(["GET"])
+def open_notebook(request, proj):
+    user = request.user
+    folder = settings.NOTEBOOK_DIR.format(username=user.username)
+
+    if not os.path.exists(folder) or not os.path.isdir(folder):
+        os.makedirs(folder)
+
+    nb_path = os.path.join(folder, "notebook.ipynb")
+    nb = nbformat.v4.new_notebook()
+    c_cell = nbformat.v4.new_code_cell("import json")
+    nb['metadata']['kernelspec'] = {
+        "display_name": "Python 3 (ipykernel)",
+        "language": "python",
+        "name": "python3"
+    } 
+    nb['cells'].append(c_cell)
+    nbformat.write(nb, open(nb_path, 'w'))
+
+    #res = papermill.execute_notebook(nb_path, None)
+    #print(res)
+
+    return JsonResponse({})

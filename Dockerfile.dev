@@ -5,6 +5,8 @@ FROM python:alpine3.16
 RUN apk update \
     && apk add build-base postgresql-dev gcc python3-dev musl-dev git jpeg-dev zlib-dev gettext libsass nodejs npm memcached supervisor busybox-extras
 
+RUN apk add linux-headers
+
 RUN adduser -D tt
 USER tt
 WORKDIR /home/tt

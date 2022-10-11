@@ -1541,3 +1541,9 @@ class UserProfile(CommonModel):
     def __str__(self):
         return self.user.username
 
+
+# class JupyterNotebook(CommonModel):
+#     user = models.ForeignKye(User, on_delete=models.SET_NULL, related_name='notebooks')
+#     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='notebooks')
+#     filename = models.CharField(_("filename"), max_length=32)
+    

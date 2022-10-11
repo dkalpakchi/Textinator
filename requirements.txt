@@ -29,3 +29,8 @@ django-guardian==2.4.0
 jsonlines==3.0.0
 python-magic==0.4.25
 django-clone==3.0.6
+papermill==2.4.0
+nbformat==5.7.0
+notebook==6.4.12
+matplotlib==3.6.1
+seaborn==0.12.0

@@ -333,6 +333,8 @@ DATA_DIRS = [
     os.path.join(MEDIA_ROOT, 'uploads', "{username}")
 ]
 
+NOTEBOOK_DIR = os.path.join(MEDIA_ROOT, 'uploads', "{username}", "notebooks")
+
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 20240
 DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600 # 100MB
 
