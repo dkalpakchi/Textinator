@@ -33,7 +33,7 @@
     "medium-zoom": "^1.0.6",
     "shepherd.js": "^3.1.0",
     "tippy.js": "^6.3.7",
-    "video.js": "^7.18.1"
+    "video.js": "^7.20.3"
   },
   "devDependencies": {
     "eslint": "^8.24.0",

@@ -25,7 +25,6 @@ from chartjs.views.columns import BaseColumnsHighChartsView
 
 import nbformat
 import papermill
-#from notebook import notebookapp
 
 # from modeltranslation.translator import translator
 
