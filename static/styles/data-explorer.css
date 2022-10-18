@@ -1,58 +1,77 @@
 #flaggedCollapse .message-body,
 #flaggedCollapse table {
-  background-color: #feecf0; }
+  background-color: #feecf0;
+}
 
 .explorer.container .select,
 .explorer.container select {
-  width: 100%; }
+  width: 100%;
+}
 
 .explorer .context {
-  text-align: justify !important; }
+  text-align: justify !important;
+}
 
 ol li {
-  margin-bottom: 1em; }
+  margin-bottom: 1em;
+}
 
 div.alternative.tags {
-  display: block; }
+  display: block;
+}
 
 div.alternative.tags span.tags {
-  margin-bottom: 0.1em; }
+  margin-bottom: 0.1em;
+}
 
 .context.message {
-  margin-bottom: 2em; }
+  margin-bottom: 2em;
+}
 
 span.tag:hover {
-  cursor: default; }
+  cursor: default;
+}
 
 .loading {
   font-size: 1em;
   font-family: "Montserrat", sans-serif;
   font-weight: 800;
-  text-align: left; }
-  .loading span {
-    display: inline-block;
-    margin: 0 -0.05em; }
+  text-align: left;
+}
+.loading span {
+  display: inline-block;
+  margin: 0 -0.05em;
+}
 
 .loading03 span {
   margin: 0 -0.075em;
-  animation: loading03 0.7s infinite alternate; }
-  .loading03 span:nth-child(2) {
-    animation-delay: 0.1s; }
-  .loading03 span:nth-child(3) {
-    animation-delay: 0.2s; }
-  .loading03 span:nth-child(4) {
-    animation-delay: 0.3s; }
-  .loading03 span:nth-child(5) {
-    animation-delay: 0.4s; }
-  .loading03 span:nth-child(6) {
-    animation-delay: 0.5s; }
-  .loading03 span:nth-child(7) {
-    animation-delay: 0.6s; }
+  animation: loading03 0.7s infinite alternate;
+}
+.loading03 span:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.loading03 span:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.loading03 span:nth-child(4) {
+  animation-delay: 0.3s;
+}
+.loading03 span:nth-child(5) {
+  animation-delay: 0.4s;
+}
+.loading03 span:nth-child(6) {
+  animation-delay: 0.5s;
+}
+.loading03 span:nth-child(7) {
+  animation-delay: 0.6s;
+}
 
 @keyframes loading03 {
   0% {
-    transform: scale(1); }
+    transform: scale(1);
+  }
   100% {
-    transform: scale(0.8); } }
+    transform: scale(0.8);
+  }
+}
 
-/*# sourceMappingURL=data-explorer.css.map */

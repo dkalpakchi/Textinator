@@ -574,7 +574,8 @@ label.error {
   left: 7px;
 }
 
-.marker.groups.message .message-body {
+.marker.groups.message .message-body,
+.markers.message .message-body {
   max-height: 50vh;
   overflow-y: scroll;
 }
@@ -716,6 +717,10 @@ label.help.is-danger {
 .card .card-content .content.is-divided {
   border-bottom: 1px solid #b5b5b5;
   padding-bottom: 1.5em;
+}
+
+.vertical-radio .radio {
+  margin-left: 0;
 }
 
 /** 

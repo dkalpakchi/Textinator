@@ -50,9 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "compressor",
-    'sass_processor',
     # 'prettyjson',
-    'django_admin_json_editor',
     'django_registration',
     'tinymce',
     'chartjs',
@@ -234,13 +232,9 @@ if not os.path.exists(MEDIA_ROOT):
 if not os.path.exists(UPLOAD_DIR):
     os.mkdir(UPLOAD_DIR)
 
-# Django Sass
-SASS_PROCESSOR_ROOT = os.path.join(BASE_DIR, 'static')
-
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'sass_processor.finders.CssFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder'
 ]
 
 TINYMCE_DEFAULT_CONFIG = {
@@ -372,7 +366,9 @@ ANNOTATION_TYPES = [
     ('lfree-text', 'Long free-text input'),
     ('integer', 'Integer'),
     ('float', 'Floating-point number'),
-    ('range', 'Range')
+    ('range', 'Range'),
+    ('radio', 'Radio buttons'),
+    ('check', 'Checkboxes')
 ]
 
 LOGIN_URL = '/{}accounts/login/'.format(ROOT_URLPATH)

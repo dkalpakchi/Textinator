@@ -1,11 +1,13 @@
+import json
+
 from django.contrib import admin
 from django.db.models import Q
 from django import forms
 from django.contrib.auth.models import User, Permission
-from django_admin_json_editor import JSONEditorWidget
 from django.contrib.admin import DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
+from django.template.loader import render_to_string
 
 import nested_admin
 # from modeltranslation.admin import TranslationAdmin
@@ -34,6 +36,37 @@ class CommonNestedStackedInline(nested_admin.NestedStackedInline):
     readonly_fields = ['dt_created', 'dt_updated']
 
 
+class TextinatorJSONEditorWidget(forms.Widget):
+    template_name = "admin/json_editor.html"
+
+    def __init__(self, schema, field, collapsed=False, editor_options=None):
+        super().__init__()
+        # TODO: change theme to fit with the Admin's look & feel
+        self.__field = field
+        self.__editor_options = {
+            "theme": "spectre",
+            "schema": schema,
+            "collapsed": int(collapsed)
+        }
+        self.__editor_options.update(editor_options or {})
+
+    def render(self, name, value, attrs=None, renderer=None):
+        return render_to_string(self.template_name, {
+            "field": self.__field,
+            "name": name,
+            "value": value,
+            "editor_options": self.__editor_options
+        })
+
+    @property
+    def media(self):
+        js = [
+            '/static/@json-editor/json-editor/dist/jsoneditor.js',
+            '/static/scripts/admin_json_editor.js'
+        ]
+        return forms.Media(js=js)
+
+
 class MarkerRestrictionInline(CommonNestedStackedInline):
     model = MarkerRestriction
     extra = 0
@@ -50,9 +83,23 @@ class MarkerContextMenuItemInline(CommonNestedStackedInline):
     exclude = ('verbose_admin',)
 
 
-class MarkerVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
-    model = MarkerVariant
+class MarkerVariantForm(forms.ModelForm):
+    class Meta:
+        model = MarkerVariant
+        exclude = ('custom_suggestion_endpoint', 'are_suggestions_enabled',)
+        DATA_SCHEMA = {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "textarea"
+            }
+        }
+        widgets = {
+            'choices': TextinatorJSONEditorWidget(DATA_SCHEMA, "choices", collapsed=False),
+        }
 
+
+class MarkerVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
     def __init__(self, *args, **kwargs):
         super(MarkerVariantInlineFormset, self).__init__(*args, **kwargs)
 
@@ -74,6 +121,7 @@ class MarkerVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
 #       happens when trying to assign marker to be both task and project specific
 class MarkerVariantInline(CommonNestedStackedInline):
     model = MarkerVariant
+    form = MarkerVariantForm
     formset = MarkerVariantInlineFormset
     extra = 0
     inlines = [MarkerRestrictionInline, MarkerContextMenuItemInline]
@@ -391,25 +439,6 @@ class LabelRelationAdmin(CommonModelAdmin):
         return qs.filter(user=request.user)
 
 
-class TextinatorJSONEditorWidget(JSONEditorWidget):
-    @property
-    def media(self):
-        css = {
-            'all': [
-                'django_admin_json_editor/fontawesome/css/font-awesome.min.css',
-                'django_admin_json_editor/style.css',
-            ]
-        }
-        js = [
-            'django_admin_json_editor/jsoneditor/jsoneditor.min.js',
-        ]
-
-        if self._sceditor:
-            css['all'].append('django_admin_json_editor/sceditor/themes/default.min.css')
-            js.append('django_admin_json_editor/sceditor/jquery.sceditor.bbcode.min.js')
-        return forms.Media(css=css, js=js)
-
-
 # TODO: add autocomplete for data source specs
 class DataSourceForm(forms.ModelForm):
     class Meta:
@@ -429,7 +458,7 @@ class DataSourceForm(forms.ModelForm):
             }
         }
         widgets = {
-            'spec': TextinatorJSONEditorWidget(DATA_SCHEMA, collapsed=False),
+            'spec': TextinatorJSONEditorWidget(DATA_SCHEMA, "spec", collapsed=False),
         }
 
 
@@ -549,7 +578,7 @@ class TaskTypeConfigForm(forms.ModelForm):
             }
         }
         widgets = {
-            'config': TextinatorJSONEditorWidget(DATA_SCHEMA, collapsed=False),
+            'config': TextinatorJSONEditorWidget(DATA_SCHEMA, "config", collapsed=False),
         }
 
 @admin.register(TaskTypeSpecification)

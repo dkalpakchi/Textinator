@@ -1,0 +1,11 @@
+{% if marker.choices %}
+  <div class="control is-marker-w80{% if marker.max_choice_len > 50 %} vertical-radio{% endif %}">
+    <p class="has-text-weight-bold">{{marker.name}}</p>
+    {% for c in marker.choices %}
+      <label class="radio" for="">
+        <input type="radio" name="{{marker.code}}" value="{{c}}">
+        {{c}}
+      </label>
+    {% endfor %}
+  </div>
+{% endif %}

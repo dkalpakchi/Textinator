@@ -8,6 +8,7 @@ import json
 import uuid
 import hashlib
 from collections import defaultdict
+from itertools import groupby
 
 from django.db import models, transaction
 from django.conf import settings
@@ -459,13 +460,17 @@ class Project(CloneMixin, CommonModel):
         else:
             return self.data_order == ('op' if parallel else 'os')
 
-    @property
-    def free_markers(self):
+    def free_markers(self, intelligent_groups=False):
         """
         Returns:
             QuerySet: The set of marker variants that do NOT belong to marker unit (order by annotation type)
         """
-        return self.markervariant_set.filter(unit=None).order_by('anno_type')
+        fm = self.markervariant_set.filter(unit=None).order_by("order_in_unit", 'anno_type')
+        if intelligent_groups:
+            groups = groupby(fm, lambda x: x.anno_type)
+            return groups
+        else:
+            return fm
 
     @property
     def marker_groups(self):
@@ -852,6 +857,8 @@ class MarkerVariant(CloneMixin, CommonModel):
         help_text=_("The type of annotations made using this marker"))
     export_name = models.CharField(_("export name"), max_length=50, blank=True, null=True,
         help_text=_("The name of the field in the exported JSON file (English name by default)"))
+    choices = models.JSONField(_("Choices for the values this marker"), null=True, blank=True,
+        help_text=_("Valid only if annotation type is `radio buttons` or `checkboxes`"))
 
     def __init__(self, *args, **kwargs):
         super(MarkerVariant, self).__init__(*args, **kwargs)
@@ -902,6 +909,10 @@ class MarkerVariant(CloneMixin, CommonModel):
         same_marker_pk = list(self.project.markervariant_set.filter(marker=self.marker).values_list('pk', flat=True))
         same_marker_pk.sort()
         return "{}_{}".format(self.marker.code, same_marker_pk.index(self.pk))
+    
+    @property
+    def max_choice_len(self):
+        return max([len(c) for c in self.choices]) if self.choices else 0
 
     def is_in_unit(self):
         return bool(self.unit)

@@ -106,8 +106,7 @@
       spec_editor.destroy();
       schema["title"] = " ";
       spec_editor = new JSONEditor(element, {
-        theme: "bootstrap4",
-        iconlib: "fontawesome4",
+        theme: "spectre",
         schema: schema,
       });
 
@@ -131,7 +130,6 @@
 
       spec_editor = updateSchema(option);
 
-      // defined in django-admin-json-editor
       spec_editor.setValue(templates[option]);
 
       $('input[name="root[db_type]"]').off("change");

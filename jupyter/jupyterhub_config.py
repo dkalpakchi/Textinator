@@ -6,6 +6,10 @@ CUR_DIR = os.getcwd()
 if CUR_DIR not in sys.path:
     sys.path.append(CUR_DIR)
 
+# The variable `c` below is defined by ipython traitlets and this file is guaranteed
+# to have it in its global namespace!
+# https://github.com/ipython/traitlets/blob/c5c9166373041dd561d8ad86e8990ae844d26306/traitlets/config/loader.py#L483-L501
+
 #------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
 #------------------------------------------------------------------------------
@@ -701,7 +705,8 @@ c.DockerSpawner.notebook_dir = notebook_dir
 
 # Mount the real user's Docker volume on the host to the notebook user's
 # notebook directory in the container
-c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
+# TODO: find out a way to transfer info about username and project id/hash/smth else to JH
+c.DockerSpawner.volumes = { 'jupyterhub-user-{username}-{project}': notebook_dir }
 
 # Remove containers once they are stopped
 c.DockerSpawner.remove = True

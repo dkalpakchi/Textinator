@@ -1,0 +1,16 @@
+<div id="{{ name }}_editor" class="djn-inline-form"></div>
+
+<script>
+  // need to update the attributes first
+  adminJsonEditors.initEditor(
+    "{{ field }}",
+    "{{ name }}_editor",
+    {{ editor_options|safe }},
+    "id_{{name}}",
+    {% if value %} {{ value|safe }} {% else %} undefined {% endif %}
+  )
+</script>
+
+<textarea cols="40" id="id_{{ name }}" name="{{ name }}" rows="10" required=""
+          style="display: none">{{ value|safe }}</textarea>
+

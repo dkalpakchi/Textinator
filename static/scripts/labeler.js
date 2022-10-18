@@ -908,26 +908,28 @@
                 let target = e.target;
                 if (target.getAttribute("type") == "checkbox") {
                   let marker = getClosestMarker(target);
-                  control.selectorArea
-                    .querySelectorAll(
-                      '[data-s="' + marker.getAttribute("data-s") + '"]'
-                    )
-                    .forEach(function (x) {
-                      let $x = $(x);
-                      if (!$x.prop("in_relation") && !$x.prop("disabled")) {
-                        if (
-                          !target.checked &&
-                          x.classList.contains("active") &&
-                          $x.prop("selected")
-                        ) {
-                          x.classList.remove("active");
-                          $x.prop("selected", false);
-                        } else if (target.checked) {
-                          x.classList.add("active");
-                          $x.prop("selected", true);
+                  if (utils.isDefined(marker)) {
+                    control.selectorArea
+                      .querySelectorAll(
+                        '[data-s="' + marker.getAttribute("data-s") + '"]'
+                      )
+                      .forEach(function (x) {
+                        let $x = $(x);
+                        if (!$x.prop("in_relation") && !$x.prop("disabled")) {
+                          if (
+                            !target.checked &&
+                            x.classList.contains("active") &&
+                            $x.prop("selected")
+                          ) {
+                            x.classList.remove("active");
+                            $x.prop("selected", false);
+                          } else if (target.checked) {
+                            x.classList.add("active");
+                            $x.prop("selected", true);
+                          }
                         }
-                      }
-                    });
+                      });
+                  }
                 }
               },
               false
@@ -2516,12 +2518,55 @@
                   )
               )
             : {},
+          radioButtons = {},
+          checkBoxes = {},
           longTextMarkers = utils.isDefined(this.markersArea)
             ? utils.serializeHashedObject($(this.markersArea).find("textarea"))
             : {},
           submittableChunks = chunks.filter((c) => c.submittable);
+  
+        if (utils.isDefined(this.markersArea)) {
+          $(this.markersArea)
+            .find('input[type="radio"]')
+            .filter((i, x) => x.checked)
+            .each(function(i, x) {
+              // simulate serializeHashedObject here
+              if (x.hasAttribute('data-h'))
+                radioButtons[x.name] = {
+                  hash: x.getAttribute('data-h'),
+                  value: x.value
+                }
+              else
+                radioButtons[x.name] = x.value;
+            });
 
-        console.log(submittableChunks);
+          $(this.markersArea)
+            .find('input[type="checkbox"]')
+            .filter((i, x) => x.checked)
+            .each(function(i, x) {
+              // simulate serializeHashedObject here 
+              if (!checkBoxes.hasOwnProperty(x.name)) {
+                if (x.hasAttribute("data-h"))
+                  checkBoxes[x.name] = {
+                    hash: x.getAttribute('data-h'),
+                    value: []
+                  }
+                else
+                  checkBoxes[x.name] = [];
+              }
+              if (x.hasAttribute('data-h'))
+                checkBoxes[x.name].value.push(x.value)
+              else
+                checkBoxes[x.name].push(x.value);
+            })
+
+          for (let key in checkBoxes) {
+            if (Array.isArray(checkBoxes[key]))
+              checkBoxes[key] = checkBoxes[key].join("|");
+            else
+              checkBoxes[key].value = checkBoxes[key].value.join("|");
+          }
+        }
 
         // add plugin info to chunks
         let sharedLabelPlugins = {},
@@ -2589,6 +2634,8 @@
           text_markers: stringify ? JSON.stringify(textMarkers) : textMarkers,
           numbers: stringify ? JSON.stringify(numbers) : numbers,
           ranges: stringify ? JSON.stringify(ranges) : ranges,
+          radio: stringify ? JSON.stringify(radioButtons) : radioButtons,
+          checkboxes: stringify ? JSON.stringify(checkBoxes) : checkBoxes
         };
       },
       unmarkChunk: function (c) {
@@ -2665,7 +2712,9 @@
           Object.keys(inputData["short_text_markers"]).length ||
           Object.keys(inputData["long_text_markers"]).length ||
           Object.keys(inputData["numbers"]).length ||
-          Object.keys(inputData["ranges"]).length
+          Object.keys(inputData["ranges"]).length ||
+          Object.keys(inputData["radio"]).length ||
+          Object.keys(inputData["checkboxes"]).length
         );
       },
       hasNewLabels: function (inputData) {
@@ -2692,6 +2741,8 @@
           "long_text_markers",
           "numbers",
           "ranges",
+          "radio",
+          "checkboxes"
         ];
       },
       restoreBatch: function (uuid, url) {
@@ -2736,22 +2787,42 @@
                   i++
                 ) {
                   let el = non_unit_markers[k][i],
-                    inp;
+                    inps, vals;
                   if (k == "lfree_text")
-                    inp = control.markersArea.querySelector(
+                    inps = control.markersArea.querySelectorAll(
                       'textarea[name="' + el.marker.code + '"]'
                     );
-                  else
-                    inp = control.markersArea.querySelector(
+                  else if (k == "radio")
+                    inps = control.markersArea.querySelectorAll(
+                      'input[type="radio"][name="' + el.marker.code + '"]'
+                    )
+                  else if (k == "check") {
+                    inps = control.markersArea.querySelectorAll(
+                      'input[type="checkbox"][name="' + el.marker.code + '"]'
+                    )
+                    vals = el.content.split("|");
+                  } else
+                    inps = control.markersArea.querySelectorAll(
                       'input[name="' + el.marker.code + '"]'
                     );
-                  if (inp) {
-                    inp.setAttribute("data-h", el.hash);
-                    inp.value = el.content;
+                  if (inps) {
+                    for (let i = 0, linps = inps.length; i < linps; i++) {
+                      let inp = inps[i];
+                      inp.setAttribute("data-h", el.hash);
+                      if (k == "radio") {
+                        if (inp.value == el.content)
+                          inp.checked = true;
+                      } else if (k == "check") {
+                        if (vals.includes(inp.value))
+                          inp.checked = true;
+                      } else {
+                        inp.value = el.content;
+                      }
 
-                    if (inp.getAttribute("type") == "range") {
-                      let event = new Event("input");
-                      inp.dispatchEvent(event);
+                      if (inp.getAttribute("type") == "range") {
+                        let event = new Event("input");
+                        inp.dispatchEvent(event);
+                      }
                     }
                   }
                 }
@@ -2918,16 +2989,22 @@
       },
       clearBatch: function () {
         $(this.markersArea)
-          .find('input[type="text"]')
+          .find('input[type="text"],input[type="radio"],input[type="checkbox"]')
           .each(function (i, x) {
             x.removeAttribute("data-h");
-            x.value = "";
+            if (x.type != "radio" && x.type != "checkbox")
+              x.value = "";
+            if (x.type == "radio" || x.type == "checkbox")
+              x.checked = false;
           });
         $(this.markerGroupsArea)
-          .find('#markerGroups input[type="text"]')
+          .find('#markerGroups input[type="text"],input[type="radio"],input[type="checkbox"]')
           .each(function (i, x) {
             x.removeAttribute("data-h");
-            x.value = "";
+            if (x.type != "radio" && x.type != "checkbox")
+              x.value = "";
+            if (x.type == "radio" || x.type == "checkbox")
+              x.checked = false;
           });
       },
       restoreOriginal: function () {
@@ -3078,7 +3155,10 @@
                 $(labelerModule.markersArea)
                   .find("input")
                   .each(function (i, x) {
-                    $(x).val("");
+                    if (x.type != "radio" && x.type != "checkbox")
+                      x.value = "";
+                    if (x.type == "radio" || x.type == "checkbox")
+                      x.checked = false;
                   });
                 $(labelerModule.markersArea)
                   .find("output")

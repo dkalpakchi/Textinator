@@ -35,7 +35,10 @@ import projects.helpers as Th
 import projects.export as Tex
 
 from Textinator.jinja2 import to_markdown, to_formatted_text
-
+from .view_helpers import (
+    BatchInfo, process_inputs, process_marker_groups, process_text_markers,
+    process_chunks_and_relations, process_chunk, render_editing_board
+)
 
 PT2MM = 0.3527777778
 MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -532,7 +535,7 @@ def get_batch(request):
 
         non_unit_markers_q = inputs.filter(marker__unit=None)
         non_unit_markers = {}
-        input_types = ['free-text', 'lfree-text', 'integer', 'float', 'range']
+        input_types = ['free-text', 'lfree-text', 'integer', 'float', 'range', 'radio', 'check']
         for it in input_types:
             non_unit_markers[it.replace('-', '_')] = non_unit_markers_q.filter(marker__anno_type=it)
         groups = inputs.exclude(marker__unit=None)

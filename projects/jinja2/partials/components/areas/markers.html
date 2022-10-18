@@ -1,10 +1,10 @@
-{% if project.free_markers.count() > 0 %}
+{% if project.free_markers().count() > 0 %}
   <article id="markersArea" class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
       <p>{{ _("markers")|capitalize }}</p>
     </div>
     <div class="message-body">
-      {% set grouped_markers = project.free_markers|groupby('anno_type') %}
+      {% set grouped_markers = project.free_markers(intelligent_groups=True) %}
       {% for key, group in grouped_markers %}
         <div class="field is-grouped is-grouped-multiline{% if key == 'range' %} has-addons is-align-items-center{% endif %}">
           {% for marker in group %}

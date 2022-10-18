@@ -33,7 +33,9 @@ def display_marker_variant(marker_variant, **kwargs):
     }
     ctx.update(kwargs)
 
-    template = get_template('partials/components/controls/markers/{}.html'.format(marker_variant.anno_type.replace('-', '_')))
+    template = get_template('partials/components/controls/markers/{}.html'.format(
+        marker_variant.anno_type.replace('-', '_')
+    ))
     return Markup(template.render(context=ctx))
 
 def display_relation(rel):
@@ -97,7 +99,6 @@ def markify(score):
 
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
-    extensions.append('sass_processor.jinja2.ext.SassSrc')
     extensions.append('jinja2.ext.i18n')
     extensions.append('jinja2.ext.with_')
     options['extensions'] = extensions

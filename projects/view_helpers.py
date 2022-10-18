@@ -17,6 +17,8 @@ class BatchInfo:
         self.numbers = json.loads(data['numbers'])
         self.ranges = json.loads(data['ranges'])
         self.text_markers = json.loads(data['text_markers'])
+        self.radios = json.loads(data['radio'])
+        self.checkboxes = json.loads(data['checkboxes'])
         self.datapoint = str(data['datapoint'])
         self.context = data.get('context')
 
@@ -37,7 +39,9 @@ class BatchInfo:
             ('short_text_markers', self.short_text_markers),
             ('long_text_markers', self.long_text_markers),
             ('numbers', self.numbers),
-            ('ranges', self.ranges)
+            ('ranges', self.ranges),
+            ('radios', self.radios),
+            ('checkboxes', self.checkboxes)
         ]
 
 
@@ -107,21 +111,24 @@ def render_editing_board(project, user):
     batches = Batch.objects.filter(uuid__in=batch_uuids).order_by(F('dt_updated').desc(nulls_last=True), '-dt_created')
 
     return render_to_string('partials/components/areas/editing.html', {
-        'batches':batches,
+        'batches': batches,
         'project': project
     })
 
 
 def process_inputs(batch, batch_info, short_text_markers=None, long_text_markers=None,
-    numbers=None, ranges=None, ctx_cache=None):
-    if any([short_text_markers, long_text_markers, numbers, ranges]):
+    numbers=None, ranges=None, radios=None, checkboxes=None, ctx_cache=None):
+    if any([short_text_markers, long_text_markers, numbers, ranges, radios, checkboxes]):
         stm, ltm, num, ran = short_text_markers, long_text_markers, numbers, ranges
+        rad, check = radios, checkboxes
     else:
         stm = batch_info.short_text_markers
         ltm = batch_info.long_text_markers
         num = batch_info.numbers
         ran = batch_info.ranges
-    inputs = [stm, ltm, num, ran]
+        rad = batch_info.radios
+        check = batch_info.checkboxes
+    inputs = [stm, ltm, num, ran, rad, check]
 
     if any(inputs):
         new_inputs = [x for x in inputs if x]
@@ -134,12 +141,20 @@ def process_inputs(batch, batch_info, short_text_markers=None, long_text_markers
                 if inp_string.strip():
                     marker_code = "_".join(code.split("_")[:-1])
                     if marker_code not in mv:
-                        marker_variants = MarkerVariant.objects.filter(project=batch_info.project, marker__code=marker_code)
+                        marker_variants = MarkerVariant.objects.filter(
+                            project=batch_info.project,
+                            marker__code=marker_code
+                        )
                         mv[marker_code] = marker_variants
 
                     for m in mv[marker_code]:
                         if m.code == code:
-                            Input.objects.create(content=inp_string.strip(), marker=m, batch=batch, context=ctx)
+                            Input.objects.create(
+                                content=inp_string.strip(),
+                                marker=m,
+                                batch=batch,
+                                context=ctx
+                            )
                             break
 
 
