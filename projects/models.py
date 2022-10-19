@@ -468,8 +468,15 @@ class Project(CloneMixin, CommonModel):
         """
         fm = self.markervariant_set.filter(unit=None).order_by("order_in_unit", 'anno_type')
         if intelligent_groups:
-            groups = groupby(fm, lambda x: x.anno_type)
-            return groups
+            display_groups = groupby(fm, lambda x: x.display_tab)
+            tabs, groups = [], []
+            for tab, f_groups in display_groups:
+                group = [tab, None]
+                anno_groups = groupby(list(f_groups), lambda x: x.anno_type)
+                group[1] = anno_groups
+                tabs.append(tab)
+                groups.append(group)
+            return tabs, groups
         else:
             return fm
 
@@ -856,6 +863,10 @@ class MarkerVariant(CloneMixin, CommonModel):
         help_text=_("Keyboard shortcut for annotating a piece of text with this marker (shortcut of the marker template by default"))
     anno_type = models.CharField(_("annotation type"), max_length=10, default='m-span', choices=settings.ANNOTATION_TYPES,
         help_text=_("The type of annotations made using this marker"))
+    display_type = models.CharField(_("display type"), max_length=3, default="hl", choices=[("hl", "Highlight"), ("und", "Underline")],
+        help_text=_("Only applicable if annotation type is `Marker (text spans)`"))
+    display_tab = models.CharField(_("display tab"), max_length=30, blank=True, null=True,
+        help_text=_("A name of the tab to which this marker belongs (leave empty if you don't want to have any tabs)"))
     export_name = models.CharField(_("export name"), max_length=50, blank=True, null=True,
         help_text=_("The name of the field in the exported JSON file (English name by default)"))
     choices = models.JSONField(_("Choices for the values this marker"), null=True, blank=True,

@@ -559,6 +559,7 @@ def get_batch(request):
     else:
         return JsonResponse({})
 
+
 @login_required
 @require_http_methods(["GET"])
 def get_context(request, proj):
@@ -578,6 +579,7 @@ def get_context(request, proj):
         return JsonResponse({
             "error": "does_not_exist"
         })
+
 
 @login_required
 @require_http_methods(["GET"])

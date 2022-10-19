@@ -5,7 +5,7 @@
       {% if c|is_list %}
         {% set outer_loop = loop %}
         <label class="radio outer">
-          <input id="{{marker.code}}_{{outer_loop.index0}}" data-for="{{marker.code}}" type="radio">
+          <input id="{{marker.code}}_{{outer_loop.index0}}" data-for="{{marker.code}}" name="{{marker.code}}_ocat" type="radio" value="{{outer_loop.index}}">
           <div class="inner">
             {% for x in c %}
               <label class="radio" for="{{marker.code}}_{{outer_loop.index0}}_{{loop.index0}}">

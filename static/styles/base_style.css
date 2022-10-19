@@ -580,6 +580,11 @@ label.error {
   overflow-y: scroll;
 }
 
+.markers.message .message-body .tabs {
+  margin-bottom: 0.75em;
+  margin-top: -1em;
+}
+
 .meta {
   margin-bottom: 1.5em;
 }
@@ -734,6 +739,15 @@ label.help.is-danger {
   margin-right: 1em;
   accent-color: #8F5C00;
 }
+
+#tab-content div[data-content] {
+  display: none;
+}
+
+#tab-content div[data-content].is-active {
+  display: block;
+}
+
 
 /**
  * Other library fixes

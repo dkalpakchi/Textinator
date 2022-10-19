@@ -56,6 +56,7 @@
       "ARTICLE",
     ];
     const LABEL_CSS_SELECTOR = "span.tag[data-s]";
+    const RADIO_CHECK_SEPARATOR = "||";
 
     let chunks = [], // the array of all chunks of text marked with a label, but not submitted yet
       relations = {}, // a map from relationId to the list of relations constituting it
@@ -638,6 +639,12 @@
       return btns;
     }
 
+    function getRadioButtonValue(rb) {
+      let retval = rb.value;
+      if (rb.name.endsWith("_ocat")) retval += RADIO_CHECK_SEPARATOR;
+      return retval;
+    }
+
     return {
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
@@ -650,6 +657,7 @@
       contextMenuPlugins: { sharedBetweenMarkers: {} },
       checkedOuterRadio: {}, // to keep tracked of nested radio button groups
       checkedInnerRadio: {},
+      radioCheckSeparator: RADIO_CHECK_SEPARATOR,
       isMarker: isMarker,
       isLabel: isLabel,
       init: function () {
@@ -942,6 +950,7 @@
                     if (utils.isDefined(control.checkedOuterRadio[radioFor])) {
                       control.checkedOuterRadio[radioFor].checked = false;
                     }
+                    control.checkedOuterRadio[radioFor] = target;
 
                     if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
                       control.checkedInnerRadio[radioFor].checked = false;
@@ -2559,13 +2568,25 @@
             .filter((i, x) => x.checked)
             .each(function(i, x) {
               // simulate serializeHashedObject here
-              if (x.hasAttribute('data-h'))
-                radioButtons[x.name] = {
-                  hash: x.getAttribute('data-h'),
-                  value: x.value
+              let name = x.name.endsWith("_ocat")
+                ? x.name.replace("_ocat", "")
+                : x.name;
+              if (x.hasAttribute('data-h')) {
+                if (radioButtons.hasOwnProperty(name)) {
+                  radioButtons[name].value += getRadioButtonValue(x);
+                } else {
+                  radioButtons[name] = {
+                    hash: x.getAttribute('data-h'),
+                    value: getRadioButtonValue(x)
+                  }
                 }
-              else
-                radioButtons[x.name] = x.value;
+              } else {
+                if (radioButtons.hasOwnProperty(name)) {
+                  radioButtons[name] += getRadioButtonValue(x);
+                } else {
+                  radioButtons[name] = getRadioButtonValue(x);
+                }
+              }
             });
 
           $(this.markersArea)
@@ -2588,11 +2609,12 @@
                 checkBoxes[x.name].push(x.value);
             })
 
+          var ctx = this;
           for (let key in checkBoxes) {
             if (Array.isArray(checkBoxes[key]))
-              checkBoxes[key] = checkBoxes[key].join("|");
+              checkBoxes[key] = checkBoxes[key].join(ctx.radioCheckSeparator);
             else
-              checkBoxes[key].value = checkBoxes[key].value.join("|");
+              checkBoxes[key].value = checkBoxes[key].value.join(ctx.radioCheckSeparator);
           }
         }
 
@@ -2820,15 +2842,23 @@
                     inps = control.markersArea.querySelectorAll(
                       'textarea[name="' + el.marker.code + '"]'
                     );
-                  else if (k == "radio")
-                    inps = control.markersArea.querySelectorAll(
-                      'input[type="radio"][name="' + el.marker.code + '"]'
-                    )
-                  else if (k == "check") {
+                  else if (k == "radio") {
+                    if (el.content.includes("||")) {
+                      inps = control.markersArea.querySelectorAll(
+                        'input[type="radio"][name="' + el.marker.code + '_ocat"],' +
+                        'input[type="radio"][name="' + el.marker.code + '"]'
+                      );
+                      vals = el.content.split(control.radioCheckSeparator);
+                    } else {
+                      inps = control.markersArea.querySelectorAll(
+                        'input[type="radio"][name="' + el.marker.code + '"]'
+                      );
+                    }
+                  } else if (k == "check") {
                     inps = control.markersArea.querySelectorAll(
                       'input[type="checkbox"][name="' + el.marker.code + '"]'
                     )
-                    vals = el.content.split("|");
+                    vals = el.content.split(control.radioCheckSeparator);
                   } else
                     inps = control.markersArea.querySelectorAll(
                       'input[name="' + el.marker.code + '"]'
@@ -2838,6 +2868,13 @@
                       let inp = inps[i];
                       inp.setAttribute("data-h", el.hash);
                       if (k == "radio") {
+                        if (utils.isDefined(vals)) {
+                          for (let j = 0, lv = vals.length; j < lv; j++) {
+                            if (inp.value == vals[j]) {
+                              inp.checked = true;
+                            }
+                          }
+                        }
                         if (inp.value == el.content) {
                           inp.checked = true;
                           if (inp.hasAttribute("data-group")) {
