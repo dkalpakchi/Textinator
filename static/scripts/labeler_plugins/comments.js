@@ -83,7 +83,7 @@ var plugin = function (cfg, labeler) {
             let target = e.target;
             storage[target.getAttribute("data-s")] = target.value;
           },
-          false
+          false,
         );
         commentInput.addEventListener("blur", function () {
           let relSpan = label.querySelector('[data-m="r"]');

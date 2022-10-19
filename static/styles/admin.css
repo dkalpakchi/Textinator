@@ -13,12 +13,16 @@ div[data-theme="bootstrap4"] .card-title {
   float: none !important;
 }
 
-.select2-container--default  .select2-selection--multiple .select2-selection__choice {
+.select2-container--default
+  .select2-selection--multiple
+  .select2-selection__choice {
   color: black;
   padding-left: 27px;
 }
 
-.select2-container--default .select2-selection--single  .select2-selection__arrow {
+.select2-container--default
+  .select2-selection--single
+  .select2-selection__arrow {
   top: 4px;
 }
 

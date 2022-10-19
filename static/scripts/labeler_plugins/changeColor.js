@@ -41,11 +41,7 @@ var plugin = function (cfg, labeler) {
       ];
     // Checks for rgba and converts string to
     // integer/float using unary + operator to save bytes
-    else if (
-      (cache = /rgba\((\d+),(\d+),(\d+),(\d+|\d+.\d+)\)/.exec(
-        color
-      ))
-    )
+    else if ((cache = /rgba\((\d+),(\d+),(\d+),(\d+|\d+.\d+)\)/.exec(color)))
       cache = [+cache[1], +cache[2], +cache[3], +cache[4]];
     // Checks for rgb and converts string to
     // integer/float using unary + operator to save bytes
@@ -166,7 +162,7 @@ var plugin = function (cfg, labeler) {
           if (control.storeFor == "label") {
             label.setAttribute(
               "style",
-              "background-color: " + c + "; color: " + textColor + ";"
+              "background-color: " + c + "; color: " + textColor + ";",
             );
           } else if (control.storeFor == "relation") {
             var relSpan = label.querySelector('[data-m="r"]');
@@ -174,12 +170,12 @@ var plugin = function (cfg, labeler) {
               relSpan.classList.add("is-badge");
               relSpan.setAttribute(
                 "style",
-                "background-color: " + c + "; color: " + textColor + ";"
+                "background-color: " + c + "; color: " + textColor + ";",
               );
             } else if (control.allowSingletons) {
               label.setAttribute(
                 "style",
-                "background-color: " + c + "; color: " + textColor + ";"
+                "background-color: " + c + "; color: " + textColor + ";",
               );
             }
           }
@@ -259,7 +255,7 @@ var plugin = function (cfg, labeler) {
             if (!storage.salt.hasOwnProperty(scope))
               storage.salt[scope] = makeSalt(32);
             storage[scope] = getRandomColor(
-              relSpan.textContent + storage.salt[scope]
+              relSpan.textContent + storage.salt[scope],
             );
 
             const event = new Event(COLOR_CHANGED_EVENT, { bubbles: false });

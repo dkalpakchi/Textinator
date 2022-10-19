@@ -55,7 +55,7 @@ var plugin = function (cfg, labeler) {
           storage["l" + parseInt(target.getAttribute("data-i"), 10)] =
             target.value;
         },
-        false
+        false,
       );
 
       tippy(isDefined(menuItem) ? menuItem : label, {

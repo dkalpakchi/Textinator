@@ -4,14 +4,14 @@ $(document).ready(function () {
     document.location.href = $(this).attr("data-link");
   });
 
-  $('.tabs li[data-tab]').on('click', function() {
-    var tab = $(this).data('tab');
+  $(".tabs li[data-tab]").on("click", function () {
+    var tab = $(this).data("tab");
 
-    $('.tabs li').removeClass('is-active');
-    $(this).addClass('is-active');
+    $(".tabs li").removeClass("is-active");
+    $(this).addClass("is-active");
 
-    $('#tab-content div').removeClass('is-active');
-    $('div[data-content="' + tab + '"]').addClass('is-active');
+    $("#tab-content div").removeClass("is-active");
+    $('div[data-content="' + tab + '"]').addClass("is-active");
   });
 
   // Check for click events on the navbar burger icon

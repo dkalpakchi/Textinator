@@ -56,8 +56,8 @@
     TextsAPI: {
       type: "object",
       endpoint: {
-        type: "string"
-      }
+        type: "string",
+      },
     },
     Json: {
       type: "object",
@@ -103,7 +103,6 @@
     },
   };
 
-
   function updateSchema(spec_editor, option) {
     // NOTE: `spec` everywhere is just the name of the field in the model
     //       if the name changes djang-admin-json-editor, changes the name of JS variable as well
@@ -117,7 +116,7 @@
         schema: schema,
       });
 
-      spec_editor.on('ready', function() {
+      spec_editor.on("ready", function () {
         spec_editor.on("change", function () {
           var errors = spec_editor.validate();
           if (errors.length) {
@@ -141,7 +140,7 @@
 
       spec_editor = updateSchema(spec_editor, option);
 
-      spec_editor.on('ready', function() {
+      spec_editor.on("ready", function () {
         spec_editor.setValue(templates[option]);
 
         $('input[name="root[db_type]"]').off("change");

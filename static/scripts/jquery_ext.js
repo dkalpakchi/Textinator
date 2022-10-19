@@ -1,4 +1,4 @@
-(function($) {
+(function ($) {
   $.fn.serializeObject = function () {
     let o = {};
     let a = this.serializeArray();
@@ -14,4 +14,4 @@
     });
     return o;
   };
-})(window.$)
+})(window.$);
