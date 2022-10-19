@@ -466,7 +466,7 @@ class Project(CloneMixin, CommonModel):
         Returns:
             QuerySet: The set of marker variants that do NOT belong to marker unit (order by annotation type)
         """
-        fm = self.markervariant_set.filter(unit=None).order_by("order_in_unit", 'anno_type')
+        fm = self.markervariant_set.filter(unit=None).order_by("display_tab", "order_in_unit", 'anno_type')
         if intelligent_groups:
             display_groups = groupby(fm, lambda x: x.display_tab)
             tabs, groups = [], []

@@ -14,11 +14,11 @@
 
       selector_chosen_select.height(
         selector_available_select.height() +
-          selector_available_filter.outerHeight(),
+          selector_available_filter.outerHeight()
       );
       selector_chosen_select.css(
         "border-top",
-        selector_chosen_select.css("border-bottom"),
+        selector_chosen_select.css("border-bottom")
       );
     });
   }
@@ -32,17 +32,17 @@
       const errorCarousel = errors.eq(0).closest(".carousel-item");
       $carousel.carousel(errorCarousel.data("carouselid"));
       $(".carousel-fieldset-label", $carousel).text(
-        errorCarousel.data()["label"],
+        errorCarousel.data()["label"]
       );
     } else if (hash) {
       // If we have a tab hash, open that
       const activeCarousel = $(
         '.carousel-item[data-target="' + hash + '"]',
-        $carousel,
+        $carousel
       );
       $carousel.carousel(activeCarousel.data()["carouselid"]);
       $(".carousel-fieldset-label", $carousel).text(
-        activeCarousel.data()["label"],
+        activeCarousel.data()["label"]
       );
     }
 
@@ -54,7 +54,7 @@
 
       if (e.relatedTarget.dataset.hasOwnProperty("label")) {
         $(".carousel-fieldset-label", $carousel).text(
-          e.relatedTarget.dataset.label,
+          e.relatedTarget.dataset.label
         );
       }
       const hash = e.relatedTarget.dataset.target;
@@ -141,7 +141,7 @@
 
     // Style the inline fieldset button
     $(".inline-related fieldset.module .add-row a").addClass(
-      "btn btn-sm btn-default float-right",
+      "btn btn-sm btn-default float-right"
     );
 
     // Ensure we preserve the tab the user was on using the url hash, even on page reload

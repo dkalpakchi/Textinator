@@ -162,7 +162,7 @@ var plugin = function (cfg, labeler) {
           if (control.storeFor == "label") {
             label.setAttribute(
               "style",
-              "background-color: " + c + "; color: " + textColor + ";",
+              "background-color: " + c + "; color: " + textColor + ";"
             );
           } else if (control.storeFor == "relation") {
             var relSpan = label.querySelector('[data-m="r"]');
@@ -170,12 +170,12 @@ var plugin = function (cfg, labeler) {
               relSpan.classList.add("is-badge");
               relSpan.setAttribute(
                 "style",
-                "background-color: " + c + "; color: " + textColor + ";",
+                "background-color: " + c + "; color: " + textColor + ";"
               );
             } else if (control.allowSingletons) {
               label.setAttribute(
                 "style",
-                "background-color: " + c + "; color: " + textColor + ";",
+                "background-color: " + c + "; color: " + textColor + ";"
               );
             }
           }
@@ -255,7 +255,7 @@ var plugin = function (cfg, labeler) {
             if (!storage.salt.hasOwnProperty(scope))
               storage.salt[scope] = makeSalt(32);
             storage[scope] = getRandomColor(
-              relSpan.textContent + storage.salt[scope],
+              relSpan.textContent + storage.salt[scope]
             );
 
             const event = new Event(COLOR_CHANGED_EVENT, { bubbles: false });

@@ -327,7 +327,7 @@
         if (pieces[0].nodeType === 3 && prev.nodeType === 3)
           parent.replaceChild(
             document.createTextNode(prev.data + pieces[0].data),
-            prev,
+            prev
           );
         else parent.insertBefore(pieces[0], next);
 
@@ -339,7 +339,7 @@
         if (pieces[pieces.length - 1].nodeType === 3 && next.nodeType === 3) {
           parent.replaceChild(
             document.createTextNode(pieces[pieces.length - 1].data + next.data),
-            next,
+            next
           );
         } else {
           parent.insertBefore(pieces[pieces.length - 1], next);
@@ -350,13 +350,13 @@
         if (prev == null) {
           parent.replaceChild(
             document.createTextNode(pieces[0].data + next_data),
-            node,
+            node
           );
         } else {
           let prev_data = utils.isDefined(prev.data) ? prev.data : "";
           parent.replaceChild(
             document.createTextNode(prev_data + pieces[0].data + next_data),
-            prev,
+            prev
           );
           parent.removeChild(node);
         }
@@ -457,7 +457,7 @@
                     }
                   })(btn);
                 },
-                false,
+                false
               );
             });
           }
@@ -603,17 +603,27 @@
       return text;
     }
 
-    function createMarkedSpan(obj) {
+    function createMarkedSpan(obj, displayType) {
       let color = obj.getAttribute("data-color"),
         textColor = obj.getAttribute("data-text-color"),
         markedSpan = document.createElement("span");
       markedSpan.className = "tag";
       markedSpan.setAttribute("data-s", obj.getAttribute("data-s"));
       markedSpan.setAttribute("data-scope", obj.getAttribute("data-scope"));
-      markedSpan.setAttribute(
-        "style",
-        "background-color:" + color + "; color:" + textColor + ";",
-      );
+      markedSpan.setAttribute("data-dt", displayType);
+      if (displayType == "hl") {
+        markedSpan.setAttribute(
+          "style",
+          "background-color:" + color + "; color:" + textColor + ";"
+        );
+      } else if (displayType == "und") {
+        markedSpan.setAttribute(
+          "style",
+          "text-decoration: underline 2px " +
+            color +
+            "; padding-left: 0px; border: 0px;"
+        );
+      }
       return markedSpan;
     }
 
@@ -742,8 +752,8 @@
                     control.showRelationGraph(
                       parseInt(
                         target.querySelector('[data-m="r"]').textContent,
-                        10,
-                      ),
+                        10
+                      )
                     );
                   } else if (!window.getSelection().toString()) {
                     if (
@@ -762,17 +772,17 @@
                 }
               } else if (target.hasAttribute("data-rel")) {
                 control.showRelationGraph(
-                  parseInt(target.getAttribute("data-rel"), 10),
+                  parseInt(target.getAttribute("data-rel"), 10)
                 );
               }
             },
-            false,
+            false
           );
 
           let deselectActionBtn;
           if (utils.isDefined(this.actionsArea))
             deselectActionBtn = this.actionsArea.querySelector(
-              "#deselectAllMarkers",
+              "#deselectAllMarkers"
             );
 
           if (utils.isDefined(deselectActionBtn))
@@ -797,7 +807,7 @@
                 }
               }
             },
-            false,
+            false
           );
 
           this.selectorArea.addEventListener(
@@ -815,7 +825,7 @@
                 }
               }
             },
-            false,
+            false
           );
 
           // adding chunk if a piece of text was selected with a mouse
@@ -836,7 +846,7 @@
                 labelerModule.updateChunkFromSelection();
               }
             },
-            false,
+            false
           );
 
           // TODO: might be potentially rewritten?
@@ -849,7 +859,7 @@
               if (selection && selection.anchorNode != null) {
                 let isArticleAncestor = isAncestor(
                   selection.anchorNode,
-                  control.selectorArea,
+                  control.selectorArea
                 );
 
                 if (
@@ -865,11 +875,11 @@
               let shortcut;
               if (e.shiftKey) {
                 shortcut = document.querySelector(
-                  '[data-shortcut="SHIFT + ' + s + '"]',
+                  '[data-shortcut="SHIFT + ' + s + '"]'
                 );
               } else {
                 shortcut = document.querySelector(
-                  '[data-shortcut="' + s + '"]',
+                  '[data-shortcut="' + s + '"]'
                 );
               }
 
@@ -886,7 +896,7 @@
                 }
               }
             },
-            false,
+            false
           );
 
           if (utils.isDefined(this.markersArea)) {
@@ -908,7 +918,7 @@
                   }
                 }
               },
-              false,
+              false
             );
 
             this.markersArea.addEventListener(
@@ -921,7 +931,7 @@
                   if (utils.isDefined(marker)) {
                     control.selectorArea
                       .querySelectorAll(
-                        '[data-s="' + marker.getAttribute("data-s") + '"]',
+                        '[data-s="' + marker.getAttribute("data-s") + '"]'
                       )
                       .forEach(function (x) {
                         let $x = $(x);
@@ -959,7 +969,7 @@
 
                   if (target.hasAttribute("data-group")) {
                     let outerRadio = control.markersArea.querySelector(
-                      "#" + target.getAttribute("data-group"),
+                      "#" + target.getAttribute("data-group")
                     );
 
                     // this will fire only when target.checked is true
@@ -969,7 +979,7 @@
                   }
                 }
               },
-              false,
+              false
             );
           }
 
@@ -981,7 +991,7 @@
 
                 if (utils.isDefined(relMarker)) control.markRelation(relMarker);
               },
-              false,
+              false
             );
           }
 
@@ -1015,7 +1025,7 @@
                     void (
                       $(n).data("restored") !== undefined &&
                       $(n).data("restored", false)
-                    ),
+                    )
                 );
                 // The code above is a shorthand for this code below. Note that `void` is necessary to force expression to be evaluated
                 // and return `undefined` at the end.
@@ -1041,7 +1051,7 @@
         if (plugin.storeFor == "relation") {
           if (
             !this.contextMenuPlugins["sharedBetweenMarkers"].hasOwnProperty(
-              plugin.name,
+              plugin.name
             )
           )
             this.contextMenuPlugins["sharedBetweenMarkers"][plugin.name] = p;
@@ -1070,7 +1080,7 @@
                   });
                 }
               },
-              false,
+              false
             );
           }
         }
@@ -1134,7 +1144,7 @@
         // adding the information about the node, representing a label, to the chunks array
         let chunk = {},
           marker = document.querySelector(
-            'div.marker.tags[data-s="' + node.getAttribute("data-s") + '"]',
+            'div.marker.tags[data-s="' + node.getAttribute("data-s") + '"]'
           );
         //markerText = marker.querySelector("span.tag:first-child");
         chunk["lengthBefore"] = 0;
@@ -1186,11 +1196,11 @@
             chunk["range"] = group[0].cloneRange();
             chunk["range"].setEnd(
               group[N - 1].endContainer,
-              group[N - 1].endOffset,
+              group[N - 1].endOffset
             );
 
             chunk["lengthBefore"] = previousTextLength(
-              chunk["range"].startContainer,
+              chunk["range"].startContainer
             );
 
             chunk["start"] = chunk["range"].startOffset;
@@ -1226,7 +1236,9 @@
           let chunk = this.getActiveChunk();
 
           if (!chunk.marked) {
-            let markedSpan = createMarkedSpan(obj),
+            let displayType = obj.getAttribute("data-dt");
+
+            let markedSpan = createMarkedSpan(obj, displayType),
               deleteMarkedBtn = document.createElement("button");
             markedSpan.classList.add("is-medium");
             markedSpan.setAttribute("data-i", chunk["id"]);
@@ -1283,12 +1295,12 @@
 
             let marked =
                 chunk["range"].commonAncestorContainer.querySelectorAll(
-                  "span.tag",
+                  "span.tag"
                 ),
               curLineHeight = parseFloat(
                 window
                   .getComputedStyle(marked[0], null)
-                  .getPropertyValue("line-height"),
+                  .getPropertyValue("line-height")
               );
             for (let i = 0; i < marked.length; i++) {
               let checker = marked[i],
@@ -1300,8 +1312,13 @@
 
               let len = elements.length;
 
-              elements[len - 1].style.lineHeight =
-                curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
+              if (displayType == "hl") {
+                elements[len - 1].style.lineHeight =
+                  curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
+              } else if (displayType == "und") {
+                elements[len - 1].style.lineHeight =
+                  curLineHeight + 2 * 5 + 5 * (len - 1) + "px";
+              }
 
               for (let j = 0; j < len; j++) {
                 let pTopStr = elements[j].style.paddingTop,
@@ -1310,6 +1327,11 @@
                   pBot = parseFloat(pBotStr.slice(0, -2)),
                   npTop = 5 + 5 * j,
                   npBot = 5 + 5 * j;
+
+                if (displayType == "und") {
+                  elements[j].style.textUnderlineOffset =
+                    1.75 * (2 + 2 * j) + "px";
+                }
                 if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
                   elements[j].style.paddingTop = npTop + "px";
                 if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
@@ -1342,13 +1364,13 @@
       select: function (obj, hash) {
         if (
           !this.textLabelsArea.querySelector(
-            '[data-s="' + obj.getAttribute("data-s") + '"]',
+            '[data-s="' + obj.getAttribute("data-s") + '"]'
           )
         ) {
           let markedSpan = createMarkedSpan(obj),
             deleteMarkedBtn = document.createElement("button");
           markedSpan.textContent = obj.querySelector(
-            "span.tag:first-child",
+            "span.tag:first-child"
           ).textContent;
           markedSpan.classList.add("is-small");
           deleteMarkedBtn.className = "delete is-small";
@@ -1376,12 +1398,12 @@
                 ? document.querySelectorAll(
                     '.selector span.tag[data-s="' +
                       x.getAttribute("data-s") +
-                      '"].active:not(.is-disabled)',
+                      '"].active:not(.is-disabled)'
                   ).length
                 : document.querySelectorAll(
                     '.selector span.tag[data-s="' +
                       x.getAttribute("data-s") +
-                      '"]:not(.is-disabled)',
+                      '"]:not(.is-disabled)'
                   ).length;
               let needed = parseInt(res[i].slice(2), 10),
                 restriction = res[i].slice(0, 2),
@@ -1398,7 +1420,7 @@
                       label +
                       '" ' +
                       "label" +
-                      (diff > 1 ? "s" : ""),
+                      (diff > 1 ? "s" : "")
                   );
                   return false;
                 }
@@ -1414,7 +1436,7 @@
                       label +
                       '" ' +
                       "label" +
-                      (diff > 1 ? "s" : ""),
+                      (diff > 1 ? "s" : "")
                   );
                   return false;
                 }
@@ -1429,7 +1451,7 @@
                       label +
                       '" ' +
                       "label" +
-                      (needed > 1 ? "s" : ""),
+                      (needed > 1 ? "s" : "")
                   );
                   return false;
                 }
@@ -1444,7 +1466,7 @@
                       label +
                       '" ' +
                       "label" +
-                      (needed - 1 > 1 ? "s" : ""),
+                      (needed - 1 > 1 ? "s" : "")
                   );
                   return false;
                 }
@@ -1459,7 +1481,7 @@
                       label +
                       '" ' +
                       "label" +
-                      (needed > 1 ? "s" : ""),
+                      (needed > 1 ? "s" : "")
                   );
                   return false;
                 }
@@ -1639,7 +1661,7 @@
                 .id(function (d) {
                   return d.id;
                 }) // This provide  the id of a node
-                .links(data.links), // and this the list of links
+                .links(data.links) // and this the list of links
             )
             .force("charge", d3.forceManyBody().strength(-400)) // This adds repulsion between nodes. Play with the -400 for the repulsion strength
             .force("center", d3.forceCenter(radius, 10)) // This force attracts nodes to the center of the svg area
@@ -1651,7 +1673,7 @@
             let i = 0,
               n = Math.ceil(
                 Math.log(simulation.alphaMin()) /
-                  Math.log(1 - simulation.alphaDecay()),
+                  Math.log(1 - simulation.alphaDecay())
               );
             i < n;
             ++i
@@ -1987,7 +2009,7 @@
 
             $part.prop(
               "multiple_possible_relations",
-              checkForMultiplePossibleRelations(control.relationsArea, s),
+              checkForMultiplePossibleRelations(control.relationsArea, s)
             );
 
             if (!nodes.hasOwnProperty(s)) {
@@ -2066,14 +2088,14 @@
                 sketch.nodes[between[i][from]] = [];
               sketch.nodes[between[i][from]].push.apply(
                 sketch.nodes[between[i][from]],
-                nodes[between[i][from]],
+                nodes[between[i][from]]
               );
               if (nodes[between[i][from]] != nodes[between[i][to]]) {
                 if (!sketch.nodes.hasOwnProperty(between[i][to]))
                   sketch.nodes[between[i][to]] = [];
                 sketch.nodes[between[i][to]].push.apply(
                   sketch.nodes[between[i][to]],
-                  nodes[between[i][to]],
+                  nodes[between[i][to]]
                 );
               }
               nodes[between[i][from]].forEach(function (f) {
@@ -2119,7 +2141,7 @@
                   if (
                     !containsIdentical(
                       relations[newRelationId].d3.nodes[k],
-                      nn[a],
+                      nn[a]
                     )
                   ) {
                     if (!relations[newRelationId].d3.nodes.hasOwnProperty(k))
@@ -2193,18 +2215,18 @@
                   id: relations[newRelationId]["graphId"],
                   nodes: Array.prototype.concat.apply(
                     [],
-                    Object.values(relations[newRelationId].d3.nodes),
+                    Object.values(relations[newRelationId].d3.nodes)
                   ),
                   links: [].concat(relations[newRelationId].d3.links), // necessary since d3 changes the structure of links
                 },
-                from != null && to != null && direction != "2",
+                from != null && to != null && direction != "2"
               );
             } else if (this.drawingType[rule] == "l") {
               this.drawList({
                 id: relations[newRelationId]["graphId"],
                 nodes: Array.prototype.concat.apply(
                   [],
-                  Object.values(relations[newRelationId].d3.nodes),
+                  Object.values(relations[newRelationId].d3.nodes)
                 ),
               });
             }
@@ -2263,7 +2285,7 @@
           fromRel.d3.nodes[short] = fromRel.d3.nodes[short].filter(
             function (x) {
               return x.id != objId;
-            },
+            }
           );
           if (fromRel.links.length > 0) {
             fromRel.d3.links = fromRel.d3.links.filter(function (x) {
@@ -2279,20 +2301,20 @@
                   id: fromRel.graphId,
                   nodes: Array.prototype.concat.apply(
                     [],
-                    Object.values(fromRel.d3.nodes),
+                    Object.values(fromRel.d3.nodes)
                   ),
                   links: [].concat(fromRel.d3.links),
                 },
                 fromRel.d3.from != null &&
                   fromRel.d3.to != null &&
-                  fromRel.d3.direction != "2",
+                  fromRel.d3.direction != "2"
               );
             } else if (this.drawingType[fromRel.rule] == "l") {
               this.drawList({
                 id: fromRel.graphId,
                 nodes: Array.prototype.concat.apply(
                   [],
-                  Object.values(fromRel.d3.nodes),
+                  Object.values(fromRel.d3.nodes)
                 ),
               });
             }
@@ -2388,20 +2410,20 @@
                 id: toRel.graphId,
                 nodes: Array.prototype.concat.apply(
                   [],
-                  Object.values(toRel.d3.nodes),
+                  Object.values(toRel.d3.nodes)
                 ),
                 links: [].concat(toRel.d3.links),
               },
               toRel.d3.from != null &&
                 toRel.d3.to != null &&
-                toRel.d3.direction != "2",
+                toRel.d3.direction != "2"
             );
           } else if (this.drawingType[toRel.rule] == "l") {
             this.drawList({
               id: toRel.graphId,
               nodes: Array.prototype.concat.apply(
                 [],
-                Object.values(toRel.d3.nodes),
+                Object.values(toRel.d3.nodes)
               ),
             });
           }
@@ -2413,11 +2435,11 @@
           relations[toId] = toRel;
 
           newNodes.forEach((x) =>
-            control.updateRelationSwitcher(x, toId, fromId),
+            control.updateRelationSwitcher(x, toId, fromId)
           );
         } else {
           newNodes.forEach((x) =>
-            control.updateRelationSwitcher(x, toId, fromId),
+            control.updateRelationSwitcher(x, toId, fromId)
           );
         }
 
@@ -2434,7 +2456,8 @@
         e.stopPropagation();
         let target = e.target, // delete button
           parent = target.parentNode, // actual span
-          scope = parent.getAttribute("data-scope");
+          scope = parent.getAttribute("data-scope"),
+          displayType = parent.getAttribute("data-dt");
 
         if (scope == "text") {
           parent.remove();
@@ -2479,23 +2502,33 @@
           let curLineHeight = parseFloat(
             window
               .getComputedStyle(checker, null)
-              .getPropertyValue("line-height"),
+              .getPropertyValue("line-height")
           );
 
           let len = elements.length;
           if (len > 0) {
-            elements[len - 1][0].style.lineHeight =
-              curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
+            if (displayType == "hl") {
+              elements[len - 1][0].style.lineHeight =
+                curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
+            } else if (displayType == "und") {
+              elements[len - 1][0].style.lineHeight =
+                curLineHeight + 2 * 5 + 5 * (len - 1) + "px";
+            }
           }
 
           for (let j = 0; j < len; j++) {
             let npTop = 5 + 5 * j,
-              npBot = 5 + 5 * j;
+              npBot = 5 + 5 * j,
+              undOffset = 1.75 * (2 + 2 * j);
             for (let i = 0, len2 = elements[j].length; i < len2; i++) {
               let pTopStr = elements[j][i].style.paddingTop,
                 pBotStr = elements[j][i].style.paddingBottom,
                 pTop = parseFloat(pTopStr.slice(0, -2)),
                 pBot = parseFloat(pBotStr.slice(0, -2));
+
+              if (displayType == "und") {
+                elements[j][i].style.textUnderlineOffset = undOffset + "px";
+              }
 
               if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
                 elements[j][i].style.paddingTop = npTop + "px";
@@ -2531,18 +2564,18 @@
             : {},
           shortTextMarkers = utils.isDefined(this.markersArea)
             ? utils.serializeHashedObject(
-                $(this.markersArea).find('input[type="text"]'),
+                $(this.markersArea).find('input[type="text"]')
               )
             : {},
           submitRelations = [],
           textMarkers = Array.from(
             this.textLabelsArea.querySelectorAll(
-              "span.tag[data-s]:not(.is-disabled)",
-            ),
+              "span.tag[data-s]:not(.is-disabled)"
+            )
           ).map((x) => x.getAttribute("data-s")),
           numbers = utils.isDefined(this.markersArea)
             ? utils.serializeHashedObject(
-                $(this.markersArea).find('input[type="number"]'),
+                $(this.markersArea).find('input[type="number"]')
               )
             : {},
           ranges = utils.isDefined(this.markersArea)
@@ -2550,8 +2583,8 @@
                 $(this.markersArea)
                   .find('input[type="range"]')
                   .filter(
-                    (i, x) => $('output[for="' + x.id + '"]').text() != "???",
-                  ),
+                    (i, x) => $('output[for="' + x.id + '"]').text() != "???"
+                  )
               )
             : {},
           radioButtons = {},
@@ -2612,7 +2645,7 @@
               checkBoxes[key] = checkBoxes[key].join(ctx.radioCheckSeparator);
             else
               checkBoxes[key].value = checkBoxes[key].value.join(
-                ctx.radioCheckSeparator,
+                ctx.radioCheckSeparator
               );
           }
         }
@@ -2689,7 +2722,7 @@
       },
       unmarkChunk: function (c) {
         let label = document.querySelector(
-          'span.tag[data-i="' + c["id"] + '"]',
+          'span.tag[data-i="' + c["id"] + '"]'
         );
         label.querySelector("span").remove();
         label.querySelector("button").remove();
@@ -2751,7 +2784,7 @@
           if (cnt[i] > 0) {
             $('[data-s="' + i + '"] input[type="checkbox"]').prop(
               "disabled",
-              false,
+              false
             );
           }
         }
@@ -2840,7 +2873,7 @@
                     vals;
                   if (k == "lfree_text")
                     inps = control.markersArea.querySelectorAll(
-                      'textarea[name="' + el.marker.code + '"]',
+                      'textarea[name="' + el.marker.code + '"]'
                     );
                   else if (k == "radio") {
                     if (el.content.includes("||")) {
@@ -2850,22 +2883,22 @@
                           '_ocat"],' +
                           'input[type="radio"][name="' +
                           el.marker.code +
-                          '"]',
+                          '"]'
                       );
                       vals = el.content.split(control.radioCheckSeparator);
                     } else {
                       inps = control.markersArea.querySelectorAll(
-                        'input[type="radio"][name="' + el.marker.code + '"]',
+                        'input[type="radio"][name="' + el.marker.code + '"]'
                       );
                     }
                   } else if (k == "check") {
                     inps = control.markersArea.querySelectorAll(
-                      'input[type="checkbox"][name="' + el.marker.code + '"]',
+                      'input[type="checkbox"][name="' + el.marker.code + '"]'
                     );
                     vals = el.content.split(control.radioCheckSeparator);
                   } else
                     inps = control.markersArea.querySelectorAll(
-                      'input[name="' + el.marker.code + '"]',
+                      'input[name="' + el.marker.code + '"]'
                     );
                   if (inps) {
                     for (let i = 0, linps = inps.length; i < linps; i++) {
@@ -2883,7 +2916,7 @@
                           inp.checked = true;
                           if (inp.hasAttribute("data-group")) {
                             let outerRadio = control.markersArea.querySelector(
-                              "#" + inp.getAttribute("data-group"),
+                              "#" + inp.getAttribute("data-group")
                             );
 
                             if (utils.isDefined(outerRadio))
@@ -2908,7 +2941,7 @@
               // text labels
               for (let i = 0, len = text_labels.length; i < len; i++) {
                 let lab = control.markersArea.querySelector(
-                  'input[name="' + text_labels[i].marker.code + '"]',
+                  'input[name="' + text_labels[i].marker.code + '"]'
                 );
                 if (lab) {
                   control.select(lab, text_labels[i].hash);
@@ -2952,7 +2985,7 @@
                         }),
                         numOverlapping = areOverlapping.reduce(
                           (a, b) => a + b,
-                          0,
+                          0
                         );
 
                       processed.push({
@@ -2974,11 +3007,11 @@
                           let label = span_labels[processed[i]["id"]],
                             dist =
                               Math.abs(
-                                label["end"] - span_labels[curLabelId]["end"],
+                                label["end"] - span_labels[curLabelId]["end"]
                               ) +
                               Math.abs(
                                 label["start"] -
-                                  span_labels[curLabelId]["start"],
+                                  span_labels[curLabelId]["start"]
                               );
 
                           if (x) {
@@ -3002,7 +3035,7 @@
 
                         if (utils.isDefined(minDistId)) {
                           let tagNodes = document.querySelector(
-                            'span.tag[data-i="' + minDistId + '"]',
+                            'span.tag[data-i="' + minDistId + '"]'
                           ).childNodes;
                           textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
                           if (
@@ -3030,11 +3063,11 @@
                       const range = new Range();
                       range.setStart(
                         textNode,
-                        span_labels[curLabelId]["start"] - innerAcc,
+                        span_labels[curLabelId]["start"] - innerAcc
                       );
                       range.setEnd(
                         textNode,
-                        span_labels[curLabelId]["end"] - innerAcc,
+                        span_labels[curLabelId]["end"] - innerAcc
                       );
 
                       window.getSelection().addRange(range);
@@ -3045,9 +3078,9 @@
                       let code = span_labels[curLabelId]["marker"]["code"];
                       control.mark(
                         control.markersArea.querySelector(
-                          '.marker[data-s="' + code + '"]',
+                          '.marker[data-s="' + code + '"]'
                         ),
-                        mmpi,
+                        mmpi
                       );
                       innerAcc += span_labels[curLabelId]["start"] - innerAcc;
                       curLabelId++;
@@ -3074,7 +3107,7 @@
           });
         $(this.markerGroupsArea)
           .find(
-            '#markerGroups input[type="text"],input[type="radio"],input[type="checkbox"]',
+            '#markerGroups input[type="text"],input[type="radio"],input[type="checkbox"]'
           )
           .each(function (i, x) {
             x.removeAttribute("data-h");
@@ -3122,7 +3155,7 @@
               // plugin variable will be defined in each of plugin files
               labelerModule.register(plugin(cfg, labelerModule), ms);
             };
-          })(pluginCfg, markerShort),
+          })(pluginCfg, markerShort)
         );
         labelerModule.expectToRegister();
       }
@@ -3188,11 +3221,11 @@
 
       inputFormData["datasource"] = parseInt(
         labelerModule.selectorArea.getAttribute("data-s"),
-        10,
+        10
       );
       inputFormData["datapoint"] = parseInt(
         labelerModule.selectorArea.getAttribute("data-dp"),
-        10,
+        10
       );
 
       if (labelerModule.hasNewInfo(inputFormData)) {
@@ -3213,7 +3246,7 @@
               if (data["mode"] == "r") {
                 if (labelerModule.disableSubmittedLabels)
                   labelerModule.disableChunks(
-                    JSON.parse(inputFormData["chunks"]),
+                    JSON.parse(inputFormData["chunks"])
                   );
                 else labelerModule.unmark(JSON.parse(inputFormData["chunks"]));
 
@@ -3393,7 +3426,7 @@
       let isOk =
         mode != "o" ||
         confirm(
-          "Any unsaved annotations on the current text will be lost. Proceed?",
+          "Any unsaved annotations on the current text will be lost. Proceed?"
         );
 
       if (isOk) {
@@ -3410,15 +3443,15 @@
               $target.empty();
               $target.append(
                 $(
-                  "<span class='icon'><i class='fas fa-times-circle'></i></span>",
-                ),
+                  "<span class='icon'><i class='fas fa-times-circle'></i></span>"
+                )
               );
               $target.append(
                 $(
                   "<span>" +
                     utils.title(django.gettext("stop editing")) +
-                    "</span>",
-                ),
+                    "</span>"
+                )
               );
             },
             error: function () {
@@ -3431,10 +3464,10 @@
           $("#inputForm input[name='mode']").val("r");
           $target.empty();
           $target.append(
-            $("<span class='icon'><i class='fas fa-edit'></i></span>"),
+            $("<span class='icon'><i class='fas fa-edit'></i></span>")
           );
           $target.append(
-            $("<span>" + utils.title(django.gettext("editor")) + "</span>"),
+            $("<span>" + utils.title(django.gettext("editor")) + "</span>")
           );
           labelerModule.restoreOriginal();
           labelerModule.clearBatch();

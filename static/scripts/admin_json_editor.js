@@ -58,7 +58,7 @@
               data.id,
               inlineSpecs.opt,
               inlineSpecs.taId,
-              inlineSpecs.val,
+              inlineSpecs.val
             );
           }
         });

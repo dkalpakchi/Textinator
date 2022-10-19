@@ -34,7 +34,7 @@ var plugin = function (cfg, labeler) {
       return (
         document
           .querySelector(
-            'div.marker[data-s="' + obj.getAttribute("data-s") + '"]',
+            'div.marker[data-s="' + obj.getAttribute("data-s") + '"]'
           )
           .getAttribute("data-indep") == "false"
       );
@@ -66,7 +66,7 @@ var plugin = function (cfg, labeler) {
           labeler.changeRelation(label, relId, idx);
           instance.hide();
         },
-        false,
+        false
       );
 
       const instance = tippy(isDefined(menuItem) ? menuItem : label, {

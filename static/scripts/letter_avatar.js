@@ -78,7 +78,7 @@
         img.src = LetterAvatar(name, img.getAttribute("width"));
         img.removeAttribute("avatar");
         img.setAttribute("alt", name);
-      },
+      }
     );
   };
 

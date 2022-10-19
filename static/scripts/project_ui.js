@@ -6,7 +6,7 @@
         if (x.scrollHeight > x.clientHeight) {
           clearTimeout(scrollTimer);
           let $button = $(
-              "<button class='scrolling is-link button'>Show more</button>",
+              "<button class='scrolling is-link button'>Show more</button>"
             ),
             $el = $(x),
             top = $el.scrollTop();
@@ -32,7 +32,7 @@
                 complete: function () {
                   $button.prop("disabled", false);
                 },
-              },
+              }
             );
             if ($el.scrollTop() + $el.innerHeight() >= $el[0].scrollHeight) {
               $button.hide();

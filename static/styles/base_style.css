@@ -762,6 +762,10 @@ label.help.is-danger {
   width: 100%;
 }
 
+.is-marker-w90 {
+  width: 90%;
+}
+
 .is-marker-w80 {
   width: 80%;
 }

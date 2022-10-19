@@ -79,7 +79,7 @@
               ctx.loadAnnotations(textSelected, userSelected, target.id);
             }
           },
-          false,
+          false
         );
       }
     },
@@ -193,7 +193,7 @@
       container.appendChild(header);
 
       let batchKeys = Object.keys(batch).filter(
-          (x) => x != "created" && x != "id",
+          (x) => x != "created" && x != "id"
         ),
         numBatchKeys = batchKeys.length;
 
@@ -201,8 +201,8 @@
         contentPart.appendChild(
           ctx.createAnnotationElement(
             batch[batchKeys[bi]],
-            bi != numBatchKeys - 1,
-          ),
+            bi != numBatchKeys - 1
+          )
         );
       }
       container.append(contentPart);
@@ -283,7 +283,7 @@
                 // URL.revokeObjectURL(url);
               }, 150);
             },
-            false,
+            false
           );
 
           a.click();

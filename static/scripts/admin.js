@@ -17,7 +17,7 @@ function customFileBrowser(field_name, url, type, win) {
       window: win,
       input: field_name,
       editor_id: tinyMCE.activeEditor.id,
-    },
+    }
   );
   return false;
 }
