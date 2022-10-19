@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 from django.core.management.base import BaseCommand
@@ -10,7 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         plugin_folder = finders.find('scripts/labeler_plugins')
-        
+
         plugins = []
         for fname in os.listdir(plugin_folder):
             dct, inside_comment = {}, False

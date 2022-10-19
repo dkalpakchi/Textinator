@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # This is a file for helpers that could potentially be used as post-processing methods for data sources
 #
@@ -37,24 +38,24 @@ def truncate(value, limit=80):
     """
     Truncates a string after a given number of chars keeping whole words.
     """
-    
+
     try:
         limit = int(limit)
     # invalid literal for int()
     except ValueError:
         # Fail silently.
         return value
-    
+
     # Return the string itself if length is smaller or equal to the limit
     if len(value) <= limit:
         return value
-    
+
     # Cut the string
     value = value[:limit]
-    
+
     # Break into words and remove the last
     words = value.split(' ')[:-1]
-    
+
     # Join the words and return
     return ' '.join(words) + '...'
 
@@ -111,4 +112,3 @@ def custom_or_default(fallback, prop):
                 return default
         return _inner2
     return _inner
-

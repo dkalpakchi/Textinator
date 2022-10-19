@@ -936,7 +936,7 @@
                   if (utils.isDefined(control.checkedOuterRadio[target.name])) {
                     control.checkedOuterRadio[target.name].checked = false;
                   }
-                  
+
                   if (target.hasAttribute("data-for")) {
                     let radioFor = target.getAttribute("data-for");
                     if (utils.isDefined(control.checkedOuterRadio[radioFor])) {
@@ -2552,7 +2552,7 @@
             ? utils.serializeHashedObject($(this.markersArea).find("textarea"))
             : {},
           submittableChunks = chunks.filter((c) => c.submittable);
-  
+
         if (utils.isDefined(this.markersArea)) {
           $(this.markersArea)
             .find('input[type="radio"]')
@@ -2572,7 +2572,7 @@
             .find('input[type="checkbox"]')
             .filter((i, x) => x.checked)
             .each(function(i, x) {
-              // simulate serializeHashedObject here 
+              // simulate serializeHashedObject here
               if (!checkBoxes.hasOwnProperty(x.name)) {
                 if (x.hasAttribute("data-h"))
                   checkBoxes[x.name] = {

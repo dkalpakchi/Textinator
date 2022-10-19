@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Django settings for Textinator project.
 
@@ -256,7 +257,7 @@ TINYMCE_DEFAULT_CONFIG = {
             ''',
     'menubar': True,
     'statusbar': True,
-    'relative_urls': False    
+    'relative_urls': False
 }
 
 # TINYMCE_CALLBACKS = {

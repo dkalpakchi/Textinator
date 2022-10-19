@@ -33,7 +33,7 @@
         </ul>
       {% endif %}
     </div>
-    
+
     <div class="card-body">
       <form action="{% url 'filebrowser:fb_delete' %}{% query_string %}" method="post">
         {% csrf_token %}

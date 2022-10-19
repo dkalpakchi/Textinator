@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import json
 import logging
@@ -51,7 +52,7 @@ def create_data():
     # else:
     logger.info("Creating markers for out-of-the-box annotation tasks")
     data = json.load(open(os.path.join(os.path.dirname(__file__), 'task_defaults.json')))
-        
+
     created = 0
     marker_mapping = {}
     for spec in data['markers']:
@@ -107,7 +108,7 @@ def create_data():
                 x["marker_id"] = marker_mapping[x["marker_id"]]
 
         obj, is_created = TaskTypeSpecification.objects.get_or_create(
-            task_type=task_type, 
+            task_type=task_type,
             config=spec
         )
         created += is_created
@@ -170,7 +171,7 @@ def create_data():
 def run_seed(self, mode):
     """ Seed database based on mode
 
-    :param mode: refresh / clear 
+    :param mode: refresh / clear
     :return:
     """
     # Clear data from tables

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.conf import settings
 from django.db.models import Q
 
@@ -16,7 +17,7 @@ def common_user_variables(request):
                 shared_before.append(p)
             else:
                 recently_shared.append(p)
-        
+
         return {
             "open_projects": Project.objects.filter(
                 is_open=True,

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.conf import settings
 from django.shortcuts import render
 from django.utils import translation
@@ -40,4 +41,3 @@ def user_settings(request):
         user.profile.save()
 
         return response
-

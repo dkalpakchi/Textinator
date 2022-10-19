@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 from collections import defaultdict, OrderedDict
 
@@ -26,7 +27,7 @@ class BatchInfo:
             self.project = Project.objects.get(pk=proj)
         except Project.DoesNotExist:
             self.project = None
-            
+
         try:
             self.data_source = DataSource.objects.get(pk=data['datasource'])
         except DataSource.DoesNotExist:
@@ -134,7 +135,7 @@ def process_inputs(batch, batch_info, short_text_markers=None, long_text_markers
         new_inputs = [x for x in inputs if x]
 
         ctx = get_or_create_ctx(batch_info, ctx_cache)
-        
+
         mv = {}
         for inp_type in new_inputs:
             for code, inp_string in inp_type.items():
@@ -253,7 +254,7 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
 
 def process_text_markers(batch, batch_info, text_markers=None, ctx_cache=None):
     sent_text_markers = text_markers or batch_info.text_markers
-    
+
     if sent_text_markers:
         ctx = get_or_create_ctx(batch_info, ctx_cache)
 
@@ -268,4 +269,3 @@ def process_text_markers(batch, batch_info, text_markers=None, ctx_cache=None):
                 if m.code == tm_code:
                     Label.objects.create(context=ctx, marker=m, batch=batch)
                     break
-

@@ -73,7 +73,7 @@
     const zoom = mediumZoom('[data-zoomable]', {
       background: 'rgba(0, 0, 0, 0.94)'
     });
-    
+
     zoom.on(
       'open',
       event => {
@@ -86,7 +86,7 @@
       event => {
         var $hidden = $('.medium-zoom-image--hidden'),
             name = $hidden.closest('.card').find('.card-header-title').text();
-        
+
         tippy('.medium-zoom-image--opened', {
           content: name,
           theme: 'light'

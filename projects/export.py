@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from .models import *
 
 
@@ -155,7 +156,7 @@ class Exporter:
             ann = {}
             inp_marker = (inp.marker.export_name or inp.marker.name_en.lower() or inp.marker.name.lower()) if inp.marker else "question"
             ann[inp_marker] = inp.content
-            
+
             inp_labels = Label.objects.filter(batch=inp.batch).all()
 
             if inp_labels:
@@ -197,7 +198,7 @@ class Exporter:
 
                 if inputs.count():
                     resp[context_id]["annotations"].append([i.to_minimal_json() for i in inputs.all()])
-        
+
         return list(resp.values())
 
     def _export_ner(self):
@@ -221,7 +222,7 @@ class Exporter:
                 ann = {}
                 if labels.count():
                     ann["named_entities"] = [l.to_minimal_json() for l in labels.all()]
-                
+
                 resp[context_id]["annotations"].append(ann)
         return list(resp.values())
 
@@ -238,7 +239,7 @@ class Exporter:
             input_batches = Input.objects.filter(
                 marker__project=self.__project
             ).values_list('batch', flat=True)
-            
+
             batches = Batch.objects.filter(pk__in=set(label_batches) | set(input_batches)).prefetch_related('label_set', 'input_set')
             resp = {}
             for batch in batches:
@@ -273,7 +274,7 @@ class Exporter:
 
                     if self.__config["include_usernames"]:
                         ann["annotator"] = batch.user.username
-                    
+
                     resp[context_id]["annotations"].append(ann)
 
         return list(resp.values())

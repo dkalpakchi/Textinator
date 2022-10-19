@@ -19,3 +19,4 @@ package-lock.json
 docs/build
 supervisord.log
 supervisord.pid
+pre-commit.log

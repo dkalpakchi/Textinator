@@ -18,7 +18,7 @@ RUN echo \
 # Install Docker
 RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-COPY *.py /srv/jupyterhub/ 
+COPY *.py /srv/jupyterhub/
 COPY start.sh /srv/jupyterhub
 
 RUN pip install --upgrade pip

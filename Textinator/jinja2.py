@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytz
 import markdown
 from datetime import datetime

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import random
 import secrets
 import time
@@ -79,7 +80,7 @@ class PostProcessingMethod(CommonModel):
 class DataSource(CommonModel):
     """
     Holds a **definition** of a datasource. Currently we support 4 `source_types`:
-    
+
     - plain text -- input text directly in the admin interface (mostly for testing)
     - plain text files -- a bunch of files hosted on the same server as Textinator
     - JSON files -- a bunchf of JSON files hosted on the same server as Textinator
@@ -95,7 +96,7 @@ class DataSource(CommonModel):
 
     By default each DataSource is private, unless `is_public` switch is on.
 
-    `owner` of the DataSource is set automatically and is nullable. 
+    `owner` of the DataSource is set automatically and is nullable.
     The reason behind allowing NULL values is that the data might be owned by the institution,
     not by the user and might also have projects connected to it.
     If people want their datasource deleted together with their user account,
@@ -292,7 +293,7 @@ class Relation(CommonModel):
     name = models.CharField(_("name"), max_length=50)
     pairs = models.ManyToManyField(MarkerPair, verbose_name=_("marker pairs"))
     direction = models.CharField(_("direction"), max_length=1, choices=DIRECTIONS)
-    shortcut = models.CharField(_("keyboard shortcut"), max_length=15, 
+    shortcut = models.CharField(_("keyboard shortcut"), max_length=15,
         help_text=_("Keyboard shortcut for marking a piece of text with this relation"), null=True, blank=True)
     representation = models.CharField(_("graphical representation type"), max_length=1,
         choices=[('g', _('Graph')), ('l', _('List'))], default='g',
@@ -362,7 +363,7 @@ class Project(CloneMixin, CommonModel):
         permissions = (
             ('view_this_project', 'Can view this project'),
         )
-    
+
     _clone_m2m_fields = ['markers', 'relations', 'datasources']
 
     title = models.CharField(_("title"), max_length=100)
@@ -431,11 +432,11 @@ class Project(CloneMixin, CommonModel):
     def is_sampled(self, replacement='*'):
         """
         Check if the data order is randomly sampled
-        
+
         Args:
             replacement (str or bool, optional): indicates whether to the check if sampling with replacement (True) or not (False)
                                                  or that the kind is not important ('*', by default)
-        
+
         Returns:
             bool: Indicator of whether the data is to be sampled (optionally, with or without replacement)
         """
@@ -447,11 +448,11 @@ class Project(CloneMixin, CommonModel):
     def is_ordered(self, parallel='*'):
         """
         Check if the data order is static
-        
+
         Args:
             parallel (str or bool, optional): indicates whether to check if the dataset order is parallel (True) or sequential (False)
                                               or that the exact order is not important is not important ('*', by default)
-        
+
         Returns:
             bool: Indicator of whether the data is to be presented in a specified (optionally, with sequential or parallel dataset order)
         """
@@ -503,7 +504,7 @@ class Project(CloneMixin, CommonModel):
             spec['username'] = self.author.username
             ds_instance = source_cls(spec)
             return {
-                'instance': ds_instance, 
+                'instance': ds_instance,
                 'postprocess': datasource.postprocess,
                 'ds_pk': datasource.pk
             }
@@ -540,25 +541,25 @@ class Project(CloneMixin, CommonModel):
 
         The method proceeds as follows:
 
-        - If the annotator has previously requested a datapoint, but neither did any annotation, nor requested a new one, 
+        - If the annotator has previously requested a datapoint, but neither did any annotation, nor requested a new one,
           show the very same datapoint again. Otherwise, proceed.
         - If the annotator did some annotation and the auto text switch is off, show the very same text again. Otherwise, proceed
-        - If sampling with replacement is turned off, exclude the previously annotated data. 
-        - If disjoint annotation is turned on, then all previously annotated datapoints (by anyone) should be excluded, 
-          so that the sets of annotations for each annotator are disjoint. 
+        - If sampling with replacement is turned off, exclude the previously annotated data.
+        - If disjoint annotation is turned on, then all previously annotated datapoints (by anyone) should be excluded,
+          so that the sets of annotations for each annotator are disjoint.
         - If disjoint annotation is off, then exclude only data previously annotated by the current user.
         - Instantiate all datasources associated with this project
         - Choose an unannotated datapoint uniformly at random across all datasources and return it.
-        
+
         Args:
             user (User): Current user
-        
+
         Returns:
             DatapointInfo: The instance holding the information about the datapoint to be annotated
         """
         log = DataAccessLog.objects.filter(user=user, project=self, is_submitted=False, is_skipped=False).first()
         log2 = DataAccessLog.objects.filter(user=user, project=self, is_submitted=True, is_skipped=False).order_by('-dt_updated').first()
-        
+
         if log2 and not self.auto_text_switch and not force_switch:
             # Required manual switching --> show the same data source until the annotator requested a new text explicitly
             if log:
@@ -606,8 +607,8 @@ class Project(CloneMixin, CommonModel):
                         logs = DataAccessLog.objects.filter(project=self, user=user).all()
                     for log in logs:
                         dp_taboo[log.datasource.pk].add(log.datapoint)
-            
-            
+
+
                 # TODO: introduce data source mixing strategies?
                 # TODO: choose a dataset with a prior inversely proportional to the number of datapoints in them?
 
@@ -667,15 +668,15 @@ class Project(CloneMixin, CommonModel):
                     for i, ss in enumerate(datasources):
                         if ss['ds_pk'] == last_log.datasource.pk:
                             break
-                    
-                    if i == nds: 
+
+                    if i == nds:
                         i = 0
                 else:
                     i = 0 - is_parallel
 
                 if is_parallel:
                     # Parallel order of datasets, means we attempt to advance equally in all datasets
-                    # So it goes like this: d1, d2, d3, d1, d2, d3                    
+                    # So it goes like this: d1, d2, d3, d1, d2, d3
                     next_source_ind = (i+1) % nds
                 else:
                     # Sequential order, means we exhaust one dataset first, then go the next one
@@ -714,7 +715,7 @@ class Project(CloneMixin, CommonModel):
                     )
         else:
             return DatapointInfo(no_data=True, proj_id=self.pk)
-        
+
     def get_profile_for(self, user):
         try:
             return UserProfile.objects.get(project=self, user=user)
@@ -909,7 +910,7 @@ class MarkerVariant(CloneMixin, CommonModel):
         same_marker_pk = list(self.project.markervariant_set.filter(marker=self.marker).values_list('pk', flat=True))
         same_marker_pk.sort()
         return "{}_{}".format(self.marker.code, same_marker_pk.index(self.pk))
-    
+
     @property
     def max_choice_len(self):
         if self.choices:
@@ -920,7 +921,7 @@ class MarkerVariant(CloneMixin, CommonModel):
                         cand_len = sum([len(c) for c in x])
                     else:
                         cand_len = len(x)
-                    
+
                     if cand_len > max_len:
                         max_len = cand_len
                 return max_len
@@ -943,13 +944,13 @@ class MarkerVariant(CloneMixin, CommonModel):
     def get_count_restrictions(self, stringify=True):
         """
         Get the restrictions (if any) on the number of markers per submitted instance
-        
+
         Args:
             stringify (bool, optional): Whether to return the restrictions in a string format
-        
+
         Returns:
             (str or list): Restrictions on the number of markers per submitted instance
-        
+
         """
         try:
             restrictions = list(MarkerRestriction.objects.filter(variant=self).all())
@@ -1279,9 +1280,9 @@ class Input(CloneMixin, CommonModel):
     - `Correct answer` marker (C)
 
     In the UI, the annotator will then see the following:
-    
+
     [(Q, C)+, (Q, C)+, (Q, C)+, (Q, C), (Q, C)]
-    
+
     The groups with a (+) are mandatory for submission (since a unit should hold at least 3 groups by a specification).
     `group_order` is meaningfull only if the annotator is allowed to rank the groups within a unit.
     If so, then `group_order` specifies the order of each (Q, C) group after ranking at submission time.
@@ -1492,7 +1493,7 @@ class LabelRelation(CommonModel):
         help_text=_("At the submission time"))
     extra = models.JSONField(_("extra information"), null=True, blank=True,
         help_text=_("in a JSON format"))
-    
+
     @property
     def graph(self):
         return str(self)
@@ -1572,4 +1573,3 @@ class UserProfile(CommonModel):
 #     user = models.ForeignKye(User, on_delete=models.SET_NULL, related_name='notebooks')
 #     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='notebooks')
 #     filename = models.CharField(_("filename"), max_length=32)
-    

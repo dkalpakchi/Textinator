@@ -1240,4 +1240,3 @@ msgstr ""
 #: users/jinja2/users/settings.html:47
 msgid "user details"
 msgstr ""
-

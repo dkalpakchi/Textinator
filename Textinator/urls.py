@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Textinator URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -54,4 +55,3 @@ if 'rosetta' in settings.INSTALLED_APPS:
 urlpatterns = [
     path(settings.ROOT_URLPATH, include(paths))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

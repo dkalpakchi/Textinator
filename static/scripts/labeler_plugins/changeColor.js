@@ -26,7 +26,7 @@ var plugin = function (cfg, labeler) {
   function parseColor(color) {
     let cache,
       p = parseInt; // Use p as a byte saving reference to parseInt
-    
+
     color = color.replace(/\s/g, ""); // Remove all spaces
 
     // Checks for 6 digit hex and converts string to integer
@@ -75,7 +75,7 @@ var plugin = function (cfg, labeler) {
 
   // taken from https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
   function xmur3(str) {
-    let h = 1779033703 ^ str.length; 
+    let h = 1779033703 ^ str.length;
     for (let i = 0; i < str.length; i++) {
       h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
       h = (h << 13) | (h >>> 19);

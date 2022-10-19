@@ -52,7 +52,7 @@
       <a id="joinButton" class="card-footer-item">
         <form method="POST" action="{{ url('projects:join_or_leave', kwargs={'proj': project.id}) }}">
           <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-          <input type="hidden" name="n" value="{{project_type}}">  
+          <input type="hidden" name="n" value="{{project_type}}">
         </form>
         {% if project.has_participant(user) %}
           <span>{{_("leave")|capitalize}}</span>

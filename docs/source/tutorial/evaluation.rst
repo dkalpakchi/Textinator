@@ -46,7 +46,7 @@ An example of the required JSON format is given below (and more examples are ava
 
 Each answer set should be one of the following types:
 
-- "text" -- provides a textarea for longer texts 
+- "text" -- provides a textarea for longer texts
 - "short-text" -- provides a regular HTML input for shorter texts
 - "integer" -- an HTML number input with only integers allowed
 - "float" -- an HTML number input with floats allowed

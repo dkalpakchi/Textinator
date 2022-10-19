@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 
 from django.contrib import admin
@@ -20,7 +21,7 @@ class CommonModelAdmin(admin.ModelAdmin):
     readonly_fields = ['dt_created', 'dt_updated']
     _list_filter = []
 
-    def changelist_view(self, request, extra_context=None):    
+    def changelist_view(self, request, extra_context=None):
         if not request.user.is_superuser:
             self.list_filter = []
         else:
@@ -368,7 +369,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
         if hasattr(form, 'rv2del'):
             RelationVariant.objects.filter(pk__in=form.rv2del).delete()
 
-    def changelist_view(self, request, extra_context=None):    
+    def changelist_view(self, request, extra_context=None):
         if not request.user.is_superuser:
             self.list_filter = []
         else:
@@ -481,7 +482,7 @@ class DataSourceAdmin(CommonModelAdmin):
         js = (
             'admin/js/vendor/jquery/jquery{}.js'.format('' if settings.DEBUG else '.min'),
         )
-    
+
     form = DataSourceForm
     list_display = ['name', 'source_type']
 
@@ -521,7 +522,7 @@ class MarkerAdmin(CommonModelAdmin):
 
     def get_form(self, request, *args, **kwargs):
         form = super(MarkerAdmin, self).get_form(request, *args, **kwargs)
-        
+
         if request.user.is_superuser:
             self.exclude = ['suggestion_endpoint']
         return form
@@ -533,7 +534,7 @@ class MarkerAdmin(CommonModelAdmin):
         return readonly_fields
     # def has_change_permission(request, obj=None)
     #     # Should return True if editing obj is permitted, False otherwise.
-    #     # If obj is None, should return True or False to indicate whether editing of objects of this type is permitted in general 
+    #     # If obj is None, should return True or False to indicate whether editing of objects of this type is permitted in general
 
     # def has_delete_permission(request, obj=None)
     #     # Should return True if deleting obj is permitted, False otherwise.
@@ -600,7 +601,7 @@ class TaskTypeSpecAdmin(CommonModelAdmin):
         js = (
             'admin/js/vendor/jquery/jquery{}.js'.format('' if settings.DEBUG else '.min'),
         )
-    
+
     form = TaskTypeConfigForm
 
 admin.site.register(Permission)
@@ -610,4 +611,3 @@ admin.site.site_header = 'Textinator Admin'
 admin.site.site_title = 'Textinator Admin'
 
 admin.site.site_url = '/{}'.format(settings.ROOT_URLPATH)
-

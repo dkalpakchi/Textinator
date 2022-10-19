@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import requests
 import json
@@ -41,7 +42,7 @@ class AllowedDirsMixin:
                     found_folders.append(cand_folder)
                     break
         return found_folders
-    
+
     def find_files(self, files):
         found_files = []
         for fname in files:

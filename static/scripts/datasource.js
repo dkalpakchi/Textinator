@@ -116,7 +116,7 @@
         theme: "spectre",
         schema: schema,
       });
-      
+
       spec_editor.on('ready', function() {
         spec_editor.on("change", function () {
           var errors = spec_editor.validate();
@@ -132,7 +132,7 @@
     return spec_editor;
   }
 
-  $(document).ready(function () {  
+  $(document).ready(function () {
     let spec_editor = adminJsonEditors.editors.spec_editor;
 
     $("#id_source_type").on("select2:select", function (e) {
@@ -140,7 +140,7 @@
       let option = $target.find("option:selected").val();
 
       spec_editor = updateSchema(spec_editor, option);
-      
+
       spec_editor.on('ready', function() {
         spec_editor.setValue(templates[option]);
 

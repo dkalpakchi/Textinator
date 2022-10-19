@@ -58,7 +58,7 @@
                         {% endblock %}
                     </div>
                 </div>
-                
+
                 <form id="changelist-form" method="post"{% if cl.formset and cl.formset.is_multipart %}enctype="multipart/form-data"{% endif %} novalidate>{% csrf_token %}
                     <div id="content-main">
                         {% if cl.formset and cl.formset.errors %}

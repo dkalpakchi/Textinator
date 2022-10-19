@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import io
 import bisect
@@ -143,7 +144,7 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
             for arr in [self.inputs_by_user, self.labels_by_user]:
                 for u in arr:
                     ll = list(arr[u].items())
-                    for b1, b2 in zip(ll[:len(ll)], ll[1:]):                            
+                    for b1, b2 in zip(ll[:len(ll)], ll[1:]):
                         l1, l2 = b1[1][0], b2[1][0]
                         if l1 and l2 and l1.dt_created and l2.dt_created:
                             timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
@@ -171,13 +172,13 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
         logs = Tm.DataAccessLog.objects.filter(project__id=self.pk)
         submitted_logs = logs.filter(is_submitted=True)
         skipped_logs = logs.filter(is_skipped=True, is_submitted=False)
-        
+
         self.submitted_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
         self.skipped_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
         self.dataset_info = {}
         self.l2i, i = {}, 0
         for logs_data, logs_storage in zip(
-            [submitted_logs, skipped_logs], 
+            [submitted_logs, skipped_logs],
             [self.submitted_logs_by_ds_and_user, self.skipped_logs_by_ds_and_user]):
             for l in logs_data:
                 ds = l.datasource
@@ -193,7 +194,7 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
 
         self.project = Tm.Project.objects.get(pk=self.pk)
         self.participants = self.project.participants.all()
-        
+
         return self.x_axis
 
     def get_series(self):
@@ -333,12 +334,12 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
             if proj.is_sampled(replacement=True):
                 try:
                     dal = Tm.DataAccessLog.objects.get(
-                        user=u, datapoint=str(dp_info.id), 
+                        user=u, datapoint=str(dp_info.id),
                         project=proj, datasource=d
                     )
                 except Tm.DataAccessLog.DoesNotExist:
                     dal = Tm.DataAccessLog.objects.create(
-                        user=u, datapoint=str(dp_info.id), 
+                        user=u, datapoint=str(dp_info.id),
                         project=proj, datasource=d,
                         is_submitted=False, is_skipped=False
                     )
@@ -449,7 +450,7 @@ def record_datapoint(request, proj):
             batch = Tm.Batch.objects.get(uuid=batch_uuid, user=batch_info.user)
         except Batch.MultipleObjectsReturned:
             return JsonResponse({'error': True})
-        
+
         if batch:
             batch_inputs = {i.hash: i for i in Tm.Input.objects.filter(batch=batch)}
             batch_labels = {l.hash: l for l in Tm.Label.objects.filter(batch=batch)}
@@ -472,7 +473,7 @@ def record_datapoint(request, proj):
                             data_source = Tm.DataSource.objects.get(pk=data['datasource'])
                         except Tm.DataSource.DoesNotExist:
                             data_source = None
-                        
+
                         if data_source:
                             kwargs = {
                                 input_type: {
@@ -492,7 +493,7 @@ def record_datapoint(request, proj):
             process_chunks_and_relations(batch, batch_info)
 
             batch.save() # this updates dt_updated
-            
+
             return JsonResponse({
                 'error': False,
                 'mode': mode,
@@ -500,7 +501,7 @@ def record_datapoint(request, proj):
             })
         else:
             return JsonResponse({'error': True})
-        
+
 
     return JsonResponse({
         'error': False,
@@ -598,7 +599,7 @@ def get_annotations(request, proj):
             ).order_by('batch_id')
 
             annotations = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-           
+
             Ni, Nl = len(inputs), len(labels)
 
             if Nl == 0 and Ni == 0:
@@ -624,7 +625,7 @@ def get_annotations(request, proj):
                 while i < Ni and l < Nl:
                     i_batch_id = inputs[i].batch_id
                     l_batch_id = labels[l].batch_id
-                    
+
                     if i_changed:
                         annotations[str(inputs[i].batch)][inputs[i].group_order]['inputs'].append(
                             inputs[i].to_minimal_json(include_color=True)
@@ -659,7 +660,7 @@ def get_annotations(request, proj):
         except Context.DoesNotExist:
             return JsonResponse({
                 "error": "No such text"
-            }) 
+            })
     else:
         return JsonResponse({})
 
@@ -732,7 +733,7 @@ def new_article(request, proj):
             except Tm.DataAccessLog.DoesNotExist:
                 Tm.DataAccessLog.objects.create(
                     user=request.user, project=project,
-                    datasource=data_source, datapoint=str(dp_id), 
+                    datasource=data_source, datapoint=str(dp_id),
                     is_submitted=False, is_skipped=True
                 )
 
@@ -745,14 +746,14 @@ def new_article(request, proj):
         data_source = Tm.DataSource.objects.get(pk=dp_info.source_id)
         if project.is_sampled(replacement=True) or project.is_ordered():
             Tm.DataAccessLog.objects.get_or_create(
-                user=request.user, datapoint=str(dp_info.id), 
+                user=request.user, datapoint=str(dp_info.id),
                 project=project, datasource=data_source,
                 is_submitted=False, is_skipped=False
             )
         else:
             # log the new one
             Tm.DataAccessLog.objects.create(
-                user=request.user, datapoint=str(dp_info.id), 
+                user=request.user, datapoint=str(dp_info.id),
                 project=project, datasource=data_source,
                 is_submitted=False, is_skipped=False
             )
@@ -803,10 +804,10 @@ def undo_last(request, proj):
     rel_batch = Tm.LabelRelation.objects.filter(
         batch__user=user, first_label__marker__project=project).order_by('-dt_created').all()[:1].values('batch')
     last_rels = Tm.LabelRelation.objects.filter(batch__in=rel_batch).all()
-    
+
     label_batch = Tm.Label.objects.filter(batch__user=user, marker__project=project).order_by('-dt_created').all()[:1].values('batch')
     last_labels = Tm.Label.objects.filter(batch__in=label_batch).all()
-    
+
     last_input = ''
 
     if last_rels and last_labels:
@@ -857,7 +858,7 @@ def data_explorer(request, proj):
     is_author, is_shared = project.author == request.user, project.shared_with(request.user)
     if is_author or is_shared or project.has_participant(request.user):
         is_admin = is_author or is_shared
-    
+
         flagged_datapoints = Tm.DataAccessLog.objects.filter(project=project).exclude(flags="")
         if not is_admin:
             flagged_datapoints = flagged_datapoints.filter(user=request.user)
@@ -982,7 +983,7 @@ def time_report(request, proj):
     for u in inputs_by_user:
         ll = list(inputs_by_user[u].items())
         calc_time(ll, inputs_created)
-    
+
     for u, td in time_spent.items():
         keys = sorted(td.keys())
         year, month = keys[0].split('/')
@@ -1043,7 +1044,7 @@ def open_notebook(request, proj):
         "display_name": "Python 3 (ipykernel)",
         "language": "python",
         "name": "python3"
-    } 
+    }
     nb['cells'].append(c_cell)
     nbformat.write(nb, open(nb_path, 'w'))
 

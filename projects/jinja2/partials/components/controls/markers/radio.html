@@ -4,7 +4,7 @@
     {% for c in marker.choices %}
       {% if c|is_list %}
         {% set outer_loop = loop %}
-        <label class="radio outer"> 
+        <label class="radio outer">
           <input id="{{marker.code}}_{{outer_loop.index0}}" data-for="{{marker.code}}" type="radio">
           <div class="inner">
             {% for x in c %}

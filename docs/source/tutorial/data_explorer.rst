@@ -14,7 +14,7 @@ The role of data explorer is to provide you with administration capabilities, as
 Annotation statistics & progress tracking
 ------------------------------------------
 
-Textinator provides a birds-eye view of the annotated data and the annotation process. Speficially, it shows the distribution of lengths for each marker that is present in the project (the top left graph in the screenshot below). 
+Textinator provides a birds-eye view of the annotated data and the annotation process. Speficially, it shows the distribution of lengths for each marker that is present in the project (the top left graph in the screenshot below).
 
 .. image:: images/data_explorer_stat.png
   :width: 100%

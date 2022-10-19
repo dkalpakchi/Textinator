@@ -1461,4 +1461,3 @@ msgstr "детали пользователя"
 
 #~ msgid "points in total"
 #~ msgstr ""
-

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 
 class DatapointInfo:
@@ -9,7 +10,7 @@ class DatapointInfo:
             self.source_name = ds.get_source_name(self.id)
         else:
             self.source_size, self.source_name = 0, ''
-        
+
         if ds_def:
             self.source_id = ds_def.pk
             self.source_formatting = ds_def.formatting

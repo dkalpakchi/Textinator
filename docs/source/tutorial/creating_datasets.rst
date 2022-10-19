@@ -88,15 +88,15 @@ In all other circumstances we **recommend** using *Texts API* for multiple reaso
 4. *Privacy considerations*. If you want to annotate e-mails or SMS, then authors of the data might request deletion of their
    data quoting laws such as GDPR in the European Union. Neither deleting only parts of the datasets nor anonymizing the data
    is possible via Textinator.
-5. *Disk space limitation*. Textual datasets can get quite large (think Wikipedia), which will induce unnecessary overhead 
+5. *Disk space limitation*. Textual datasets can get quite large (think Wikipedia), which will induce unnecessary overhead
    on the machine running Textinator - we want to avoid that. Furthermore, as time passes, even smaller datasets in large
-   amounts may end up requiring unreasonable large amounts of space. At that point, one would need to set some kind of 
+   amounts may end up requiring unreasonable large amounts of space. At that point, one would need to set some kind of
    expiration policy as to when data should be auto-removed along with reminders to the data owners... So I will just reiterate
    Textinator is an annotation platform :)
 
 The remaining two types of data sources (*plain-text files* and *JSON files*) are left for backward compatibility with
 pre-release versions of Textinator. They allow you to upload your data directly to the server via the secure tool of your choice
-(e.g., *scp* or *rsync*) to the data folder (`Textinator/data` by default). Then you can specify the paths to the files/folders 
+(e.g., *scp* or *rsync*) to the data folder (`Textinator/data` by default). Then you can specify the paths to the files/folders
 relative to this data folder, given that they are either plain-text or JSON files.
 
 What server is compatible with Texts API?
@@ -107,7 +107,7 @@ What server is compatible with Texts API?
 Texts API is pretty simple and requires your server to support 4 GET requests:
 
 .. code-block:: http
-    
+
     GET /get_datapoint?key=your-key HTTP/1.1
 
 *Response*
@@ -121,7 +121,7 @@ Texts API is pretty simple and requires your server to support 4 GET requests:
 ------------
 
 .. code-block:: http
-    
+
     GET /get_random_datapoint HTTP/1.1
 
 
@@ -137,7 +137,7 @@ Texts API is pretty simple and requires your server to support 4 GET requests:
 ------------
 
 .. code-block:: http
-    
+
     GET /size HTTP/1.1
 
 *Response*
@@ -151,7 +151,7 @@ Texts API is pretty simple and requires your server to support 4 GET requests:
 ------------
 
 .. code-block:: http
-    
+
     GET /get_source_name?key=your-key HTTP/1.1
 
 *Response*
@@ -181,4 +181,3 @@ In order to use this workaround, you need to ask your system administrator to ad
 Then you will see "FileBrowser" in the menu of the admin UI and will be able to access Textinator's file browser. You will then
 need to create a folder with the same name as your username and upload your files in that folder. If you place your files in
 any other folder, they will **NOT** be seen by Textinator.
-

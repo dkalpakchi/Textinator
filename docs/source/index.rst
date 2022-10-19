@@ -21,7 +21,7 @@
 * Co-reference Chain Resolution
 * Machine Translation
 
-Textinator is currently localized for 4 languages (presented in an alphabetical order): 
+Textinator is currently localized for 4 languages (presented in an alphabetical order):
 
 - English
 - Russian

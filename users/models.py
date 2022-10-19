@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import signals
@@ -18,7 +19,7 @@ class Profile(models.Model):
     @property
     def fluent_languages(self):
         return self.fluent_in.split(",")
-    
+
 
 
 def create_user_profile(sender, instance, created, **kwargs):
