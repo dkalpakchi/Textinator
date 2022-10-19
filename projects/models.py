@@ -858,7 +858,7 @@ class MarkerVariant(CloneMixin, CommonModel):
     export_name = models.CharField(_("export name"), max_length=50, blank=True, null=True,
         help_text=_("The name of the field in the exported JSON file (English name by default)"))
     choices = models.JSONField(_("Choices for the values this marker"), null=True, blank=True,
-        help_text=_("Valid only if annotation type is `radio buttons` or `checkboxes`"))
+        help_text=_("Valid only if annotation type is `radio buttons` or `checkboxes`. Up to 2 levels of nesting allowed (more than 2 is impractical for the annotator)"))
 
     def __init__(self, *args, **kwargs):
         super(MarkerVariant, self).__init__(*args, **kwargs)
@@ -912,7 +912,22 @@ class MarkerVariant(CloneMixin, CommonModel):
     
     @property
     def max_choice_len(self):
-        return max([len(c) for c in self.choices]) if self.choices else 0
+        if self.choices:
+            if any([isinstance(c, list) for c in self.choices]):
+                max_len = 0
+                for x in self.choices:
+                    if isinstance(x, list):
+                        cand_len = sum([len(c) for c in x])
+                    else:
+                        cand_len = len(x)
+                    
+                    if cand_len > max_len:
+                        max_len = cand_len
+                return max_len
+            else:
+                return max([len(c) for c in self.choices])
+        else:
+            return 0
 
     def is_in_unit(self):
         return bool(self.unit)

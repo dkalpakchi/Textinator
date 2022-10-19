@@ -36,7 +36,6 @@
       for (let key in ctx.specs) {
         let regex = new RegExp("(" + key + ")");
         let cand = idx + "-" + ctx.specs[key].field + "_editor";
-        console.log(cand);
         if (cand.match(regex))
           return {
             key: key,

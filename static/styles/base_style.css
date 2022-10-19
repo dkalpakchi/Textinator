@@ -723,6 +723,18 @@ label.help.is-danger {
   margin-left: 0;
 }
 
+.outer.radio {
+  display: inline-flex;
+  justify-content: flex-start;
+  align-items: start;
+}
+
+.outer.radio > input[type="radio"] {
+  height: 21px;
+  margin-right: 1em;
+  accent-color: #8F5C00;
+}
+
 /** 
  * Other library fixes
  */

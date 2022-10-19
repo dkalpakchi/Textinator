@@ -2,10 +2,25 @@
   <div class="control is-marker-w80{% if marker.max_choice_len > 50 %} vertical-radio{% endif %}">
     <p class="has-text-weight-bold">{{marker.name}}</p>
     {% for c in marker.choices %}
-      <label class="radio" for="">
-        <input type="radio" name="{{marker.code}}" value="{{c}}">
-        {{c}}
-      </label>
+      {% if c|is_list %}
+        {% set outer_loop = loop %}
+        <label class="radio outer"> 
+          <input id="{{marker.code}}_{{outer_loop.index0}}" data-for="{{marker.code}}" type="radio">
+          <div class="inner">
+            {% for x in c %}
+              <label class="radio" for="{{marker.code}}_{{outer_loop.index0}}_{{loop.index0}}">
+                <input id="{{marker.code}}_{{outer_loop.index0}}_{{loop.index0}}" type="radio" name="{{marker.code}}" value="{{x}}" data-group="{{marker.code}}_{{outer_loop.index0}}">
+                {{x}}
+              </label>
+            {% endfor %}
+          </div>
+        </label>
+      {% else %}
+        <label class="radio" for="{{marker.code}}_{{loop.index0}}">
+          <input id="{{marker.code}}_{{loop.index0}}" type="radio" name="{{marker.code}}" value="{{c}}">
+          {{c}}
+        </label>
+      {% endif %}
     {% endfor %}
   </div>
 {% endif %}

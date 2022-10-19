@@ -96,6 +96,8 @@ def markify(score):
         else:
             return '<i class="fas fa-{}"></i>'.format(score)
 
+def is_list(val):
+    return isinstance(val, list)
 
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
@@ -122,6 +124,7 @@ def environment(**options):
     env.filters["local_language_name"] = lang_local_name
     env.filters['translated_language_name'] = lang_translated_name
     env.filters["markify"] = markify
+    env.filters["is_list"] = is_list
 
     env.install_gettext_translations(translation)
 

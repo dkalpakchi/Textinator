@@ -648,6 +648,8 @@
       selectorArea: null, // the area where the article is
       markerGroupsArea: null,
       contextMenuPlugins: { sharedBetweenMarkers: {} },
+      checkedOuterRadio: {}, // to keep tracked of nested radio button groups
+      checkedInnerRadio: {},
       isMarker: isMarker,
       isLabel: isLabel,
       init: function () {
@@ -929,6 +931,32 @@
                           }
                         }
                       });
+                  }
+                } else if (target.getAttribute("type") == "radio") {
+                  if (utils.isDefined(control.checkedOuterRadio[target.name])) {
+                    control.checkedOuterRadio[target.name].checked = false;
+                  }
+                  
+                  if (target.hasAttribute("data-for")) {
+                    let radioFor = target.getAttribute("data-for");
+                    if (utils.isDefined(control.checkedOuterRadio[radioFor])) {
+                      control.checkedOuterRadio[radioFor].checked = false;
+                    }
+
+                    if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
+                      control.checkedInnerRadio[radioFor].checked = false;
+                    }
+                  }
+
+                  if (target.hasAttribute("data-group")) {
+                    let outerRadio = control.markersArea.querySelector(
+                      "#" + target.getAttribute("data-group")
+                    );
+
+                    // this will fire only when target.checked is true
+                    outerRadio.checked = target.checked;
+                    control.checkedOuterRadio[target.name] = outerRadio;
+                    control.checkedInnerRadio[target.name] = target;
                   }
                 }
               },
@@ -2810,8 +2838,17 @@
                       let inp = inps[i];
                       inp.setAttribute("data-h", el.hash);
                       if (k == "radio") {
-                        if (inp.value == el.content)
+                        if (inp.value == el.content) {
                           inp.checked = true;
+                          if (inp.hasAttribute("data-group")) {
+                            let outerRadio = control.markersArea.querySelector(
+                              "#" + inp.getAttribute("data-group")
+                            );
+
+                            if (utils.isDefined(outerRadio))
+                              outerRadio.checked = true;
+                          }
+                        }
                       } else if (k == "check") {
                         if (vals.includes(inp.value))
                           inp.checked = true;

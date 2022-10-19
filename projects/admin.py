@@ -46,11 +46,13 @@ class TextinatorJSONEditorWidget(forms.Widget):
         self.__editor_options = {
             "theme": "spectre",
             "schema": schema,
-            "collapsed": int(collapsed)
+            "collapsed": int(collapsed),
+            "expand_height": 1
         }
         self.__editor_options.update(editor_options or {})
 
     def render(self, name, value, attrs=None, renderer=None):
+        self.__editor_options["schema"]["title"] = " " # To emulate removed title
         return render_to_string(self.template_name, {
             "field": self.__field,
             "name": name,
@@ -90,8 +92,19 @@ class MarkerVariantForm(forms.ModelForm):
         DATA_SCHEMA = {
             "type": "array",
             "items": {
-                "type": "string",
-                "format": "textarea"
+                "oneOf": [
+                    {
+                        "type": "string",
+                        "format": "textarea"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "textarea"
+                        }
+                    }
+                ]
             }
         }
         widgets = {
