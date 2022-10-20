@@ -4,6 +4,7 @@ import json
 from django.contrib import admin
 from django.db.models import Q
 from django import forms
+from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.contrib.admin import DateFieldListFilter
 from django.utils.translation import gettext_lazy as _
@@ -64,8 +65,8 @@ class TextinatorJSONEditorWidget(forms.Widget):
     @property
     def media(self):
         js = [
-            '/static/@json-editor/json-editor/dist/jsoneditor.js',
-            '/static/scripts/admin_json_editor.js'
+            '/{}static/@json-editor/json-editor/dist/jsoneditor.js'.format(settings.ROOT_URLPATH),
+            '/{}static/scripts/admin_json_editor.js'.format(settings.ROOT_URLPATH)
         ]
         return forms.Media(js=js)
 

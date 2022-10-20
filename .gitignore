@@ -20,3 +20,4 @@ docs/build
 supervisord.log
 supervisord.pid
 pre-commit.log
+.env.prod
