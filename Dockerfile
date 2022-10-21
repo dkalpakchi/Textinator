@@ -10,6 +10,7 @@ RUN apk add linux-headers
 RUN adduser -D tt
 USER tt
 WORKDIR /home/tt
+RUN mkdir -p cache
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
