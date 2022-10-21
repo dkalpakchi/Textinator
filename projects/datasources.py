@@ -269,9 +269,10 @@ class JsonSource(AbstractDataSource, AllowedDirsMixin):
                     # this is all in-memory, of course
                     # TODO: think of fixing
                     self._add_datapoint(el[self.get_spec('key')])
+                    self.__mapping.append(os.path.basename(fname))
             elif isinstance(d, dict):
                 self._add_datapoint(d[self.get_spec('key')])
-            self.__mapping.append(os.path.basename(fname))
+                self.__mapping.append(os.path.basename(fname))
 
     def get_random_datapoint(self):
         idx = random.randint(0, self.size() - 1)
