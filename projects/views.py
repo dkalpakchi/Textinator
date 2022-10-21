@@ -24,9 +24,6 @@ from reportlab.lib.pagesizes import A4
 
 from chartjs.views.columns import BaseColumnsHighChartsView
 
-import nbformat
-import papermill
-
 # from modeltranslation.translator import translator
 
 import projects.models as Tm
