@@ -585,32 +585,6 @@ label.error {
   margin-top: -1em;
 }
 
-.meta {
-  margin-bottom: 1.5em;
-}
-
-.meta .panel-block {
-  flex-wrap: wrap;
-}
-
-.meta img {
-  object-fit: cover;
-}
-
-.meta .card {
-  margin-right: 1em;
-  margin-bottom: 1em;
-}
-
-.meta .card .card-image:not(.video):not(.audio),
-.meta .card .card-image:not(.video):not(.audio) .image img {
-  height: 150px;
-}
-
-.meta .card .card-image.video {
-  height: 185px;
-}
-
 /**
  * Bulma extensions
  */

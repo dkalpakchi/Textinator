@@ -54,78 +54,15 @@ class AllowedDirsMixin:
         return found_files
 
 
-class MetadataProcessor(AllowedDirsMixin):
-    def __init__(self, folders, owner_username):
-        self.set_allowed_dirs(owner_username)
-
-        self.__images = defaultdict(list)
-        self.__audio = defaultdict(list)
-        self.__video = defaultdict(list)
-
-        found_folders = self.find_folders(folders)
-
-        for found_folder in found_folders:
-            self.__process_dir(Path(found_folder))
-
-    def __process_dir(self, d, prefix=""):
-        for f in d.iterdir():
-            if f.is_file():
-                self.__process_file(f, prefix)
-            elif f.is_dir():
-                self.__process_dir(f, prefix=os.path.join(prefix, f))
-
-    def __process_file(self, f, prefix=""):
-        mime = magic.from_file(f, mime=True)
-        prefix = Path(prefix).name
-        fs = str(f)
-        if mime.startswith('image'):
-            if fs.startswith(settings.MEDIA_ROOT):
-                self.__images[prefix].append("{}{}".format(
-                    settings.MEDIA_URL,
-                    str(fs.replace(settings.MEDIA_ROOT, "").strip("/"))
-                ))
-        elif mime.startswith('video'):
-            if fs.startswith(settings.MEDIA_ROOT):
-                self.__video[prefix].append("{}{}".format(
-                    settings.MEDIA_URL,
-                    str(fs.replace(settings.MEDIA_ROOT, "").strip("/"))
-                ))
-        elif mime.startswith('audio'):
-            if fs.startswith(settings.MEDIA_ROOT):
-                self.__audio[prefix].append("{}{}".format(
-                    settings.MEDIA_URL,
-                    str(fs.replace(settings.MEDIA_ROOT, "").strip("/"))
-                ))
-
-    def to_json(self):
-        return {
-            'images': self.__images,
-            'video': self.__video,
-            'audio': self.__audio
-        }
-
-
 class TextDatapoint:
-    def __init__(self, text=None, meta=None):
+    def __init__(self, text=None):
         self.__text = text or []
-        self.__meta = meta or []
 
-    def add_datapoint(self, text, meta):
+    def add_datapoint(self, text):
         self.__text.append(text.strip() if text else text)
-        self.__meta.append(meta)
 
     def get_text(self, idx):
         return self.__text[idx]
-
-    def get_meta(self, idx):
-        return self.__meta[idx]
-
-    def iterator(self):
-        return zip(self.__text, self.__meta)
-
-    @property
-    def meta(self):
-        return self.__meta
 
 
 class AbstractDataSource:
@@ -319,53 +256,3 @@ class TextsAPISource(AbstractDataSource):
             return data['name']
         else:
             return ""
-
-
-class DialJSLSource(AbstractDataSource, AllowedDirsMixin):
-    def __init__(self, spec_data):
-        super().__init__(spec_data)
-
-        self._required_keys = ['key']
-        self._aux_keys = [('files',), ('folders',)]
-        self.check_constraints()
-
-        self.__mapping = []
-
-        self.set_allowed_dirs(self.get_spec('username'))
-        self.__files = []
-        if self.get_spec('files'):
-            found_files = self.find_files(self.get_spec('files'))
-
-            for found_file in found_files:
-                self.__files.append(found_file)
-
-        if self.get_spec('folders'):
-            found_folders = self.find_folders(self.get_spec('folders'))
-
-            for found_folder in found_folders:
-                self.__files.extend(Path(found_folder).rglob('*.jsonl'))
-
-        for fname in self.__files:
-            dp = TextDatapoint()
-            with jsonlines.open(fname) as reader:
-                for d in reader:
-                    try:
-                        txt = d.pop(self.get_spec("key"))
-                        dp.add_datapoint(txt, d)
-                    except KeyError:
-                        dp.add_datapoint(None, d)
-            self._add_datapoint(dp)
-            self.__mapping.append(os.path.basename(fname))
-
-        if self.get_spec('meta'):
-            self.meta_proc = MetadataProcessor(self.get_spec('meta'), self.get_spec('username'))
-        else:
-            self.meta_proc = None
-
-    def get_random_datapoint(self):
-        idx = random.randint(0, self.size() - 1)
-        return idx, self[idx]
-
-    def get_source_name(self, dp_id):
-        # we know dp_id is for sure an integer
-        return self.__mapping[int(dp_id)]

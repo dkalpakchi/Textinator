@@ -350,7 +350,6 @@ DATASOURCE_TYPES = [
     ('PlainText', 'Plain text'),
     ('TextFile', 'Plain text file(s)'),
     ('Json', 'JSON file(s)'),
-    ('DialJSL', 'Dialogue JSON lines'),
     ('TextsAPI', 'Texts API')
 ]
 

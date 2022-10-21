@@ -15,12 +15,6 @@
     TextsAPI: {
       endpoint: "",
     },
-    DialJSL: {
-      files: [],
-      folders: [],
-      key: "",
-      meta: [],
-    },
   };
 
   let schemas = {
@@ -75,30 +69,6 @@
           },
         },
         key: "string",
-      },
-    },
-    DialJSL: {
-      type: "object",
-      properties: {
-        files: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-        },
-        folders: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-        },
-        key: "string",
-        meta: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-        },
       },
     },
   };

@@ -24,8 +24,6 @@ class DatapointInfo:
         self.is_dialogue = is_dialogue
         self.project_id = proj_id
 
-        self.meta = ds.meta_proc if ds and hasattr(ds, 'meta_proc') else None
-
     def to_json(self):
         return {
             'id': self.id,
@@ -34,6 +32,5 @@ class DatapointInfo:
             'source_id': self.source_id,
             'source_formatting': self.source_formatting,
             'is_empty': self.is_empty,
-            'project_id': self.project_id,
-            'meta': self.meta.to_json() if self.meta else None
+            'project_id': self.project_id
         }

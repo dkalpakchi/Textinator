@@ -8,8 +8,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      jupyter:
-        condition: service_healthy
 
   db:
     image: postgres:13.4-alpine
@@ -26,23 +24,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  jupyter:
-    build:
-      context: ./jupyter
-      dockerfile: Dockerfile
-    ports:
-      - 8345:8345
-    env_file:
-      - ././jupyter/.env.dev
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    healthcheck:
-      test: wget -O- --no-verbose --tries=1 http://localhost:8345${JUPYTERHUB_SERVICE_PREFIX:-/}api || exit 1
-      interval: 15s
-      start_period: 15s
-      timeout: 3s
-      retries: 3
 
 volumes:
   postgres_data:
