@@ -138,7 +138,7 @@ class DataSource(CommonModel):
                 text = globals().get(method.helper, lambda x: x)(text)
         return text
 
-    def __load_datasource(self):
+    def __load(self):
         source_cls = DataSource.type2class(self.source_type)
         if self.owner:
             spec = json.loads(self.spec.replace('\r\n', ' ').replace('\n', ' '))
@@ -149,11 +149,11 @@ class DataSource(CommonModel):
         return ds_instance
 
     def get(self, idx):
-        ds_instance = self.__load_datasource()
+        ds_instance = self.__load()
         return ds_instance[idx]
 
     def size(self):
-        ds_instance = self.__load_datasource()
+        ds_instance = self.__load()
         return ds_instance.size()
 
     def __str__(self):
@@ -488,11 +488,11 @@ class Project(CloneMixin, CommonModel):
         """
         return self.markervariant_set.exclude(unit=None).order_by('anno_type')
 
-    def get_dp_from_log(self, log, user):
+    def get_dp_from_log(self, log):
         ds_def = log.datasource
         source_cls = DataSource.type2class(ds_def.source_type)
         spec = json.loads(ds_def.spec.replace('\r\n', ' ').replace('\n', ' '))
-        spec['username'] = user.username
+        spec['username'] = ds_def.owner.username
         ds_instance = source_cls(spec)
         dp_id = log.datapoint
         if ds_instance[dp_id] is not None:
@@ -573,7 +573,7 @@ class Project(CloneMixin, CommonModel):
                 log.delete()
 
             if log2.datasource in self.datasources.all():
-                dp_info = self.get_dp_from_log(log2, user)
+                dp_info = self.get_dp_from_log(log2)
                 if dp_info: return dp_info
             else:
                 log2.is_skipped = True
@@ -582,7 +582,7 @@ class Project(CloneMixin, CommonModel):
         elif log:
             # Auto switching
             if log.datasource in self.datasources.all():
-                dp_info = self.get_dp_from_log(log, user)
+                dp_info = self.get_dp_from_log(log)
                 if dp_info: return dp_info
             else:
                 log.is_skipped = True

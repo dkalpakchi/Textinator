@@ -19,7 +19,6 @@
     {% if project.author == user or project.shared_with(user) %}
       <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-success">Generate a PDF time report</a>
     {% endif %}
-    <a class="button is-pulled-right" href="{{ url('projects:open_notebook', kwargs={'proj': project.pk}) }}" target="_blank">Open Notebook</a>
   </div>
   <div class="mt-5 box">
     <p class="title">Export data</p>
