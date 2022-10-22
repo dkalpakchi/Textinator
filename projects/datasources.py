@@ -5,12 +5,16 @@ import json
 import jsonlines
 import random
 import string
+import logging
 from collections import defaultdict
 from pathlib import Path
 
 import magic
 
 from django.conf import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class AbsentSpecError(Exception):
@@ -114,10 +118,10 @@ class AbstractDataSource:
         return self.__size
 
     def __getitem__(self, key):
-        print(key)
         try:
             return self.__data[int(key)]
-        except ValueError:
+        except (ValueError, IndexError) as e:
+            logger.error(e)
             return None
 
 

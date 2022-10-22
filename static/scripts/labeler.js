@@ -2724,8 +2724,12 @@
         let label = document.querySelector(
           'span.tag[data-i="' + c["id"] + '"]'
         );
-        label.querySelector("span").remove();
-        label.querySelector("button").remove();
+        let relSpan = label.querySelector("span");
+        let delButton = label.querySelector("button");
+
+        if (utils.isDefined(relSpan)) relSpan.remove();
+        if (utils.isDefined(delButton)) delButton.remove();
+
         mergeWithNeighbors(label);
       },
       unmark: function (chunksList) {
