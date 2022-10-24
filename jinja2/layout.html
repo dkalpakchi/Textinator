@@ -26,7 +26,7 @@
   </head>
   <body root='{{root_url}}' is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
     {% include 'partials/_navbar.html' %}
-    <div class="container is-fluid">
+    <div class="container is-fluid tt-workspace">
       {% block content %}{% endblock %}
     </div>
     {% block custom_body_scripts %}{% endblock %}

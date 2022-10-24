@@ -102,21 +102,28 @@
       return range.toString().length;
     }
 
-    // hide those that will influence innerText
+    // hide those that will influence textContent
     function showExtraElements(selectorArea, makeVisible) {
       let $sel = $(selectorArea),
         $relNum = $sel.find('[data-m="r"]'),
         $delBtn = $sel.find("button.delete"),
-        $meta = $sel.find("[data-meta]");
+        $meta = $sel.find("[data-meta]"),
+        $br = $sel.find("br");
 
       if (makeVisible) {
         $relNum.show();
         $delBtn.show();
         $meta.show();
+        $br.each(function (i, x) {
+          x.previousSibling.remove();
+        });
+        $br.show();
       } else {
         $relNum.hide();
         $delBtn.hide();
         $meta.hide();
+        $br.before(document.createTextNode("\n"));
+        $br.hide();
       }
     }
 
@@ -126,20 +133,27 @@
         let len = 0;
         while (prev != null) {
           if (prev.nodeType === 1) {
-            if (prev.tagName == "BR") {
-              // if newline
-              len += 1;
-            } else if (
+            // ELEMENT_NODE
+            if (
               (prev.tagName == "SPAN" && prev.classList.contains("tag")) ||
               LINE_ENDING_TAGS.includes(prev.tagName)
             ) {
-              // if there is a label, need to remove the possible relation label before calculating textContent
+              // if there is a label, need to remove the possible relation label
+              // This is why normally we would use innerText here and not textContent
+              // but now we hid extra elements already, we could just use textContent
+              // since it's faster
               len += prev.textContent.trim().length;
               if (LINE_ENDING_TAGS.includes(prev.tagName)) len += 1; // +1 because P is replaced by '\n'
             } else if (prev.tagName != "SCRIPT" && prev.tagName != "BUTTON") {
+              // we don't need to account for invisible parts in any cases,
+              // other than the ones from the previous else if statement
+              // also sometimes a browser will correct typos like double spaces automatically
+              // but because .surroundContents happens on the TEXT_NODE with all
+              // typos included, we want the original TEXT_CONTENT to be here
               len += prev.textContent.trim().length;
             }
           } else if (prev.nodeType === 3 && prev.wholeText.trim()) {
+            // TEXT_NODE
             len += prev.length;
           }
           prev = onlyElements
@@ -149,12 +163,13 @@
         return len;
       }
 
-      let selectorArea = document.querySelector(".selector");
+      let selectorArea = document.querySelector("#selector");
 
       showExtraElements(selectorArea, false);
 
       // account for the same paragraph
       let textLength = getPrevLength(node.previousSibling);
+      console.log(textLength);
 
       // account for the previous text of the enclosing label
       let enclosingLabel = getEnclosingLabel(node);
@@ -678,7 +693,7 @@
         this.relationsArea = this.taskArea.querySelector("#relationsArea");
         this.textArea = this.taskArea.querySelector("#textArea");
         this.actionsArea = this.taskArea.querySelector("#actionsArea");
-        this.selectorArea = this.textArea.querySelector(".selector");
+        this.selectorArea = this.textArea.querySelector("#selector");
         this.textLabelsArea = this.taskArea.querySelector("#textLabels");
         resetTextHTML =
           this.selectorArea == null ? "" : this.selectorArea.innerHTML;
@@ -714,6 +729,19 @@
               });
           }
         });
+
+        let viewPortHeight = window.innerHeight;
+
+        if (this.markersArea.nextElementSibling == this.actionsArea) {
+          this.markersArea.style.height =
+            viewPortHeight - this.markersArea.offsetTop - 80 + "px";
+          let markersAreaBody = this.markersArea.querySelector(".message-body");
+          markersAreaBody.style.maxHeight =
+            viewPortHeight - this.markersArea.offsetTop - 140 + "px";
+        }
+
+        this.textArea.style.height =
+          viewPortHeight - this.textArea.offsetTop - 80 + "px";
       },
       getContextText: function (forPresentation) {
         if (forPresentation === undefined) {
@@ -1385,6 +1413,7 @@
       },
       checkRestrictions: function (inRelation) {
         if (inRelation === undefined) inRelation = false;
+        let ctx = this;
 
         let markers = document.querySelectorAll(".marker.tags[data-res]");
         let messages = [];
@@ -1395,13 +1424,13 @@
           for (let i = 0, len = res.length; i < len; i++) {
             if (res[i]) {
               let have = inRelation
-                ? document.querySelectorAll(
-                    '.selector span.tag[data-s="' +
+                ? ctx.selectorArea.querySelectorAll(
+                    'span.tag[data-s="' +
                       x.getAttribute("data-s") +
                       '"].active:not(.is-disabled)'
                   ).length
-                : document.querySelectorAll(
-                    '.selector span.tag[data-s="' +
+                : ctx.selectorArea.querySelectorAll(
+                    'span.tag[data-s="' +
                       x.getAttribute("data-s") +
                       '"]:not(.is-disabled)'
                   ).length;
@@ -1911,14 +1940,14 @@
       markRelation: function (obj) {
         if (!this.checkRestrictions(true)) return;
 
-        let $parts = $(".selector span.tag.active"),
+        let $parts = $(this.selectorArea).find("span.tag.active"),
           between = obj
             .getAttribute("data-b")
             .split("|")
             .map((x) => x.split("-:-")),
           direction = obj.getAttribute("data-d"),
           rule = obj.getAttribute("data-r"),
-          relName = obj.querySelector('[data-role="name"]').innerText,
+          relName = obj.querySelector('[data-role="name"]').textContent,
           control = this,
           newRelationId = lastRelationId;
 
@@ -3219,6 +3248,11 @@
       let inputFormData = $inputForm.serializeObject();
 
       // if there's an input form field, then create input_context
+      // the reason why we use false as a param to getContextText
+      // is to because sometimes browser will auto-correct small mistakes
+      // like double spaces, which are present in the data,
+      // but when .surroundContext happens, it does so on the TEXT_NODE
+      // which contains the original uncorrected text
       inputFormData["context"] = labelerModule.getContextText(false);
 
       $.extend(inputFormData, labelerModule.getSubmittableDict());
@@ -3315,7 +3349,7 @@
       $button.attr("disabled", true);
 
       if (confirmation) {
-        let $el = $(".selector.element");
+        let $el = $(labelerModule.selectorArea);
         $el.addClass("is-loading");
 
         $.ajax({

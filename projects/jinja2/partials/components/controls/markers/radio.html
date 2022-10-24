@@ -1,5 +1,5 @@
 {% if marker.choices %}
-  <div class="control is-marker-w90{% if marker.max_choice_len > 50 %} vertical-radio{% endif %}">
+  <div class="control is-marker-w90{% if marker.max_choice_len > 35 %} vertical-radio{% endif %}">
     <p class="has-text-weight-bold">{{marker.name}}</p>
     {% for c in marker.choices %}
       {% if c|is_list %}
