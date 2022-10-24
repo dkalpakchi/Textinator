@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="has-navbar-fixed-top">
+<html class="has-navbar-fixed-top" is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="{{ static('scripts/script.js') }}"></script>
     {% block custom_scripts %}{% endblock %}
   </head>
-  <body root='{{root_url}}' is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
+  <body root='{{root_url}}'>
     {% include 'partials/_navbar.html' %}
     <div class="container is-fluid tt-workspace">
       {% block content %}{% endblock %}

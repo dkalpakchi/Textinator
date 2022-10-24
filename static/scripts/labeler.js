@@ -2760,13 +2760,15 @@
         let label = document.querySelector(
           'span.tag[data-i="' + c["id"] + '"]'
         );
-        let relSpan = label.querySelector("span");
-        let delButton = label.querySelector("button");
+        if (utils.isDefined(label)) {
+          let relSpan = label.querySelector("span");
+          let delButton = label.querySelector("button");
 
-        if (utils.isDefined(relSpan)) relSpan.remove();
-        if (utils.isDefined(delButton)) delButton.remove();
+          if (utils.isDefined(relSpan)) relSpan.remove();
+          if (utils.isDefined(delButton)) delButton.remove();
 
-        mergeWithNeighbors(label);
+          mergeWithNeighbors(label);
+        }
       },
       unmark: function (chunksList) {
         for (let c in chunksList) {

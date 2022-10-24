@@ -1,13 +1,10 @@
-<article id="remindersArea" class="reminders message">
-  <div class="message-header">
-    <p>{{ _("reminders")|capitalize }}</p>
-    <a id="guidelinesButton" class="is-pulled-right">{{ _("guidelines")|upper }}</a>
-  </div>
-  <div class="message-body">
-    {% if project.reminders %}
+{% if project.reminders %}
+  <article id="remindersArea" class="reminders message">
+    <div class="message-header">
+      <p>{{ _("reminders")|capitalize }}</p>
+    </div>
+    <div class="message-body">
       {{project.reminders|safe}}
-    {% else %}
-      {{ _("No reminders are set") }}
-    {% endif %}
-  </div>
-</article>
+    </div>
+  </article>
+{% endif %}

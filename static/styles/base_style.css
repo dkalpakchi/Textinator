@@ -1,5 +1,5 @@
-html,
-body {
+html[is-inside],
+html[is-inside] body {
   overflow: hidden;
 }
 
@@ -382,16 +382,19 @@ textarea {
 .selector {
   height: 100%;
   overflow-y: scroll;
+  overflow: auto;
 }
 
 .selector .scrollable {
   height: 68%;
   overflow-y: scroll;
+  overflow: auto;
 }
 
 .selector .pinned {
   height: 28%;
   overflow-y: scroll;
+  overflow: auto;
 }
 
 .container.tt-workspace {
@@ -400,12 +403,26 @@ textarea {
 }
 
 .actions-area {
-  max-width: 5rem;
+  border-color: #00d1b2;
+  border-width: 0 0 0 4px;
+  border-style: solid;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  max-width: 5rem;
   position: fixed;
   right: 0;
   top: 3.25rem;
   z-index: 25;
+}
+
+.message.actions-area .message-body {
+  border-width: 0;
+}
+
+.actions-area .message-body:last-of-type {
+  margin-bottom: 3rem;
+  margin-top: auto;
 }
 
 .actions-area .button {
@@ -793,14 +810,24 @@ label.help.is-danger {
   align-items: start;
 }
 
+.outer.radio:not(:last-of-type) {
+  margin-bottom: 10px;
+}
+
 .outer.radio > input[type="radio"] {
-  height: 20px;
+  height: 23px;
   margin-right: 0.5em;
   accent-color: #8f5c00;
 }
 
-.outer.radio:not(:first-of-type) > input[type="radio"] {
-  margin-left: 1em;
+.outer.radio .radio {
+  display: inline-block;
+}
+
+.outer.radio .radio input[type="radio"] {
+  height: 23px;
+  margin-right: 0;
+  vertical-align: top;
 }
 
 #tab-content div[data-content] {
