@@ -1270,6 +1270,14 @@ class Batch(CommonModel):
             self_clone = Batch.objects.get(pk=mapped_pk)
         return self_clone
 
+    @property
+    def project(self):
+        i = Input.objects.filter(batch=self).first()
+        l = Label.objects.filter(batch=self).first()
+        if i: return i.marker.project
+        elif l: return l.marker.project
+        else: return "Empty"
+
 
 class Input(CloneMixin, CommonModel):
     """
