@@ -108,7 +108,8 @@
         $relNum = $sel.find('[data-m="r"]'),
         $delBtn = $sel.find("button.delete"),
         $meta = $sel.find("[data-meta]"),
-        $br = $sel.find("br");
+        $br = $sel.find("br"),
+        $pinned = $sel.find(".pinned");
 
       if (makeVisible) {
         $relNum.show();
@@ -118,12 +119,16 @@
           x.previousSibling.remove();
         });
         $br.show();
+        $pinned.each(function (i, x) {
+          x.previousSibling.remove();
+        });
       } else {
         $relNum.hide();
         $delBtn.hide();
         $meta.hide();
         $br.before(document.createTextNode("\n"));
         $br.hide();
+        $pinned.before(document.createTextNode("\n\n"));
       }
     }
 
