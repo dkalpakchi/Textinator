@@ -174,7 +174,6 @@
 
       // account for the same paragraph
       let textLength = getPrevLength(node.previousSibling);
-      console.log(textLength);
 
       // account for the previous text of the enclosing label
       let enclosingLabel = getEnclosingLabel(node);
@@ -679,6 +678,7 @@
       allowSelectingLabels: false,
       disableSubmittedLabels: false,
       drawingType: {},
+      initLineHeight: undefined,
       taskArea: null,
       textLabelsArea: null,
       markersArea: null,
@@ -1327,14 +1327,19 @@
             }
 
             let marked =
-                chunk["range"].commonAncestorContainer.querySelectorAll(
-                  "span.tag"
-                ),
-              curLineHeight = parseFloat(
+              chunk["range"].commonAncestorContainer.querySelectorAll(
+                "span.tag"
+              );
+            if (!utils.isDefined(this.initLineHeight)) {
+              this.initLineHeight = parseFloat(
                 window
                   .getComputedStyle(marked[0], null)
                   .getPropertyValue("line-height")
               );
+            }
+
+            let ctx = this;
+
             for (let i = 0; i < marked.length; i++) {
               let checker = marked[i],
                 elements = [];
@@ -1344,13 +1349,14 @@
               }
 
               let len = elements.length;
+              let elDisplayType = elements[len - 1].getAttribute("data-dt");
 
-              if (displayType == "hl") {
+              if (elDisplayType == "hl") {
                 elements[len - 1].style.lineHeight =
-                  curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
-              } else if (displayType == "und") {
+                  ctx.initLineHeight + 3 * 5 + 10 * (len - 1) + "px";
+              } else if (elDisplayType == "und") {
                 elements[len - 1].style.lineHeight =
-                  curLineHeight + 2 * 5 + 5 * (len - 1) + "px";
+                  ctx.initLineHeight + 2 * 5 + 5 * (len - 1) + "px";
               }
 
               for (let j = 0; j < len; j++) {
@@ -1358,8 +1364,8 @@
                   pBotStr = elements[j].style.paddingBottom,
                   pTop = parseFloat(pTopStr.slice(0, -2)),
                   pBot = parseFloat(pBotStr.slice(0, -2)),
-                  npTop = 5 + 5 * j,
-                  npBot = 5 + 5 * j;
+                  npTop = 4 + 4 * j,
+                  npBot = 4 + 4 * j;
 
                 if (displayType == "und") {
                   elements[j].style.textUnderlineOffset =
@@ -2533,20 +2539,16 @@
             siblings = []; // do not care about further siblings
           }
 
-          let curLineHeight = parseFloat(
-            window
-              .getComputedStyle(checker, null)
-              .getPropertyValue("line-height")
-          );
-
+          let ctx = this;
           let len = elements.length;
           if (len > 0) {
-            if (displayType == "hl") {
+            let elDisplayType = elements[len - 1][0].getAttribute("data-dt");
+            if (elDisplayType == "hl") {
               elements[len - 1][0].style.lineHeight =
-                curLineHeight + 3 * 5 + 10 * (len - 1) + "px";
-            } else if (displayType == "und") {
+                ctx.initLineHeight + 3 * 5 + 10 * (len - 1) + "px";
+            } else if (elDisplayType == "und") {
               elements[len - 1][0].style.lineHeight =
-                curLineHeight + 2 * 5 + 5 * (len - 1) + "px";
+                ctx.initLineHeight + 2 * 5 + 5 * (len - 1) + "px";
             }
           }
 
