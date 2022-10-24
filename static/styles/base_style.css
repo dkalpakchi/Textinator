@@ -1,6 +1,7 @@
 html[is-inside],
 html[is-inside] body {
   overflow: hidden;
+  scrollbar-width: thin;
 }
 
 body .container:first-of-type {
@@ -386,13 +387,15 @@ textarea {
 }
 
 .selector .scrollable {
-  height: 68%;
+  padding-right: 5px;
+  height: 64%;
   overflow-y: scroll;
   overflow: auto;
 }
 
 .selector .pinned {
-  height: 28%;
+  padding-right: 5px;
+  height: 32%;
   overflow-y: scroll;
   overflow: auto;
 }
@@ -810,8 +813,13 @@ label.help.is-danger {
   align-items: start;
 }
 
-.outer.radio:not(:last-of-type) {
+.outer.radio:not(:last-of-type),
+.vertical-radio .radio:not(:last-of-type) {
   margin-bottom: 10px;
+}
+
+.vertical-radio .outer.radio .radio:not(:last-of-type) {
+  margin-bottom: 0;
 }
 
 .outer.radio > input[type="radio"] {
