@@ -147,17 +147,18 @@
               // This is why normally we would use innerText here and not textContent
               // but now we hid extra elements already, we could just use textContent
               // since it's faster
-              len += prev.textContent.trim().length;
-              if (LINE_ENDING_TAGS.includes(prev.tagName)) len += 1; // +1 because P is replaced by '\n'
+              len += prev.textContent.length;
+              // +1 because P is replaced by '\n'
+              if (LINE_ENDING_TAGS.includes(prev.tagName)) len += 1;
             } else if (prev.tagName != "SCRIPT" && prev.tagName != "BUTTON") {
               // we don't need to account for invisible parts in any cases,
               // other than the ones from the previous else if statement
               // also sometimes a browser will correct typos like double spaces automatically
               // but because .surroundContents happens on the TEXT_NODE with all
               // typos included, we want the original TEXT_CONTENT to be here
-              len += prev.textContent.trim().length;
+              len += prev.textContent.length;
             }
-          } else if (prev.nodeType === 3 && prev.wholeText.trim()) {
+          } else if (prev.nodeType === 3) {
             // TEXT_NODE
             len += prev.length;
           }
