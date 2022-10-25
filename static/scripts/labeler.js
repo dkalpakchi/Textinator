@@ -383,63 +383,6 @@
       }
     }
 
-    /*
-     * From MDN (https://developer.mozilla.org/en-US/docs/Web/API/Range/startOffset)
-     * If the startContainer is a Node of type Text, Comment, or CDATASection,
-     * then the offset is the number of characters from the start of the startContainer
-     * to the boundary point of the Range. For other Node types, the startOffset is
-     * the number of child nodes between the start of the startContainer and the boundary point of the Range
-     *
-     * The same is true for endContainer and endOffset
-     */
-    function getSelectionFromRange(range, config) {
-      if (range.startContainer == range.endContainer) {
-        let node = range.startContainer;
-        if (node.nodeType === 3) {
-          // Text
-          return node.textContent.slice(range.startOffset, range.endOffset);
-        } else {
-          return node.textContent;
-        }
-      } else {
-        let start = range.startContainer,
-          end = range.endContainer,
-          startText = "",
-          endText = "";
-
-        if (start.nodeType === 3) {
-          startText += start.textContent.slice(range.startOffset);
-        } else {
-          for (let i = 0; i < range.startOffset; i++) {
-            let n = start.childNodes[i];
-            if (n != end) {
-              startText += n.textContent;
-            }
-          }
-        }
-        if (config.startOnly) return startText;
-
-        if (end.nodeType === 3) {
-          endText += end.textContent.slice(0, range.endOffset);
-        } else {
-          for (let i = 0; i < range.endOffset; i++) {
-            let n = end.childNodes[i];
-            endText += n.textContent;
-          }
-        }
-        if (config.endOnly) return endText;
-
-        if (
-          startText == endText &&
-          (start.contains(end) || end.contains(start))
-        ) {
-          return startText;
-        } else {
-          return startText + endText;
-        }
-      }
-    }
-
     // checks if a chunk is in any of the relations
     function isInRelations(c) {
       for (let key in relations) {
@@ -1286,15 +1229,39 @@
 
             initContextMenu(markedSpan, this.contextMenuPlugins);
 
-            // NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
-            // "An exception will be thrown, however, if the Range splits a non-Text node with only one of its boundary points."
-            // https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
+            /*
+             * From MDN (https://developer.mozilla.org/en-US/docs/Web/API/Range/startOffset)
+             * If the startContainer is a Node of type Text, Comment, or CDATASection,
+             * then the offset is the number of characters from the start of the startContainer
+             * to the boundary point of the Range. For other Node types, the startOffset is
+             * the number of child nodes between the start of the startContainer and the
+             * boundary point of the Range
+             *
+             * The same is true for endContainer and endOffset
+             *
+             * Also from MDN
+             * (https://developer.mozilla.org/en-US/docs/Web/API/range/commonAncestorContainer)
+             * The Range.commonAncestorContainer read-only property returns the deepest —
+             * or furthest down the document tree — Node that contains both boundary points
+             * of the Range. This means that if Range.startContainer and Range.endContainer
+             * both refer to the same node, this node is the common ancestor container.
+             */
+
+            /*
+             * NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
+             * "An exception will be thrown, however, if the Range splits a non-Text node
+             * with only one of its boundary points."
+             * https://developer.mozilla.org/en-US/docs/Web/API/Range/surroundContents
+             */
+
             try {
               chunk["range"].surroundContents(markedSpan);
               markedSpan.appendChild(deleteMarkedBtn);
             } catch (error) {
+              // if (chunk['range'].endOffset > chunk['range'].startOffset) {
               let nodeAfterEnd = chunk["range"].endContainer.nextSibling;
               if (nodeAfterEnd != null && isDeleteButton(nodeAfterEnd)) {
+                // means we're at the delete button
                 while (isLabel(nodeAfterEnd.parentNode)) {
                   nodeAfterEnd = nodeAfterEnd.parentNode;
                   if (
@@ -1306,11 +1273,34 @@
                 }
                 chunk["range"].setEndAfter(nodeAfterEnd);
               }
+              //}
+
+              // TODO: this still causes problems when
+              // a) we mark at the beginning of already marked span, here it's weird
+              //    and depends on the cursor movement???, it seems, as in whether
+              //    we come from already marked span or from a different container
+              //    and that's how it decides on the startContainer and endContainer?
+              // b) we mark part of the already marked span somewhere in the middle,
+              //    take all the end with the delete button and then grab some text after
+              //
+              // In both cases this solution grabs the whole already marked label,
+              // even though, the annotator most probably didn't want that.
+              //
+              // If we put an if statement as in L1262, we can remedy a), but the problem
+              // is that the already marked span splits into two, one of which
+              // is connected to the same delete button and the other one is orphane.
+              //
+              // So clearly there should be some tracking of these orphanes such that:
+              // 1. If the parent container got deleted, so did the orphane, while all
+              //    other marked spans on top of that did not.
+              // 2. If the marked span on top of the orphane got deleted, the orphane
+              //    should reunite with its parent (both visually and for deletion purposes).
 
               let nodeBeforeStart =
                 chunk["range"].startContainer.previousSibling;
               let start;
               if (nodeBeforeStart == null) {
+                // means we're within a label at its beginning
                 start = chunk["range"].startContainer;
                 while (isLabel(start.parentNode)) {
                   start = start.parentNode;
