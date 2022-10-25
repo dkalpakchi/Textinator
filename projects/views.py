@@ -505,7 +505,8 @@ def record_datapoint(request, proj):
     return JsonResponse({
         'error': False,
         'batch': str(batch),
-        'mode': mode
+        'mode': mode,
+        'trigger_update': batch_info.project.auto_text_switch
     })
 
 

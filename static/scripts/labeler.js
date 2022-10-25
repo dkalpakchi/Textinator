@@ -737,7 +737,11 @@
 
         let viewPortHeight = window.innerHeight;
 
-        if (this.markersArea.nextElementSibling == this.actionsArea) {
+        if (
+          utils.isDefined(this.markersArea) &&
+          utils.isDefined(this.actionsArea) &&
+          this.markersArea.nextElementSibling == this.actionsArea
+        ) {
           this.markersArea.style.height =
             viewPortHeight - this.markersArea.offsetTop - 80 + "px";
           let markersAreaBody = this.markersArea.querySelector(".message-body");
@@ -3239,6 +3243,70 @@
       });
     });
 
+    function getNewText(confirmationCallback, $button) {
+      let confirmation = confirmationCallback();
+      $button.attr("disabled", true);
+
+      if (confirmation) {
+        let $el = $(labelerModule.selectorArea);
+        $el.addClass("is-loading");
+
+        $.ajax({
+          type: "POST",
+          url: $button.attr("href"),
+          dataType: "json",
+          data: {
+            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+            sId: $el.attr("data-s"),
+            dpId: $el.attr("data-dp"),
+          },
+          success: function (d) {
+            // update text, source id and datapoint id
+            $el.attr("data-s", d.dp_info.source_id);
+            $el.attr("data-dp", d.dp_info.id);
+            let dpName = $("#dpName");
+            if (dpName.text()) {
+              dpName.text("(" + d.dp_info.source_name + ")");
+            }
+
+            let $selector = $(labelerModule.selectorArea);
+
+            if (d.dp_info.is_empty) {
+              let $text = $selector.closest("article.text");
+              if ($text) {
+                $text.removeClass("text");
+              }
+
+              // TODO: great_job image path should be dynamic
+              $selector.html(d.text);
+              $text.siblings("article").remove();
+
+              $(labelerModule.markersArea).remove();
+              $(labelerModule.relationsArea).remove();
+              $(labelerModule.markerGroupsArea).remove();
+              $(labelerModule.actionsArea).remove();
+            } else {
+              $selector.html(d.text);
+              labelerModule.restart();
+              $("#undoLast").attr("disabled", true);
+              $button.attr("disabled", false);
+            }
+            $("#markerGroups input").each(function (i, x) {
+              $(x).val("");
+            });
+            $el.removeClass("is-loading");
+          },
+          error: function () {
+            console.log("ERROR!");
+            $el.removeClass("is-loading");
+            $button.attr("disabled", false);
+          },
+        });
+      } else {
+        $button.attr("disabled", false);
+      }
+    }
+
     // TODO(dmytro):
     // - after the relationship is submitted, the ID starts over, whereas old ID is still there - confusing
     // - making labels in relationships transparent works very poorly for nested labels, so think of another way
@@ -3327,6 +3395,11 @@
                   .each(function (i, x) {
                     $(x).text("???");
                   }); // labels for input[type="range"]
+                if (data["trigger_update"] === true) {
+                  getNewText(function () {
+                    return true;
+                  }, $("#getNewArticle"));
+                }
               } else if (data["mode"] == "e") {
                 $("#editingBoard").html(data.template);
                 $("#editingBoard")
@@ -3350,70 +3423,6 @@
         });
       }
     });
-
-    function getNewText(confirmationCallback, $button) {
-      let confirmation = confirmationCallback();
-      $button.attr("disabled", true);
-
-      if (confirmation) {
-        let $el = $(labelerModule.selectorArea);
-        $el.addClass("is-loading");
-
-        $.ajax({
-          type: "POST",
-          url: $button.attr("href"),
-          dataType: "json",
-          data: {
-            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-            sId: $el.attr("data-s"),
-            dpId: $el.attr("data-dp"),
-          },
-          success: function (d) {
-            // update text, source id and datapoint id
-            $el.attr("data-s", d.dp_info.source_id);
-            $el.attr("data-dp", d.dp_info.id);
-            let dpName = $("#dpName");
-            if (dpName.text()) {
-              dpName.text("(" + d.dp_info.source_name + ")");
-            }
-
-            let $selector = $(labelerModule.selectorArea);
-
-            if (d.dp_info.is_empty) {
-              let $text = $selector.closest("article.text");
-              if ($text) {
-                $text.removeClass("text");
-              }
-
-              // TODO: great_job image path should be dynamic
-              $selector.html(d.text);
-              $text.siblings("article").remove();
-
-              $(labelerModule.markersArea).remove();
-              $(labelerModule.relationsArea).remove();
-              $(labelerModule.markerGroupsArea).remove();
-              $(labelerModule.actionsArea).remove();
-            } else {
-              $selector.html(d.text);
-              labelerModule.restart();
-              $("#undoLast").attr("disabled", true);
-              $button.attr("disabled", false);
-            }
-            $("#markerGroups input").each(function (i, x) {
-              $(x).val("");
-            });
-            $el.removeClass("is-loading");
-          },
-          error: function () {
-            console.log("ERROR!");
-            $el.removeClass("is-loading");
-            $button.attr("disabled", false);
-          },
-        });
-      } else {
-        $button.attr("disabled", false);
-      }
-    }
 
     // get a new article from the data source(s)
     $("#getNewArticle").on("click", function (e) {
