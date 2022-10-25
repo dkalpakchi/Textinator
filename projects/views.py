@@ -743,19 +743,11 @@ def new_article(request, proj):
         text = render_to_string('partials/_great_job.html')
     else:
         data_source = Tm.DataSource.objects.get(pk=dp_info.source_id)
-        if project.is_sampled(replacement=True) or project.is_ordered():
-            Tm.DataAccessLog.objects.get_or_create(
-                user=request.user, datapoint=str(dp_info.id),
-                project=project, datasource=data_source,
-                is_submitted=False, is_skipped=False
-            )
-        else:
-            # log the new one
-            Tm.DataAccessLog.objects.create(
-                user=request.user, datapoint=str(dp_info.id),
-                project=project, datasource=data_source,
-                is_submitted=False, is_skipped=False
-            )
+        Tm.DataAccessLog.objects.get_or_create(
+            user=request.user, datapoint=str(dp_info.id),
+            project=project, datasource=data_source,
+            is_submitted=False, is_skipped=False
+        )
 
         text = Th.apply_premarkers(project, dp_info.text)
 
@@ -922,11 +914,13 @@ def flag_text(request, proj):
     project = Tm.Project.objects.filter(pk=proj).get()
     data_source = Tm.DataSource.objects.get(pk=ds_id)
 
-    Tm.DataAccessLog.objects.create(
+    dal = Tm.DataAccessLog.objects.get_or_create(
         user=request.user, datapoint=str(dp_id),
         project=project, datasource=data_source,
-        is_submitted=False, is_skipped=True, flags=feedback
+        is_submitted=False, is_skipped=True
     )
+    dal.flags = feedback
+    dal.save()
     return JsonResponse({})
 
 
