@@ -45,11 +45,13 @@ class TextinatorJSONEditorWidget(forms.Widget):
         super().__init__()
         # TODO: change theme to fit with the Admin's look & feel
         self.__field = field
+        schema["options"] = {
+            "collapsed": int(collapsed),
+            "expand_height": 1
+        }
         self.__editor_options = {
             "theme": "spectre",
             "schema": schema,
-            "collapsed": int(collapsed),
-            "expand_height": 1
         }
         self.__editor_options.update(editor_options or {})
 
@@ -110,7 +112,7 @@ class MarkerVariantForm(forms.ModelForm):
             }
         }
         widgets = {
-            'choices': TextinatorJSONEditorWidget(DATA_SCHEMA, "choices", collapsed=False),
+            'choices': TextinatorJSONEditorWidget(DATA_SCHEMA, "choices", collapsed=True),
         }
 
 
@@ -143,6 +145,7 @@ class MarkerVariantInline(CommonNestedStackedInline):
     verbose_name = _("project-specific marker")
     verbose_name_plural = _("project-specific markers")
     exclude = ('custom_suggestion_endpoint', 'are_suggestions_enabled',)
+    ordering = ('display_tab', 'order_in_unit',)
 
 
 class PreMarkerInline(CommonNestedStackedInline):

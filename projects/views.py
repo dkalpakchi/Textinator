@@ -427,12 +427,12 @@ def record_datapoint(request, proj):
             raise Http404
 
         # log the submission
-        dal = Tm.DataAccessLog.objects.get(
+        dal = Tm.DataAccessLog.objects.filter(
             user=batch_info.user,
             datapoint=batch_info.datapoint,
             project=batch_info.project,
             datasource=batch_info.data_source
-        )
+        ).order_by('-dt_updated').first()
         dal.is_submitted = True
         dal.save()
 
