@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
 import io
+import time
 import bisect
 import uuid
+import json
 from collections import defaultdict
 
 from django.http import JsonResponse, Http404, FileResponse
@@ -914,12 +916,19 @@ def flag_text(request, proj):
     project = Tm.Project.objects.filter(pk=proj).get()
     data_source = Tm.DataSource.objects.get(pk=ds_id)
 
-    dal = Tm.DataAccessLog.objects.get_or_create(
+    dal, _ = Tm.DataAccessLog.objects.get_or_create(
         user=request.user, datapoint=str(dp_id),
         project=project, datasource=data_source,
         is_submitted=False, is_skipped=True
     )
-    dal.flags = feedback
+    if not dal.flags:
+        dal.flags = json.dumps({})
+    flags = json.loads(dal.flags)
+    if 'text_errors' not in flags:
+        flags['text_errors'] = {}
+    ts = time.time()
+    flags['text_errors'][ts] = feedback
+    dal.flags = json.dumps(flags)
     dal.save()
     return JsonResponse({})
 

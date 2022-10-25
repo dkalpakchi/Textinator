@@ -3469,6 +3469,7 @@
         success: function () {
           alert("Thank you for your feedback!");
           $(".flag.modal").removeClass("is-active");
+          $form.find("textarea").val("");
           // getNewText(function () {
           //   return true;
           // }, $("#getNewArticle"));
