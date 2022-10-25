@@ -3180,8 +3180,6 @@
   $(document).ready(function () {
     labelerModule.init();
 
-    window.lm = labelerModule;
-
     /**
      * Labeler plugins
      */
@@ -3448,6 +3446,37 @@
           "Are you sure that you have completed the task to the best of your ability?";
         return confirm(confirmationText);
       }, $button);
+    });
+
+    $("#flagTextButton").on("click", function () {
+      $(".flag.modal").addClass("is-active");
+    });
+
+    $("#flagTextForm").on("submit", function (e) {
+      e.preventDefault();
+      let $form = $("#flagTextForm");
+
+      $.ajax({
+        type: $form.attr("method"),
+        url: $form.attr("action"),
+        dataType: "json",
+        data: {
+          csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+          feedback: $form.find('textarea[name="feedback"]').val(),
+          ds_id: labelerModule.selectorArea.getAttribute("data-s"),
+          dp_id: labelerModule.selectorArea.getAttribute("data-dp"),
+        },
+        success: function () {
+          alert("Thank you for your feedback!");
+          $(".flag.modal").removeClass("is-active");
+          // getNewText(function () {
+          //   return true;
+          // }, $("#getNewArticle"));
+        },
+        error: function () {
+          alert("Your feedback was not recorded. Please try again later.");
+        },
+      });
     });
 
     $("#prevRelation").on("click", function (e) {
