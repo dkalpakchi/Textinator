@@ -45,7 +45,7 @@ class AllowedDirsMixin:
                 if os.path.exists(cand_folder) and os.path.isdir(cand_folder):
                     found_folders.append(cand_folder)
                     break
-        return found_folders
+        return sorted(found_folders)
 
     def find_files(self, files):
         found_files = []
@@ -55,7 +55,7 @@ class AllowedDirsMixin:
                 if os.path.exists(cand_file) and os.path.isfile(cand_file):
                     found_files.append(cand_file)
                     break
-        return found_files
+        return sorted(found_files)
 
 
 class TextDatapoint:
@@ -161,7 +161,7 @@ class TextFileSource(AbstractDataSource, AllowedDirsMixin):
 
             for found_folder in found_folders:
                 for d, _, files in os.walk(found_folder):
-                    for f in files:
+                    for f in sorted(files):
                         self.__files.append(os.path.join(d, f))
 
         for fname in self.__files:
@@ -201,7 +201,7 @@ class JsonSource(AbstractDataSource, AllowedDirsMixin):
             found_folders = self.find_folders(self.get_spec('folders'))
 
             for found_folder in found_folders:
-                self.__files.extend(Path(found_folder).rglob('*.json'))
+                self.__files.extend(sorted(Path(found_folder).rglob('*.json')))
 
         for fname in self.__files:
             d = json.load(open(fname))
