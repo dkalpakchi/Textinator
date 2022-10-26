@@ -39,6 +39,22 @@
         a.every((val, index) => val === b[index])
       );
     },
+    defaultobj: function (creator) {
+      return new Proxy(Object(), {
+        get(obj, prop) {
+          if (!obj.hasOwnProperty(prop)) obj[prop] = creator();
+          return obj[prop];
+        },
+      });
+    },
+    getRadioLabel: function (inp) {
+      let label = document.querySelector(
+        'p[data-label-for="' + inp.getAttribute("name") + '"]'
+      );
+      if (this.isDefined(label)) {
+        return label.firstChild.textContent.trim();
+      }
+    },
   };
 
   const labelerModule = (function () {
@@ -897,6 +913,47 @@
                       control.select(marker);
                     }
                   }
+                } else if (target.getAttribute("type") == "radio") {
+                  if (!target.hasAttribute("required")) {
+                    let memoryInnerRb = control.checkedInnerRadio[target.name];
+                    if (
+                      utils.isDefined(memoryInnerRb) &&
+                      memoryInnerRb.checked
+                    ) {
+                      memoryInnerRb.checked = false;
+
+                      if (target.hasAttribute("data-group")) {
+                        let outerRadio = control.markersArea.querySelector(
+                          "#" + target.getAttribute("data-group")
+                        );
+
+                        // this will fire only when target.checked is true
+                        outerRadio.checked = memoryInnerRb.checked;
+                        delete control.checkedOuterRadio[outerRadio.name];
+                      }
+                      delete control.checkedInnerRadio[target.name];
+                    }
+
+                    let memoryOuterRb = control.checkedOuterRadio[target.name];
+                    if (
+                      utils.isDefined(memoryOuterRb) &&
+                      memoryOuterRb.checked
+                    ) {
+                      memoryOuterRb.checked = false;
+
+                      if (target.hasAttribute("data-for")) {
+                        let radioFor = target.getAttribute("data-for");
+
+                        if (
+                          utils.isDefined(control.checkedInnerRadio[radioFor])
+                        ) {
+                          control.checkedInnerRadio[radioFor].checked = false;
+                          delete control.checkedInnerRadio[radioFor];
+                        }
+                      }
+                      delete control.checkedOuterRadio[target.name];
+                    }
+                  }
                 }
               },
               false
@@ -932,23 +989,25 @@
                       });
                   }
                 } else if (target.getAttribute("type") == "radio") {
-                  if (utils.isDefined(control.checkedOuterRadio[target.name])) {
-                    control.checkedOuterRadio[target.name].checked = false;
-                  }
-
                   if (target.hasAttribute("data-for")) {
                     let radioFor = target.getAttribute("data-for");
-                    if (utils.isDefined(control.checkedOuterRadio[radioFor])) {
-                      control.checkedOuterRadio[radioFor].checked = false;
+                    let previousRadio = control.checkedOuterRadio[radioFor];
+                    if (
+                      utils.isDefined(previousRadio) &&
+                      previousRadio != target
+                    ) {
+                      // grab old outer checkbox and uncheck it
+                      previousRadio.checked = false;
                     }
+                    // assign new outer checkbox
                     control.checkedOuterRadio[radioFor] = target;
 
                     if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
                       control.checkedInnerRadio[radioFor].checked = false;
                     }
-                  }
-
-                  if (target.hasAttribute("data-group")) {
+                    // this is to track unchecking
+                    control.checkedOuterRadio[target.name] = target;
+                  } else if (target.hasAttribute("data-group")) {
                     let outerRadio = control.markersArea.querySelector(
                       "#" + target.getAttribute("data-group")
                     );
@@ -956,6 +1015,11 @@
                     // this will fire only when target.checked is true
                     outerRadio.checked = target.checked;
                     control.checkedOuterRadio[target.name] = outerRadio;
+                    control.checkedInnerRadio[target.name] = target;
+
+                    // this is to track unchecking
+                    control.checkedOuterRadio[outerRadio.name] = outerRadio;
+                  } else {
                     control.checkedInnerRadio[target.name] = target;
                   }
                 }
@@ -1536,7 +1600,46 @@
         if (numSatisfied != markers.length) {
           alert(messages.join("\n"));
         }
-        return numSatisfied == markers.length;
+
+        let requiredAlertMsg = [];
+
+        // check required inputs
+        let requiredRadioGroups = utils.defaultobj(() => Array());
+        let radios = this.markersArea.querySelectorAll(
+          'input[type="radio"][required]'
+        );
+        radios.forEach((x) =>
+          requiredRadioGroups[utils.getRadioLabel(x)].push(x.checked)
+        );
+
+        for (let name in requiredRadioGroups) {
+          let group = requiredRadioGroups[name];
+          let filledIn = group.reduce((a, b) => a && b);
+          if (!filledIn) {
+            requiredAlertMsg.push("The field " + '"' + name + '" is required!');
+          }
+        }
+
+        let textInputs = this.markersArea.querySelectorAll(
+          'input[type="text"][required],textarea[required]'
+        );
+        textInputs.forEach(function (x) {
+          if (!x.value) {
+            let name;
+            if (x.tagName == "INPUT") {
+              let tag = x.nextElementSibling;
+              name = tag.firstChild.textContent.trim();
+            } else {
+              let tag = x.previousElementSibling;
+              name = tag.firstChild.textContent.trim();
+            }
+            requiredAlertMsg.push("The field " + '"' + name + '" is required!');
+          }
+        });
+
+        if (requiredAlertMsg.length > 0) alert(requiredAlertMsg.join("\n"));
+
+        return numSatisfied == markers.length && requiredAlertMsg.length == 0;
       },
       initSvg: function () {
         if (typeof d3 !== "undefined") {

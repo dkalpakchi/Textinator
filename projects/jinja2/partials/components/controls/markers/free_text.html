@@ -1,4 +1,7 @@
 <div class="control has-tag-left is-marker-fullwidth">
-  <input class='input' type="text" name="{% if prefix is defined %}{{prefix}}{% endif %}{{marker.code}}{% if suffix is defined %}{{suffix}}{% endif %}" placeholder="{% if placeholder is defined %}{{placeholder}}{% else %}{{marker.name}}{% endif %}" {% if extra is defined %}{{extra}}{% endif %}>
-  {% include 'partials/components/controls/markers/tag.html' %}
+  {% set required = marker.get_count_restrictions() == "eq1" %}
+  <input class='input' type="text" name="{% if prefix is defined %}{{prefix}}{% endif %}{{marker.code}}{% if suffix is defined %}{{suffix}}{% endif %}" placeholder="{% if placeholder is defined %}{{placeholder}}{% else %}{{marker.name}}{% endif %}" {% if extra is defined %}{{extra}}{% endif %} {% if required %} required {% endif %}>
+  {% with required=required %}
+    {% include 'partials/components/controls/markers/tag.html' with context %}
+  {% endwith %}
 </div>

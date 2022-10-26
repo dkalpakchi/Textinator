@@ -1,4 +1,7 @@
 <div class="control has-tag-left has-fixed-size is-marker-fullwidth">
-  {% include 'partials/components/controls/markers/tag.html' %}
-  <textarea class='textarea' name="{{marker.code}}" placeholder="{{marker.name}}"></textarea>
+  {% set required=marker.get_count_restrictions() == "eq1" %}
+  {% with required=required%}
+    {% include 'partials/components/controls/markers/tag.html' with context %}
+  {% endwith %}
+  <textarea class='textarea' name="{{marker.code}}" placeholder="{{marker.name}}" {% if required %} required {% endif %}></textarea>
 </div>

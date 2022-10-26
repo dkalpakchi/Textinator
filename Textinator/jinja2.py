@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 import pytz
 import markdown
 from datetime import datetime
@@ -15,9 +16,11 @@ from django.template.loader import get_template
 from jinja2 import Environment, Template, Markup
 
 
+INSIDE_PROJECT_RE = re.compile(r"/projects/\d+/?")
+
+
 def get_path(url):
     return urlparse(url).path
-
 
 def display_marker_variant(marker_variant, **kwargs):
     h = marker_variant.color.lstrip('#')
@@ -111,6 +114,9 @@ def markify(score):
 def is_list(val):
     return isinstance(val, list)
 
+def is_inside(path):
+    return bool(re.match(INSIDE_PROJECT_RE, path))
+
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('jinja2.ext.i18n')
@@ -137,6 +143,7 @@ def environment(**options):
     env.filters['translated_language_name'] = lang_translated_name
     env.filters["markify"] = markify
     env.filters["is_list"] = is_list
+    env.filters["is_inside"] = is_inside
 
     env.install_gettext_translations(translation)
 

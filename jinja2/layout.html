@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="has-navbar-fixed-top" is-inside="{{'true' if '/projects/' in request.path else 'false'}}">
+<html class="has-navbar-fixed-top" {% if request.path|is_inside %}is-inside="true"{% endif %}>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
