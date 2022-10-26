@@ -360,7 +360,11 @@
       }
 
       if (pieces.length > 1) {
-        if (pieces[0].nodeType === 3 && prev.nodeType === 3)
+        if (
+          pieces[0].nodeType === 3 &&
+          utils.isDefined(prev) &&
+          prev.nodeType === 3
+        )
           parent.replaceChild(
             document.createTextNode(prev.data + pieces[0].data),
             prev
@@ -372,7 +376,11 @@
           parent.insertBefore(pieces[i], next);
         }
 
-        if (pieces[pieces.length - 1].nodeType === 3 && next.nodeType === 3) {
+        if (
+          pieces[pieces.length - 1].nodeType === 3 &&
+          utils.isDefined(next) &&
+          next.nodeType === 3
+        ) {
           parent.replaceChild(
             document.createTextNode(pieces[pieces.length - 1].data + next.data),
             next
@@ -869,15 +877,17 @@
                 }
               }
               let s = String.fromCharCode(e.which).toUpperCase();
-              let shortcut;
-              if (e.shiftKey) {
-                shortcut = document.querySelector(
-                  '[data-shortcut="SHIFT + ' + s + '"]'
-                );
-              } else {
-                shortcut = document.querySelector(
-                  '[data-shortcut="' + s + '"]'
-                );
+              let shortcut = null;
+              if (s.trim()) {
+                if (e.shiftKey) {
+                  shortcut = document.querySelector(
+                    '[data-shortcut="SHIFT + ' + s + '"]'
+                  );
+                } else {
+                  shortcut = document.querySelector(
+                    '[data-shortcut="' + s + '"]'
+                  );
+                }
               }
 
               if (shortcut != null) {
@@ -2883,6 +2893,9 @@
         d3.selectAll("svg > *").remove();
         this.showRelationGraph(currentRelationId);
         activeLabels = 0;
+
+        this.checkedOuterRadio = {};
+        this.checkedInnerRadio = {};
 
         chunks.forEach(function (c) {
           if (c.submittable) {
