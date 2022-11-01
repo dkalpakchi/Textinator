@@ -43,6 +43,10 @@
         an1: document.querySelector('[data-id="an1"]'),
         an2: document.querySelector('[data-id="an2"]'),
       };
+      this.flaggedArea = {
+        form: document.querySelector("#flaggedSearchForm"),
+        res: document.querySelector("#flaggedResults"),
+      };
 
       this.initEvents();
     },
@@ -82,6 +86,28 @@
           false
         );
       }
+
+      this.flaggedArea.form.addEventListener(
+        "submit",
+        function (e) {
+          e.preventDefault();
+          let data = $(ctx.flaggedArea.form).serializeObject();
+          ctx.flaggedArea.res.classList.add("lds-circle");
+          $.ajax({
+            method: ctx.flaggedArea.form.method,
+            headers: { "X-CSRFToken": data.csrfmiddlewaretoken },
+            url: ctx.flaggedArea.form.getAttribute("data-action"),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            data: JSON.stringify(data),
+            success: function (data) {
+              ctx.flaggedArea.res.innerHTML = data.res;
+              ctx.flaggedArea.res.classList.remove("lds-circle");
+            },
+          });
+        },
+        false
+      );
     },
     loadText: function (textId) {
       let ctx = this;

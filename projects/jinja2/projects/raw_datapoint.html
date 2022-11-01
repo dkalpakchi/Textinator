@@ -1,0 +1,20 @@
+<article class="text message">
+  <div class="message-header">
+    <span class="is-group">
+      <span>
+        <p>{{ _("text")|capitalize }}</p>
+      </span>
+    </span>
+  </div>
+  <div class="content message-body">
+    <div class="broad">
+      {% if ds.formatting == 'md' %}
+        {{text|to_markdown}}
+      {% elif ds.formatting == 'ft' %}
+        {{text|to_formatted_text|safe}}
+      {% else %}
+        {{text|wrap_paragraph|safe}}
+      {% endif %}
+    </div>
+  </div>
+</article>

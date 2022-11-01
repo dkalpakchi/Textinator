@@ -16,7 +16,7 @@ from django.template.loader import get_template
 from jinja2 import Environment, Template, Markup
 
 
-INSIDE_PROJECT_RE = re.compile(r"/projects/\d+/?")
+INSIDE_PROJECT_RE = re.compile(r"/projects/\d+/?$")
 
 
 def get_path(url):
@@ -117,6 +117,9 @@ def is_list(val):
 def is_inside(path):
     return bool(re.match(INSIDE_PROJECT_RE, path))
 
+def from_ts(ts):
+    return datetime.fromtimestamp(float(ts))
+
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('jinja2.ext.i18n')
@@ -144,6 +147,7 @@ def environment(**options):
     env.filters["markify"] = markify
     env.filters["is_list"] = is_list
     env.filters["is_inside"] = is_inside
+    env.filters["from_ts"] = from_ts
 
     env.install_gettext_translations(translation)
 

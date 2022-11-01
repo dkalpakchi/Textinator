@@ -1,0 +1,20 @@
+{% for flagged in flagged_datapoints %}
+  {% if flagged.text_errors %}
+    <tr>
+      <td>{{ flagged.user.username }}</td>
+      <td>
+        {% for k, v in flagged.text_errors.items() %}
+          <div{% if not loop.last %} class="mb-2"{% endif %}>
+            <div class="is-size-7">
+              {{k|from_ts|naturaltime}}
+            </div>
+            {{v}}
+          </div>
+        {% endfor %}
+      </td>
+      <td>
+        <a target="_blank" href="{{ url('projects:get_data', kwargs={'source_id': flagged.datasource_id, 'dp_id': flagged.datapoint}) }}">Show text</a>
+      </td>
+    </tr>
+  {% endif %}
+{% endfor %}

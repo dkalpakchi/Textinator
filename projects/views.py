@@ -853,7 +853,7 @@ def data_explorer(request, proj):
     if is_author or is_shared or project.has_participant(request.user):
         is_admin = is_author or is_shared
 
-        flagged_datapoints = Tm.DataAccessLog.objects.filter(project=project).exclude(flags="")
+        flagged_datapoints = Tm.DataAccessLog.objects.filter(project=project).exclude(flags="").order_by('-dt_created')
         if not is_admin:
             flagged_datapoints = flagged_datapoints.filter(user=request.user)
 
@@ -876,11 +876,25 @@ def data_explorer(request, proj):
             'total_relations': total_relations,
             'total_inputs': inputs.count(),
             'total_batches': len(batch_ids),
-            'flagged_datapoints': flagged_datapoints,
+            'flagged_datapoints': flagged_datapoints[:300],
+            'flagged_num': flagged_datapoints.count(),
             'contexts': contexts
         }
         return render(request, 'projects/data_explorer.html', ctx)
     else:
+        raise Http404
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_data(request, source_id, dp_id):
+    try:
+        ds = Tm.DataSource.objects.get(pk=source_id)
+        return render(request, 'projects/raw_datapoint.html', {
+            'ds': ds,
+            'text': ds.get(dp_id)
+        })
+    except DataSource.DoesNotExist:
         raise Http404
 
 
@@ -933,6 +947,32 @@ def flag_text(request, proj):
     dal.save()
     return JsonResponse({})
 
+
+@login_required
+@require_http_methods(["POST"])
+def flagged_search(request, proj):
+    project = Tm.Project.objects.get(pk=proj)
+    data = json.loads(request.body)
+    query = data.get('query')
+
+    if query:
+        is_author, is_shared = project.author == request.user, project.shared_with(request.user)
+
+        if is_author or is_shared or project.has_participant(request.user):
+            is_admin = is_author or is_shared
+
+            flagged = Tm.DataAccessLog.objects.filter(project=project).exclude(
+                flags="")
+            if not is_admin:
+                flagged = flagged.filter(user=request.user)
+
+            res = flagged.filter(flags__search=query)
+            return JsonResponse({
+                "res": render_to_string('partials/_flagged_summary.html', {
+                    'flagged_datapoints': res
+                })
+            })
+    return JsonResponse({'res': ""})
 
 @login_required
 def time_report(request, proj):

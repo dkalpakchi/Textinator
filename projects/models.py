@@ -1121,6 +1121,11 @@ class DataAccessLog(CommonModel):
     is_skipped = models.BooleanField(_("is skipped?"), default=False,
         help_text=_("Indicates whether the datapoint was skipped by an annotator"))
 
+    @property
+    def text_errors(self):
+        flags_dict = json.loads(self.flags)
+        return flags_dict.get("text_errors")
+
 
 # TODO: put constraints on the markers - only markers belonging to project or task_type can be put!
 # TODO: for one might want to mark pronouns 'det', 'den' iff they are really pronouns and not articles

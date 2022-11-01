@@ -3,6 +3,7 @@
 {% block custom_styles %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <link rel="stylesheet" href="{{ static('styles/data-explorer.css') }}">
+<link rel="stylesheet" href="{{ static('@loadingio/css-spinner/index.min.css') }}">
 {% endblock %}
 
 {% block custom_scripts %}
@@ -56,7 +57,7 @@
     </div>
     <div class="message-body">
       <div class="mt-3 mb-3">
-        In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_datapoints.count()}} flagged text(s)
+        In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_num}} flagged text(s)
       </div>
 
       <script type="text/javascript" src="{{ static('highcharts/highcharts.js') }}"></script>
@@ -116,28 +117,29 @@
           </p>
         </div>
         <div class="message-body">
-          <table class="table is-fullwidth">
+          <form id="flaggedSearchForm" method="POST" data-action="{{ url('projects:flagged_search', kwargs={'proj': project.pk})}}">
+            {{csrf_input}}
+            <div class="field has-addons">
+              <div class="control is-expanded">
+                <input name="query" class="input" type="text" placeholder="Search within flagged texts">
+              </div>
+              <div class="control">
+                <input type='submit' class="button is-info" value='Search'>
+              </div>
+            </div>
+          </form>
+          <table class="table is-fullwidth flagged">
             <thead>
               <tr>
                 <th>User</th>
                 <th>Comment</th>
-                <th>Text sample</th>
+                <th>Text</th>
               </tr>
             </thead>
-            <tbody>
-              {% for flagged in flagged_datapoints %}
-                <tr>
-                  <td>{{ flagged.user.username }}</td>
-                  <td>{{ flagged.flags }}</td>
-                  <td>
-                    {% if flagged.datasource.get(flagged.datapoint) is none %}
-                      NA
-                    {% else %}
-                      {{ flagged.datasource.get(flagged.datapoint)|truncate(100,True) }}
-                    {% endif %}
-                  </td>
-                </tr>
-              {% endfor %}
+            <tbody id="flaggedResults">
+              {% with flagged_datapoints=flagged_datapoints %}
+                {% include 'partials/_flagged_summary.html' %}
+              {% endwith %}
             </tbody>
           </table>
         </div>
