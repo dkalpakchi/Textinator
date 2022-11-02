@@ -107,7 +107,7 @@
 
   {% if flagged_datapoints %}
     <div class="mb-4">
-      <article id="flaggedCollapse" class="message is-danger">
+      <article id="flaggedCollapse" class="message is-danger flagged-area">
         <div class="message-header">
           <p>
             <span class="icon is-small mr-2">
@@ -128,20 +128,15 @@
               </div>
             </div>
           </form>
-          <table class="table is-fullwidth flagged">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Comment</th>
-                <th>Text</th>
-              </tr>
-            </thead>
-            <tbody id="flaggedResults">
-              {% with flagged_datapoints=flagged_datapoints %}
-                {% include 'partials/_flagged_summary.html' %}
-              {% endwith %}
-            </tbody>
-          </table>
+          <div class="flagged-wrapper">
+            <table class="table is-fullwidth is-hoverable">
+              <tbody id="flaggedResults">
+                {% with flagged_datapoints=flagged_datapoints %}
+                  {% include 'partials/_flagged_summary.html' %}
+                {% endwith %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </article>
     </div>

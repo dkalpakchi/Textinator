@@ -1,0 +1,18 @@
+<div class="control is-marker-w80{% if values|length == 1%} single{% endif %}">
+  {% if values|is_list %}
+    {% if values|length > 1 %}
+      <p class="has-text-weight-bold">{{name|title}}</p>
+    {% endif %}
+    {% for v in values %}
+      <label class="checkbox" for="{{name}}_{{loop.index0}}">
+        <input id="{{name}}_{{loop.index0}}" type="checkbox" name="{{name}}" value="{{v}}">
+        {{v}}
+      </label>
+    {% endfor %}
+  {% else %}
+    <label class="checkbox" for="{{name}}_0">
+      <input id="{{name}}_0" type="checkbox" name="{{name}}" value="{{values}}">
+      {{values}}
+    </label>
+  {% endif %}
+</div>

@@ -5,12 +5,16 @@ $(document).ready(function () {
   });
 
   $(".tabs li[data-tab]").on("click", function () {
-    var tab = $(this).data("tab");
+    var tab = $(this).data("tab"),
+      $ul = $(this).closest("ul"),
+      $container = $ul.parent();
 
-    $(".tabs li").removeClass("is-active");
+    $ul.find("li").removeClass("is-active");
     $(this).addClass("is-active");
 
-    $("#tab-content div").removeClass("is-active");
+    $('div[data-from="' + $container.data("for") + '"]').removeClass(
+      "is-active"
+    );
     $('div[data-content="' + tab + '"]').addClass("is-active");
   });
 

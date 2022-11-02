@@ -6,7 +6,7 @@
     <div class="message-body">
       {% set tabs, grouped_markers = project.free_markers(intelligent_groups=True) %}
       {% if tabs|length > 1%}
-        <div class="tabs">
+        <div class="tabs" data-for="markersTabContent">
           <ul>
             {% for tab in tabs %}
               <li{% if loop.index0 == 0 %} class="is-active"{% endif %} data-tab="{{tab}}">
@@ -16,7 +16,7 @@
           </ul>
         </div>
       {% endif %}
-      <div id="tab-content">
+      <div id="markersTabContent">
       {% for tab, tab_groups in grouped_markers %}
         <div data-content="{{ tab }}"{% if tab == tabs[0] %} class="is-active"{% endif %}>
         {% for key, group in tab_groups %}

@@ -1,6 +1,18 @@
-#flaggedCollapse .message-body,
-#flaggedCollapse table {
+.flagged-area {
+  max-height: 500px;
+  overflow-y: hidden;
+}
+
+.flagged-area .message-body,
+.flagged-area table {
   background-color: #feecf0;
+}
+
+.flagged-area .message-body div.flagged-wrapper {
+  display: block;
+  max-height: 400px;
+  overflow-y: scroll;
+  width: 100%;
 }
 
 .explorer.container .select,

@@ -19,7 +19,11 @@
         {# <a id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>{{ _("undo last")|capitalize }}</span></a> #}
         <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle">
           <span class="icon"><i class="fas fa-file-alt"></i></span>
-          <span>{{ _("new text")|capitalize }}</span>
+          <span>{{ _("get next")|capitalize }}</span>
+        </a>
+        <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="skipForLater">
+          <span class="icon"><i class="fas fa-cloud-upload-alt"></i></span>
+          <span>{{ _("save for later")|capitalize }}</span>
         </a>
         <a id="editingModeButton" href="{{ url('projects:editing', kwargs={'proj': project.pk}) }}" class="button" data-mode="o">
           <span class="icon"><i class="fas fa-edit"></i></span>

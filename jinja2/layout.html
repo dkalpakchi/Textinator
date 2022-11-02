@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html class="has-navbar-fixed-top" {% if request.path|is_inside %}is-inside="true"{% endif %}>
+{% set is_inside_project=request.path|is_inside %}
+<html class="has-navbar-fixed-top" {% if is_inside_project %}is-inside="true"{% endif %}>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,7 +27,7 @@
   </head>
   <body root='{{root_url}}'>
     {% include 'partials/_navbar.html' %}
-    <div class="container is-fluid tt-workspace">
+    <div class="container is-fluid{% if is_inside_project %} tt-workspace{% endif %}">
       {% block content %}{% endblock %}
     </div>
     {% block custom_body_scripts %}{% endblock %}

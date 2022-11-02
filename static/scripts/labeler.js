@@ -3350,9 +3350,11 @@
       });
     });
 
-    function getNewText(confirmationCallback, $button) {
+    function getNewText(confirmationCallback, $button, saveForLater) {
       let confirmation = confirmationCallback();
       $button.attr("disabled", true);
+
+      if (!utils.isDefined(saveForLater)) saveForLater = false;
 
       if (confirmation) {
         let $el = $(labelerModule.selectorArea);
@@ -3366,6 +3368,7 @@
             csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
             sId: $el.attr("data-s"),
             dpId: $el.attr("data-dp"),
+            saveForLater: saveForLater,
           },
           success: function (d) {
             // update text, source id and datapoint id
@@ -3542,11 +3545,32 @@
       // TODO: should I also count relations here?
       getNewText(function () {
         let confirmationText =
-          "All your unsubmitted labels will be removed. Are you sure?";
+          "All your unsubmitted annotations will be removed. Are you sure?";
         return labelerModule.countUnsubmittedChunks() > 0
           ? confirm(confirmationText)
           : true;
       }, $button);
+    });
+
+    $("#skipForLater").on("click", function (e) {
+      e.preventDefault();
+
+      let $button = $(this);
+
+      if ($button.attr("disabled")) return;
+
+      // TODO: should I also count relations here?
+      getNewText(
+        function () {
+          let confirmationText =
+            "You chose to save this text for later. All your unsubmitted annotations will be removed. Are you sure?";
+          return labelerModule.countUnsubmittedChunks() > 0
+            ? confirm(confirmationText)
+            : true;
+        },
+        $button,
+        true
+      );
     });
 
     // get a new article from the data source(s)
@@ -3572,13 +3596,19 @@
       e.preventDefault();
       let $form = $("#flagTextForm");
 
+      let data = $form.serializeObject();
+      let csrf = data["csrfmiddlewaretoken"];
+
+      if (data.hasOwnProperty("csrfmiddlewaretoken"))
+        delete data["csrfmiddlewaretoken"];
+
       $.ajax({
         type: $form.attr("method"),
         url: $form.attr("action"),
         dataType: "json",
         data: {
-          csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-          feedback: $form.find('textarea[name="feedback"]').val(),
+          csrfmiddlewaretoken: csrf,
+          feedback: JSON.stringify(data),
           ds_id: labelerModule.selectorArea.getAttribute("data-s"),
           dp_id: labelerModule.selectorArea.getAttribute("data-dp"),
         },

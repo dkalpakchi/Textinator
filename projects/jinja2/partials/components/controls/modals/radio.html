@@ -1,0 +1,11 @@
+<div class="control is-marker-w90">
+  <p class="has-text-weight-bold">
+    {{name|title}}
+  </p>
+  {% for v in values %}
+    <label class="radio" for="{{name}}_{{loop.index0}}">
+      <input id="{{name}}_{{loop.index0}}" type="radio" name="{{name}}" value="{{v}}">
+      {{v}}
+    </label>
+  {% endfor %}
+</div>

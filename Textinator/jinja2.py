@@ -120,6 +120,9 @@ def is_inside(path):
 def from_ts(ts):
     return datetime.fromtimestamp(float(ts))
 
+def to_list(x):
+    return list(x)
+
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('jinja2.ext.i18n')
@@ -148,6 +151,7 @@ def environment(**options):
     env.filters["is_list"] = is_list
     env.filters["is_inside"] = is_inside
     env.filters["from_ts"] = from_ts
+    env.filters["to_list"] = to_list
 
     env.install_gettext_translations(translation)
 

@@ -5,9 +5,11 @@
       <td>
         {% for k, v in flagged.text_errors.items() %}
           <div{% if not loop.last %} class="mb-2"{% endif %}>
-            <div class="is-size-7">
-              {{k|from_ts|naturaltime}}
-            </div>
+            {% if k %}
+              <div class="is-size-7">
+                {{k|from_ts|naturaltime}}
+              </div>
+            {% endif %}
             {{v}}
           </div>
         {% endfor %}

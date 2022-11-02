@@ -8,14 +8,59 @@
         </p>
       </div>
       <div class="card-content">
-        <form id="flagTextForm" action="{{ url('projects:flag_text', kwargs={'proj':project.pk}) }}" method="POST">
+        <form id="flagTextForm" action="{{ url('projects:flag_text', kwargs={'proj':project.pk}) }}" method="POST" class="flag-controls">
           {{ csrf_input }}
-          <div class="field">
-            <label class="label">{{ _("What is the problem with this text?") }}</label>
-            <div class="control">
-              <textarea name="feedback" class="textarea" placeholder="{{ _('Please describe any problems you experience, e.g. weird formatting, wrong sentence starts, empty text, etc.') }}"></textarea>
+
+          {% set flags_config = project.flags_config %}
+
+          {% if flags_config %}
+            {% set tabs = flags_config.keys()|to_list %}
+
+            {% if tabs|length > 1 %}
+              <div class="tabs" data-for="flaggedTabsContent">
+                <ul>
+                  {% for tab in tabs %}
+                    {% if flags_config[tab] is not none %}
+                      <li{% if loop.index0 == 0 %} class="is-active"{% endif %} data-tab="{{tab}}">
+                        <a class="no-decoration">{{tab|title}}</a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            {% for tab in tabs %}
+              {% if flags_config[tab] is not none %}
+                <div class="field {% if tab == tabs[0] %} is-active{% endif %}" data-from="flaggedTabsContent" data-content="{{ tab }}">
+                  {% for group, fields in flags_config[tab].items() %}
+                    {% if group == "checkboxes" %}
+                      {% for name, values in fields %}
+                        {% include 'partials/components/controls/modals/checkboxes.html' %}
+                      {% endfor %}
+                    {% elif group == "radio" %}
+                      {% for name, values in fields %}
+                        {% include 'partials/components/controls/modals/radio.html' %}
+                      {% endfor %}
+                    {% elif group == "text" %}
+                      {% set value = fields %}
+                      {% include 'partials/components/controls/modals/text_input.html' %}
+                    {% elif group == "textarea" %}
+                      {% set value = fields %}
+                      {% include 'partials/components/controls/modals/textarea.html' %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <div class="field">
+              <label class="label">{{ _("What is the problem with this text?") }}</label>
+              <div class="control">
+                <textarea name="feedback" class="textarea" placeholder="{{ _('Please describe any problems you experience, e.g. weird formatting, wrong sentence starts, empty text, etc.') }}"></textarea>
+              </div>
             </div>
-          </div>
+          {% endif %}
 
           <div class="field">
             <div class="control">

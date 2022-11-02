@@ -2,7 +2,7 @@
 import json
 
 class DatapointInfo:
-    def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, proj_id=None, is_empty=False, no_data=False, is_dialogue=False):
+    def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, proj_id=None, is_empty=False, no_data=False, is_dialogue=False, is_delayed=False):
         self.id = dp_id
         self.text = text
         if ds:
@@ -23,6 +23,7 @@ class DatapointInfo:
         self.no_data = no_data
         self.is_dialogue = is_dialogue
         self.project_id = proj_id
+        self.is_delayed = is_delayed
 
     def to_json(self):
         return {

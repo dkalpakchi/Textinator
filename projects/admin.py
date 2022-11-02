@@ -223,9 +223,12 @@ class ProjectForm(forms.ModelForm):
             'temporary_message', 'reminders', 'dt_publish', 'dt_finish', 'collaborators',
             'task_type', 'guidelines', 'video_summary', 'datasources', 'show_datasource_identifiers',
             'is_open', 'is_peer_reviewed', 'allow_selecting_labels', 'disable_submitted_labels',
-            'disjoint_annotation', 'auto_text_switch', 'data_order'
+            'disjoint_annotation', 'auto_text_switch', 'data_order', 'modal_configs'
             #'max_markers_per_input', 'has_intro_tour', 'round_length', 'points_scope', 'points_unit'
         ]
+        widgets = {
+                'modal_configs': TextinatorJSONEditorWidget({"type": "object"}, "modal_configs", collapsed=True),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -332,7 +335,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
                 'dt_publish', 'dt_finish', 'collaborators', 'author')
         }),
         (_('task specification').title(), {
-            'fields': ('task_type', 'guidelines', 'reminders', 'video_summary')
+            'fields': ('task_type', 'guidelines', 'reminders', 'video_summary', 'modal_configs')
         }),
         (_('data').title(), {
             'fields': ('datasources', 'show_datasource_identifiers',)

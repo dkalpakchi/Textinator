@@ -434,7 +434,7 @@ textarea {
   padding-right: 0;
   margin-bottom: 5px;
   left: 0;
-  transition: all 0.5s;
+  transition: left 0.75s, padding-right 0.4s;
 }
 
 .actions-area .button .icon:first-child:not(:last-child) {
@@ -449,7 +449,7 @@ textarea {
 }
 
 .actions-area .button:hover {
-  left: -5em;
+  left: -6.5em;
   width: fit-content;
   width: -moz-fit-content;
   width: -webkit-fit-content;
@@ -578,6 +578,14 @@ textarea {
   background: rgba(0, 0, 0, 0.1);
 }
 
+.flag-controls .field .control:not(.single) {
+  margin-bottom: 0.5em;
+}
+
+.flag-controls .field > .control:not(.single) {
+  margin-top: 0.5em;
+}
+
 .explorer {
   max-width: 1366px;
   margin: 0 auto;
@@ -679,7 +687,8 @@ label.error {
   overflow-y: scroll;
 }
 
-.markers.message .message-body .tabs {
+.markers.message .message-body .tabs,
+.modal .tabs {
   margin-bottom: 0.75em;
   margin-top: -1em;
 }
@@ -797,6 +806,16 @@ label.help.is-danger {
   padding-bottom: 1.5em;
 }
 
+/*
+ * Checkboxes
+ */
+.checkbox + .checkbox {
+  margin-left: 0.5em;
+}
+
+/*
+ * Radio buttons
+ */
 .vertical-radio .radio {
   display: flex;
   margin-left: 0;
@@ -838,11 +857,14 @@ label.help.is-danger {
   vertical-align: top;
 }
 
-#tab-content div[data-content] {
+/*
+ * Tabs
+ */
+div[data-content] {
   display: none;
 }
 
-#tab-content div[data-content].is-active {
+div[data-content].is-active {
   display: block;
 }
 

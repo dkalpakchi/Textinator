@@ -18,6 +18,7 @@ from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
@@ -328,37 +329,41 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                 d = Tm.DataSource.objects.get(pk=dp_info.source_id)
             except Tm.DataSource.DoesNotExist:
                 print("DataSource does not exist")
-                pass
+                raise Http404
 
-            if proj.is_sampled(replacement=True):
-                try:
-                    dal = Tm.DataAccessLog.objects.get(
-                        user=u, datapoint=str(dp_info.id),
-                        project=proj, datasource=d
-                    )
-                except Tm.DataAccessLog.DoesNotExist:
+            if dp_info.is_delayed:
+                dal = Tm.DataAccessLog.objects.filter(
+                    user=u, datapoint=str(dp_info.id),
+                    project=proj, datasource=d,
+                    is_submitted=False, is_skipped=False,
+                    is_delayed=True
+                ).order_by('-dt_updated').first()
+                dal.is_delayed = False
+                dal.save()
+            else:
+                if proj.is_sampled(replacement=True):
                     dal = Tm.DataAccessLog.objects.create(
                         user=u, datapoint=str(dp_info.id),
                         project=proj, datasource=d,
-                        is_submitted=False, is_skipped=False
-                    )
-            else:
-                if proj.auto_text_switch:
-                    Tm.DataAccessLog.objects.get_or_create(
-                        user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
-                        is_submitted=False, is_skipped=False
+                        is_submitted=False
                     )
                 else:
-                    Tm.DataAccessLog.objects.get_or_create(
-                        user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
-                        is_skipped=False
-                    )
+                    if proj.auto_text_switch:
+                        Tm.DataAccessLog.objects.get_or_create(
+                            user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
+                            is_submitted=False
+                        )
+                    else:
+                        Tm.DataAccessLog.objects.get_or_create(
+                            user=u, project=proj, datasource=d, datapoint=str(dp_info.id),
+                            is_skipped=False
+                        )
 
-            try:
-                logs = Tm.DataAccessLog.objects.filter(user=u, project=proj, datasource=d, is_submitted=True).count()
-            except Tm.DataAccessLog.DoesNotExist:
-                print("DataAccessLog does not exist")
-                pass
+                try:
+                    logs = Tm.DataAccessLog.objects.filter(user=u, project=proj, datasource=d, is_submitted=True).count()
+                except Tm.DataAccessLog.DoesNotExist:
+                    print("DataAccessLog does not exist")
+                    pass
 
         menu_items, project_markers = {}, Tm.MarkerVariant.objects.filter(project=proj)
         for m in project_markers:
@@ -434,6 +439,7 @@ def record_datapoint(request, proj):
             datasource=batch_info.data_source
         ).order_by('-dt_updated').first()
         dal.is_submitted = True
+        dal.is_delayed = False
         dal.save()
 
         batch = Tm.Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
@@ -724,33 +730,49 @@ def new_article(request, proj):
     if ds_id:
         data_source = Tm.DataSource.objects.get(pk=ds_id)
         dp_id = request.POST.get('dpId')
+        save_for_later = request.POST.get('saveForLater') == "true"
+        print(save_for_later)
         if dp_id:
             try:
                 log = Tm.DataAccessLog.objects.get(
                     user=request.user, project=project,
                     datasource=data_source, datapoint=str(dp_id), is_skipped=False
                 )
-                log.is_skipped = True
+                log.is_skipped = not save_for_later
+                log.is_delayed = save_for_later
                 log.save()
             except Tm.DataAccessLog.DoesNotExist:
                 Tm.DataAccessLog.objects.create(
                     user=request.user, project=project,
                     datasource=data_source, datapoint=str(dp_id),
-                    is_submitted=False, is_skipped=True
+                    is_submitted=False, is_skipped=not save_for_later,
+                    is_delayed=save_for_later
                 )
 
     dp_info = project.data(request.user, True)
+    print(dp_info.is_delayed)
     request.session['dp_info_{}'.format(proj)] = dp_info.to_json()
 
     if dp_info.is_empty:
         text = render_to_string('partials/_great_job.html')
     else:
         data_source = Tm.DataSource.objects.get(pk=dp_info.source_id)
-        Tm.DataAccessLog.objects.get_or_create(
-            user=request.user, datapoint=str(dp_info.id),
-            project=project, datasource=data_source,
-            is_submitted=False, is_skipped=False
-        )
+        if dp_info.is_delayed:
+            log = Tm.DataAccessLog.objects.get(
+                user=request.user, datapoint=str(dp_info.id),
+                project=project, datasource=data_source,
+                is_submitted=False, is_skipped=False,
+                is_delayed=True
+            )
+            log.is_delayed = False
+            log.save()
+        else:
+            Tm.DataAccessLog.objects.get_or_create(
+                user=request.user, datapoint=str(dp_info.id),
+                project=project, datasource=data_source,
+                is_submitted=False, is_skipped=False,
+                is_delayed=False
+            )
 
         text = Th.apply_premarkers(project, dp_info.text)
 
@@ -921,10 +943,11 @@ def export(request, proj):
     except Project.DoesNotExist:
         raise Http404
 
+
 @login_required
 @require_http_methods(["POST"])
 def flag_text(request, proj):
-    feedback = request.POST.get('feedback')
+    feedback = json.loads(request.POST.get('feedback'))
     dp_id = request.POST.get('dp_id')
     ds_id = request.POST.get('ds_id')
 
@@ -937,13 +960,13 @@ def flag_text(request, proj):
         is_submitted=False, is_skipped=True
     )
     if not dal.flags:
-        dal.flags = json.dumps({})
-    flags = json.loads(dal.flags)
+        dal.flags = {}
+    flags = dal.flags
     if 'text_errors' not in flags:
         flags['text_errors'] = {}
     ts = time.time()
     flags['text_errors'][ts] = feedback
-    dal.flags = json.dumps(flags)
+    dal.flags = flags
     dal.save()
     return JsonResponse({})
 
@@ -955,24 +978,34 @@ def flagged_search(request, proj):
     data = json.loads(request.body)
     query = data.get('query')
 
+    is_author, is_shared = project.author == request.user, project.shared_with(request.user)
+
+    if is_author or is_shared or project.has_participant(request.user):
+        is_admin = is_author or is_shared
+
+        flagged = Tm.DataAccessLog.objects.filter(project=project).exclude(
+            flags="")
+        if not is_admin:
+            flagged = flagged.filter(user=request.user)
+
     if query:
-        is_author, is_shared = project.author == request.user, project.shared_with(request.user)
+        vector = SearchVector('flags')
+        query = SearchQuery(query)
+        res = flagged.annotate(
+            search=vector
+        ).filter(
+            search=query
+        ).annotate(
+            rank=SearchRank(vector, query)
+        ).order_by('-rank')
+    else:
+        res = flagged.order_by('-dt_created')
+    return JsonResponse({
+        "res": render_to_string('partials/_flagged_summary.html', {
+            'flagged_datapoints': res
+        })
+    })
 
-        if is_author or is_shared or project.has_participant(request.user):
-            is_admin = is_author or is_shared
-
-            flagged = Tm.DataAccessLog.objects.filter(project=project).exclude(
-                flags="")
-            if not is_admin:
-                flagged = flagged.filter(user=request.user)
-
-            res = flagged.filter(flags__search=query)
-            return JsonResponse({
-                "res": render_to_string('partials/_flagged_summary.html', {
-                    'flagged_datapoints': res
-                })
-            })
-    return JsonResponse({'res': ""})
 
 @login_required
 def time_report(request, proj):

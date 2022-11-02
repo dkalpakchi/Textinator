@@ -7,8 +7,9 @@ import string
 import logging
 import json
 import uuid
+import copy
 import hashlib
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from itertools import groupby
 
 from django.db import models, transaction
@@ -424,6 +425,8 @@ class Project(CloneMixin, CommonModel):
         help_text=_("Video introducing people to the annotation task at hand (if applicable)"))
     video_remote = models.URLField(max_length=200, null=True, blank=True,
         help_text=_("A URL for video summary to be embedded (e.g. from YouTube)"))
+    modal_configs = models.JSONField(_("Configuration for the fields included in project's modal windows"), null=True, blank=True,
+        help_text=_("JSON configuration for the modal windows in the project. Currently available keys for modals are: 'flagged'"))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -501,7 +504,8 @@ class Project(CloneMixin, CommonModel):
                 text=ds_def.postprocess(ds_instance[dp_id]),   # a post-processed random datapoint from the chosen dataset
                 ds=ds_instance,                                # instantiated DataSource of a specific type
                 ds_def=ds_def,                                 # DataSource
-                proj_id=self.pk
+                proj_id=self.pk,
+                is_delayed=log.is_delayed
             )
 
     def instantiate_source(self, datasource):
@@ -532,8 +536,8 @@ class Project(CloneMixin, CommonModel):
     def __get_next_source_log(self, user, ds_pk):
         try:
             last_next_source_log = DataAccessLog.objects.filter(
-                user=user, project=self, datasource__pk=ds_pk
-            ).order_by('-dt_updated').first()
+                user=user, project=self, datasource__pk=ds_pk,
+            ).order_by('-datapoint').first()
             if last_next_source_log:
                 next_key = last_next_source_log.datapoint + 1
             else:
@@ -541,6 +545,14 @@ class Project(CloneMixin, CommonModel):
         except DataAccessLog.DoesNotExist:
             last_next_source_log, next_key = None, 0
         return last_next_source_log, next_key
+
+    def __fetch_saved_for_later(self, user):
+        log = DataAccessLog.objects.filter(user=user, project=self, is_delayed=True).order_by('-dt_updated')
+
+        if log.count() > 0:
+            return self.get_dp_from_log(log.first())
+        else:
+            return None
 
     def data(self, user, force_switch=False):
         """
@@ -564,7 +576,7 @@ class Project(CloneMixin, CommonModel):
         Returns:
             DatapointInfo: The instance holding the information about the datapoint to be annotated
         """
-        log = DataAccessLog.objects.filter(user=user, project=self, is_submitted=False, is_skipped=False).first()
+        log = DataAccessLog.objects.filter(user=user, project=self, is_submitted=False, is_skipped=False, is_delayed=False).first()
         log2 = DataAccessLog.objects.filter(user=user, project=self, is_submitted=True, is_skipped=False).order_by('-dt_updated').first()
 
         if log2 and not self.auto_text_switch and not force_switch:
@@ -577,7 +589,7 @@ class Project(CloneMixin, CommonModel):
                 if dp_info: return dp_info
             else:
                 log2.is_skipped = True
-                log2.flags = "manual switching: invalid datasource"
+                log2.flags["errors"].append("manual switching: invalid datasource")
                 log2.save()
         elif log:
             # Auto switching
@@ -586,9 +598,10 @@ class Project(CloneMixin, CommonModel):
                 if dp_info: return dp_info
             else:
                 log.is_skipped = True
-                log.flags = "auto switching: invalid datasource"
+                log.flags["errors"].append("auto switching: invalid datasource")
                 log.save()
 
+        print("HHH")
         datasources = []
         for source in self.datasources.all():
             source_data = self.instantiate_source(source)
@@ -614,7 +627,6 @@ class Project(CloneMixin, CommonModel):
                         logs = DataAccessLog.objects.filter(project=self, user=user).all()
                     for log in logs:
                         dp_taboo[log.datasource.pk].add(log.datapoint)
-
 
                 # TODO: introduce data source mixing strategies?
                 # TODO: choose a dataset with a prior inversely proportional to the number of datapoints in them?
@@ -648,7 +660,12 @@ class Project(CloneMixin, CommonModel):
                         ds, postprocess, idx = self.__unpack_datasource(datasources, ds_ind)
 
                 if finished_all:
-                    return DatapointInfo(is_empty=True, proj_id=self.pk)
+                    print("HERE")
+                    fetched = self.__fetch_saved_for_later(user)
+                    if fetched:
+                        return fetched
+                    else:
+                        return DatapointInfo(is_empty=True, proj_id=self.pk)
                 else:
                     # get the id of the random datapoint and the datapoint itself
                     dp_id, dp = ds.get_random_datapoint()
@@ -668,7 +685,9 @@ class Project(CloneMixin, CommonModel):
                     )
             else:
                 # means the order is not random
-                last_log = DataAccessLog.objects.filter(user=user, project=self).order_by('-dt_updated').first()
+                last_log = DataAccessLog.objects.filter(user=user, project=self).order_by('-datapoint').first()
+                if last_log:
+                    print("LL-ID", last_log.datapoint)
                 is_parallel = self.is_ordered(parallel=True)
 
                 if last_log:
@@ -711,7 +730,12 @@ class Project(CloneMixin, CommonModel):
                         break
 
                 if finished_all:
-                    return DatapointInfo(is_empty=True, proj_id=self.pk)
+                    print("HERE2")
+                    fetched = self.__fetch_saved_for_later(user)
+                    if fetched:
+                        return fetched
+                    else:
+                        return DatapointInfo(is_empty=True, proj_id=self.pk)
                 else:
                     return DatapointInfo(
                         dp_id=next_key,
@@ -734,6 +758,32 @@ class Project(CloneMixin, CommonModel):
 
     def shared_with(self, user):
         return user in self.collaborators.all()
+
+    @property
+    def flags_config(self, ordered=True):
+        # The structure is like this:
+        # { tab: { type: {name: {order: x, items: [] } } } }
+        raw_cfg = self.modal_configs.get("flags")
+        if ordered:
+            cfg = copy.deepcopy(raw_cfg)
+            if cfg:
+                for tab in list(cfg.keys()):
+                    if cfg[tab]:
+                        groups = list(cfg[tab].keys())
+                        for group_type in list(cfg[tab].keys()):
+                            items = [
+                                ("{}_{}".format(tab, name), item["items"]) for name, item in sorted(
+                                    list(cfg[tab][group_type].items()),
+                                    key=lambda x: x[1].get("order")
+                                )
+                            ]
+
+                            cfg[tab][group_type] = items
+                    else:
+                        del cfg[tab]
+            return cfg
+        else:
+            return raw_cfg
 
     def __str__(self):
         return self.title
@@ -1096,6 +1146,9 @@ class MarkerRestriction(CommonModel):
             return None
 
 
+def get_default_flags_dict():
+    return dict([('text_errors', dict()), ('errors', dict()), ('delayed', False)])
+
 class DataAccessLog(CommonModel):
     """
     Holds data access logs for each annotator per project. We keep track of:
@@ -1114,17 +1167,23 @@ class DataAccessLog(CommonModel):
     datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     datapoint = models.IntegerField(_("datapoint ID"),
         help_text=_("As ordered in the original dataset"))
-    flags = models.TextField(_("flags"), default="", blank=True,
+    flags = models.JSONField(_("flags"), default=get_default_flags_dict, null=True, blank=True,
         help_text=_("Additional information provided by the annotator"))
     is_submitted = models.BooleanField(_("is submitted?"), default=False,
         help_text=_("Indicates whether the datapoint was successfully submitted by an annotator"))
     is_skipped = models.BooleanField(_("is skipped?"), default=False,
         help_text=_("Indicates whether the datapoint was skipped by an annotator"))
+    is_delayed = models.BooleanField(_("is saved for later?"), default=False,
+        help_text=_("Indicates whether the datapoint for skipped and saved for later by an annotator"))
 
     @property
     def text_errors(self):
-        flags_dict = json.loads(self.flags)
-        return flags_dict.get("text_errors")
+        terr = self.flags.get("text_errors")
+        if isinstance(terr, str):
+            # To ensure backward compatibility with previous versions
+            return {None: terr}
+        else:
+            return terr
 
 
 # TODO: put constraints on the markers - only markers belonging to project or task_type can be put!
