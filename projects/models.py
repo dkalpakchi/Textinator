@@ -493,7 +493,7 @@ class Project(CloneMixin, CommonModel):
         ds_def = log.datasource
         source_cls = DataSource.type2class(ds_def.source_type)
         spec = json.loads(ds_def.spec.replace('\r\n', ' ').replace('\n', ' '))
-        spec['username'] = ds_def.owner.username
+        spec['username'] = ds_def.owner.username if ds_def.owner else ""
         ds_instance = source_cls(spec)
         dp_id = log.datapoint
         if ds_instance[dp_id] is not None:
