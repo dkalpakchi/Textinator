@@ -115,7 +115,7 @@ def is_list(val):
     return isinstance(val, list)
 
 def is_inside(path):
-    return bool(re.match(INSIDE_PROJECT_RE, path))
+    return bool(re.search(INSIDE_PROJECT_RE, path))
 
 def from_ts(ts):
     return datetime.fromtimestamp(float(ts))
