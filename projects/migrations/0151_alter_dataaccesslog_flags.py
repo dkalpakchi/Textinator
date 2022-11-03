@@ -10,11 +10,14 @@ def reassign_flags(apps, schema_editor):
     DataAccessLog = apps.get_model('projects', 'DataAccessLog')
 
     flagged = DataAccessLog.objects.exclude(flags="")
-    altered = 0
+    altered, resaved = 0, 0
 
     for f_dal in flagged:
         try:
-            json.loads(f_dal.flags)
+            if not isinstance(f_dal.flags, dict):
+                f_dal.flags_j = json.loads(f_dal.flags)
+                f_dal.save()
+                resaved += 1
         except json.decoder.JSONDecodeError:
             f_dal.flags_j = {
                 "text_errors": f_dal.flags
@@ -23,7 +26,7 @@ def reassign_flags(apps, schema_editor):
             altered += 1
 
     if altered > 0:
-        print("Altered {} access logs".format(altered))
+        print("Altered {} access logs. Updated {} logs.".format(altered, resaved))
 
 
 class Migration(migrations.Migration):
