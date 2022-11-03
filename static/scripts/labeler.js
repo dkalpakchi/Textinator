@@ -3626,6 +3626,13 @@
       if (data.hasOwnProperty("csrfmiddlewaretoken"))
         delete data["csrfmiddlewaretoken"];
 
+      let keys = Object.keys(data);
+      for (let i = 0, len = keys.length; i < len; i++) {
+        if (!data[keys[i]].trim()) {
+          delete data[keys[i]];
+        }
+      }
+
       $.ajax({
         type: $form.attr("method"),
         url: $form.attr("action"),

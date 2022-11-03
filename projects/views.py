@@ -854,7 +854,7 @@ def data_explorer(request, proj):
     if is_author or is_shared or project.has_participant(request.user):
         is_admin = is_author or is_shared
 
-        flagged_datapoints = Tm.DataAccessLog.objects.filter(project=project).exclude(flags="").order_by('-dt_created')
+        flagged_datapoints = Tm.DataAccessLog.objects.filter(project=project).exclude(flags="").order_by('-dt_updated')
         if not is_admin:
             flagged_datapoints = flagged_datapoints.filter(user=request.user)
 

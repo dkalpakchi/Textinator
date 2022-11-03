@@ -3,7 +3,8 @@
     <tr>
       <td>{{ flagged.user.username }}</td>
       <td>
-        {% for k, v in flagged.text_errors.items() %}
+        {% for k in flagged.text_errors.keys()|sort|reverse %}
+          {% set v = flagged.text_errors[k] %}
           <div{% if not loop.last %} class="mb-2"{% endif %}>
             {% if k %}
               <div class="is-size-7">
