@@ -261,10 +261,6 @@ TINYMCE_DEFAULT_CONFIG = {
     'relative_urls': False
 }
 
-# TINYMCE_CALLBACKS = {
-#     'file_browser_callback': 'customFileBrowser'
-# }
-
 FILEBROWSER_MAX_UPLOAD_SIZE = 20971520 # 20MB
 
 

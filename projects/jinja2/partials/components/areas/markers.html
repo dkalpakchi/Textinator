@@ -16,9 +16,8 @@
           </ul>
         </div>
       {% endif %}
-      <div id="markersTabContent">
       {% for tab, tab_groups in grouped_markers %}
-        <div data-content="{{ tab }}"{% if tab == tabs[0] %} class="is-active"{% endif %}>
+        <div data-from="markersTabContent" data-content="{{ tab }}"{% if tab == tabs[0] %} class="is-active"{% endif %}>
         {% for key, group in tab_groups %}
           <div class="field is-grouped is-grouped-multiline{% if key == 'range' %} has-addons is-align-items-center{% endif %}">
             {% for marker in group %}
@@ -31,7 +30,6 @@
         {% endfor %}
         </div>
       {% endfor %}
-      </div>
     </div>
   </article>
 {% endif %}

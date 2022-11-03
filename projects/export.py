@@ -109,31 +109,30 @@ class Exporter:
             labels_in_relation.add(r.first_label.pk)
             labels_in_relation.add(r.second_label.pk)
             is_bidirectional[r.rule.name] = r.rule.direction == '2'
-        else:
-            if group:
-                if have_the_same_relation(group) and is_bidirectional.get(group[0]['type'], False):
-                    group = merge2cluster(group)
-                ghash = group2hash(group)
+        if group:
+            if have_the_same_relation(group) and is_bidirectional.get(group[0]['type'], False):
+                group = merge2cluster(group)
+            ghash = group2hash(group)
 
-                if ghash not in hashes:
-                    hashes.add(ghash)
+            if ghash not in hashes:
+                hashes.add(ghash)
 
-                    if group not in grouped_relations[-1]["relations"].values():
-                        grouped_relations[-1]["relations"]["{}_{}".format(batch, cluster)] = group
+                if group not in grouped_relations[-1]["relations"].values():
+                    grouped_relations[-1]["relations"]["{}_{}".format(batch, cluster)] = group
 
-            singletons = Label.objects.filter(
-                marker__project=self.__project,
-                context_id=context_id,
-                undone=False
-            ).exclude(pk__in=list(labels_in_relation))
+        singletons = Label.objects.filter(
+            marker__project=self.__project,
+            context_id=context_id,
+            undone=False
+        ).exclude(pk__in=list(labels_in_relation))
 
-            if singletons.count():
-                grouped_relations[-1]["labels"] = []
-                for sng in singletons.all():
-                    sng_obj = getattr(sng, json_exporter)()
-                    if self.__config['include_usernames']:
-                        sng_obj['annotator'] = sng.batch.user.username
-                    grouped_relations[-1]["labels"].append(sng_obj)
+        if singletons.count():
+            grouped_relations[-1]["labels"] = []
+            for sng in singletons.all():
+                sng_obj = getattr(sng, json_exporter)()
+                if self.__config['include_usernames']:
+                    sng_obj['annotator'] = sng.batch.user.username
+                grouped_relations[-1]["labels"].append(sng_obj)
         return grouped_relations
 
     def _export_pronr(self):

@@ -33,20 +33,14 @@
             {% for tab in tabs %}
               {% if flags_config[tab] is not none %}
                 <div class="field {% if tab == tabs[0] %} is-active{% endif %}" data-from="flaggedTabsContent" data-content="{{ tab }}">
-                  {% for group, fields in flags_config[tab].items() %}
+                  {% for group, name, verbose_name, values in flags_config[tab] %}
                     {% if group == "checkboxes" %}
-                      {% for name, values in fields %}
-                        {% include 'partials/components/controls/modals/checkboxes.html' %}
-                      {% endfor %}
+                      {% include 'partials/components/controls/modals/checkboxes.html' %}
                     {% elif group == "radio" %}
-                      {% for name, values in fields %}
-                        {% include 'partials/components/controls/modals/radio.html' %}
-                      {% endfor %}
+                      {% include 'partials/components/controls/modals/radio.html' %}
                     {% elif group == "text" %}
-                      {% set value = fields %}
                       {% include 'partials/components/controls/modals/text_input.html' %}
                     {% elif group == "textarea" %}
-                      {% set value = fields %}
                       {% include 'partials/components/controls/modals/textarea.html' %}
                     {% endif %}
                   {% endfor %}

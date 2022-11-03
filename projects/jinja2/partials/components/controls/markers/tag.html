@@ -1,6 +1,7 @@
+{% set is_required = marker.get_count_restrictions() == "eq1s" %}
 <span class="tag" style="background-color: {{marker.color}}; color: {{text_color}};">
   {{marker.name}}
-  {% if required %}
+  {% if is_required %}
     {% include 'partials/_form_required.html' %}
   {% endif %}
 </span>

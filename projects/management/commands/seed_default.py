@@ -14,10 +14,10 @@ from projects.models import (
 
 # python manage.py seed --mode=refresh
 
-""" Clear all data and creates addresses """
+# Clear all data and creates addresses
 MODE_REFRESH = 'refresh'
 
-""" Clear all data and do not create any object """
+# Clear all data and do not create any object
 MODE_CLEAR = 'clear'
 
 logger = logging.getLogger(__name__)

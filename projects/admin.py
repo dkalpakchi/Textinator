@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-import json
-
 from django.contrib import admin
 from django.db.models import Q
 from django import forms
 from django.conf import settings
-from django.contrib.auth.models import User, Permission
-from django.contrib.admin import DateFieldListFilter
+from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -15,7 +12,7 @@ import nested_admin
 # from modeltranslation.admin import TranslationAdmin
 # from guardian.admin import GuardedModelAdmin
 
-from .models import *
+import projects.models as Tm
 
 
 class CommonModelAdmin(admin.ModelAdmin):
@@ -74,7 +71,7 @@ class TextinatorJSONEditorWidget(forms.Widget):
 
 
 class MarkerRestrictionInline(CommonNestedStackedInline):
-    model = MarkerRestriction
+    model = Tm.MarkerRestriction
     extra = 0
     # classes = ['collapse']
     verbose_name = _("restriction")
@@ -82,7 +79,7 @@ class MarkerRestrictionInline(CommonNestedStackedInline):
 
 
 class MarkerContextMenuItemInline(CommonNestedStackedInline):
-    model = MarkerContextMenuItem
+    model = Tm.MarkerContextMenuItem
     verbose_name = _("context menu item")
     verbose_name_plural = _("context menu items")
     extra = 0
@@ -91,7 +88,7 @@ class MarkerContextMenuItemInline(CommonNestedStackedInline):
 
 class MarkerVariantForm(forms.ModelForm):
     class Meta:
-        model = MarkerVariant
+        model = Tm.MarkerVariant
         exclude = ('custom_suggestion_endpoint', 'are_suggestions_enabled',)
         DATA_SCHEMA = {
             "type": "array",
@@ -137,7 +134,7 @@ class MarkerVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
 # TODO: fix name 'ModelValidationError' is not defined
 #       happens when trying to assign marker to be both task and project specific
 class MarkerVariantInline(CommonNestedStackedInline):
-    model = MarkerVariant
+    model = Tm.MarkerVariant
     form = MarkerVariantForm
     formset = MarkerVariantInlineFormset
     extra = 0
@@ -149,12 +146,12 @@ class MarkerVariantInline(CommonNestedStackedInline):
 
 
 class PreMarkerInline(CommonNestedStackedInline):
-    model = PreMarker
+    model = Tm.PreMarker
     extra = 0
 
 
 class UserProfileInline(CommonNestedStackedInline):
-    model = UserProfile
+    model = Tm.UserProfile
     verbose_name = _("participant")
     verbose_name_plural = _("participants")
     extra = 0
@@ -164,18 +161,18 @@ class UserProfileInline(CommonNestedStackedInline):
 class LabelInline(CommonStackedInline):
     raw_id_fields = ('context',)
     readonly_fields = CommonStackedInline.readonly_fields + ['text']
-    model = Label
+    model = Tm.Label
     extra = 0
 
 
 class LabelReviewInline(CommonStackedInline):
     readonly_fields = CommonStackedInline.readonly_fields + ['text']
-    model = LabelReview
+    model = Tm.LabelReview
     extra = 0
 
 
 class RelationVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
-    model = RelationVariant
+    model = Tm.RelationVariant
 
     def __init__(self, *args, **kwargs):
         super(RelationVariantInlineFormset, self).__init__(*args, **kwargs)
@@ -191,7 +188,7 @@ class RelationVariantInlineFormset(nested_admin.formsets.NestedInlineFormSet):
 
 
 class RelationVariantInline(CommonNestedStackedInline):
-    model = RelationVariant
+    model = Tm.RelationVariant
     formset = RelationVariantInlineFormset
     extra = 0
     verbose_name = _("project-specific relation")
@@ -200,23 +197,23 @@ class RelationVariantInline(CommonNestedStackedInline):
 
 class InputInline(CommonStackedInline):
     raw_id_fields = ('context', 'batch', 'marker')
-    model = Input
+    model = Tm.Input
     extra = 0
 
 
 class LabelRelationInline(CommonStackedInline):
     raw_id_fields = ('first_label', 'second_label')
-    model = LabelRelation
+    model = Tm.LabelRelation
     extra = 0
 
 
 class ProjectForm(forms.ModelForm):
     datasources = forms.ModelMultipleChoiceField(
         queryset=None, # set later
-        label=DataSource._meta.verbose_name_plural)
+        label=Tm.DataSource._meta.verbose_name_plural)
 
     class Meta:
-        model = Project
+        model = Tm.Project
 
         fields = [
             'title', 'language', 'short_description', 'institution', 'supported_by',
@@ -234,9 +231,9 @@ class ProjectForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.user.is_superuser:
-            self.fields["datasources"].queryset = DataSource.objects.all()
+            self.fields["datasources"].queryset = Tm.DataSource.objects.all()
         else:
-            self.fields["datasources"].queryset = DataSource.objects.filter(
+            self.fields["datasources"].queryset = Tm.DataSource.objects.filter(
                 Q(is_public=True) | Q(owner=self.user)
             )
 
@@ -256,9 +253,9 @@ class ProjectForm(forms.ModelForm):
         instance = forms.ModelForm.save(self, commit=False)
         instance.save()
         try:
-            project = Project.objects.get(pk=instance.pk)
+            project = Tm.Project.objects.get(pk=instance.pk)
             existing_ds = set(project.datasources.all())
-        except Project.DoesNotExist:
+        except Tm.Project.DoesNotExist:
             existing_ds = set()
 
         for ds in (existing_ds | sent_ds):
@@ -270,21 +267,21 @@ class ProjectForm(forms.ModelForm):
                 project.datasources.add(ds)
 
         if instance._original_task_type != instance.task_type:
-            self.mv2del = list(MarkerVariant.objects.filter(project=instance).values_list('pk', flat=True))
-            self.rv2del = list(RelationVariant.objects.filter(project=instance).values_list('pk', flat=True))
+            self.mv2del = list(Tm.MarkerVariant.objects.filter(project=instance).values_list('pk', flat=True))
+            self.rv2del = list(Tm.RelationVariant.objects.filter(project=instance).values_list('pk', flat=True))
 
             try:
-                spec_obj = TaskTypeSpecification.objects.get(task_type=instance.task_type)
+                spec_obj = Tm.TaskTypeSpecification.objects.get(task_type=instance.task_type)
                 spec = spec_obj.config
                 marker_map = {}
                 for mspec in spec["markers"]:
-                    m = Marker.objects.get(pk=mspec["id"])
+                    m = Tm.Marker.objects.get(pk=mspec["id"])
                     if mspec.get("unit_id"):
-                        mv, is_created = MarkerVariant.objects.get_or_create(
+                        mv, is_created = Tm.MarkerVariant.objects.get_or_create(
                             marker=m, project=instance, anno_type=mspec["anno_type"], unit_id=mspec["unit_id"]
                         )
                     else:
-                        mv, is_created = MarkerVariant.objects.get_or_create(marker=m, project=instance, anno_type=mspec["anno_type"])
+                        mv, is_created = Tm.MarkerVariant.objects.get_or_create(marker=m, project=instance, anno_type=mspec["anno_type"])
 
                     if not is_created:
                         self.mv2del.remove(mv.pk)
@@ -294,17 +291,17 @@ class ProjectForm(forms.ModelForm):
                     marker_map[mspec["id"]] = mv
 
                 for rel_id in spec.get("relations", []):
-                    r = Relation.objects.get(pk=rel_id)
-                    RelationVariant.objects.create(relation=r, project=instance)
+                    r = Tm.Relation.objects.get(pk=rel_id)
+                    Tm.RelationVariant.objects.create(relation=r, project=instance)
 
                 for aspec in spec.get("actions", []):
-                    aspec["action"] = MarkerAction.objects.get(name=aspec["name"])
+                    aspec["action"] = Tm.MarkerAction.objects.get(name=aspec["name"])
                     aspec["marker"] = marker_map[aspec["marker_id"]]
                     del aspec["name"]
                     del aspec["marker_id"]
-                    MarkerContextMenuItem.objects.get_or_create(**aspec)
+                    Tm.MarkerContextMenuItem.objects.get_or_create(**aspec)
 
-            except TaskTypeSpecification.DoesNotExist:
+            except Tm.TaskTypeSpecification.DoesNotExist:
                 pass
 
         if instance.task_type == 'corr' or instance.task_type == 'pronr':
@@ -322,7 +319,7 @@ def clone_project(modeladmin, request, queryset):
         })
 clone_project.short_description = "Clone the project"
 
-@admin.register(Project)
+@admin.register(Tm.Project)
 class ProjectAdmin(nested_admin.NestedModelAdmin):
     _list_filter = [
         'institution',
@@ -371,10 +368,10 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
         super(ProjectAdmin, self).save_related(request, form, formsets, change)
 
         if hasattr(form, 'mv2del'):
-            MarkerVariant.objects.filter(pk__in=form.mv2del).delete()
+            Tm.MarkerVariant.objects.filter(pk__in=form.mv2del).delete()
 
         if hasattr(form, 'rv2del'):
-            RelationVariant.objects.filter(pk__in=form.rv2del).delete()
+            Tm.RelationVariant.objects.filter(pk__in=form.rv2del).delete()
 
     def changelist_view(self, request, extra_context=None):
         if not request.user.is_superuser:
@@ -387,7 +384,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
         return reverse('projects:detail', kwargs={'pk': obj.pk})
 
 
-@admin.register(Context)
+@admin.register(Tm.Context)
 class ContextAdmin(CommonModelAdmin):
     _list_filter = [
         'datasource'
@@ -398,7 +395,7 @@ class ContextAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash', 'id']
 
 
-@admin.register(Input)
+@admin.register(Tm.Input)
 class InputAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['content_hash']
     # inlines = [LabelInline]
@@ -407,7 +404,7 @@ class InputAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['batch']
 
 
-@admin.register(Batch)
+@admin.register(Tm.Batch)
 class BatchAdmin(CommonModelAdmin):
     inlines = [InputInline, LabelInline, LabelRelationInline]
     search_fields = ['input__content', 'uuid']
@@ -417,7 +414,7 @@ class BatchAdmin(CommonModelAdmin):
 # TODO: translation?
 # from django.utils.translation import ugettext_lazy as _
 
-@admin.register(Label)
+@admin.register(Tm.Label)
 class LabelAdmin(CommonModelAdmin):
     _list_filter = (
        'marker',
@@ -437,7 +434,7 @@ class LabelAdmin(CommonModelAdmin):
         return qs.filter(user=request.user)
 
 
-@admin.register(LabelReview)
+@admin.register(Tm.LabelReview)
 class LabelReviewAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['text']
 
@@ -448,7 +445,7 @@ class LabelReviewAdmin(CommonModelAdmin):
         return qs.filter(user=request.user)
 
 
-@admin.register(LabelRelation)
+@admin.register(Tm.LabelRelation)
 class LabelRelationAdmin(CommonModelAdmin):
     readonly_fields = CommonModelAdmin.readonly_fields + ['graph', 'batch']
     raw_id_fields = ('first_label', 'second_label')
@@ -463,7 +460,7 @@ class LabelRelationAdmin(CommonModelAdmin):
 # TODO: add autocomplete for data source specs
 class DataSourceForm(forms.ModelForm):
     class Meta:
-        model = DataSource
+        model = Tm.DataSource
         fields = '__all__'
         # TODO: fork django-admin-json-editor and make SQL syntax highlighting with AceEditor
         DATA_SCHEMA = {
@@ -483,7 +480,7 @@ class DataSourceForm(forms.ModelForm):
         }
 
 
-@admin.register(DataSource)
+@admin.register(Tm.DataSource)
 class DataSourceAdmin(CommonModelAdmin):
     class Media:
         js = (
@@ -514,7 +511,7 @@ class DataSourceAdmin(CommonModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-@admin.register(DataAccessLog)
+@admin.register(Tm.DataAccessLog)
 class DataAccessLogAdmin(CommonModelAdmin):
     _list_filter = [
         'user',
@@ -523,7 +520,7 @@ class DataAccessLogAdmin(CommonModelAdmin):
     list_display = ['id', 'user', 'project']
 
 
-@admin.register(Marker)
+@admin.register(Tm.Marker)
 class MarkerAdmin(CommonModelAdmin):
     exclude = ('suggestion_endpoint', 'code')
 
@@ -548,7 +545,7 @@ class MarkerAdmin(CommonModelAdmin):
     #     # If obj is None, should return True or False to indicate whether deleting objects of this type is permitted in general
 
 
-@admin.register(Relation)
+@admin.register(Tm.Relation)
 class RelationAdmin(CommonModelAdmin):
     class Media:
         js = (
@@ -559,26 +556,26 @@ class RelationAdmin(CommonModelAdmin):
 # @admin.register(Level)
 # class LevelAdmin(CommonModelAdmin): pass
 
-@admin.register(PostProcessingMethod)
+@admin.register(Tm.PostProcessingMethod)
 class PostProcessingMethodAdmin(CommonModelAdmin): pass
 
-@admin.register(PreMarker)
+@admin.register(Tm.PreMarker)
 class PreMarkerAdmin(CommonModelAdmin):
     user_can_access_owned_objects_only = True
     user_owned_objects_field = 'project__author'
 
-@admin.register(MarkerPair)
+@admin.register(Tm.MarkerPair)
 class MarkerPairAdmin(CommonModelAdmin): pass
 
-@admin.register(MarkerUnit)
+@admin.register(Tm.MarkerUnit)
 class MarkerUnitAdmin(CommonModelAdmin): pass
 
-@admin.register(Range)
+@admin.register(Tm.Range)
 class RangeAdmin(CommonModelAdmin): pass
 
 class TaskTypeConfigForm(forms.ModelForm):
     class Meta:
-        model = TaskTypeSpecification
+        model = Tm.TaskTypeSpecification
         fields = '__all__'
         # TODO: fork django-admin-json-editor and make SQL syntax highlighting with AceEditor
         DATA_SCHEMA = {
@@ -602,7 +599,7 @@ class TaskTypeConfigForm(forms.ModelForm):
             'config': TextinatorJSONEditorWidget(DATA_SCHEMA, "config", collapsed=False),
         }
 
-@admin.register(TaskTypeSpecification)
+@admin.register(Tm.TaskTypeSpecification)
 class TaskTypeSpecAdmin(CommonModelAdmin):
     class Media:
         js = (
@@ -611,7 +608,7 @@ class TaskTypeSpecAdmin(CommonModelAdmin):
 
     form = TaskTypeConfigForm
 
-admin.site.register(Permission)
+admin.site.register(Tm.Permission)
 # admin.site.register(MarkerContextMenuItem)
 
 admin.site.site_header = 'Textinator Admin'

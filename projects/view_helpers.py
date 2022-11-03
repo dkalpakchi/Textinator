@@ -204,7 +204,7 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
             if prefix not in marker_groups:
                 marker_groups[prefix] = defaultdict(list)
             if v:
-                if type(v) == list:
+                if isinstance(v, list):
                     marker_groups[prefix][mv_code].extend(v)
                 else:
                     marker_groups[prefix][mv_code].append(v)

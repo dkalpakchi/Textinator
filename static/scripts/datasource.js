@@ -88,11 +88,11 @@
 
       spec_editor.on("ready", function () {
         spec_editor.on("change", function () {
-          var errors = spec_editor.validate();
+          let errors = spec_editor.validate();
           if (errors.length) {
             console.log(errors);
           } else {
-            var json = spec_editor.getValue();
+            let json = spec_editor.getValue();
             document.getElementById("id_spec").value = JSON.stringify(json);
           }
         });
@@ -116,7 +116,7 @@
         $('input[name="root[db_type]"]').off("change");
         $('input[name="root[db_type]"]').on("change", function (e) {
           if (e.target.value == "mongodb") {
-            var options = { ...templates[option] };
+            let options = { ...templates[option] };
             options["db_type"] = e.target.value;
             options["collection"] = "";
             options["field"] = "";

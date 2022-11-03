@@ -1496,7 +1496,10 @@
         let ctx = this;
 
         let markers = document.querySelectorAll(".marker.tags[data-res]");
-        let messages = [];
+        let messages = {
+          s: [],
+          i: [],
+        };
 
         let satisfied = Array.from(markers).map(function (x) {
           let res = x.getAttribute("data-res").split("&");
@@ -1514,15 +1517,17 @@
                       x.getAttribute("data-s") +
                       '"]:not(.is-disabled)'
                   ).length;
-              let needed = parseInt(res[i].slice(2), 10),
+              let rlen = res[i].length,
+                mode = res[i].slice(rlen - 1),
+                needed = parseInt(res[i].slice(2, rlen - 1), 10),
                 restriction = res[i].slice(0, 2),
-                label = x.querySelector("span.tag").textContent;
+                label = x.querySelector("span.tag").textContent.trim();
               if (restriction == "ge") {
                 if (have >= needed) {
                   return true;
                 } else {
                   let diff = needed - have;
-                  messages.push(
+                  messages[mode].push(
                     "You need at least " +
                       diff +
                       ' more "' +
@@ -1538,7 +1543,7 @@
                   return true;
                 } else {
                   let diff = needed - have + 1;
-                  messages.push(
+                  messages[mode].push(
                     "You need at least " +
                       diff +
                       ' more "' +
@@ -1553,7 +1558,7 @@
                 if (have <= needed) {
                   return true;
                 } else {
-                  messages.push(
+                  messages[mode].push(
                     "You can have max " +
                       needed +
                       ' "' +
@@ -1568,7 +1573,7 @@
                 if (have < needed) {
                   return true;
                 } else {
-                  messages.push(
+                  messages[mode].push(
                     "You can have max " +
                       (needed - 1) +
                       ' "' +
@@ -1583,7 +1588,7 @@
                 if (have == needed) {
                   return true;
                 } else {
-                  messages.push(
+                  messages[mode].push(
                     "You need to have exactly " +
                       needed +
                       ' "' +
@@ -1606,10 +1611,6 @@
         let numSatisfied = satisfied.reduce(function (acc, val) {
           return acc + val;
         }, 0);
-
-        if (numSatisfied != markers.length) {
-          alert(messages.join("\n"));
-        }
 
         let requiredAlertMsg = [];
 
@@ -1647,7 +1648,24 @@
           }
         });
 
-        if (requiredAlertMsg.length > 0) alert(requiredAlertMsg.join("\n"));
+        if (requiredAlertMsg.length > 0) {
+          alert(requiredAlertMsg.join("\n"));
+          return false;
+        }
+
+        if (numSatisfied != markers.length) {
+          if (messages["s"].length > 0) {
+            alert(messages["s"].join("\n"));
+          } else if (messages["i"].length > 0) {
+            let res = confirm(
+              "Some optional restrictions are not satisfied:\n" +
+                messages["i"].join("\n") +
+                "\nDo you want to ignore these?"
+            );
+
+            if (res) return true; // ignore and declare the restrictions to be passed
+          }
+        }
 
         return numSatisfied == markers.length && requiredAlertMsg.length == 0;
       },
@@ -3486,7 +3504,12 @@
                 $(labelerModule.markersArea)
                   .find("input")
                   .each(function (i, x) {
-                    if (x.type != "radio" && x.type != "checkbox") x.value = "";
+                    if (
+                      x.type != "radio" &&
+                      x.type != "checkbox" &&
+                      x.type != "submit"
+                    )
+                      x.value = "";
                     if (x.type == "radio" || x.type == "checkbox")
                       x.checked = false;
                   });
@@ -3615,7 +3638,14 @@
         success: function () {
           alert("Thank you for your feedback!");
           $(".flag.modal").removeClass("is-active");
-          $form.find("textarea").val("");
+          $form.find("textarea").each(function (i, x) {
+            $(x).val("");
+          });
+          $form.find("input").each(function (i, x) {
+            if (x.type != "radio" && x.type != "checkbox" && x.type != "submit")
+              x.value = "";
+            if (x.type == "radio" || x.type == "checkbox") x.checked = false;
+          });
           // getNewText(function () {
           //   return true;
           // }, $("#getNewArticle"));

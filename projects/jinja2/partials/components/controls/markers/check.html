@@ -1,9 +1,15 @@
 {% if marker.choices %}
-  <div class="control is-marker-w80">
-    <p class="has-text-weight-bold">{{marker.name}}</p>
+  {% set is_required = marker.get_count_restrictions() == "eq1s" %}
+  <div class="control is-marker-w90{% if marker.max_choice_len > 35 %} vertical-checkbox{% endif %}">
+    <p class="has-text-weight-bold">
+      {{marker.name}}
+      {% if is_required %}
+        {% include 'partials/_form_required.html' %}
+      {% endif %}
+    </p>
     {% for c in marker.choices %}
-      <label class="checkbox" for="">
-        <input type="checkbox" name="{{marker.code}}" value="{{c}}">
+      <label class="checkbox" for="{{marker.code}}_{{loop.index0}}">
+        <input id="{{marker.code}}_{{loop.index0}}"type="checkbox" name="{{marker.code}}" value="{{c}}">
         {{c}}
       </label>
     {% endfor %}

@@ -4,7 +4,6 @@ from . import views
 
 app_name = 'projects'
 urlpatterns = [
-	path('participations/update', views.update_participations, name="update_participations"),
     path('<proj>/flag/text', views.flag_text, name='flag_text'),
     path('<proj>/flagged/search', views.flagged_search, name='flagged_search'),
     path('<proj>/article/new', views.new_article, name='new_article'),

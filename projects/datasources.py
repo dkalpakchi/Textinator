@@ -2,14 +2,10 @@
 import os
 import requests
 import json
-import jsonlines
 import random
 import string
 import logging
-from collections import defaultdict
 from pathlib import Path
-
-import magic
 
 from django.conf import settings
 
@@ -254,7 +250,7 @@ class TextsAPISource(AbstractDataSource):
             return 0
 
     def get_source_name(self, dp_id):
-        r = requests.get("{}/get_source_name?key={}".format(self.__endpoint, key))
+        r = requests.get("{}/get_source_name?key={}".format(self.__endpoint, dp_id))
         if r.status_code == 200:
             data = r.json()
             return data['name']

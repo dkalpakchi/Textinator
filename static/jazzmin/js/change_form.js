@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, django) {
   "use strict";
 
   function FixSelectorHeight() {
@@ -158,4 +158,4 @@
 
   // Apply select2 to all select boxes when new inline row is created
   django.jQuery(document).on("formset:added", applySelect2);
-})(jQuery);
+})(jQuery, django);

@@ -1,6 +1,6 @@
 # Developer guidelines
 
-### Working with static translations
+## Working with static translations
 
 We use Babel:
 
@@ -23,7 +23,7 @@ Step 4: compile the updated translations:
 
 First run steps 1 to 4. Next if you need to update your translations, **skip step 2** for languages with **already existing translations**.
 
-### Working with dynamic translations
+## Working with dynamic translations
 
 We're using django-model-translation for this purpose and the workflow is as follows:
 
@@ -41,7 +41,7 @@ docker-compose exec web python /home/tt/Textinator/manage.py migrate projects --
 docker-compose exec web python /home/tt/Textinator/manage.py update_translation_fields projects
 ```
 
-### Useful commands
+## Useful commands
 
 Here is the list of useful commands that has not found their own documentation section yet.
 

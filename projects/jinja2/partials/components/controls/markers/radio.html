@@ -1,5 +1,5 @@
 {% if marker.choices %}
-  {% set is_required = marker.get_count_restrictions() == "eq1" %}
+  {% set is_required = marker.get_count_restrictions() == "eq1s" %}
   <div class="control is-marker-w90{% if marker.max_choice_len > 35 %} vertical-radio{% endif %}">
     <p class="has-text-weight-bold" data-label-for="{{marker.code}}">
       {{marker.name}}

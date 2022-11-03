@@ -3,13 +3,11 @@ import random
 import secrets
 import time
 import sys
-import string
 import logging
 import json
-import uuid
 import copy
 import hashlib
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from itertools import groupby
 
 from django.db import models, transaction
@@ -601,7 +599,6 @@ class Project(CloneMixin, CommonModel):
                 log.flags["errors"].append("auto switching: invalid datasource")
                 log.save()
 
-        print("HHH")
         datasources = []
         for source in self.datasources.all():
             source_data = self.instantiate_source(source)
@@ -660,7 +657,6 @@ class Project(CloneMixin, CommonModel):
                         ds, postprocess, idx = self.__unpack_datasource(datasources, ds_ind)
 
                 if finished_all:
-                    print("HERE")
                     fetched = self.__fetch_saved_for_later(user)
                     if fetched:
                         return fetched
@@ -686,8 +682,6 @@ class Project(CloneMixin, CommonModel):
             else:
                 # means the order is not random
                 last_log = DataAccessLog.objects.filter(user=user, project=self).order_by('-datapoint').first()
-                if last_log:
-                    print("LL-ID", last_log.datapoint)
                 is_parallel = self.is_ordered(parallel=True)
 
                 if last_log:
@@ -730,7 +724,6 @@ class Project(CloneMixin, CommonModel):
                         break
 
                 if finished_all:
-                    print("HERE2")
                     fetched = self.__fetch_saved_for_later(user)
                     if fetched:
                         return fetched
@@ -762,26 +755,10 @@ class Project(CloneMixin, CommonModel):
     @property
     def flags_config(self, ordered=True):
         # The structure is like this:
-        # { tab: { type: {name: {order: x, items: [] } } } }
+        # { tab: { type: {name: {order: x, items: [] or str } } } }
         raw_cfg = self.modal_configs.get("flags")
         if ordered:
-            cfg = copy.deepcopy(raw_cfg)
-            if cfg:
-                for tab in list(cfg.keys()):
-                    if cfg[tab]:
-                        groups = list(cfg[tab].keys())
-                        for group_type in list(cfg[tab].keys()):
-                            items = [
-                                ("{}_{}".format(tab, name), item["items"]) for name, item in sorted(
-                                    list(cfg[tab][group_type].items()),
-                                    key=lambda x: x[1].get("order")
-                                )
-                            ]
-
-                            cfg[tab][group_type] = items
-                    else:
-                        del cfg[tab]
-            return cfg
+            return JSONFormConfig(raw_cfg).config
         else:
             return raw_cfg
 
@@ -1129,9 +1106,14 @@ class MarkerRestriction(CommonModel):
     kind = models.CharField(_("restriction kind"), max_length=2, choices=RESTRICTION_KINDS)
     value = models.PositiveIntegerField(_("restriction value"),
         help_text=_("e.g., if restriction kind is '<=' and value is '3', this creates a restriction '<= 3'"))
+    is_ignorable = models.BooleanField(_("can be ignored?"), default=False,
+        help_text=_("whether the restriction can be ignored at the discretion of the annotator"))
 
     def __str__(self):
-        return self.kind + str(self.value)
+        # Examples:
+        # eq1i -- equals to 1, ignorable
+        # le2s -- less than or equals to 2, strict
+        return self.kind + str(self.value) + ("i" if self.is_ignorable else "s")
 
     @classmethod
     def from_string(cls, value):
@@ -1583,7 +1565,7 @@ class LabelRelation(CommonModel):
 
     @property
     def label_ids(self):
-        return [first_label.pk, second_label.pk]
+        return [self.first_label.pk, self.second_label.pk]
 
     def __str__(self):
         if self.rule.direction == '0':

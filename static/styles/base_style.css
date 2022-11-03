@@ -813,6 +813,16 @@ label.help.is-danger {
   margin-left: 0.5em;
 }
 
+.vertical-checkbox .checkbox {
+  display: flex;
+  margin-left: 0;
+}
+
+.vertical-checkbox .checkbox input[type="checkbox"] {
+  height: 23px;
+  margin-right: 7px;
+}
+
 /*
  * Radio buttons
  */

@@ -9,6 +9,7 @@
       errorClass: "error tag is-danger",
       invalidHandler: function (event, validator) {
         event.preventDefault();
+        if (validator !== undefined && validator !== null) validator();
       },
       errorPlacement: function (label, element) {
         if (element.parent().prop("tagName") == "LABEL") {
@@ -29,7 +30,7 @@
     });
 
     $('input[type!="hidden"]').each(function () {
-      var isRequired =
+      let isRequired =
         $(this).siblings(".criterion").attr("data-required") == "true" ||
         $(this).parent().siblings(".criterion").attr("data-required") == "true";
 

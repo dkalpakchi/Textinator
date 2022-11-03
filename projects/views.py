@@ -17,7 +17,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
 from reportlab.pdfgen import canvas
@@ -557,8 +556,8 @@ def get_batch(request):
 
         return JsonResponse({
             'context': context,
-            'span_labels': [l.to_short_json() for l in span_labels],
-            'text_labels': [l.to_short_json() for l in text_labels],
+            'span_labels': [s_label.to_short_json() for s_label in span_labels],
+            'text_labels': [t_label.to_short_json() for t_label in text_labels],
             'non_unit_markers': {k: [i.to_short_json() for i in v] for k, v in non_unit_markers.items()},
             'groups': [i.to_short_json() for i in groups]
         })
@@ -628,44 +627,44 @@ def get_annotations(request, proj):
                         annotations[str(lab.batch)]['id'] = lab.batch_id
             else:
                 # linear scan
-                i, l = 0, 0
+                i_id, l_id = 0, 0
                 i_changed, l_changed = True, True
-                while i < Ni and l < Nl:
-                    i_batch_id = inputs[i].batch_id
-                    l_batch_id = labels[l].batch_id
+                while i_id < Ni and l_id < Nl:
+                    i_batch_id = inputs[i_id].batch_id
+                    l_batch_id = labels[l_id].batch_id
 
                     if i_changed:
-                        annotations[str(inputs[i].batch)][inputs[i].group_order]['inputs'].append(
-                            inputs[i].to_minimal_json(include_color=True)
+                        annotations[str(inputs[i_id].batch)][inputs[i_id].group_order]['inputs'].append(
+                            inputs[i_id].to_minimal_json(include_color=True)
                         )
-                        annotations[str(inputs[i].batch)]['created'] = inputs[i].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+                        annotations[str(inputs[i_id].batch)]['created'] = inputs[i_id].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
                         if request.user.is_superuser:
-                            annotations[str(inputs[i].batch)]['id'] = inputs[i].batch_id
+                            annotations[str(inputs[i_id].batch)]['id'] = inputs[i_id].batch_id
                         i_changed = False
                     if l_changed:
-                        annotations[str(labels[l].batch)][labels[l].group_order]['labels'].append(
-                            labels[l].to_minimal_json(include_color=True)
+                        annotations[str(labels[l_id].batch)][labels[l_id].group_order]['labels'].append(
+                            labels[l_id].to_minimal_json(include_color=True)
                         )
-                        annotations[str(labels[l].batch)]['created'] = labels[l].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
+                        annotations[str(labels[l_id].batch)]['created'] = labels[l_id].batch.dt_created.strftime("%-d %B %Y, %H:%M:%S")
                         if request.user.is_superuser:
-                            annotations[str(labels[l].batch)]['id'] = labels[l].batch_id
+                            annotations[str(labels[l_id].batch)]['id'] = labels[l_id].batch_id
                         l_changed = False
 
                     if i_batch_id < l_batch_id:
-                        i += 1
+                        i_id += 1
                         i_changed = True
                     elif i_batch_id > l_batch_id:
-                        l += 1
+                        l_id += 1
                         l_changed = True
                     else:
-                        i += 1
-                        l += 1
+                        i_id += 1
+                        l_id += 1
                         i_changed, l_changed = True, True
 
             return JsonResponse({
                 "annotations": annotations
             })
-        except Context.DoesNotExist:
+        except Tm.Context.DoesNotExist:
             return JsonResponse({
                 "error": "No such text"
             })
@@ -731,7 +730,6 @@ def new_article(request, proj):
         data_source = Tm.DataSource.objects.get(pk=ds_id)
         dp_id = request.POST.get('dpId')
         save_for_later = request.POST.get('saveForLater') == "true"
-        print(save_for_later)
         if dp_id:
             try:
                 log = Tm.DataAccessLog.objects.get(
@@ -750,7 +748,6 @@ def new_article(request, proj):
                 )
 
     dp_info = project.data(request.user, True)
-    print(dp_info.is_delayed)
     request.session['dp_info_{}'.format(proj)] = dp_info.to_json()
 
     if dp_info.is_empty:
@@ -788,24 +785,6 @@ def new_article(request, proj):
 
 
 @login_required
-@require_http_methods("GET")
-def update_participations(request):
-    n = request.GET.get('n', '')
-    template = ''
-    if n == 'p':
-        open_projects = Tm.Project.objects.filter(is_open=True).exclude(participants__in=[request.user]).all()
-        template = render_to_string('partials/_open_projects.html', {}, request=request)
-    elif n == 'o':
-        participations = request.user.participations.all()
-        template = render_to_string('partials/_participations.html', {}, request=request)
-    elif n == 's':
-        template = render_to_string('partials/_shared_projects.html', {}, request=request)
-    return JsonResponse({
-        'template': template
-    })
-
-
-@login_required
 @require_http_methods("POST")
 def undo_last(request, proj):
     user = request.user
@@ -813,7 +792,7 @@ def undo_last(request, proj):
 
     try:
         u_profile = Tm.UserProfile.objects.get(user=user, project=project)
-    except UserProfile.DoesNotExist:
+    except Tm.UserProfile.DoesNotExist:
         u_profile = None
 
     # find a last relation submitted if any
@@ -916,7 +895,7 @@ def get_data(request, source_id, dp_id):
             'ds': ds,
             'text': ds.get(dp_id)
         })
-    except DataSource.DoesNotExist:
+    except Tm.DataSource.DoesNotExist:
         raise Http404
 
 
@@ -940,7 +919,7 @@ def export(request, proj):
             'include_usernames': request.GET.get('include_usernames', False)
         })
         return JsonResponse({"data": exporter.export()})
-    except Project.DoesNotExist:
+    except Tm.Project.DoesNotExist:
         raise Http404
 
 
@@ -957,7 +936,7 @@ def flag_text(request, proj):
     dal, _ = Tm.DataAccessLog.objects.get_or_create(
         user=request.user, datapoint=str(dp_id),
         project=project, datasource=data_source,
-        is_submitted=False, is_skipped=True
+        is_submitted=False
     )
     if not dal.flags:
         dal.flags = {}

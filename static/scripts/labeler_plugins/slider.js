@@ -35,7 +35,7 @@ var plugin = function (cfg, labeler) {
     subscribe: config.subscribe,
     initOnce: false,
     isAllowed: function (obj) {
-      return labeler.markersArea != null;
+      return labeler.markersArea != null && isDefined(obj);
     },
     exec: function (label, menuItem) {
       let id = label.getAttribute("data-i"),
