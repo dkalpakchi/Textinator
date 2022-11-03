@@ -3507,7 +3507,8 @@
                     if (
                       x.type != "radio" &&
                       x.type != "checkbox" &&
-                      x.type != "submit"
+                      x.type != "submit" &&
+                      x.type != "hidden"
                     )
                       x.value = "";
                     if (x.type == "radio" || x.type == "checkbox")
@@ -3636,13 +3637,18 @@
           dp_id: labelerModule.selectorArea.getAttribute("data-dp"),
         },
         success: function () {
-          alert("Thank you for your feedback!");
+          //alert("Thank you for your feedback!");
           $(".flag.modal").removeClass("is-active");
           $form.find("textarea").each(function (i, x) {
             $(x).val("");
           });
           $form.find("input").each(function (i, x) {
-            if (x.type != "radio" && x.type != "checkbox" && x.type != "submit")
+            if (
+              x.type != "radio" &&
+              x.type != "checkbox" &&
+              x.type != "submit" &&
+              x.type != "hidden"
+            )
               x.value = "";
             if (x.type == "radio" || x.type == "checkbox") x.checked = false;
           });
