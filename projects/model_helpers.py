@@ -49,7 +49,6 @@ class JSONFormConfig:
     def __parse(self):
         for tab in list(self.__cfg.keys()):
             if self.__cfg[tab]:
-                groups = list(self.__cfg[tab].keys())
                 tab_items = []
                 for group_type, items in self.__cfg[tab].items():
                     for name, item in items.items():
