@@ -3067,7 +3067,12 @@
           );
         });
       },
-      updateProcessed: function (currentlyProcessed, spanLabels, labelId) {
+      updateProcessed: function (
+        currentlyProcessed,
+        spanLabels,
+        labelId,
+        isMultiParagraph
+      ) {
         let areOverlapping = this.getOverlappingSpans(
             currentlyProcessed,
             spanLabels,
@@ -3075,10 +3080,13 @@
           ),
           numOverlapping = areOverlapping.reduce((a, b) => a + b, 0);
 
+        if (!utils.isDefined(isMultiParagraph)) isMultiParagraph = false;
+
         currentlyProcessed.push({
           id: labelId,
           ov: numOverlapping,
           closed: false,
+          multip: isMultiParagraph,
         });
         return {
           items: areOverlapping,
@@ -3252,7 +3260,8 @@
                   for (let candLabelId in multiParagraph) {
                     if (acc + cnodeLength > span_labels[candLabelId]["end"]) {
                       // we found the end of this multiParagraph label!
-                      let startInfo = multiParagraph[candLabelId]["start"],
+                      let multiData = multiParagraph[candLabelId],
+                        startInfo = multiData["start"],
                         endTextNode = undefined;
                       if (cnodes[i].nodeType === 1) {
                         endTextNode =
@@ -3270,6 +3279,55 @@
                         acc
                       );
                       keys2del.push(candLabelId);
+
+                      console.log(multiData);
+                      for (let dId in multiData.delayed) {
+                        // need to re-select tagItem on account of
+                        // having added new spans in the previous iteration
+                        let tagItem = document.querySelector(
+                          'span.tag[data-i="' + candLabelId + '"]'
+                        );
+                        let tagNodes = tagItem.childNodes;
+
+                        let dInfo = multiData.delayed[dId];
+                        let dStart = span_labels[dInfo.id]["start"] - dInfo.acc;
+                        let dEnd = span_labels[dInfo.id]["end"] - dInfo.acc;
+                        let dAcc = 0;
+                        let dStartNode = undefined,
+                          dEndNode = undefined,
+                          dStartNodeDefined = false,
+                          dEndNodeDefined = false;
+
+                        for (let idt = 0; idt < tagNodes.length - 1; idt++) {
+                          let curIdtLength = tagNodes[idt].textContent.length;
+                          if (
+                            !dStartNodeDefined &&
+                            dStart <= dAcc + curIdtLength
+                          ) {
+                            dStartNode = tagNodes[idt];
+                            dStartNodeDefined = true;
+                          }
+                          if (!dEndNodeDefined && dEnd <= dAcc + curIdtLength) {
+                            dEndNode = tagNodes[idt];
+                            dEndNodeDefined = true;
+                          }
+
+                          if (dStartNodeDefined && dEndNodeDefined) break;
+                          dAcc += curIdtLength;
+                        }
+
+                        console.log(dStartNode);
+                        console.log(dEndNode);
+
+                        control.restoreMarkedSpan(
+                          dStartNode,
+                          dEndNode,
+                          span_labels,
+                          dInfo.id,
+                          dAcc + dInfo.acc,
+                          dAcc + dInfo.acc
+                        );
+                      }
                     }
                   }
 
@@ -3305,12 +3363,14 @@
                           node: candTextNode,
                           innerAcc: innerAcc,
                         },
+                        delayed: [],
                       };
 
                       let overlap = control.updateProcessed(
                         processed,
                         span_labels,
-                        curLabelId
+                        curLabelId,
+                        true // isMultiParagraph
                       );
 
                       curLabelId++;
@@ -3403,6 +3463,11 @@
                                 innerAcc +=
                                   span_labels[sameLevelId]["end"] - innerAcc;
                             }
+                          } else if (processed[minDistId].multip) {
+                            multiParagraph[minDistId].delayed.push({
+                              id: curLabelId,
+                              acc: innerAcc,
+                            });
                           }
                         } else {
                           textNode =
@@ -3414,16 +3479,18 @@
 
                       // means the node starts and ends within this very same paragraph
 
-                      control.restoreMarkedSpan(
-                        textNode,
-                        textNode,
-                        span_labels,
-                        curLabelId,
-                        innerAcc,
-                        innerAcc
-                      );
-                      innerAcc += span_labels[curLabelId]["start"] - innerAcc;
-                      numInnerLoops++;
+                      if (utils.isDefined(textNode)) {
+                        control.restoreMarkedSpan(
+                          textNode,
+                          textNode,
+                          span_labels,
+                          curLabelId,
+                          innerAcc,
+                          innerAcc
+                        );
+                        innerAcc += span_labels[curLabelId]["start"] - innerAcc;
+                        numInnerLoops++;
+                      }
 
                       curLabelId++;
                     }

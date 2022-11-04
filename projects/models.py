@@ -1353,6 +1353,10 @@ class Batch(CommonModel):
         else:
             return "Empty"
 
+    @property
+    def labels(self):
+        return Label.objects.filter(batch=self)
+
 
 class Input(CloneMixin, CommonModel):
     """
