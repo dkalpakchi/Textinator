@@ -1,11 +1,18 @@
-<article id="editingBoard" data-url="{{ url('projects:get_batch') }}" class="editing message is-primary">
+<article id="editingBoard" data-url="{{ url('projects:get_batch') }}" class="editing-area message is-primary">
   <div class="message-header">
     <p>{{ _("editing")|capitalize }}</p>
   </div>
   <div class="message-body">
     <ul>
       {% for batch in batches %}
-        <li class="button is-small is-fullwidth is-link is-outlined" data-mode='e' data-id="{{batch.uuid}}">{{(batch.dt_updated or batch.dt_created)|naturaltime}}</li>
+        <li class="button is-small is-fullwidth is-link is-outlined" data-mode='e' data-id="{{batch.uuid}}">
+          {% if project.editing_title_regex %}
+            <span>{{ batch.get_title(regex=project.editing_title_regex) }}</span>
+          {% else %}
+            <span>{{ batch.get_title() }}</span>
+          {% endif %}
+          <span>{{ (batch.dt_updated or batch.dt_created)|naturaltime }}</span>
+        </li>
       {% endfor %}
     </ul>
   </div>

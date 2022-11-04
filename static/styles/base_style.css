@@ -524,10 +524,18 @@ textarea {
   display: none !important;
 }
 
-.editing .message-body {
+.editing-area .message-body {
   max-height: 450px;
   -ms-overflow-y: scroll;
   overflow-y: scroll;
+}
+
+.editing-area .button {
+  display: flex;
+}
+
+.editing-area .button span:last-child {
+  margin-left: auto;
 }
 
 .tabs span.text {

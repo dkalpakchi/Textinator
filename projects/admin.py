@@ -339,7 +339,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
         }),
         (_('settings').title(), {
             'fields': ('data_order', 'is_open', 'allow_selecting_labels', 'disable_submitted_labels',
-                'disjoint_annotation', 'auto_text_switch')
+                'disjoint_annotation', 'auto_text_switch', 'editing_title_regex')
         }),
         (_('administration').title(), {
             'fields': ('temporary_message',)

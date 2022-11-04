@@ -425,6 +425,8 @@ class Project(CloneMixin, CommonModel):
         help_text=_("A URL for video summary to be embedded (e.g. from YouTube)"))
     modal_configs = models.JSONField(_("Configuration for the fields included in project's modal windows"), null=True, blank=True,
         help_text=_("JSON configuration for the modal windows in the project. Currently available keys for modals are: 'flagged'"))
+    editing_title_regex = models.TextField(_("Regular expression for editorial board"), default="", null=True, blank=True,
+        help_text=_("The regular expression to be used for searching the annotated texts and using the first found result as a title of the batches to be edited"))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1318,11 +1320,32 @@ class Batch(CommonModel):
 
     @property
     def project(self):
-        i = Input.objects.filter(batch=self).first()
-        l = Label.objects.filter(batch=self).first()
-        if i: return i.marker.project
-        elif l: return l.marker.project
+        inp = Input.objects.filter(batch=self).first()
+        lab = Label.objects.filter(batch=self).first()
+        if inp: return inp.marker.project
+        elif lab: return lab.marker.project
         else: return "Empty"
+
+    def get_title(self, regex=None, trim=40):
+        inp = Input.objects.filter(batch=self).first()
+        lab = Label.objects.filter(batch=self).first()
+
+        if inp and inp.context:
+            if regex:
+                res = re.search(regex, inp.context.content)
+                return res.group(0).strip() if res else "Empty"
+            else:
+                content = inp.context.content
+                return "{} ... {}".format(content[:trim], content[-trim:])
+        elif lab and lab.context:
+            if regex:
+                res = re.search(regex, lab.context.content)
+                return res.group(0).strip() if res else "Empty"
+            else:
+                content = lab.context.content
+                return "{} ... {}".format(content[:trim], content[-trim:])
+        else:
+            return "Empty"
 
 
 class Input(CloneMixin, CommonModel):

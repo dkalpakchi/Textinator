@@ -2998,6 +2998,32 @@
           "checkboxes",
         ];
       },
+      restoreMarkedSpan: function (
+        nodeStart,
+        nodeEnd,
+        spanLabels,
+        labelId,
+        subValueStart,
+        subValueEnd
+      ) {
+        const range = new Range();
+        range.setStart(nodeStart, spanLabels[labelId]["start"] - subValueStart);
+        range.setEnd(nodeEnd, spanLabels[labelId]["end"] - subValueEnd);
+
+        window.getSelection().addRange(range);
+        this.updateChunkFromSelection();
+
+        let activeChunk = this.getActiveChunk();
+        activeChunk["hash"] = spanLabels[labelId]["hash"];
+        activeChunk["updated"] = false;
+
+        let code = spanLabels[labelId]["marker"]["code"],
+          mmpi = this.markersArea.getAttribute("data-mmpi");
+        this.mark(
+          this.markersArea.querySelector('.marker[data-s="' + code + '"]'),
+          mmpi
+        );
+      },
       restoreBatch: function (uuid, url) {
         let control = this;
         if (utils.isDefined(url)) {
@@ -3124,26 +3150,123 @@
                 curLabelId = 0,
                 numLabels = span_labels.length,
                 cnodes = control.selectorArea.childNodes,
-                mmpi = control.markersArea.getAttribute("data-mmpi"),
                 processed = []; // labels that are not nested into one another
               span_labels.sort(function (x, y) {
                 return x["start"] - y["start"];
               });
 
+              // account for scrollable and pinned parts -- these must be viewed as one text
+              let flatCnodes = [],
+                pinnedClassNames = ["scrollable", "pinned"];
               for (let i = 0, len = cnodes.length; i < len; i++) {
-                if (curLabelId < numLabels) {
+                if (
+                  cnodes[i].tagName === "P" &&
+                  pinnedClassNames.includes(cnodes[i].className)
+                ) {
+                  for (
+                    let j = 0, len2 = cnodes[i].childNodes.length;
+                    j < len2;
+                    j++
+                  ) {
+                    flatCnodes.push(cnodes[i].childNodes[j]);
+                  }
+                }
+              }
+              if (flatCnodes.length > 0) cnodes = flatCnodes;
+
+              let multiParagraph = {};
+              // handling labels within one paragraph and collecting multiParagraph (and labeling them as soon as they are ready)
+              for (let i = 0, len = cnodes.length; i < len; i++) {
+                if (
+                  curLabelId < numLabels ||
+                  Object.keys(multiParagraph).length > 0
+                ) {
+                  let cnodeLength = cnodes[i].textContent.length;
+                  if (cnodeLength === 0 && cnodes[i].tagName === "BR") {
+                    cnodeLength = 1;
+                  }
+
+                  let keys2del = [];
+                  for (let candLabelId in multiParagraph) {
+                    if (acc + cnodeLength > span_labels[candLabelId]["end"]) {
+                      // we found the end of this multiParagraph label!
+                      let startInfo = multiParagraph[candLabelId]["start"],
+                        endTextNode = undefined;
+                      if (cnodes[i].nodeType === 1) {
+                        endTextNode =
+                          cnodes[i].childNodes[cnodes[i].childNodes.length - 1];
+                      } else {
+                        endTextNode = cnodes[i];
+                      }
+
+                      control.restoreMarkedSpan(
+                        startInfo["node"],
+                        endTextNode,
+                        span_labels,
+                        candLabelId,
+                        startInfo["innerAcc"],
+                        acc
+                      );
+                      keys2del.push(candLabelId);
+                    }
+                  }
+
+                  for (let keyId in keys2del)
+                    delete multiParagraph[keys2del[keyId]];
+
                   if (
-                    acc + cnodes[i].textContent.length >
-                    span_labels[curLabelId]["start"]
+                    curLabelId >= numLabels &&
+                    Object.keys(multiParagraph).length == 0
+                  )
+                    break;
+
+                  if (
+                    curLabelId < numLabels &&
+                    !multiParagraph.hasOwnProperty(curLabelId) &&
+                    acc + cnodeLength > span_labels[curLabelId]["start"]
                   ) {
                     // we found an element to mark
                     let innerAcc = acc,
-                      numInnerLoops = 0,
-                      cnodeLength = cnodes[i].textContent.length;
+                      numInnerLoops = 0;
+
+                    let candTextNode;
+                    if (cnodes[i].nodeType === 1) {
+                      candTextNode =
+                        cnodes[i].childNodes[cnodes[i].childNodes.length - 1];
+                    } else {
+                      candTextNode = cnodes[i];
+                    }
+
+                    while (
+                      span_labels[curLabelId]["end"] > acc + cnodeLength &&
+                      acc + cnodeLength > span_labels[curLabelId]["start"] &&
+                      !multiParagraph.hasOwnProperty(curLabelId)
+                    ) {
+                      // means it's a multi-paragraph node
+                      multiParagraph[curLabelId] = {
+                        start: {
+                          node: candTextNode,
+                          innerAcc: innerAcc,
+                        },
+                      };
+                      curLabelId++;
+                      if (curLabelId >= numLabels) break;
+                    }
+
+                    if (
+                      curLabelId >= numLabels ||
+                      acc + cnodeLength < span_labels[curLabelId]["start"]
+                    ) {
+                      acc += cnodeLength;
+                      continue;
+                    }
+
                     while (
                       curLabelId < numLabels &&
-                      span_labels[curLabelId]["end"] <= acc + cnodeLength
+                      span_labels[curLabelId]["end"] <= acc + cnodeLength &&
+                      !multiParagraph.hasOwnProperty(curLabelId)
                     ) {
+                      // working within paragraph
                       let areOverlapping = processed.map(function (x) {
                           let s1 = span_labels[curLabelId],
                             s2 = span_labels[x["id"]];
@@ -3167,8 +3290,14 @@
 
                       let textNode = undefined;
                       if (numOverlapping === 0) {
-                        textNode =
-                          cnodes[i].childNodes[cnodes[i].childNodes.length - 1];
+                        if (cnodes[i].nodeType === 1) {
+                          textNode =
+                            cnodes[i].childNodes[
+                              cnodes[i].childNodes.length - 1
+                            ];
+                        } else {
+                          textNode = cnodes[i];
+                        }
                       } else {
                         let minDistId = undefined,
                           minDist = Infinity,
@@ -3231,35 +3360,26 @@
                         }
                       }
 
-                      const range = new Range();
-                      range.setStart(
-                        textNode,
-                        span_labels[curLabelId]["start"] - innerAcc
-                      );
-                      range.setEnd(
-                        textNode,
-                        span_labels[curLabelId]["end"] - innerAcc
-                      );
+                      // means the node starts and ends within this very same paragraph
 
-                      window.getSelection().addRange(range);
-                      control.updateChunkFromSelection();
-                      let activeChunk = control.getActiveChunk();
-                      activeChunk["hash"] = span_labels[curLabelId]["hash"];
-                      activeChunk["updated"] = false;
-                      let code = span_labels[curLabelId]["marker"]["code"];
-                      control.mark(
-                        control.markersArea.querySelector(
-                          '.marker[data-s="' + code + '"]'
-                        ),
-                        mmpi
+                      control.restoreMarkedSpan(
+                        textNode,
+                        textNode,
+                        span_labels,
+                        curLabelId,
+                        innerAcc,
+                        innerAcc
                       );
                       innerAcc += span_labels[curLabelId]["start"] - innerAcc;
-                      curLabelId++;
                       numInnerLoops++;
+
+                      curLabelId++;
                     }
                   }
+                  acc += cnodeLength;
+                } else {
+                  break;
                 }
-                acc += cnodes[i].textContent.length;
               }
             },
             error: function () {
@@ -3270,7 +3390,9 @@
       },
       clearBatch: function () {
         $(this.markersArea)
-          .find('input[type="text"],input[type="radio"],input[type="checkbox"]')
+          .find(
+            'input[type="text"],input[type="radio"],input[type="checkbox"],textarea'
+          )
           .each(function (i, x) {
             x.removeAttribute("data-h");
             if (x.type != "radio" && x.type != "checkbox") x.value = "";
@@ -3539,6 +3661,7 @@
                 $("#editingBoard")
                   .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
                   .addClass("is-hovered");
+                alert("Your edit is successfully saved!");
               }
             }
 
@@ -3719,6 +3842,7 @@
                     "</span>"
                 )
               );
+              labelerModule.fixUI();
             },
             error: function () {
               console.log("Error while invoking editing mode!");
@@ -3737,6 +3861,7 @@
           );
           labelerModule.restoreOriginal();
           labelerModule.clearBatch();
+          labelerModule.fixUI();
         }
       }
     });
