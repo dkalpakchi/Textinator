@@ -106,8 +106,11 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
 
 
 def render_editing_board(project, user, page):
-    label_batches = Label.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
-    input_batches = Input.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
+    #label_batches = Label.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
+    #input_batches = Input.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
+
+    label_batches = Label.objects.filter(marker__project=project).values_list('batch__uuid', flat=True)
+    input_batches = Input.objects.filter(marker__project=project).values_list('batch__uuid', flat=True)
 
     batch_uuids = set(label_batches) | set(input_batches)
     batches = Batch.objects.filter(uuid__in=batch_uuids).order_by(F('dt_updated').desc(nulls_last=True), '-dt_created')

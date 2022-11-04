@@ -3057,6 +3057,34 @@
           mmpi
         );
       },
+      getOverlappingSpans: function (currentlyProcessed, spanLabels, labelId) {
+        return currentlyProcessed.map(function (x) {
+          let s1 = spanLabels[labelId],
+            s2 = spanLabels[x["id"]];
+          return (
+            (s1["start"] >= s2["start"] && s1["end"] <= s2["end"]) ||
+            (s2["start"] >= s1["start"] && s2["end"] <= s1["end"])
+          );
+        });
+      },
+      updateProcessed: function (currentlyProcessed, spanLabels, labelId) {
+        let areOverlapping = this.getOverlappingSpans(
+            currentlyProcessed,
+            spanLabels,
+            labelId
+          ),
+          numOverlapping = areOverlapping.reduce((a, b) => a + b, 0);
+
+        currentlyProcessed.push({
+          id: labelId,
+          ov: numOverlapping,
+          closed: false,
+        });
+        return {
+          items: areOverlapping,
+          size: numOverlapping,
+        };
+      },
       restoreBatch: function (uuid, url) {
         let control = this;
         if (utils.isDefined(url)) {
@@ -3219,6 +3247,7 @@
                     cnodeLength = 1;
                   }
 
+                  // Attempt to close a multi-paragraph marking
                   let keys2del = [];
                   for (let candLabelId in multiParagraph) {
                     if (acc + cnodeLength > span_labels[candLabelId]["end"]) {
@@ -3253,11 +3282,7 @@
                   )
                     break;
 
-                  if (
-                    curLabelId < numLabels &&
-                    !multiParagraph.hasOwnProperty(curLabelId) &&
-                    acc + cnodeLength > span_labels[curLabelId]["start"]
-                  ) {
+                  if (acc + cnodeLength > span_labels[curLabelId]["start"]) {
                     // we found an element to mark
                     let innerAcc = acc,
                       numInnerLoops = 0;
@@ -3272,8 +3297,7 @@
 
                     while (
                       span_labels[curLabelId]["end"] > acc + cnodeLength &&
-                      acc + cnodeLength > span_labels[curLabelId]["start"] &&
-                      !multiParagraph.hasOwnProperty(curLabelId)
+                      acc + cnodeLength > span_labels[curLabelId]["start"]
                     ) {
                       // means it's a multi-paragraph node
                       multiParagraph[curLabelId] = {
@@ -3282,6 +3306,13 @@
                           innerAcc: innerAcc,
                         },
                       };
+
+                      let overlap = control.updateProcessed(
+                        processed,
+                        span_labels,
+                        curLabelId
+                      );
+
                       curLabelId++;
                       if (curLabelId >= numLabels) break;
                     }
@@ -3296,33 +3327,17 @@
 
                     while (
                       curLabelId < numLabels &&
-                      span_labels[curLabelId]["end"] <= acc + cnodeLength &&
-                      !multiParagraph.hasOwnProperty(curLabelId)
+                      span_labels[curLabelId]["end"] <= acc + cnodeLength
                     ) {
                       // working within paragraph
-                      let areOverlapping = processed.map(function (x) {
-                          let s1 = span_labels[curLabelId],
-                            s2 = span_labels[x["id"]];
-                          return (
-                            (s1["start"] >= s2["start"] &&
-                              s1["end"] <= s2["end"]) ||
-                            (s2["start"] >= s1["start"] &&
-                              s2["end"] <= s1["end"])
-                          );
-                        }),
-                        numOverlapping = areOverlapping.reduce(
-                          (a, b) => a + b,
-                          0
-                        );
-
-                      processed.push({
-                        id: curLabelId,
-                        ov: numOverlapping,
-                        closed: false,
-                      });
+                      let overlap = control.updateProcessed(
+                        processed,
+                        span_labels,
+                        curLabelId
+                      );
 
                       let textNode = undefined;
-                      if (numOverlapping === 0) {
+                      if (overlap.size === 0) {
                         if (cnodes[i].nodeType === 1) {
                           textNode =
                             cnodes[i].childNodes[
@@ -3336,7 +3351,7 @@
                           minDist = Infinity,
                           sameLevelDist = Infinity,
                           sameLevelId = undefined;
-                        areOverlapping.forEach(function (x, i) {
+                        overlap.items.forEach(function (x, i) {
                           let label = span_labels[processed[i]["id"]],
                             dist =
                               Math.abs(
@@ -3350,7 +3365,7 @@
                           if (x) {
                             if (
                               dist < minDist &&
-                              processed[i]["ov"] == numOverlapping - 1
+                              processed[i]["ov"] == overlap.size - 1
                             ) {
                               minDist = dist;
                               minDistId = processed[i]["id"];
@@ -3358,7 +3373,7 @@
                           }
                           if (
                             dist < sameLevelDist &&
-                            processed[i]["ov"] == numOverlapping &&
+                            processed[i]["ov"] == overlap.size &&
                             !processed[i]["closed"]
                           ) {
                             sameLevelDist = dist;
@@ -3367,23 +3382,27 @@
                         });
 
                         if (utils.isDefined(minDistId)) {
-                          let tagNodes = document.querySelector(
+                          let tagItem = document.querySelector(
                             'span.tag[data-i="' + minDistId + '"]'
-                          ).childNodes;
-                          textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
-                          if (
-                            numInnerLoops !== 0 &&
-                            utils.isDefined(sameLevelId)
-                          ) {
-                            for (let i = 0; i <= curLabelId; i++) {
-                              if (numOverlapping < processed[i]["ov"]) {
-                                processed[i]["closed"] = true;
-                              }
-                            }
+                          );
 
-                            if (span_labels[sameLevelId]["end"] > innerAcc)
-                              innerAcc +=
-                                span_labels[sameLevelId]["end"] - innerAcc;
+                          if (utils.isDefined(tagItem)) {
+                            let tagNodes = tagItem.childNodes;
+                            textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
+                            if (
+                              numInnerLoops !== 0 &&
+                              utils.isDefined(sameLevelId)
+                            ) {
+                              for (let i = 0; i <= curLabelId; i++) {
+                                if (overlap.size < processed[i]["ov"]) {
+                                  processed[i]["closed"] = true;
+                                }
+                              }
+
+                              if (span_labels[sameLevelId]["end"] > innerAcc)
+                                innerAcc +=
+                                  span_labels[sameLevelId]["end"] - innerAcc;
+                            }
                           }
                         } else {
                           textNode =
@@ -3784,7 +3803,11 @@
 
       let keys = Object.keys(data);
       for (let i = 0, len = keys.length; i < len; i++) {
-        if (!data[keys[i]].trim()) {
+        if (
+          (typeof data[keys[i]] === "string" ||
+            data[keys[i]] instanceof String) &&
+          !data[keys[i]].trim()
+        ) {
           delete data[keys[i]];
         }
       }
