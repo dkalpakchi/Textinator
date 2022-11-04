@@ -1073,7 +1073,25 @@
               closestEditingBatch = getEnclosingEditingBatch(target);
 
             // TODO: this relies on us not including any icons in the buttons, which we don't so far
-            if (utils.isDefined(closestEditingBatch)) {
+            if (target.tagName == "A" && target.hasAttribute("data-page")) {
+              let editingButton = document.querySelector("#editingModeButton"),
+                editingArea = document.querySelector("#editingBoard");
+              $.ajax({
+                type: "GET",
+                url:
+                  editingModeButton.getAttribute("href") +
+                  "?p=" +
+                  target.getAttribute("data-page"),
+                success: function (d) {
+                  editingArea.outerHTML = d.template;
+
+                  control.fixUI();
+                },
+                error: function () {
+                  console.log("Error while invoking editing mode!");
+                },
+              });
+            } else if (utils.isDefined(closestEditingBatch)) {
               let uuid = closestEditingBatch.getAttribute("data-id"),
                 $editingBoard = $("#editingBoard"),
                 $closestBatch = $(closestEditingBatch),

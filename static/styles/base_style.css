@@ -534,6 +534,10 @@ textarea {
   display: flex;
 }
 
+.editing-area .pagination {
+  padding: 1.5em 1.5em 1.25em 1.5em;
+}
+
 .editing-area .button span:last-child {
   margin-left: auto;
 }

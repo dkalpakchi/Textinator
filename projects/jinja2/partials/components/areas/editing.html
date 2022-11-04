@@ -3,8 +3,9 @@
     <p>{{ _("editing")|capitalize }}</p>
   </div>
   <div class="message-body">
+    {% set current_page = paginator.page(page) %}
     <ul>
-      {% for batch in batches %}
+      {% for batch in current_page %}
         <li class="button is-small is-fullwidth is-link is-outlined" data-mode='e' data-id="{{batch.uuid}}">
           {% if project.editing_title_regex %}
             <span>{{ batch.get_title(regex=project.editing_title_regex) }}</span>
@@ -16,4 +17,37 @@
       {% endfor %}
     </ul>
   </div>
+  <nav class="pagination is-small is-rounded" role="navigation" aria-label="pagination">
+    {% if current_page.has_previous() %}
+      <a class="button pagination-previous" data-page="{{page-1}}">Previous</a>
+    {% endif %}
+    {% if current_page.has_next() %}
+      <a class="button pagination-next" data-page="{{page+1}}">Next</a>
+    {% endif %}
+    <ul class="pagination-list">
+      {% set min_page = [page - 2, 2]|max %}
+      {% set max_page = [page + 2, paginator.num_pages]|min %}
+      <li>
+        <a class="button pagination-link{% if page == 1 %} is-current{% endif %}" data-page="1">1</a>
+      </li>
+      {% if min_page > 2 %}
+        <li>
+          <span class="pagination-ellipsis">&hellip;</span>
+        </li>
+      {% endif %}
+      {% for i in range(min_page, max_page + 1) %}
+        <li>
+          <a class="button pagination-link{% if i == page %} is-current{% endif %}" data-page="{{i}}">{{i}}</a>
+        </li>
+      {% endfor %}
+      {% if max_page < paginator.num_pages %}
+        <li>
+          <span class="pagination-ellipsis">&hellip;</span>
+        </li>
+        <li>
+          <a class="button pagination-link" data-page="{{paginator.num_pages}}">{{paginator.num_pages}}</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
 </article>

@@ -518,9 +518,10 @@ def record_datapoint(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def editing(request, proj):
+    page = int(request.GET.get("p", 1))
     project = get_object_or_404(Tm.Project, pk=proj)
     return JsonResponse({
-        'template': render_editing_board(project, request.user)
+        'template': render_editing_board(project, request.user, page)
     })
 
 
