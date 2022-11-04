@@ -1333,14 +1333,20 @@ class Batch(CommonModel):
         if inp and inp.context:
             if regex:
                 res = re.search(regex, inp.context.content)
-                return res.group(0).strip() if res else "Empty"
+                display_title = res.group(0).strip()
+                if len(display_title) > trim:
+                    display_title = "{}...".format(display_title[:trim])
+                return display_title if res else "Empty"
             else:
                 content = inp.context.content
                 return "{} ... {}".format(content[:trim], content[-trim:])
         elif lab and lab.context:
             if regex:
                 res = re.search(regex, lab.context.content)
-                return res.group(0).strip() if res else "Empty"
+                display_title = res.group(0).strip()
+                if len(display_title) > trim:
+                    display_title = "{}...".format(display_title[:trim])
+                return display_title if res else "Empty"
             else:
                 content = lab.context.content
                 return "{} ... {}".format(content[:trim], content[-trim:])
