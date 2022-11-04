@@ -293,6 +293,15 @@
       );
     }
 
+    function isEditingBatch(node) {
+      return (
+        utils.isDefined(node) &&
+        node.nodeName == "LI" &&
+        node.hasAttribute("data-mode") &&
+        node.getAttribute("data-mode") == "e"
+      );
+    }
+
     function isInsideTippyContent(node) {
       while (utils.isDefined(node.id) && !node.id.startsWith("tippy")) {
         if (!utils.isDefined(node)) break;
@@ -331,6 +340,14 @@
         node = node.parentNode;
       }
       return isRelation(node) ? node : null;
+    }
+
+    function getEnclosingEditingBatch(node) {
+      while (!isEditingBatch(node)) {
+        if (!utils.isDefined(node)) break;
+        node = node.parentNode;
+      }
+      return isEditingBatch(node) ? node : null;
     }
 
     function getEnclosingParagraph(node) {
@@ -1052,29 +1069,27 @@
 
           // editing mode events
           document.addEventListener("click", function (e) {
-            let target = e.target;
+            let target = e.target,
+              closestEditingBatch = getEnclosingEditingBatch(target);
 
             // TODO: this relies on us not including any icons in the buttons, which we don't so far
-            if (
-              target.tagName == "LI" &&
-              target.getAttribute("data-mode") == "e"
-            ) {
-              let uuid = target.getAttribute("data-id"),
+            if (utils.isDefined(closestEditingBatch)) {
+              let uuid = closestEditingBatch.getAttribute("data-id"),
                 $editingBoard = $("#editingBoard"),
-                $target = $(target),
+                $closestBatch = $(closestEditingBatch),
                 url = $editingBoard.attr("data-url"),
                 $list = $editingBoard.find("li"),
                 clickedOnCurrent =
-                  $target.data("restored") !== undefined &&
-                  $target.data("restored");
+                  $closestBatch.data("restored") !== undefined &&
+                  $closestBatch.data("restored");
 
               $list.removeClass("is-hovered");
               if (clickedOnCurrent) {
-                $target.data("restored", false);
+                $closestBatch.data("restored", false);
                 control.restoreOriginal();
                 control.clearBatch();
               } else {
-                target.classList.add("is-hovered");
+                closestEditingBatch.classList.add("is-hovered");
                 $list.each(
                   (i, n) =>
                     void (
@@ -1092,7 +1107,7 @@
                 if (utils.isDefined(uuid) && utils.isDefined(url)) {
                   control.restoreBatch(uuid, url);
                 }
-                $target.data("restored", true);
+                $closestBatch.data("restored", true);
               }
             }
           });
