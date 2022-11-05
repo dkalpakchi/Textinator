@@ -1322,8 +1322,8 @@ class Batch(CommonModel):
     def project(self):
         inp = Input.objects.filter(batch=self).first()
         lab = Label.objects.filter(batch=self).first()
-        if inp: return inp.marker.project
-        elif lab: return lab.marker.project
+        if inp and inp.marker: return inp.marker.project
+        elif lab and lab.marker: return lab.marker.project
         else: return "Empty"
 
     def get_title(self, regex=None, trim=40):

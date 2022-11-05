@@ -12,7 +12,7 @@
           {% else %}
             <span>{{ batch.get_title() }}</span>
           {% endif %}
-          <span>{{batch.labels.count()}} | {{ (batch.dt_updated or batch.dt_created)|naturaltime }}</span>
+          <span>{{batch.labels.count()}} markable(s) &nbsp; | &nbsp; {{ (batch.dt_updated or batch.dt_created)|naturaltime }}</span>
         </li>
       {% endfor %}
     </ul>
