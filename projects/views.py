@@ -501,7 +501,7 @@ def record_datapoint(request, proj):
             return JsonResponse({
                 'error': False,
                 'mode': mode,
-                'template': render_editing_board(batch_info.project, batch_info.user)
+                'template': render_editing_board(request, batch_info.project, batch_info.user, 1)
             })
         else:
             return JsonResponse({'error': True})
@@ -521,7 +521,7 @@ def editing(request, proj):
     page = int(request.GET.get("p", 1))
     project = get_object_or_404(Tm.Project, pk=proj)
     return JsonResponse({
-        'template': render_editing_board(project, request.user, page)
+        'template': render_editing_board(request, project, request.user, page)
     })
 
 
@@ -949,6 +949,44 @@ def flag_text(request, proj):
     dal.flags = flags
     dal.save()
     return JsonResponse({})
+
+
+@login_required
+@require_http_methods(["POST"])
+def flag_batch(request, proj):
+    flag = request.POST.get('flag') == "true"
+    batch_uuid = request.POST.get('uuid')
+
+    try:
+        project = Tm.Project.objects.filter(pk=proj).get()
+
+        is_author, is_shared = project.author == request.user, project.shared_with(request.user)
+
+        if is_author or is_shared:
+            batch = Tm.Batch.objects.filter(uuid=batch_uuid).first()
+        else:
+            batch = Tm.Batch.objects.filter(
+                uuid=batch_uuid, user=request.user
+            ).first()
+
+
+        if batch and batch.project == project:
+            batch.is_flagged = flag
+            batch.save()
+            return JsonResponse({
+                "errors": False
+            })
+        else:
+            return JsonResponse({
+                "errors": True
+            })
+    except Tm.Project.DoesNotExist:
+        logger.error("Project does not exist")
+    except Tm.Batch.DoesNotExist:
+        logger.error("Batch does not exist")
+    return JsonResponse({
+        "errors": True
+    })
 
 
 @login_required

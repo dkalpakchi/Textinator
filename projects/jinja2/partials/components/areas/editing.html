@@ -1,4 +1,4 @@
-<article id="editingBoard" data-url="{{ url('projects:get_batch') }}" class="editing-area message is-primary">
+<article id="editingBoard" data-url="{{ url('projects:get_batch') }}" data-flag-url="{{ url('projects:flag_batch', kwargs={'proj': project.pk}) }}" class="editing-area message is-primary">
   <div class="message-header">
     <p>{{ _("editing")|capitalize }}</p>
   </div>
@@ -6,13 +6,23 @@
     {% set current_page = paginator.page(page) %}
     <ul>
       {% for batch in current_page %}
-        <li class="button is-small is-fullwidth is-link is-outlined" data-mode='e' data-id="{{batch.uuid}}">
-          {% if project.editing_title_regex %}
-            <span>{{ batch.get_title(regex=project.editing_title_regex) }}</span>
-          {% else %}
-            <span>{{ batch.get_title() }}</span>
-          {% endif %}
-          <span>{{batch.labels.count()}} markable(s) &nbsp; | &nbsp; {{ (batch.dt_updated or batch.dt_created)|naturaltime }}</span>
+        <li data-mode='e' data-id="{{batch.uuid}}" data-flagged="{{batch.is_flagged|bool2str}}">
+          <div class="button is-small is-fullwidth {% if batch.is_flagged %}is-danger{% else %}is-link{% endif %} is-outlined" data-purpose='s'>
+            {% if project.editing_title_regex %}
+              <span>{{ batch.get_title(regex=project.editing_title_regex) }}</span>
+            {% else %}
+              <span>{{ batch.get_title() }}</span>
+            {% endif %}
+            <span>
+              {{batch.labels.count()}} span(s) &nbsp; | &nbsp; {% if is_admin %}{{batch.user.username}}, {% endif %}{{ batch.dt_created|naturaltime }}
+            </span>
+          </div>
+          <div class="button is-small is-danger is-outlined{% if batch.is_flagged %} is-active{% endif %}" data-purpose='f'>
+            <span class="icon is-small">
+              <i class="fas fa-flag"></i>
+            </span>
+            {{csrf_input}}
+          </div>
         </li>
       {% endfor %}
     </ul>

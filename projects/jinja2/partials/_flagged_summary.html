@@ -1,4 +1,5 @@
 {% for flagged in flagged_datapoints %}
+  {% set i = loop.index0 %}
   {% if flagged.text_errors %}
     <tr>
       <td>{{ flagged.user.username }}</td>
@@ -11,7 +12,11 @@
                 {{k|from_ts|naturaltime}}
               </div>
             {% endif %}
-            {{v}}
+            <div id="flagged_{{i}}_{{loop.index0}}"></div>
+            <script type="text/javascript">
+              const formatter_{{i}}_{{loop.index0}} = new JSONFormatter({{v|tojson|safe}});
+              document.querySelector("#flagged_{{i}}_{{loop.index0}}").appendChild(formatter_{{i}}_{{loop.index0}}.render());
+            </script>
           </div>
         {% endfor %}
       </td>

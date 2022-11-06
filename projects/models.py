@@ -1303,6 +1303,8 @@ class Batch(CommonModel):
 
     uuid = models.UUIDField()
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    is_flagged = models.BooleanField(_("flagged?"), default=False,
+        help_text=_("Indicates whether the annotator has flagged the batch as having problems"))
 
     def __str__(self):
         return str(self.uuid)

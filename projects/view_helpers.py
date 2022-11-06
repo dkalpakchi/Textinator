@@ -105,23 +105,27 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
         return (ctx_cache, label_cache), saved_labels
 
 
-def render_editing_board(project, user, page):
-    #label_batches = Label.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
-    #input_batches = Input.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
+def render_editing_board(request, project, user, page):
+    is_author, is_shared = project.author == user, project.shared_with(user)
 
-    label_batches = Label.objects.filter(marker__project=project).values_list('batch__uuid', flat=True)
-    input_batches = Input.objects.filter(marker__project=project).values_list('batch__uuid', flat=True)
+    if is_author or is_shared:
+        label_batches = Label.objects.filter(marker__project=project).values_list('batch__uuid', flat=True)
+        input_batches = Input.objects.filter(marker__project=project).values_list('batch__uuid', flat=True)
+    else:
+        label_batches = Label.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
+        input_batches = Input.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
 
     batch_uuids = set(label_batches) | set(input_batches)
-    batches = Batch.objects.filter(uuid__in=batch_uuids).order_by(F('dt_updated').desc(nulls_last=True), '-dt_created')
+    batches = Batch.objects.filter(uuid__in=batch_uuids).order_by(F('dt_created').desc(nulls_last=True))
 
     p = Paginator(batches, 30)
 
     return render_to_string('partials/components/areas/editing.html', {
         'paginator': p,
         'page': page,
-        'project': project
-    })
+        'project': project,
+        'is_admin': is_author or is_shared
+    }, request=request)
 
 
 def process_inputs(batch, batch_info, short_text_markers=None, long_text_markers=None,

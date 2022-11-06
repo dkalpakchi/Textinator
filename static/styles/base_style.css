@@ -530,8 +530,32 @@ textarea {
   overflow-y: scroll;
 }
 
-.editing-area .button {
+.editing-area li {
   display: flex;
+}
+
+.editing-area li:not(:last-child) {
+  margin-bottom: 0.3em;
+}
+
+.editing-area li .button:first-child {
+  display: flex;
+  margin-right: 0.5em;
+}
+
+.editing-area li div.button.is-danger {
+  border-color: #ab1f35;
+  color: #ab1f35;
+}
+
+.editing-area li div.button.is-danger.is-outlined:hover,
+.editing-area li div.button.is-danger.is-outlined:focus,
+.editing-area li div.button.is-danger.is-outlined:active,
+.editing-area li div.button.is-danger.is-outlined.is-hovered,
+.editing-area li div.button.is-danger.is-outlined.is-active {
+  background-color: #ab1f35;
+  border-color: #ab1f35;
+  color: white;
 }
 
 .editing-area .pagination {
@@ -540,6 +564,11 @@ textarea {
 
 .editing-area .button span:last-child {
   margin-left: auto;
+}
+
+.editing-area .button .icon:first-child:not(:last-child) {
+  margin-left: calc(-0.5em - 1px);
+  margin-right: calc(-0.5em - 1px);
 }
 
 .tabs span.text {

@@ -2,6 +2,7 @@
 
 {% block custom_styles %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="{{ static('json-formatter-js/dist/json-formatter.css') }}">
 <link rel="stylesheet" href="{{ static('styles/data-explorer.css') }}">
 <link rel="stylesheet" href="{{ static('@loadingio/css-spinner/index.min.css') }}">
 {% endblock %}
@@ -9,6 +10,7 @@
 {% block custom_scripts %}
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script type="text/javascript" src="{{ static('scripts/bulma-collapsible.min.js') }}"></script>
+<script type="text/javascript" src="{{ static('json-formatter-js/dist/json-formatter.umd.js') }}"></script>
 <script type="text/javascript" src="{{ static('scripts/data_explorer.js') }}"></script>
 {% endblock %}
 

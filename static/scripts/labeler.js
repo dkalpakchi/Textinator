@@ -302,6 +302,10 @@
       );
     }
 
+    function isPurposeNode(node) {
+      return utils.isDefined(node) && node.hasAttribute("data-purpose");
+    }
+
     function isInsideTippyContent(node) {
       while (utils.isDefined(node.id) && !node.id.startsWith("tippy")) {
         if (!utils.isDefined(node)) break;
@@ -348,6 +352,14 @@
         node = node.parentNode;
       }
       return isEditingBatch(node) ? node : null;
+    }
+
+    function getEnclosingPurposeNode(node) {
+      while (!isPurposeNode(node)) {
+        if (!utils.isDefined(node)) break;
+        node = node.parentNode;
+      }
+      return isPurposeNode(node) ? node : null;
     }
 
     function getEnclosingParagraph(node) {
@@ -1094,38 +1106,99 @@
             } else if (utils.isDefined(closestEditingBatch)) {
               let uuid = closestEditingBatch.getAttribute("data-id"),
                 $editingBoard = $("#editingBoard"),
-                $closestBatch = $(closestEditingBatch),
-                url = $editingBoard.attr("data-url"),
-                $list = $editingBoard.find("li"),
-                clickedOnCurrent =
-                  $closestBatch.data("restored") !== undefined &&
-                  $closestBatch.data("restored");
+                $closestBatch = $(closestEditingBatch);
 
-              $list.removeClass("is-hovered");
-              if (clickedOnCurrent) {
-                $closestBatch.data("restored", false);
-                control.restoreOriginal();
-                control.clearBatch();
-              } else {
-                closestEditingBatch.classList.add("is-hovered");
-                $list.each(
-                  (i, n) =>
-                    void (
-                      $(n).data("restored") !== undefined &&
-                      $(n).data("restored", false)
-                    )
-                );
-                // The code above is a shorthand for this code below. Note that `void` is necessary to force expression to be evaluated
-                // and return `undefined` at the end.
-                // $list.each(function(i, n) {
-                //   if ($(n).data('restored') !== undefined) {
-                //     $(n).data('restored', false);
-                //   }
-                // });
-                if (utils.isDefined(uuid) && utils.isDefined(url)) {
-                  control.restoreBatch(uuid, url);
+              let purposeNode = getEnclosingPurposeNode(target);
+
+              if (utils.isDefined(purposeNode)) {
+                let purpose = purposeNode.getAttribute("data-purpose");
+                if (purpose === "s") {
+                  // show batch
+                  let url = $editingBoard.attr("data-url"),
+                    $list = $editingBoard.find("li"),
+                    clickedOnCurrent =
+                      $closestBatch.data("restored") !== undefined &&
+                      $closestBatch.data("restored");
+
+                  $list.find('[data-purpose="s"]').removeClass("is-hovered");
+                  if (clickedOnCurrent) {
+                    $closestBatch.data("restored", false);
+                    control.restoreOriginal();
+                    control.clearBatch();
+                  } else {
+                    purposeNode.classList.add("is-hovered");
+                    $list.each(
+                      (i, n) =>
+                        void (
+                          $(n).data("restored") !== undefined &&
+                          $(n).data("restored", false)
+                        )
+                    );
+                    // The code above is a shorthand for this code below. Note that `void` is necessary to force expression to be evaluated
+                    // and return `undefined` at the end.
+                    // $list.each(function(i, n) {
+                    //   if ($(n).data('restored') !== undefined) {
+                    //     $(n).data('restored', false);
+                    //   }
+                    // });
+                    if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                      control.restoreBatch(uuid, url);
+                    }
+                    $closestBatch.data("restored", true);
+                  }
+                } else if (purpose === "f") {
+                  // flag a batch as problematic
+                  let url = $editingBoard.attr("data-flag-url"),
+                    csrf = purposeNode.querySelector(
+                      'input[name="csrfmiddlewaretoken"]'
+                    ),
+                    batchButton =
+                      closestEditingBatch.querySelector('[data-purpose="s"]');
+
+                  if (closestEditingBatch.hasAttribute("data-flagged")) {
+                    if (
+                      closestEditingBatch.getAttribute("data-flagged") == "true"
+                    ) {
+                      // unflag
+                      if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                        control.changeBatchFlag(
+                          uuid,
+                          url,
+                          false,
+                          csrf.value,
+                          function () {
+                            batchButton.classList.remove("is-danger");
+                            batchButton.classList.add("is-link");
+                            closestEditingBatch.setAttribute(
+                              "data-flagged",
+                              false
+                            );
+                            purposeNode.classList.remove("is-active");
+                          }
+                        );
+                      }
+                    } else {
+                      // flag!!!
+                      if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                        control.changeBatchFlag(
+                          uuid,
+                          url,
+                          true,
+                          csrf.value,
+                          function () {
+                            batchButton.classList.add("is-danger");
+                            batchButton.classList.remove("is-link");
+                            closestEditingBatch.setAttribute(
+                              "data-flagged",
+                              true
+                            );
+                            purposeNode.classList.add("is-active");
+                          }
+                        );
+                      }
+                    }
+                  }
                 }
-                $closestBatch.data("restored", true);
               }
             }
           });
@@ -3146,6 +3219,7 @@
         let control = this;
         let textNode = cnodes[id];
         let cLength = this.getTextNodeLength(textNode);
+        let errors = 0;
 
         let cAcc = iAcc;
         while (
@@ -3166,6 +3240,7 @@
         return {
           node: textNode,
           acc: cAcc,
+          errors: errors,
         };
       },
       restoreNonUnitMarkers: function (non_unit_markers) {
@@ -3262,6 +3337,7 @@
           c2i: {}, // mapping between internal labels and those on the webpage
           multip: {}, // multi-paragraph nodes are stored here
           numInner: {},
+          likelyErrors: 0,
         };
         let numLabels = span_labels.length,
           cnodes = this.selectorArea.childNodes,
@@ -3341,6 +3417,7 @@
                   candLabelId,
                   state.acc
                 );
+                state.errors += startSearchRes.errors + endSearchRes.errors;
 
                 let hasRestored = control.restoreMarkedSpan(
                   startSearchRes.node,
@@ -3428,9 +3505,13 @@
                         state.c2i[dInfo.id] = control.getActiveChunk().id;
 
                         state.processed[dId].closed = true;
+                      } else {
+                        state.likelyErrors++;
                       }
                     }
                   }
+                } else {
+                  state.likelyErrors++;
                 }
               }
             }
@@ -3556,6 +3637,7 @@
                     );
                     textNode = searchRes.node;
                     innerAcc = searchRes.acc;
+                    state.likelyErrors += searchRes.errors;
                   }
                 } else {
                   // if there is an overlap, find a parent,
@@ -3607,6 +3689,7 @@
                     if (utils.isDefined(tagItem)) {
                       let tagNodes = tagItem.childNodes;
                       textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
+
                       // this is to render nodes that are nested on the same level
                       if (
                         state.numInner[cId] !== 0 &&
@@ -3657,6 +3740,7 @@
                     );
                     textNode = searchRes.node;
                     innerAcc = searchRes.acc;
+                    state.likelyErrors += searchRes.errors;
                   }
                 }
 
@@ -3677,6 +3761,8 @@
                     state.numInner[cId]++; // a default counter for labels within this paragraph, nested or not
                     state.c2i[state.curLabelId] = control.getActiveChunk().id;
                     innerAcc = span_labels[state.curLabelId]["start"];
+                  } else {
+                    state.likelyErrors++;
                   }
                 }
 
@@ -3687,6 +3773,12 @@
           } else {
             break;
           }
+        }
+
+        if (state.likelyErrors > 0) {
+          alert(
+            "The annotations are likely to be restored incorrectly.\nPlease do NOT submit any edits for these annotations\nand report this by clicking the red flag button\nnear the selected annotation button."
+          );
         }
       },
       restoreBatch: function (uuid, url) {
@@ -3766,6 +3858,25 @@
       },
       getEditingBatch: function () {
         return editingBatch;
+      },
+      changeBatchFlag: function (uuid, url, flag, csrfValue, callback) {
+        $.ajax({
+          method: "POST",
+          url: url,
+          dataType: "json",
+          data: {
+            csrfmiddlewaretoken: csrfValue,
+            uuid: uuid,
+            flag: flag,
+          },
+          success: function (data) {
+            if (data.errors) console.log("Caught errors!");
+            else callback();
+          },
+          error: function () {
+            console.log("ERROR!");
+          },
+        });
       },
     };
   })();
