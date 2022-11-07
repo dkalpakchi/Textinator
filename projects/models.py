@@ -427,6 +427,12 @@ class Project(CloneMixin, CommonModel):
         help_text=_("JSON configuration for the modal windows in the project. Currently available keys for modals are: 'flagged'"))
     editing_title_regex = models.TextField(_("Regular expression for editorial board"), default="", null=True, blank=True,
         help_text=_("The regular expression to be used for searching the annotated texts and using the first found result as a title of the batches to be edited"))
+    allow_editing  = models.BooleanField(_("should editing of own annotations be allowed?"), default=True)
+    editing_as_revision = models.BooleanField(_("should editing be saved as revisions?"), default=False,
+        help_text=_("""
+        By default editing happens directly in the annotated objects. If this setting is turned on,
+        the original objects will remain intact and separate reivison objects will be created"""))
+    allow_reviewing = models.BooleanField(_("should peer reviewing be enabled?"), default=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1289,7 +1295,7 @@ class Context(CommonModel):
         }
 
 
-class Batch(CommonModel):
+class Batch(Revisable, CommonModel):
     """
     Each time an annotator submits any annotation(s), an annotation batch is created
     for this annotator and a unique UUID is assigned tot his batch.
@@ -1341,7 +1347,7 @@ class Batch(CommonModel):
                 return display_title if res else "Empty"
             else:
                 content = inp.context.content
-                return "{} ... {}".format(content[:trim], content[-trim:])
+                return "{} ... {}".format(content[:trim//2], content[-trim//2:])
         elif lab and lab.context:
             if regex:
                 res = re.search(regex, lab.context.content)
@@ -1351,7 +1357,7 @@ class Batch(CommonModel):
                 return display_title if res else "Empty"
             else:
                 content = lab.context.content
-                return "{} ... {}".format(content[:trim], content[-trim:])
+                return "{} ... {}".format(content[:trim//2], content[-trim//2:])
         else:
             return "Empty"
 
@@ -1360,7 +1366,7 @@ class Batch(CommonModel):
         return Label.objects.filter(batch=self)
 
 
-class Input(CloneMixin, CommonModel):
+class Input(Orderable, Revisable, CloneMixin, CommonModel):
     """
     Holds an **instantiation** of a `Marker` that does not require specifying the start-end boundaries
     of the text. This mostly concerns the cases when a user provides an input via HTML `<input>` tag.
@@ -1397,8 +1403,6 @@ class Input(CloneMixin, CommonModel):
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    group_order = models.PositiveIntegerField(_("marker group order in the unit"), default=1, # TODO: rename
-        help_text=_("At the submission time"))
 
     @property
     def hash(self):
@@ -1440,7 +1444,7 @@ class Input(CloneMixin, CommonModel):
         return res
 
 
-class Label(CloneMixin, CommonModel):
+class Label(Orderable, Revisable, CloneMixin, CommonModel):
     """
     Holds an **instantiation** of a `Marker` that requires specifying the start-end boundaries
     of the text or is **NOT** provided via HTML `<input>` tag.
@@ -1472,8 +1476,6 @@ class Label(CloneMixin, CommonModel):
     undone = models.BooleanField(_("was undone?"), default=False,
         help_text=_("Indicates whether the annotator used 'Undo' button"))
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
-    group_order = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
-        help_text=_("At the submission time"))
 
     @property
     def hash(self):
@@ -1523,6 +1525,7 @@ class Label(CloneMixin, CommonModel):
         res['batch'] = str(self.batch)
         res['user'] = self.batch.user.username
         res['hash'] = self.hash
+        res['undone'] = self.undone
         return res
 
     def to_json(self, dt_format=None):
@@ -1532,6 +1535,7 @@ class Label(CloneMixin, CommonModel):
 
     def __str__(self):
         return self.text
+
 
 def delete_batch_if_empty(sender, **kwargs):
     try:
@@ -1543,36 +1547,6 @@ def delete_batch_if_empty(sender, **kwargs):
 
 signals.post_delete.connect(delete_batch_if_empty, sender=Label, dispatch_uid='project.models.label_delete_batches')
 signals.post_delete.connect(delete_batch_if_empty, sender=Input, dispatch_uid='project.models.input_delete_batches')
-
-class LabelReview(CommonModel):
-    """
-    **NOTE:** currently inactive, preparation for v1.1
-    """
-    class Meta:
-        verbose_name = _('label review')
-        verbose_name_plural = _('label reviews')
-
-    original = models.ForeignKey(Label, on_delete=models.CASCADE)
-    is_match = models.BooleanField(_("is a match?"), null=True,
-        help_text=_("Indicates whether the reviewed and original labels match"))
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    ambiguity_status = models.CharField(_("ambiguity?"), max_length=2, default='no',
-        choices=[
-            ('no', 'No ambiguity'), ('rr', 'Requires resolution'), ('rs', 'Resolved')
-        ],
-        help_text=_("Decided automatically to inform a decision maker"))
-    resolved_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL, related_name='resolved_by')
-    start = models.PositiveIntegerField(_("start position of the review label"), null=True,
-        help_text=_("If applicable"))
-    end = models.PositiveIntegerField(_("start position of the review label"), null=True,
-        help_text=_("If applicable"))
-    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
-    impossible = models.BooleanField(_("is impossible?"), default=False,
-        help_text=_("Indicates whether the reviewer marked the datapoint as impossible wrt. guidelines"))
-
-    @property
-    def text(self):
-        return self.original.input.context.content[self.start:self.end]
 
 
 class LabelRelation(CommonModel):
@@ -1657,19 +1631,8 @@ class UserProfile(CommonModel):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profiles')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='participant_profiles')
-
-    @property
-    def accepted(self):
-        return LabelReview.objects.filter(original__user=self.user).count()
-
-    def reviewed(self):
-        return LabelReview.objects.filter(user=self.user).count()
+    allowed_reviewing = models.BooleanField(_("allowed reviewing?"), default=False,
+        help_text=_("Whether the annotator is allowed to review for this project"))
 
     def __str__(self):
         return self.user.username
-
-
-# class JupyterNotebook(CommonModel):
-#     user = models.ForeignKye(User, on_delete=models.SET_NULL, related_name='notebooks')
-#     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='notebooks')
-#     filename = models.CharField(_("filename"), max_length=32)

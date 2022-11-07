@@ -423,10 +423,10 @@ def record_datapoint(request, proj):
     ctx_cache = caches['context']
     mode = data['mode']
 
-    batch_info = BatchInfo(data, proj, request.user)
+    batch_info = BatchInfo(data, proj, request.user, mode)
 
     if mode == 'r':
-        # # regular submission
+        # regular submission
         if not batch_info.project or not batch_info.data_source:
             raise Http404
 
@@ -447,32 +447,72 @@ def record_datapoint(request, proj):
         process_marker_groups(batch, batch_info, ctx_cache=ctx_cache)
         process_text_markers(batch, batch_info, ctx_cache=ctx_cache) # markers for the whole text
         process_chunks_and_relations(batch, batch_info, ctx_cache=ctx_cache)
-    elif mode == 'e':
-        # editing
+    elif mode == 'e' or mode == "rev":
+        # editing (e) or reviewing (rev)
         batch_uuid = data.get('batch')
-        try:
-            batch = Tm.Batch.objects.get(uuid=batch_uuid, user=batch_info.user)
-        except Batch.MultipleObjectsReturned:
-            return JsonResponse({'error': True})
+        is_project_author = batch_info.project.author == batch_info.user
+        is_project_shared = batch_info.project.shared_with(batch_info.user)
+
+        original_mode = mode
+        if batch_info.project.editing_as_revision and mode == 'e':
+            mode = 'rev'
+
+        if mode == "e":
+            try:
+                if is_project_author or is_project_shared:
+                    batch = Tm.Batch.objects.get(uuid=batch_uuid)
+                else:
+                    batch = Tm.Batch.objects.get(uuid=batch_uuid, user=batch_info.user)
+            except Tm.Batch.MultipleObjectsReturned:
+                return JsonResponse({'error': True})
+        elif mode == "rev":
+            profile = Tm.UserProfile.objects.get(
+                user=batch_info.user, project=batch_info.project
+            )
+
+            is_admin = is_project_author or is_project_shared
+
+            is_reviewer = profile.allowed_reviewing
+
+            if is_admin or is_reviewer:
+                try:
+                    # not necessarily one's own batches, but require a reviewer permission
+                    batch = Tm.Batch.objects.get(uuid=batch_uuid)
+                except Tm.Batch.MultipleObjectsReturned:
+                    return JsonResponse({'error': True})
+
+                revised_batch = Tm.Batch.objects.create(
+                    uuid=uuid.uuid4(), user=batch_info.user,
+                    revision_of=batch
+                )
+            else:
+                batch = None
 
         if batch:
             batch_inputs = {i.hash: i for i in Tm.Input.objects.filter(batch=batch)}
             batch_labels = {l.hash: l for l in Tm.Label.objects.filter(batch=batch)}
 
+            # Dealing with inputs
             inputs = []
             for input_type, changed_inputs in batch_info.inputs():
                 for name, changed in changed_inputs.items():
                     if isinstance(changed, dict):
+                        # this means we have changed a previous value
                         try:
                             inp = batch_inputs[changed['hash']]
-                            if inp.marker.code == name:
+                            if inp.marker.code == name and inp.content != changed['value']:
                                 inp.content = changed['value']
+                                if mode == "rev":
+                                    old_pk = inp.pk
+                                    inp.pk = None
+                                    inp.batch = revised_batch
+                                    inp.revision_of_id = old_pk
                                 inputs.append(inp)
                         except KeyError:
                             # smth is wrong
                             pass
                     elif isinstance(changed, str):
-                        # we create a new record!
+                        # we create a value of a new parameter altogether
                         try:
                             data_source = Tm.DataSource.objects.get(pk=data['datasource'])
                         except Tm.DataSource.DoesNotExist:
@@ -484,28 +524,61 @@ def record_datapoint(request, proj):
                                     name: changed
                                 }
                             }
-                            process_inputs(batch, batch_info, **kwargs)
+
+                            if mode == "e":
+                                process_inputs(batch, batch_info, **kwargs)
+                            elif mode == "rev":
+                                process_inputs(revised_batch, batch_info, **kwargs)
 
             if inputs:
-                Tm.Input.objects.bulk_update(inputs, ['content'])
+                if mode == "e":
+                    Tm.Input.objects.bulk_update(inputs, ['content'])
+                elif mode == "rev":
+                    Tm.Input.objects.bulk_create(inputs)
 
+            # Dealing with labels
             for chunk in batch_info.chunks:
                 if chunk.get('deleted', False):
                     chunk_hash = chunk.get('hash')
                     if chunk_hash and chunk_hash in batch_labels:
-                        batch_labels[chunk_hash].delete()
-            process_chunks_and_relations(batch, batch_info)
+                        if mode == "e":
+                            batch_labels[chunk_hash].delete()
+                        elif mode == "rev":
+                            revised_label = batch_labels[chunk_hash]
+                            revised_label.pk = None
+                            revised_label.batch = revised_batch
+                            revised_label.undone = True
+                            revised_label.save()
+
+            if mode == "e":
+                process_chunks_and_relations(batch, batch_info)
+            elif mode == "rev":
+                process_chunks_and_relations(revised_batch, batch_info)
 
             batch.save() # this updates dt_updated
+
+            if mode != original_mode:
+                mode = original_mode
+
+            kwargs = {}
+            if mode == "rev":
+                kwargs['template'] = 'partials/components/areas/reviewing.html'
+                try:
+                    kwargs['ds_id'] = int(data['datasource'])
+                    kwargs['dp_id'] = int(data['datapoint'])
+                except Value:
+                    kwargs['ds_id'], kwargs['dp_id'] = -1, -1
 
             return JsonResponse({
                 'error': False,
                 'mode': mode,
-                'template': render_editing_board(request, batch_info.project, batch_info.user, 1)
+                'template': render_editing_board(
+                    request, batch_info.project, batch_info.user, 1,
+                    **kwargs
+                )
             })
         else:
             return JsonResponse({'error': True})
-
 
     return JsonResponse({
         'error': False,
@@ -522,6 +595,26 @@ def editing(request, proj):
     project = get_object_or_404(Tm.Project, pk=proj)
     return JsonResponse({
         'template': render_editing_board(request, project, request.user, page)
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def review(request, proj):
+    try:
+        ds = int(request.GET.get('ds', -1))
+        dp = int(request.GET.get('dp', -1))
+        page = int(request.GET.get("p", 1))
+    except ValueError:
+        ds, dp = -1, -1
+        page = 1
+    project = get_object_or_404(Tm.Project, pk=proj)
+    return JsonResponse({
+        'template': render_editing_board(
+            request, project, request.user, page,
+            template='partials/components/areas/reviewing.html',
+            ds_id=ds, dp_id=dp
+        )
     })
 
 

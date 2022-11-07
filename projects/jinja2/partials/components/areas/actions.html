@@ -7,16 +7,24 @@
           <span>{{ _("guidelines")|title }}</span>
         </a>
       {% endif %}
-      <a id="editingModeButton" href="{{ url('projects:editing', kwargs={'proj': project.pk}) }}" class="button" data-mode="o">
-        <span class="icon"><i class="fas fa-edit"></i></span>
-        <span>{{ _("editor")|capitalize }}</span>
-      </a>
+      {% if project.allow_editing %}
+        <a id="editingModeButton" href="{{ url('projects:editing', kwargs={'proj': project.pk}) }}" class="button" data-mode="o">
+          <span class="icon"><i class="fas fa-edit"></i></span>
+          <span>{{ _("edit")|capitalize }}</span>
+        </a>
+      {% endif %}
+      {% if project.allow_reviewing %}
+        <a id="reviewingModeButton" href="{{ url('projects:review', kwargs={'proj': project.pk}) }}" class="button" data-mode="o">
+          <span class="icon"><i class="fas fa-pencil-ruler"></i></span>
+          <span>{{ _("review")|capitalize }}</span>
+        </a>
+      {% endif %}
     </div>
     <div class="message-body">
       <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
         {{ csrf_input }}
         <input type="hidden" name="mode" value="r">
-        <a class='submit button'>
+        <a data-type="submit" class='submit button'>
           <span class="icon"><i class="fas fa-paper-plane"></i></span>
           <span>{{ _("submit")|capitalize }}</span>
         </a>

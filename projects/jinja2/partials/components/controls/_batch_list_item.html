@@ -1,0 +1,23 @@
+<li data-mode='e' data-id="{{batch.uuid}}" data-flagged="{{batch.is_flagged|bool2str}}">
+  <div class="button is-small is-fullwidth {% if batch.is_flagged %}is-danger{% else %}{% if mode == 'review' %}is-dark{% else %}is-link{% endif %}{% endif %} is-outlined" data-purpose='s'>
+    <span>
+      {% if batch.revision_of %}
+        <i class="fas fa-tools"></i>
+      {% endif %}
+      {% if project.editing_title_regex %}
+        {{ batch.get_title(regex=project.editing_title_regex) }}
+      {% else %}
+        {{ batch.get_title() }}
+      {% endif %}
+    </span>
+    <span>
+      {{batch.labels.count()}} span(s) &nbsp; | &nbsp; {% if is_admin %}{{batch.user.username}}, {% endif %}{{ batch.dt_created|naturaltime }}
+    </span>
+  </div>
+  <div class="button is-small is-danger is-outlined{% if batch.is_flagged %} is-active{% endif %}" data-purpose='f'>
+    <span class="icon is-small">
+      <i class="fas fa-flag"></i>
+    </span>
+    {{csrf_input}}
+  </div>
+</li>

@@ -293,12 +293,22 @@
       );
     }
 
-    function isEditingBatch(node) {
+    function isBatch(node) {
       return (
         utils.isDefined(node) &&
         node.nodeName == "LI" &&
         node.hasAttribute("data-mode") &&
         node.getAttribute("data-mode") == "e"
+      );
+    }
+
+    function isPostSubmitArea(node) {
+      return (
+        utils.isDefined(node) &&
+        node.nodeName == "ARTICLE" &&
+        node.hasAttribute("data-mode") &&
+        node.hasAttribute("id") &&
+        node.id === node.getAttribute("data-mode") + "Board"
       );
     }
 
@@ -322,44 +332,44 @@
       return node == ancestorCand;
     }
 
-    function getEnclosingLabel(node) {
-      while (isLabel(node.parentNode)) {
+    function getEnclosing(node, isOfType) {
+      while (isOfType(node.parentNode)) {
         if (!utils.isDefined(node)) break;
         node = node.parentNode;
       }
-      return isLabel(node) ? node : null;
+      return isOfType(node) ? node : null;
+    }
+
+    function getClosest(node, isOfType) {
+      while (!isOfType(node)) {
+        if (!utils.isDefined(node)) break;
+        node = node.parentNode;
+      }
+      return isOfType(node) ? node : null;
+    }
+
+    function getEnclosingLabel(node) {
+      return getEnclosing(node, isLabel);
+    }
+
+    function getClosestBatch(node) {
+      return getClosest(node, isBatch);
+    }
+
+    function getClosestPurposeNode(node) {
+      return getClosest(node, isPurposeNode);
     }
 
     function getClosestMarker(node) {
-      while (!isMarker(node)) {
-        if (!utils.isDefined(node)) break;
-        node = node.parentNode;
-      }
-      return isMarker(node) ? node : null;
+      return getClosest(node, isMarker);
     }
 
     function getClosestRelation(node) {
-      while (!isRelation(node)) {
-        if (!utils.isDefined(node)) break;
-        node = node.parentNode;
-      }
-      return isRelation(node) ? node : null;
+      return getClosest(node, isRelation);
     }
 
-    function getEnclosingEditingBatch(node) {
-      while (!isEditingBatch(node)) {
-        if (!utils.isDefined(node)) break;
-        node = node.parentNode;
-      }
-      return isEditingBatch(node) ? node : null;
-    }
-
-    function getEnclosingPurposeNode(node) {
-      while (!isPurposeNode(node)) {
-        if (!utils.isDefined(node)) break;
-        node = node.parentNode;
-      }
-      return isPurposeNode(node) ? node : null;
+    function getClosestPostSubmitArea(node) {
+      return getClosest(node, isPostSubmitArea);
     }
 
     function getEnclosingParagraph(node) {
@@ -681,6 +691,7 @@
       markersArea: null,
       selectorArea: null, // the area where the article is
       markerGroupsArea: null,
+      submitForm: null,
       contextMenuPlugins: { sharedBetweenMarkers: {} },
       checkedOuterRadio: {}, // to keep tracked of nested radio button groups
       checkedInnerRadio: {},
@@ -711,6 +722,8 @@
         let repr = document.querySelector("#relationRepr");
         if (utils.isDefined(repr))
           this.drawingType = JSON.parse(repr.textContent);
+        if (utils.isDefined(this.actionsArea))
+          this.submitForm = this.actionsArea.querySelector("#inputForm");
         if (utils.isDefined(this.relationsArea)) this.initSvg();
         this.initEvents();
         this.updateMarkAllCheckboxes();
@@ -1079,23 +1092,25 @@
             );
           }
 
-          // editing mode events
+          // editing & reviewing mode events
           document.addEventListener("click", function (e) {
             let target = e.target,
-              closestEditingBatch = getEnclosingEditingBatch(target);
+              closestBatch = getClosestBatch(target),
+              closestPsArea = getClosestPostSubmitArea(target);
 
-            // TODO: this relies on us not including any icons in the buttons, which we don't so far
             if (target.tagName == "A" && target.hasAttribute("data-page")) {
-              let editingButton = document.querySelector("#editingModeButton"),
-                editingArea = document.querySelector("#editingBoard");
+              // pagination events
+              let psButton = document.querySelector(
+                "#" + closestPsArea.getAttribute("data-mode") + "ModeButton"
+              );
               $.ajax({
                 type: "GET",
                 url:
-                  editingModeButton.getAttribute("href") +
+                  psButton.getAttribute("href") +
                   "?p=" +
                   target.getAttribute("data-page"),
                 success: function (d) {
-                  editingArea.outerHTML = d.template;
+                  closestPsArea.outerHTML = d.template;
 
                   control.fixUI();
                 },
@@ -1103,19 +1118,20 @@
                   console.log("Error while invoking editing mode!");
                 },
               });
-            } else if (utils.isDefined(closestEditingBatch)) {
-              let uuid = closestEditingBatch.getAttribute("data-id"),
-                $editingBoard = $("#editingBoard"),
-                $closestBatch = $(closestEditingBatch);
+            } else if (utils.isDefined(closestBatch)) {
+              // clicked on one of the batches
+              let uuid = closestBatch.getAttribute("data-id"),
+                $psArea = $(closestPsArea),
+                $closestBatch = $(closestBatch);
 
-              let purposeNode = getEnclosingPurposeNode(target);
+              let purposeNode = getClosestPurposeNode(target);
 
               if (utils.isDefined(purposeNode)) {
                 let purpose = purposeNode.getAttribute("data-purpose");
                 if (purpose === "s") {
                   // show batch
-                  let url = $editingBoard.attr("data-url"),
-                    $list = $editingBoard.find("li"),
+                  let url = $psArea.attr("data-url"),
+                    $list = $('[id*="Board"] li'),
                     clickedOnCurrent =
                       $closestBatch.data("restored") !== undefined &&
                       $closestBatch.data("restored");
@@ -1148,17 +1164,15 @@
                   }
                 } else if (purpose === "f") {
                   // flag a batch as problematic
-                  let url = $editingBoard.attr("data-flag-url"),
+                  let url = $psArea.attr("data-flag-url"),
                     csrf = purposeNode.querySelector(
                       'input[name="csrfmiddlewaretoken"]'
                     ),
                     batchButton =
-                      closestEditingBatch.querySelector('[data-purpose="s"]');
+                      closestBatch.querySelector('[data-purpose="s"]');
 
-                  if (closestEditingBatch.hasAttribute("data-flagged")) {
-                    if (
-                      closestEditingBatch.getAttribute("data-flagged") == "true"
-                    ) {
+                  if (closestBatch.hasAttribute("data-flagged")) {
+                    if (closestBatch.getAttribute("data-flagged") == "true") {
                       // unflag
                       if (utils.isDefined(uuid) && utils.isDefined(url)) {
                         control.changeBatchFlag(
@@ -1168,11 +1182,17 @@
                           csrf.value,
                           function () {
                             batchButton.classList.remove("is-danger");
-                            batchButton.classList.add("is-link");
-                            closestEditingBatch.setAttribute(
-                              "data-flagged",
-                              false
-                            );
+                            if (
+                              closestPsArea.getAttribute("data-mode") ==
+                              "editing"
+                            )
+                              batchButton.classList.add("is-link");
+                            else if (
+                              closestPsArea.getAttribute("data-mode") ==
+                              "reviewing"
+                            )
+                              batchButton.classList.add("is-dark");
+                            closestBatch.setAttribute("data-flagged", false);
                             purposeNode.classList.remove("is-active");
                           }
                         );
@@ -1187,11 +1207,17 @@
                           csrf.value,
                           function () {
                             batchButton.classList.add("is-danger");
-                            batchButton.classList.remove("is-link");
-                            closestEditingBatch.setAttribute(
-                              "data-flagged",
-                              true
-                            );
+                            if (
+                              closestPsArea.getAttribute("data-mode") ==
+                              "editing"
+                            )
+                              batchButton.classList.remove("is-link");
+                            else if (
+                              closestPsArea.getAttribute("data-mode") ==
+                              "reviewing"
+                            )
+                              batchButton.classList.remove("is-dark");
+                            closestBatch.setAttribute("data-flagged", true);
                             purposeNode.classList.add("is-active");
                           }
                         );
@@ -3180,6 +3206,10 @@
           this.markersArea.querySelector('.marker[data-s="' + code + '"]'),
           mmpi
         );
+
+        if (spanLabels[labelId].undone) {
+          this.disableChunk(this.getActiveChunk());
+        }
         return true;
       },
       getOverlappingSpans: function (state, spanLabels) {
@@ -3781,6 +3811,12 @@
           );
         }
       },
+      getCurrentDatasource: function () {
+        return this.selectorArea.getAttribute("data-s");
+      },
+      getCurrentDatapoint: function () {
+        return this.selectorArea.getAttribute("data-dp");
+      },
       restoreBatch: function (uuid, url) {
         let control = this;
         if (utils.isDefined(url)) {
@@ -3800,8 +3836,8 @@
 
               if (!utils.isDefined(originalConfig)) {
                 originalConfig = {
-                  "data-s": control.selectorArea.getAttribute("data-s"),
-                  "data-dp": control.selectorArea.getAttribute("data-dp"),
+                  "data-s": control.getCurrentDatasource(),
+                  "data-dp": control.getCurrentDatapoint(),
                   resetText: resetText,
                   resetTextHTML: resetTextHTML,
                 };
@@ -3935,7 +3971,9 @@
           $submittedToday.text(data["submitted_today"]);
           $submittedToday.append($('<span class="smaller">q</span>'));
 
-          $('#inputForm input[type="text"]').val(data["input"]);
+          $(labelerModule.submitForm)
+            .find('input[type="text"]')
+            .val(data["input"]);
         },
         error: function () {
           console.log("ERROR!");
@@ -4015,124 +4053,134 @@
     // - making labels in relationships transparent works very poorly for nested labels, so think of another way
 
     // submitting the marked labels and/or relations with(out) inputs
-    $("#inputForm .submit.button").on("click", function (e) {
-      e.preventDefault();
+    $(labelerModule.submitForm)
+      .find('a[data-type="submit"]')
+      .on("click", function (e) {
+        e.preventDefault();
 
-      // check if restrictions are violated
-      if (!labelerModule.checkRestrictions()) return;
+        // check if restrictions are violated
+        if (!labelerModule.checkRestrictions()) return;
 
-      let $inputForm = $("#inputForm");
+        let $inputForm = $(labelerModule.submitForm);
 
-      let inputFormData = $inputForm.serializeObject();
+        let inputFormData = $inputForm.serializeObject();
 
-      // if there's an input form field, then create input_context
-      // the reason why we use false as a param to getContextText
-      // is to because sometimes browser will auto-correct small mistakes
-      // like double spaces, which are present in the data,
-      // but when .surroundContext happens, it does so on the TEXT_NODE
-      // which contains the original uncorrected text
-      inputFormData["context"] = labelerModule.getContextText(false);
+        // if there's an input form field, then create input_context
+        // the reason why we use false as a param to getContextText
+        // is to because sometimes browser will auto-correct small mistakes
+        // like double spaces, which are present in the data,
+        // but when .surroundContext happens, it does so on the TEXT_NODE
+        // which contains the original uncorrected text
+        inputFormData["context"] = labelerModule.getContextText(false);
 
-      $.extend(inputFormData, labelerModule.getSubmittableDict());
+        $.extend(inputFormData, labelerModule.getSubmittableDict());
 
-      inputFormData["datasource"] = parseInt(
-        labelerModule.selectorArea.getAttribute("data-s"),
-        10
-      );
-      inputFormData["datapoint"] = parseInt(
-        labelerModule.selectorArea.getAttribute("data-dp"),
-        10
-      );
+        inputFormData["datasource"] = parseInt(
+          labelerModule.getCurrentDatasource(),
+          10
+        );
+        inputFormData["datapoint"] = parseInt(
+          labelerModule.getCurrentDatapoint(),
+          10
+        );
 
-      if (labelerModule.hasNewInfo(inputFormData)) {
-        labelerModule.getMarkerTypes().forEach(function (x) {
-          inputFormData[x] = JSON.stringify(inputFormData[x]);
-        });
+        if (labelerModule.hasNewInfo(inputFormData)) {
+          labelerModule.getMarkerTypes().forEach(function (x) {
+            inputFormData[x] = JSON.stringify(inputFormData[x]);
+          });
 
-        if (inputFormData["mode"] == "e")
-          inputFormData["batch"] = labelerModule.getEditingBatch();
+          if (inputFormData["mode"] == "e" || inputFormData["mode"] == "rev") {
+            inputFormData["batch"] = labelerModule.getEditingBatch();
+          }
 
-        $.ajax({
-          method: "POST",
-          url: $inputForm.attr("action"),
-          dataType: "json",
-          data: inputFormData,
-          success: function (data) {
-            if (data["error"] === false) {
-              if (data["mode"] == "r") {
-                if (labelerModule.disableSubmittedLabels)
-                  labelerModule.disableChunks(
-                    JSON.parse(inputFormData["chunks"])
-                  );
-                else labelerModule.unmark(JSON.parse(inputFormData["chunks"]));
+          $.ajax({
+            method: "POST",
+            url: $inputForm.attr("action"),
+            dataType: "json",
+            data: inputFormData,
+            success: function (data) {
+              if (data["error"] === false) {
+                if (data["mode"] == "r") {
+                  if (labelerModule.disableSubmittedLabels)
+                    labelerModule.disableChunks(
+                      JSON.parse(inputFormData["chunks"])
+                    );
+                  else
+                    labelerModule.unmark(JSON.parse(inputFormData["chunks"]));
 
-                $(labelerModule.markersArea)
-                  .find("textarea")
-                  .each(function (i, x) {
-                    $(x).val("");
-                  });
-                $(labelerModule.markerGroupsArea)
-                  .find("#markerGroups textarea")
-                  .each(function (i, x) {
-                    $(x).val("");
-                  });
-                $(labelerModule.markersArea)
-                  .find("input")
-                  .each(function (i, x) {
-                    if (
-                      x.type != "radio" &&
-                      x.type != "checkbox" &&
-                      x.type != "submit" &&
-                      x.type != "hidden"
-                    )
-                      x.value = "";
-                    if (x.type == "radio" || x.type == "checkbox")
-                      x.checked = false;
-                  });
-                $(labelerModule.markersArea)
-                  .find("output")
-                  .each(function (i, x) {
-                    $(x).text("???");
-                  }); // labels for input[type="range"]
-                $(labelerModule.markerGroupsArea)
-                  .find("#markerGroups input")
-                  .each(function (i, x) {
-                    $(x).val("");
-                  });
-                $(labelerModule.markerGroupsArea)
-                  .find("output")
-                  .each(function (i, x) {
-                    $(x).text("???");
-                  }); // labels for input[type="range"]
-                if (data["trigger_update"] === true) {
-                  getNewText(function () {
-                    return true;
-                  }, $("#getNewArticle"));
+                  $(labelerModule.markersArea)
+                    .find("textarea")
+                    .each(function (i, x) {
+                      $(x).val("");
+                    });
+                  $(labelerModule.markerGroupsArea)
+                    .find("#markerGroups textarea")
+                    .each(function (i, x) {
+                      $(x).val("");
+                    });
+                  $(labelerModule.markersArea)
+                    .find("input")
+                    .each(function (i, x) {
+                      if (
+                        x.type != "radio" &&
+                        x.type != "checkbox" &&
+                        x.type != "submit" &&
+                        x.type != "hidden"
+                      )
+                        x.value = "";
+                      if (x.type == "radio" || x.type == "checkbox")
+                        x.checked = false;
+                    });
+                  $(labelerModule.markersArea)
+                    .find("output")
+                    .each(function (i, x) {
+                      $(x).text("???");
+                    }); // labels for input[type="range"]
+                  $(labelerModule.markerGroupsArea)
+                    .find("#markerGroups input")
+                    .each(function (i, x) {
+                      $(x).val("");
+                    });
+                  $(labelerModule.markerGroupsArea)
+                    .find("output")
+                    .each(function (i, x) {
+                      $(x).text("???");
+                    }); // labels for input[type="range"]
+                  if (data["trigger_update"] === true) {
+                    getNewText(function () {
+                      return true;
+                    }, $("#getNewArticle"));
+                  }
+                } else if (data["mode"] == "e") {
+                  $("#editingBoard").html(data.template);
+                  $("#editingBoard")
+                    .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
+                    .addClass("is-hovered");
+                  alert("Your edit is successfully saved!");
+                } else if (data["mode"] == "rev") {
+                  $("#reviewingBoard").html(data.template);
+                  $("#reviewingBoard")
+                    .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
+                    .addClass("is-hovered");
+                  alert("Your review is successfully saved!");
                 }
-              } else if (data["mode"] == "e") {
-                $("#editingBoard").html(data.template);
-                $("#editingBoard")
-                  .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
-                  .addClass("is-hovered");
-                alert("Your edit is successfully saved!");
               }
-            }
 
-            // TODO; trigger iff .countdown is present
-            // $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
+              // TODO; trigger iff .countdown is present
+              // $('.countdown').trigger('cdAnimateStop').trigger('cdAnimate');
 
-            labelerModule.postSubmitHandler(data.batch);
+              labelerModule.postSubmitHandler(data.batch);
 
-            $("#undoLast").attr("disabled", false);
-          },
-          error: function () {
-            console.log("ERROR!");
-            $("#undoLast").attr("disabled", true);
-            // $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');
-          },
-        });
-      }
-    });
+              $("#undoLast").attr("disabled", false);
+            },
+            error: function () {
+              console.log("ERROR!");
+              $("#undoLast").attr("disabled", true);
+              // $('.countdown').trigger('cdAnimateReset').trigger('cdAnimate');
+            },
+          });
+        }
+      });
 
     // get a new article from the data source(s)
     $("#getNewArticle").on("click", function (e) {
@@ -4220,8 +4268,8 @@
         data: {
           csrfmiddlewaretoken: csrf,
           feedback: JSON.stringify(data),
-          ds_id: labelerModule.selectorArea.getAttribute("data-s"),
-          dp_id: labelerModule.selectorArea.getAttribute("data-dp"),
+          ds_id: labelerModule.getCurrentDatasource(),
+          dp_id: labelerModule.getCurrentDatapoint(),
         },
         success: function () {
           //alert("Thank you for your feedback!");
@@ -4264,10 +4312,16 @@
       labelerModule.showRelationGraph(labelerModule.removeCurrentRelation());
     });
 
-    $("#editingModeButton").on("click", function (e) {
-      e.preventDefault();
+    function adjustModeWindow(e, actionTitle, callbackOk, callbackData) {
       let $target = $(e.target).closest("a"),
         mode = $target.attr("data-mode");
+
+      if (!utils.isDefined(callbackOk)) callbackOk = function () {};
+
+      if (!utils.isDefined(callbackData))
+        callbackData = function () {
+          return {};
+        };
 
       let isOk =
         mode != "o" ||
@@ -4278,13 +4332,15 @@
       if (isOk) {
         let $lastCol = $(labelerModule.taskArea).find(".column:last");
 
-        if (mode == "o") {
+        if (mode === "o") {
           $.ajax({
             type: "GET",
             url: $target.attr("href"),
+            dataType: "json",
+            data: callbackData(),
             success: function (d) {
               $lastCol.prepend(d.template);
-              $("#inputForm input[name='mode']").val("e");
+              callbackOk($target, $lastCol, mode);
               $target.attr("data-mode", "c");
               $target.empty();
               $target.append(
@@ -4295,32 +4351,71 @@
               $target.append(
                 $(
                   "<span>" +
-                    utils.title(django.gettext("stop editing")) +
+                    utils.title(django.gettext("stop " + actionTitle)) +
                     "</span>"
                 )
               );
               labelerModule.fixUI();
             },
             error: function () {
-              console.log("Error while invoking editing mode!");
+              console.log("Error while invoking " + actionTitle + " mode!");
             },
           });
-        } else if (mode == "c") {
-          $lastCol.find("#editingBoard").remove();
+        } else if (mode === "c") {
           $target.attr("data-mode", "o");
-          $("#inputForm input[name='mode']").val("r");
           $target.empty();
-          $target.append(
-            $("<span class='icon'><i class='fas fa-edit'></i></span>")
-          );
-          $target.append(
-            $("<span>" + utils.title(django.gettext("editor")) + "</span>")
-          );
+          callbackOk($target, $lastCol, mode);
+
           labelerModule.restoreOriginal();
           labelerModule.clearBatch();
           labelerModule.fixUI();
         }
       }
+    }
+
+    $("#editingModeButton").on("click", function (e) {
+      e.preventDefault();
+      adjustModeWindow(e, "editing", function ($target, $lastCol, mode) {
+        if (mode === "o") {
+          $(labelerModule.submitForm).find("input[name='mode']").val("e");
+        } else if (mode === "c") {
+          $lastCol.find("#editingBoard").remove();
+          $(labelerModule.submitForm).find("input[name='mode']").val("r");
+          $target.append(
+            $("<span class='icon'><i class='fas fa-edit'></i></span>")
+          );
+          $target.append(
+            $("<span>" + utils.title(django.gettext("edit")) + "</span>")
+          );
+        }
+      });
+    });
+
+    $("#reviewingModeButton").on("click", function (e) {
+      e.preventDefault();
+      adjustModeWindow(
+        e,
+        "reviewing",
+        function ($target, $lastCol, mode) {
+          if (mode === "o") {
+            $(labelerModule.submitForm).find("input[name='mode']").val("rev");
+          } else if (mode == "c") {
+            $lastCol.find("#reviewingBoard").remove();
+            $target.append(
+              $("<span class='icon'><i class='fas fa-pencil-ruler'></i></span>")
+            );
+            $target.append(
+              $("<span>" + utils.title(django.gettext("review")) + "</span>")
+            );
+          }
+        },
+        function () {
+          return {
+            ds: labelerModule.getCurrentDatasource(),
+            dp: labelerModule.getCurrentDatapoint(),
+          };
+        }
+      );
     });
   });
 })(window.jQuery, window.d3, window.tippy, window.django);

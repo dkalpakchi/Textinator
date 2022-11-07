@@ -3,6 +3,9 @@ import json
 import copy
 import operator
 
+from django.db import models, transaction
+from django.utils.translation import gettext_lazy as _
+
 class DatapointInfo:
     def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, proj_id=None, is_empty=False, no_data=False, is_dialogue=False, is_delayed=False):
         self.id = dp_id
@@ -64,3 +67,18 @@ class JSONFormConfig:
     @property
     def config(self):
         return self.__cfg
+
+
+class Revisable(models.Model):
+    revision_of = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='revisions')
+
+    class Meta:
+        abstract = True
+
+
+class Orderable(models.Model):
+    group_order = models.PositiveIntegerField(_("marker group order in the unit"), default=1,
+        help_text=_("At the submission time"))
+
+    class Meta:
+        abstract = True

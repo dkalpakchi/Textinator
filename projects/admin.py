@@ -159,15 +159,19 @@ class UserProfileInline(CommonNestedStackedInline):
 
 
 class LabelInline(CommonStackedInline):
-    raw_id_fields = ('context',)
+    raw_id_fields = ('context', 'revision_of')
     readonly_fields = CommonStackedInline.readonly_fields + ['text']
     model = Tm.Label
     extra = 0
 
 
-class LabelReviewInline(CommonStackedInline):
-    readonly_fields = CommonStackedInline.readonly_fields + ['text']
-    model = Tm.LabelReview
+class BatchInline(CommonStackedInline):
+    show_change_link = True
+    verbose_name = _("revision")
+    verbose_name_plural = _("revisions")
+    raw_id_fields = ('revision_of',)
+    readonly_fields = CommonStackedInline.readonly_fields
+    model = Tm.Batch
     extra = 0
 
 
@@ -196,7 +200,7 @@ class RelationVariantInline(CommonNestedStackedInline):
 
 
 class InputInline(CommonStackedInline):
-    raw_id_fields = ('context', 'batch', 'marker')
+    raw_id_fields = ('context', 'batch', 'marker', 'revision_of')
     model = Tm.Input
     extra = 0
 
@@ -339,7 +343,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
         }),
         (_('settings').title(), {
             'fields': ('data_order', 'is_open', 'allow_selecting_labels', 'disable_submitted_labels',
-                'disjoint_annotation', 'auto_text_switch', 'editing_title_regex')
+                'disjoint_annotation', 'auto_text_switch', 'allow_editing', 'editing_as_revision', 'allow_reviewing', 'editing_title_regex')
         }),
         (_('administration').title(), {
             'fields': ('temporary_message',)
@@ -402,13 +406,15 @@ class InputAdmin(CommonModelAdmin):
     list_display = ['content', 'context']
     search_fields = ['context__content', 'content']
     readonly_fields = CommonModelAdmin.readonly_fields + ['batch']
+    raw_id_fields = ('revision_of',)
 
 
 @admin.register(Tm.Batch)
 class BatchAdmin(CommonModelAdmin):
-    inlines = [InputInline, LabelInline, LabelRelationInline]
+    inlines = [InputInline, LabelInline, LabelRelationInline, BatchInline]
     search_fields = ['input__content', 'uuid']
     list_display = ['uuid', 'project', 'user']
+    raw_id_fields = ('revision_of',)
 
 
 # TODO: translation?
@@ -424,22 +430,11 @@ class LabelAdmin(CommonModelAdmin):
        'undone'
     )
     readonly_fields = CommonModelAdmin.readonly_fields + ['text', 'batch']
-    inlines = [LabelReviewInline]
     search_fields = ['context__content', 'batch__uuid']
+    raw_id_fields = ('revision_of',)
 
     def get_queryset(self, request):
         qs = super(LabelAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(user=request.user)
-
-
-@admin.register(Tm.LabelReview)
-class LabelReviewAdmin(CommonModelAdmin):
-    readonly_fields = CommonModelAdmin.readonly_fields + ['text']
-
-    def get_queryset(self, request):
-        qs = super(LabelReviewAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
         return qs.filter(user=request.user)

@@ -530,11 +530,16 @@ textarea {
   overflow-y: scroll;
 }
 
+.editing-area ul > ul {
+  margin-left: 1.5em;
+}
+
 .editing-area li {
   display: flex;
 }
 
-.editing-area li:not(:last-child) {
+.editing-area ul > ul > li,
+.editing-area ul > li:not(:last-child) {
   margin-bottom: 0.3em;
 }
 

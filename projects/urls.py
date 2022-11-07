@@ -11,6 +11,7 @@ urlpatterns = [
     path('<proj>/article/undo_last', views.undo_last, name='undo_last'),
     path('<proj>/record_datapoint/', views.record_datapoint, name="record_datapoint"),
     path('<proj>/edit/', views.editing, name="editing"),
+    path('<proj>/review/', views.review, name='review'),
     path('<proj>/join', views.join_or_leave_project, name='join_or_leave'),
     path('<proj>/time_report', views.time_report, name='time_report'),
     path('<proj>/explorer', views.data_explorer, name='data_explorer'),

@@ -10,7 +10,7 @@ from .models import *
 
 
 class BatchInfo:
-    def __init__(self, data, proj, user):
+    def __init__(self, data, proj, user, mode):
         self.chunks = json.loads(data['chunks'])
         self.relations = json.loads(data['relations'])
         self.marker_groups = json.loads(data["marker_groups"], object_pairs_hook=OrderedDict)
@@ -105,22 +105,46 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
         return (ctx_cache, label_cache), saved_labels
 
 
-def render_editing_board(request, project, user, page):
+def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None):
     is_author, is_shared = project.author == user, project.shared_with(user)
 
     if is_author or is_shared:
-        label_batches = Label.objects.filter(marker__project=project).values_list('batch__uuid', flat=True)
-        input_batches = Input.objects.filter(marker__project=project).values_list('batch__uuid', flat=True)
+        label_batches = Label.objects.filter(marker__project=project)
+        input_batches = Input.objects.filter(marker__project=project)
     else:
-        label_batches = Label.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
-        input_batches = Input.objects.filter(batch__user=user, marker__project=project).values_list('batch__uuid', flat=True)
+        label_batches = Label.objects.filter(batch__user=user, marker__project=project)
+        input_batches = Input.objects.filter(batch__user=user, marker__project=project)
+
+    if ds_id and dp_id:
+        if ds_id > 0 and dp_id > 0:
+            label_batches = label_batches.filter(
+                context__datasource_id=ds_id,
+                context__datapoint=dp_id
+            )
+            input_batches = input_batches.filter(
+                context__datasource_id=ds_id,
+                context__datapoint=dp_id
+            )
+        else:
+            label_batches, input_batches = None, None
+
+    if label_batches:
+        label_batches = label_batches.values_list('batch__uuid', flat=True)
+    else:
+        label_batches = []
+
+    if input_batches:
+        input_batches = input_batches.values_list('batch__uuid', flat=True)
+    else:
+        input_batches = []
 
     batch_uuids = set(label_batches) | set(input_batches)
-    batches = Batch.objects.filter(uuid__in=batch_uuids).order_by(F('dt_created').desc(nulls_last=True))
+    batches = Batch.objects.filter(
+        uuid__in=batch_uuids).order_by(F('dt_created').desc(nulls_last=True))
 
     p = Paginator(batches, 30)
 
-    return render_to_string('partials/components/areas/editing.html', {
+    return render_to_string(template, {
         'paginator': p,
         'page': page,
         'project': project,
