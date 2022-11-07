@@ -595,7 +595,9 @@ class Project(CloneMixin, CommonModel):
                 if dp_info: return dp_info
             else:
                 log2.is_skipped = True
-                log2.flags["errors"].append("manual switching: invalid datasource")
+                if not "data" in log.flags["errors"]:
+                    log.flags["errors"]["data"] = []
+                log2.flags["errors"]["data"].append("manual switching: invalid datasource")
                 log2.save()
         elif log:
             # Auto switching
@@ -604,7 +606,9 @@ class Project(CloneMixin, CommonModel):
                 if dp_info: return dp_info
             else:
                 log.is_skipped = True
-                log.flags["errors"].append("auto switching: invalid datasource")
+                if not "data" in log.flags["errors"]:
+                    log.flags["errors"]["data"] = []
+                log.flags["errors"]["data"].append("auto switching: invalid datasource")
                 log.save()
 
         datasources = []
