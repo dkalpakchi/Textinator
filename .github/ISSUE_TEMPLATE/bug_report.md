@@ -23,6 +23,9 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
+**Textinator version**
+What textinator version do you use? If pulled from the master branch, just leave as latest.
+
 **Desktop (please complete the following information):**
 
 *   OS: \[e.g. iOS]
