@@ -17,8 +17,7 @@
     </a>
   </div>
   {% set all_text_markers=project.markervariant_set.filter(anno_type='free-text').count() == project.markervariant_set.count() %}
-  <div class="content message-body">
-    <div id="selector" class="selector element{% if all_text_markers %} broad{% endif %}" data-s="{% if dp_info.source_id is not none and not dp_info.is_empty %}{{dp_info.source_id}}{% endif %}" data-dp="{% if dp_info.id is not none and not dp_info.is_empty %}{{dp_info.id}}{% endif %}" data-f="{{dp_info.is_empty}}">
+    <div id="selector" class="content message-body selector element{% if all_text_markers %} broad{% endif %}" data-s="{% if dp_info.source_id is not none and not dp_info.is_empty %}{{dp_info.source_id}}{% endif %}" data-dp="{% if dp_info.id is not none and not dp_info.is_empty %}{{dp_info.id}}{% endif %}" data-f="{{dp_info.is_empty}}">
       {% if dp_info.no_data %}
         {% include 'partials/_no_data.html' %}
       {% elif dp_info.is_empty %}
@@ -35,5 +34,4 @@
         {% endif %}
       {% endif %}
     </div>
-  </div>
 </article>

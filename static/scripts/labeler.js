@@ -647,7 +647,7 @@
           "style",
           "text-decoration: underline 2px " +
             color +
-            "; padding-left: 0px; border: 0px;"
+            "; padding-left: 0px; border: 0px; background-color: transparent;"
         );
       }
       return markedSpan;
@@ -679,6 +679,37 @@
       let retval = rb.value;
       if (rb.name.endsWith("_ocat")) retval += RADIO_CHECK_SEPARATOR;
       return retval;
+    }
+
+    function findStartNode(node) {
+      let startNode = node.nextSibling;
+      if (!utils.isDefined(startNode)) return null;
+
+      if (startNode.nodeType === 1) {
+        startNode = startNode.childNodes[0];
+        if (!utils.isDefined(startNode)) return null;
+
+        while (startNode.nodeType !== 3 || startNode.textContent.length === 0) {
+          if (!utils.isDefined(startNode.nextSibling))
+            return findStartNode(startNode.parentNode.childNodes[0]);
+          startNode = startNode.nextSibling;
+        }
+        return startNode;
+      } else if (startNode.nodeType === 3) {
+        return startNode;
+      } else {
+        return null;
+      }
+    }
+
+    function findEndNode(node, nodeText) {
+      if (!utils.isDefined(node)) return null;
+
+      if (!utils.isDefined(nodeText)) nodeText = node.textContent;
+
+      if (node.parentNode.textContent == nodeText)
+        return findEndNode(node.parentNode, nodeText);
+      else return node;
     }
 
     return {
@@ -1380,6 +1411,89 @@
 
             if (group[0].collapsed) continue;
 
+            /*
+             * From MDN (https://developer.mozilla.org/en-US/docs/Web/API/Range/startOffset)
+             * If the startContainer is a Node of type Text, Comment, or CDATASection,
+             * then the offset is the number of characters from the start of the startContainer
+             * to the boundary point of the Range. For other Node types, the startOffset is
+             * the number of child nodes between the start of the startContainer and the
+             * boundary point of the Range
+             *
+             * The same is true for endContainer and endOffset
+             *
+             * Also from MDN
+             * (https://developer.mozilla.org/en-US/docs/Web/API/range/commonAncestorContainer)
+             * The Range.commonAncestorContainer read-only property returns the deepest —
+             * or furthest down the document tree — Node that contains both boundary points
+             * of the Range. This means that if Range.startContainer and Range.endContainer
+             * both refer to the same node, this node is the common ancestor container.
+             */
+            if (group[0].startContainer.nodeType === 1) {
+              // means startContainer is an element node and then its startOffset is the number of child nodes
+              let startOffset = group[0].startOffset;
+              let startNode = group[0].startContainer.childNodes[startOffset];
+
+              if (startNode.tagName == "BR") {
+                // this is the end of the paragraph, so select the previous node as end container
+                // and set offset to be its length
+                if (
+                  startOffset + 1 <
+                  group[0].startContainer.childNodes.length
+                ) {
+                  startNode =
+                    group[0].startContainer.childNodes[startOffset + 1];
+                  group[0].setStart(startNode, 0);
+                } else {
+                  startNode = group[0].startContainer.nextSibling;
+                  if (!utils.isDefined(startNode)) continue;
+                }
+              }
+            } else if (group[0].startContainer.nodeType === 3) {
+              // means it's a text node, so the offset is the number of chars
+              let startOffset = group[0].startOffset;
+              let startContLength = group[0].startContainer.textContent.length;
+
+              if (startOffset == startContLength) {
+                let startNode = findStartNode(group[0].startContainer);
+                if (!utils.isDefined(startNode) || startNode.nodeType !== 3)
+                  continue;
+                group[0].setStart(startNode, 0);
+              }
+            }
+
+            if (group[N - 1].endContainer.nodeType === 1) {
+              // means startContainer is an element node and then its startOffset is the number of child nodes
+              let endOffset = group[N - 1].endOffset;
+              let endNode = group[N - 1].endContainer.childNodes[endOffset];
+
+              if (endNode.tagName == "BR") {
+                // this is the end of the paragraph, so select the previous node as end container
+                // and set offset to be its length
+                if (endOffset - 1 >= 0) {
+                  endNode = group[N - 1].endContainer.childNodes[endOffset - 1];
+                  group[N - 1].setEnd(endNode, endNode.textContent.length);
+                } else {
+                  endNode = group[N - 1].endContainer.previousSibling;
+                  if (!utils.isDefined(endNode)) continue;
+                }
+              }
+            } else if (group[N - 1].endContainer.nodeType === 3) {
+              // means it's a text node, so the offset is the number of chars
+              let endOffset = group[N - 1].endOffset;
+              let endContLength = group[N - 1].endContainer.textContent.length;
+
+              if (
+                endOffset == endContLength &&
+                group[0].startContainer != group[N - 1].endContainer
+              ) {
+                let endNode = findEndNode(group[N - 1].endContainer);
+                if (!utils.isDefined(endNode)) continue;
+                group[N - 1].setEndAfter(endNode);
+              }
+            }
+
+            if (group[0].collapsed || group[N - 1].collapsed) continue;
+
             chunk["range"] = group[0].cloneRange();
             chunk["range"].setEnd(
               group[N - 1].endContainer,
@@ -1419,6 +1533,7 @@
       },
       mark: function (obj, max_markers) {
         // TODO: marking from meta information!
+        let control = this;
         if (chunks.length > 0 && activeLabels < max_markers) {
           let chunk = this.getActiveChunk();
 
@@ -1437,24 +1552,6 @@
             initContextMenu(markedSpan, this.contextMenuPlugins);
 
             /*
-             * From MDN (https://developer.mozilla.org/en-US/docs/Web/API/Range/startOffset)
-             * If the startContainer is a Node of type Text, Comment, or CDATASection,
-             * then the offset is the number of characters from the start of the startContainer
-             * to the boundary point of the Range. For other Node types, the startOffset is
-             * the number of child nodes between the start of the startContainer and the
-             * boundary point of the Range
-             *
-             * The same is true for endContainer and endOffset
-             *
-             * Also from MDN
-             * (https://developer.mozilla.org/en-US/docs/Web/API/range/commonAncestorContainer)
-             * The Range.commonAncestorContainer read-only property returns the deepest —
-             * or furthest down the document tree — Node that contains both boundary points
-             * of the Range. This means that if Range.startContainer and Range.endContainer
-             * both refer to the same node, this node is the common ancestor container.
-             */
-
-            /*
              * NOTE: avoid `chunk['range'].surroundContents(markedSpan)`, since
              * "An exception will be thrown, however, if the Range splits a non-Text node
              * with only one of its boundary points."
@@ -1465,20 +1562,37 @@
               chunk["range"].surroundContents(markedSpan);
               markedSpan.appendChild(deleteMarkedBtn);
             } catch (error) {
-              // if (chunk['range'].endOffset > chunk['range'].startOffset) {
-              let nodeAfterEnd = chunk["range"].endContainer.nextSibling;
-              if (nodeAfterEnd != null && isDeleteButton(nodeAfterEnd)) {
+              let end = chunk["range"].endContainer,
+                nodeAfterEnd = end.nextSibling;
+              if (nodeAfterEnd != null) {
                 // means we're at the delete button
-                while (isLabel(nodeAfterEnd.parentNode)) {
-                  nodeAfterEnd = nodeAfterEnd.parentNode;
-                  if (
-                    nodeAfterEnd.nextSibling == null ||
-                    !isDeleteButton(nodeAfterEnd.nextSibling)
-                  )
-                    break;
-                  nodeAfterEnd = nodeAfterEnd.nextSibling;
+                if (chunk["range"].endOffset == end.textContent.length) {
+                  let start = chunk["range"].startContainer,
+                    originalText = end.textContent,
+                    startOffset = start == end ? chunk["range"].startOffset : 0,
+                    endOffset = chunk["range"].endOffset;
+
+                  while (
+                    utils.isDefined(nodeAfterEnd) &&
+                    isLabel(nodeAfterEnd.parentNode) &&
+                    originalText.substr(startOffset, endOffset) ==
+                      end.parentNode.textContent.substr(startOffset, endOffset)
+                  ) {
+                    end = end.parentNode;
+                    nodeAfterEnd = nodeAfterEnd.nextSibling;
+                    let isEmpty =
+                      nodeAfterEnd == null ||
+                      nodeAfterEnd.textContent.length == 0;
+                    if (
+                      (isEmpty && !isLabel(end.parentNode)) ||
+                      (!isEmpty && !isDeleteButton(nodeAfterEnd))
+                    )
+                      break;
+                  }
+
+                  if (utils.isDefined(nodeAfterEnd))
+                    chunk["range"].setEndAfter(nodeAfterEnd);
                 }
-                chunk["range"].setEndAfter(nodeAfterEnd);
               }
 
               /* This code works well for nodeBeforeStart, but not here
@@ -1511,20 +1625,38 @@
               let nodeBeforeStart =
                 chunk["range"].startContainer.previousSibling;
               let start;
+
               if (nodeBeforeStart == null) {
-                // means we're within a label at its beginning
-                start = chunk["range"].startContainer;
-                while (isLabel(start.parentNode)) {
-                  start = start.parentNode;
+                // means we're within a label
+                if (chunk["range"].startOffset == 0) {
+                  start = chunk["range"].startContainer;
+                  let originalText = start.textContent,
+                    endOffset =
+                      start == chunk["range"].endContainer
+                        ? chunk["range"].endOffset
+                        : originalText.length;
+
+                  while (
+                    isLabel(start.parentNode) &&
+                    originalText.substr(0, endOffset) ==
+                      start.parentNode.textContent.substr(0, endOffset)
+                  ) {
+                    start = start.parentNode;
+                  }
+                  if (start != chunk["range"].startContainer)
+                    chunk["range"].setStartBefore(start);
                 }
-                if (start != chunk["range"].startContainer)
-                  chunk["range"].setStartBefore(start);
               } else if (
                 utils.isDefined(nodeBeforeStart) &&
                 nodeBeforeStart.textContent.length === 0
               ) {
-                // it's empty string, which sometimes happens for some reason
-                chunk["range"].setStartBefore(nodeBeforeStart);
+                // it's empty string, which means that we're at a <br> tag
+                // just ensure that <br> is not selected!
+                if (
+                  nodeBeforeStart.nodeName == "BR" &&
+                  chunk["range"].startOffset == 0
+                )
+                  chunk["range"].setStartAfter(nodeBeforeStart);
               }
 
               start = chunk["range"].startContainer;
