@@ -363,6 +363,7 @@ textarea {
   left: 4px;
   position: absolute;
   top: 0;
+  line-height: initial;
 }
 
 .selector .tag .rel.is-badge {

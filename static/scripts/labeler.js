@@ -378,25 +378,21 @@
       return ["P", "UL", "ARTICLE"].includes(node.tagName) ? node : null;
     }
 
+    function mergeDisjoint(node1, node2) {
+      node2.innerHTML = node1.innerHTML + node2.innerHTML;
+    }
+
     function mergeWithNeighbors(node) {
       // merge the given node with two siblings - used when deleting a label
       let next = node.nextSibling,
         prev = node.previousSibling,
         parent = node.parentNode;
 
-      let pieces = [],
-        element = document.createTextNode("");
-      for (let i = 0; i < node.childNodes.length; i++) {
-        let child = node.childNodes[i];
-        if (child.nodeType === 3) {
-          element = document.createTextNode(element.data + child.data);
-          if (i == node.childNodes.length - 1) pieces.push(element);
-        } else {
-          pieces.push(element);
-          pieces.push(child);
-          element = document.createTextNode("");
-        }
-      }
+      let pieces = Array.from(node.childNodes);
+
+      console.log(pieces);
+      console.log("PNT", prev);
+      console.log("NNT", next);
 
       if (pieces.length > 1) {
         if (
@@ -408,7 +404,15 @@
             document.createTextNode(prev.data + pieces[0].data),
             prev
           );
-        else parent.insertBefore(pieces[0], next);
+        else if (
+          isLabel(pieces[0]) &&
+          isLabel(prev) &&
+          pieces[0].getAttribute("data-i") == prev.getAttribute("data-i")
+        ) {
+          console.log("Disjoint prev");
+          mergeDisjoint(prev, pieces[0]);
+          parent.replaceChild(pieces[0], prev);
+        } else parent.insertBefore(pieces[0], next);
 
         parent.removeChild(node);
         for (let i = 1; i < pieces.length - 1; i++) {
@@ -424,26 +428,58 @@
             document.createTextNode(pieces[pieces.length - 1].data + next.data),
             next
           );
+        } else if (
+          isLabel(pieces[pieces.length - 1]) &&
+          isLabel(next) &&
+          pieces[pieces.length - 1].getAttribute("data-i") ==
+            next.getAttribute("data-i")
+        ) {
+          console.log("Disjoint next");
+          mergeDisjoint(pieces[pieces.length - 1], next);
         } else {
           parent.insertBefore(pieces[pieces.length - 1], next);
         }
       } else {
-        let next_data =
-          next != null && utils.isDefined(next.data) ? next.data : "";
+        // if it's only one piece, then it's guaranteed to be a text node
         if (prev == null) {
-          parent.replaceChild(
-            document.createTextNode(pieces[0].data + next_data),
-            node
-          );
+          if (next != null) {
+            if (next.nodeType === 3) {
+              parent.replaceChild(
+                document.createTextNode(pieces[0].data + next.data),
+                next
+              );
+            } else if (next.nodeType === 1) {
+              parent.insertBefore(pieces[0], next);
+            }
+          }
         } else {
-          let prev_data = utils.isDefined(prev.data) ? prev.data : "";
-          parent.replaceChild(
-            document.createTextNode(prev_data + pieces[0].data + next_data),
-            prev
-          );
-          parent.removeChild(node);
+          if (prev.nodeType === 1) {
+            // previous is an Element node
+            if (next.nodeType === 3) {
+              parent.replaceChild(
+                document.createTextNode(pieces[0].data + next.data),
+                next
+              );
+            } else if (next.nodeType === 1) {
+              parent.insertBefore(pieces[0], next);
+            }
+          } else if (prev.nodeType === 3) {
+            // previous is a Text node
+            if (next.nodeType === 3) {
+              // next is also a Text node
+              parent.replaceChild(
+                document.createTextNode(prev.data + pieces[0].data + next.data),
+                prev
+              );
+              if (utils.isDefined(next) && !isDeleteButton(next))
+                parent.removeChild(next);
+            } else if (next.nodeType === 1) {
+              parent.insertBefore(pieces[0], next);
+            }
+          }
         }
-        if (next != null && !isDeleteButton(next)) parent.removeChild(next);
+
+        parent.removeChild(node);
       }
     }
 
@@ -878,10 +914,19 @@
                 if (labelerModule.allowSelectingLabels) {
                   e.stopPropagation();
                   if (target.classList.contains("tag"))
-                    if (!$(target).prop("selected"))
+                    if (!$(target).prop("selected")) {
                       target.classList.add("active");
-                    else if (!$(target.parentNode).prop("selected"))
+                      $(
+                        '[data-i="' + target.getAttribute("data-i") + '"]'
+                      ).addClass("active");
+                    } else if (!$(target.parentNode).prop("selected")) {
                       target.parentNode.classList.add("active");
+                      $(
+                        '[data-i="' +
+                          target.parentNode.getAttribute("data-i") +
+                          '"]'
+                      ).addClass("active");
+                    }
                 }
               }
             },
@@ -896,10 +941,19 @@
                 if (labelerModule.allowSelectingLabels) {
                   e.stopPropagation();
                   if (target.classList.contains("tag"))
-                    if (!$(target).prop("selected"))
+                    if (!$(target).prop("selected")) {
                       target.classList.remove("active");
-                    else if (!$(target.parentNode).prop("selected"))
+                      $(
+                        '[data-i="' + target.getAttribute("data-i") + '"]'
+                      ).removeClass("active");
+                    } else if (!$(target.parentNode).prop("selected")) {
                       target.parentNode.classList.remove("active");
+                      $(
+                        '[data-i="' +
+                          target.parentNode.getAttribute("data-i") +
+                          '"]'
+                      ).removeClass("active");
+                    }
                 }
               }
             },
@@ -2892,13 +2946,73 @@
         // Dispatch the event.
         document.dispatchEvent(event);
       },
+      deleteSpan: function (markedSpan) {
+        let siblings = filterSiblings(markedSpan, isLabel), // collect other spans in this marked span
+          checker = undefined,
+          elements = [],
+          displayType = markedSpan.getAttribute("data-dt");
+
+        mergeWithNeighbors(markedSpan);
+
+        if (siblings) {
+          checker = markedSpan;
+        } else {
+          checker = markedSpan.parentNode;
+          siblings = filterSiblings(checker, isLabel);
+        }
+
+        while (isLabel(checker)) {
+          let cand = checker == markedSpan ? [] : [checker];
+          for (let i in siblings) {
+            cand.push(siblings[i]);
+          }
+
+          if (cand.length > 0) elements.push(cand);
+
+          checker = checker.parentNode;
+          siblings = []; // do not care about further siblings
+        }
+
+        let ctx = this;
+        let len = elements.length;
+        if (len > 0) {
+          let elDisplayType = elements[len - 1][0].getAttribute("data-dt");
+          if (elDisplayType == "hl") {
+            elements[len - 1][0].style.lineHeight =
+              ctx.initLineHeight + 3 * 5 + 10 * (len - 1) + "px";
+          } else if (elDisplayType == "und") {
+            elements[len - 1][0].style.lineHeight =
+              ctx.initLineHeight + 2 * 5 + 5 * (len - 1) + "px";
+          }
+        }
+
+        for (let j = 0; j < len; j++) {
+          let npTop = 5 + 5 * j,
+            npBot = 5 + 5 * j,
+            undOffset = 1.75 * (2 + 2 * j);
+          for (let i = 0, len2 = elements[j].length; i < len2; i++) {
+            let pTopStr = elements[j][i].style.paddingTop,
+              pBotStr = elements[j][i].style.paddingBottom,
+              pTop = parseFloat(pTopStr.slice(0, -2)),
+              pBot = parseFloat(pBotStr.slice(0, -2));
+
+            if (displayType == "und") {
+              elements[j][i].style.textUnderlineOffset = undOffset + "px";
+            }
+
+            if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
+              elements[j][i].style.paddingTop = npTop + "px";
+            if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
+              elements[j][i].style.paddingBottom = npBot + "px";
+          }
+        }
+      },
       labelDeleteHandler: function (e) {
         // when a delete button on any label is clicked
         e.stopPropagation();
         let target = e.target, // delete button
           parent = target.parentNode, // actual span
-          scope = parent.getAttribute("data-scope"),
-          displayType = parent.getAttribute("data-dt");
+          scope = parent.getAttribute("data-scope");
 
         if (scope == "text") {
           parent.remove();
@@ -2914,64 +3028,17 @@
             this.changeRelation(parent, rel, null);
           }
 
-          target.remove();
-          if (sibling != null) sibling.remove();
+          target.remove(); // remove delete button
+          if (sibling != null) sibling.remove(); // remove the relation identifier (if any)
 
-          let siblings = filterSiblings(parent, isLabel),
-            checker = undefined,
-            elements = [];
+          let iid = parent.getAttribute("data-i");
+          this.deleteSpan(parent);
 
-          if (siblings) {
-            checker = parent;
-          } else {
-            checker = parent.parentNode;
-            siblings = filterSiblings(checker, isLabel);
-          }
-
-          while (isLabel(checker)) {
-            let cand = checker == parent ? [] : [checker];
-            for (let i in siblings) {
-              cand.push(siblings[i]);
-            }
-
-            if (cand.length > 0) elements.push(cand);
-
-            checker = checker.parentNode;
-            siblings = []; // do not care about further siblings
-          }
-
-          let ctx = this;
-          let len = elements.length;
-          if (len > 0) {
-            let elDisplayType = elements[len - 1][0].getAttribute("data-dt");
-            if (elDisplayType == "hl") {
-              elements[len - 1][0].style.lineHeight =
-                ctx.initLineHeight + 3 * 5 + 10 * (len - 1) + "px";
-            } else if (elDisplayType == "und") {
-              elements[len - 1][0].style.lineHeight =
-                ctx.initLineHeight + 2 * 5 + 5 * (len - 1) + "px";
-            }
-          }
-
-          for (let j = 0; j < len; j++) {
-            let npTop = 5 + 5 * j,
-              npBot = 5 + 5 * j,
-              undOffset = 1.75 * (2 + 2 * j);
-            for (let i = 0, len2 = elements[j].length; i < len2; i++) {
-              let pTopStr = elements[j][i].style.paddingTop,
-                pBotStr = elements[j][i].style.paddingBottom,
-                pTop = parseFloat(pTopStr.slice(0, -2)),
-                pBot = parseFloat(pBotStr.slice(0, -2));
-
-              if (displayType == "und") {
-                elements[j][i].style.textUnderlineOffset = undOffset + "px";
-              }
-
-              if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
-                elements[j][i].style.paddingTop = npTop + "px";
-              if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
-                elements[j][i].style.paddingBottom = npBot + "px";
-            }
+          let disjointParts = this.selectorArea.querySelectorAll(
+            '[data-i="' + iid + '"]'
+          );
+          for (let i = 0, len = disjointParts.length; i < len; i++) {
+            this.deleteSpan(disjointParts[i]);
           }
 
           if (utils.isDefined(editingBatch)) {
@@ -2986,7 +3053,7 @@
               return x.id != chunkId;
             });
           }
-          mergeWithNeighbors(parent);
+
           // $(target).prop('in_relation', false);
           activeLabels--;
         }
