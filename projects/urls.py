@@ -19,13 +19,13 @@ urlpatterns = [
     path('<proj>/explorer/inputs/<inp>/delete', views.async_delete_input, name='async_delete_input'),
     path("<proj>/get/annotations", views.get_annotations, name="get_annotations"),
     path("<proj>/get/context", views.get_context, name="get_context"),
+    path("<proj>/get/batch", views.get_batch, name="get_batch"),
     path('profile/<username>/', views.profile, name='profile'),
     path('<pk>/', views.DetailView.as_view(), name='detail'),
     path("<pk>/charts/labels/lengths", views.label_lengths_chart_json, name="label_lengths_chart"),
     path("<pk>/charts/users/timing", views.user_timing_chart_json, name="user_timing_chart"),
     path("<pk>/charts/users/progress", views.user_progress_chart_json, name="user_progress_chart"),
     path("<pk>/charts/datasources/sizes", views.datasource_size_chart_json, name="datasource_size_chart"),
-    path("get/batch", views.get_batch, name="get_batch"),
     path("get/data/<source_id>/<dp_id>", views.get_data, name="get_data"),
     path('', views.IndexView.as_view(), name='index')
 ]

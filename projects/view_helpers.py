@@ -129,18 +129,18 @@ def render_editing_board(request, project, user, page, template='partials/compon
             label_batches, input_batches = None, None
 
     if label_batches:
-        label_batches = label_batches.values_list('batch__uuid', flat=True)
+        label_batches = label_batches.values_list('batch_id', flat=True)
     else:
         label_batches = []
 
     if input_batches:
-        input_batches = input_batches.values_list('batch__uuid', flat=True)
+        input_batches = input_batches.values_list('batch_id', flat=True)
     else:
         input_batches = []
 
-    batch_uuids = set(label_batches) | set(input_batches)
+    batch_ids = set(label_batches) | set(input_batches)
     batches = Batch.objects.filter(
-        uuid__in=batch_uuids).order_by(F('dt_created').desc(nulls_last=True))
+        pk__in=batch_ids).order_by(F('dt_created').desc(nulls_last=True))
 
     p = Paginator(batches, 30)
 

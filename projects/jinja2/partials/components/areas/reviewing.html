@@ -1,4 +1,4 @@
-<article id="reviewingBoard" data-mode='reviewing' data-url="{{ url('projects:get_batch') }}" data-flag-url="{{ url('projects:flag_batch', kwargs={'proj': project.pk}) }}" class="editing-area message is-warning">
+<article id="reviewingBoard" data-mode='reviewing' data-url="{{ url('projects:get_batch', kwargs={'proj': project.pk}) }}" data-flag-url="{{ url('projects:flag_batch', kwargs={'proj': project.pk}) }}" class="editing-area message is-warning">
   <div class="message-header">
     <p>{{ _("reviewing")|capitalize }}</p>
   </div>
@@ -6,7 +6,7 @@
     {% if paginator.count > 0 %}
       {% set current_page = paginator.page(page) %}
       <ul>
-        {% with mode="reviewing" %}
+        {% with mode="review" %}
           {% for batch in current_page %}
             {% if not batch.revision_of %}
               {% include 'partials/components/controls/_batch_list_item.html' %}

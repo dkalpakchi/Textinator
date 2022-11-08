@@ -458,13 +458,10 @@ def record_datapoint(request, proj):
             mode = 'rev'
 
         if mode == "e":
-            try:
-                if is_project_author or is_project_shared:
-                    batch = Tm.Batch.objects.get(uuid=batch_uuid)
-                else:
-                    batch = Tm.Batch.objects.get(uuid=batch_uuid, user=batch_info.user)
-            except Tm.Batch.MultipleObjectsReturned:
-                return JsonResponse({'error': True})
+            if is_project_author or is_project_shared:
+                batches = Tm.Batch.objects.filter(uuid=batch_uuid).all()
+            else:
+                batches = Tm.Batch.objects.filter(uuid=batch_uuid, user=batch_info.user).all()
         elif mode == "rev":
             profile = Tm.UserProfile.objects.get(
                 user=batch_info.user, project=batch_info.project
@@ -475,20 +472,22 @@ def record_datapoint(request, proj):
             is_reviewer = profile.allowed_reviewing
 
             if is_admin or is_reviewer:
-                try:
-                    # not necessarily one's own batches, but require a reviewer permission
-                    batch = Tm.Batch.objects.get(uuid=batch_uuid)
-                except Tm.Batch.MultipleObjectsReturned:
-                    return JsonResponse({'error': True})
-
-                revised_batch = Tm.Batch.objects.create(
-                    uuid=uuid.uuid4(), user=batch_info.user,
-                    revision_of=batch
-                )
+                # not necessarily one's own batches, but require a reviewer permission
+                batches = Tm.Batch.objects.filter(uuid=batch_uuid).all()
             else:
-                batch = None
+                batches = []
+
+        batch = None
+        for b in batches:
+            if b.project == batch_info.project:
+                batch = b
+                break
 
         if batch:
+            revised_batch = Tm.Batch.objects.create(
+                uuid=uuid.uuid4(), user=batch_info.user,
+                revision_of=batch
+            )
             batch_inputs = {i.hash: i for i in Tm.Input.objects.filter(batch=batch)}
             batch_labels = {l.hash: l for l in Tm.Label.objects.filter(batch=batch)}
 
@@ -620,12 +619,12 @@ def review(request, proj):
 
 @login_required
 @require_http_methods(["GET"])
-def get_batch(request):
+def get_batch(request, proj):
     # TODO: ensure that the request cannot be triggered by external tools
     uuid = request.GET.get('uuid', '')
     if uuid:
-        labels = Tm.Label.objects.filter(batch__uuid=uuid)
-        inputs = Tm.Input.objects.filter(batch__uuid=uuid)
+        labels = Tm.Label.objects.filter(batch__uuid=uuid, marker__project_id=proj)
+        inputs = Tm.Input.objects.filter(batch__uuid=uuid, marker__project_id=proj)
 
         context = None
         if labels.count():
@@ -1056,23 +1055,22 @@ def flag_batch(request, proj):
         is_author, is_shared = project.author == request.user, project.shared_with(request.user)
 
         if is_author or is_shared:
-            batch = Tm.Batch.objects.filter(uuid=batch_uuid).first()
+            batches = Tm.Batch.objects.filter(uuid=batch_uuid).all()
         else:
-            batch = Tm.Batch.objects.filter(
+            batches = Tm.Batch.objects.filter(
                 uuid=batch_uuid, user=request.user
-            ).first()
+            ).all()
 
-
-        if batch and batch.project == project:
-            batch.is_flagged = flag
-            batch.save()
-            return JsonResponse({
-                "errors": False
-            })
-        else:
-            return JsonResponse({
-                "errors": True
-            })
+        for batch in batches:
+            if batch and batch.project == project:
+                batch.is_flagged = flag
+                batch.save()
+                return JsonResponse({
+                    "errors": False
+                })
+        return JsonResponse({
+            "errors": True
+        })
     except Tm.Project.DoesNotExist:
         logger.error("Project does not exist")
     except Tm.Batch.DoesNotExist:

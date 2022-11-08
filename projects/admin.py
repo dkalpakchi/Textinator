@@ -415,6 +415,9 @@ class BatchAdmin(CommonModelAdmin):
     search_fields = ['input__content', 'uuid']
     list_display = ['uuid', 'project', 'user']
     raw_id_fields = ('revision_of',)
+    _list_filter = (
+       'user',
+    )
 
 
 # TODO: translation?
