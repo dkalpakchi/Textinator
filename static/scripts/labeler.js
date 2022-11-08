@@ -2946,66 +2946,80 @@
         // Dispatch the event.
         document.dispatchEvent(event);
       },
-      deleteSpan: function (markedSpan) {
-        let siblings = filterSiblings(markedSpan, isLabel), // collect other spans in this marked span
-          checker = undefined,
-          elements = [],
-          displayType = markedSpan.getAttribute("data-dt");
-
-        mergeWithNeighbors(markedSpan);
-
+      collectSiblings: function (markedSpan, level, hr) {
+        let siblings = filterSiblings(markedSpan, isLabel);
         if (siblings) {
-          checker = markedSpan;
-        } else {
-          checker = markedSpan.parentNode;
-          siblings = filterSiblings(checker, isLabel);
+          for (let i in siblings) hr[level].push(siblings[i]);
+        }
+      },
+      getMarkerHierarchy: function (markedSpan, level, hr) {
+        let control = this;
+        if (!utils.isDefined(hr)) hr = utils.defaultobj(() => Array());
+        if (!utils.isDefined(level)) level = 1; // default for the initial marker
+
+        this.collectSiblings(markedSpan, level, hr);
+
+        if (level === 1) {
+          // let's account for the parent nodes as well
+          if (isLabel(markedSpan.parentNode))
+            hr[level - 1].push(markedSpan.parentNode);
+
+          this.collectSiblings(markedSpan.parentNode, level - 1, hr);
         }
 
-        while (isLabel(checker)) {
-          let cand = checker == markedSpan ? [] : [checker];
-          for (let i in siblings) {
-            cand.push(siblings[i]);
+        for (let i = 0, len = markedSpan.childNodes.length; i < len; i++) {
+          if (isLabel(markedSpan.childNodes[i])) {
+            hr[level + 1].push(markedSpan.childNodes[i]);
           }
-
-          if (cand.length > 0) elements.push(cand);
-
-          checker = checker.parentNode;
-          siblings = []; // do not care about further siblings
+          control.getMarkerHierarchy(markedSpan.childNodes[i], level + 1, hr);
         }
+        return hr;
+      },
+      deleteSpan: function (markedSpan) {
+        let displayType = markedSpan.getAttribute("data-dt");
 
+        let hr = this.getMarkerHierarchy(markedSpan);
         let ctx = this;
-        let len = elements.length;
+
+        let levels = Array.from(Object.keys(hr)).sort().reverse();
+        let len = levels.length;
         if (len > 0) {
-          let elDisplayType = elements[len - 1][0].getAttribute("data-dt");
-          if (elDisplayType == "hl") {
-            elements[len - 1][0].style.lineHeight =
-              ctx.initLineHeight + 3 * 5 + 10 * (len - 1) + "px";
-          } else if (elDisplayType == "und") {
-            elements[len - 1][0].style.lineHeight =
-              ctx.initLineHeight + 2 * 5 + 5 * (len - 1) + "px";
+          let lastLevelObj = hr[levels[len - 1]];
+          for (let i in lastLevelObj) {
+            let elDisplayType = lastLevelObj[i].getAttribute("data-dt");
+            if (elDisplayType == "hl") {
+              lastLevelObj[i].style.lineHeight =
+                ctx.initLineHeight + 3 * 5 + 10 * (len - 1) + "px";
+            } else if (elDisplayType == "und") {
+              lastLevelObj[i].style.lineHeight =
+                ctx.initLineHeight + 2 * 5 + 5 * (len - 1) + "px";
+            }
           }
         }
 
         for (let j = 0; j < len; j++) {
-          let npTop = 5 + 5 * j,
-            npBot = 5 + 5 * j,
+          let npTop = 4 + 4 * j,
+            npBot = 4 + 4 * j,
             undOffset = 1.75 * (2 + 2 * j);
-          for (let i = 0, len2 = elements[j].length; i < len2; i++) {
-            let pTopStr = elements[j][i].style.paddingTop,
-              pBotStr = elements[j][i].style.paddingBottom,
+          let levelObj = hr[levels[j]];
+          for (let i in levelObj) {
+            let pTopStr = levelObj[i].style.paddingTop,
+              pBotStr = levelObj[i].style.paddingBottom,
               pTop = parseFloat(pTopStr.slice(0, -2)),
               pBot = parseFloat(pBotStr.slice(0, -2));
 
             if (displayType == "und") {
-              elements[j][i].style.textUnderlineOffset = undOffset + "px";
+              levelObj[i].style.textUnderlineOffset = undOffset + "px";
             }
 
             if (pTopStr == "" || (utils.isDefined(pTopStr) && !isNaN(pTop)))
-              elements[j][i].style.paddingTop = npTop + "px";
+              levelObj[i].style.paddingTop = npTop + "px";
             if (pBotStr == "" || (utils.isDefined(pBotStr) && !isNaN(pBot)))
-              elements[j][i].style.paddingBottom = npBot + "px";
+              levelObj[i].style.paddingBottom = npBot + "px";
           }
         }
+
+        mergeWithNeighbors(markedSpan);
       },
       labelDeleteHandler: function (e) {
         // when a delete button on any label is clicked
