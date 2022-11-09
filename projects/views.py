@@ -484,10 +484,11 @@ def record_datapoint(request, proj):
                 break
 
         if batch:
-            revised_batch = Tm.Batch.objects.create(
-                uuid=uuid.uuid4(), user=batch_info.user,
-                revision_of=batch
-            )
+            if mode == "rev":
+                revised_batch = Tm.Batch.objects.create(
+                    uuid=uuid.uuid4(), user=batch_info.user,
+                    revision_of=batch
+                )
             batch_inputs = {i.hash: i for i in Tm.Input.objects.filter(batch=batch)}
             batch_labels = {l.hash: l for l in Tm.Label.objects.filter(batch=batch)}
 
@@ -559,7 +560,9 @@ def record_datapoint(request, proj):
             if mode != original_mode:
                 mode = original_mode
 
-            kwargs = {}
+            kwargs = {
+                'current_uuid': batch.uuid
+            }
             if mode == "rev":
                 kwargs['template'] = 'partials/components/areas/reviewing.html'
                 try:

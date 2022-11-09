@@ -105,7 +105,7 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
         return (ctx_cache, label_cache), saved_labels
 
 
-def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None):
+def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None, current_uuid=None):
     is_author, is_shared = project.author == user, project.shared_with(user)
 
     if is_author or is_shared:
@@ -148,7 +148,8 @@ def render_editing_board(request, project, user, page, template='partials/compon
         'paginator': p,
         'page': page,
         'project': project,
-        'is_admin': is_author or is_shared
+        'is_admin': is_author or is_shared,
+        'current_uuid': current_uuid
     }, request=request)
 
 
