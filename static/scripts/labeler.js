@@ -333,7 +333,8 @@
     }
 
     function getEnclosing(node, isOfType) {
-      while (isOfType(node.parentNode)) {
+      node = node.parentNode;
+      while (isOfType(node)) {
         if (!utils.isDefined(node)) break;
         node = node.parentNode;
       }
@@ -390,10 +391,6 @@
 
       let pieces = Array.from(node.childNodes);
 
-      console.log(pieces);
-      console.log("PNT", prev);
-      console.log("NNT", next);
-
       if (pieces.length > 1) {
         if (
           pieces[0].nodeType === 3 &&
@@ -409,7 +406,6 @@
           isLabel(prev) &&
           pieces[0].getAttribute("data-i") == prev.getAttribute("data-i")
         ) {
-          console.log("Disjoint prev");
           mergeDisjoint(prev, pieces[0]);
           parent.replaceChild(pieces[0], prev);
         } else parent.insertBefore(pieces[0], next);
@@ -434,7 +430,6 @@
           pieces[pieces.length - 1].getAttribute("data-i") ==
             next.getAttribute("data-i")
         ) {
-          console.log("Disjoint next");
           mergeDisjoint(pieces[pieces.length - 1], next);
         } else {
           parent.insertBefore(pieces[pieces.length - 1], next);
@@ -1440,10 +1435,23 @@
           //  - two disjoint spans of text are selected, they should end up in separate groups (possible only in Firefox)
           let groups = [],
             group = [];
-          group.push(selection.getRangeAt(0));
+          let firstRange = selection.getRangeAt(0);
+          let skipFirst =
+            firstRange.startContainer == firstRange.endContainer &&
+            firstRange.startContainer.textContent.length == 0;
+          if (!skipFirst) group.push(firstRange);
           for (let i = 1; i < selection.rangeCount; i++) {
             let last = group[group.length - 1],
               cand = selection.getRangeAt(i);
+
+            if (cand.collapsed) continue;
+
+            if (
+              cand.endContainer.textContent.length == 0 &&
+              cand.startContainer.textContent.length == 0
+            )
+              continue;
+
             // NOTE:
             // - can't use `cand.compareBoundaryPoints(Range.END_TO_START, last)` because of delete buttons in the labels
             if (
@@ -1456,14 +1464,19 @@
               group = [cand];
             }
           }
+
           if (group) groups.push(group);
 
           for (let i = 0; i < groups.length; i++) {
             let chunk = {},
-              group = groups[i],
-              N = group.length;
+              group = groups[i];
 
-            if (group[0].collapsed) continue;
+            group = group.filter(function (x) {
+              return !x.collapsed;
+            });
+            let N = group.length;
+
+            if (N == 0) continue;
 
             /*
              * From MDN (https://developer.mozilla.org/en-US/docs/Web/API/Range/startOffset)
@@ -1543,6 +1556,67 @@
                 let endNode = findEndNode(group[N - 1].endContainer);
                 if (!utils.isDefined(endNode)) continue;
                 group[N - 1].setEndAfter(endNode);
+              } else if (endOffset === 0) {
+                // means the annotator has most probably accidentally hovered
+                // over the beginning of the next marker
+                let startNode = group[N - 1].startContainer;
+                if (startNode.textContent.length > 0) {
+                  // this means endOffset is 0, but there is a non-empty start container
+                  // then just set the end after this start container or at the end of
+                  // its text node
+                  if (startNode.nodeType === 3)
+                    group[N - 1].setEnd(
+                      startNode,
+                      startNode.textContent.length
+                    );
+                  else if (startNode.nodeType === 1)
+                    group[N - 1].setEndAfter(startNode);
+                } else {
+                  // this means that our start container is also empty
+                  // this means the group became de-facto collapsed, so remove it
+                  group.pop();
+                  N = group.length;
+                  // find the first group, which is not collapsed
+                  // it can either still be with endOffset 0, but a non-empty start container
+                  // or with an empty start container, but endOffset which is non-zero
+                  // or when both conditions are false
+                  while (
+                    group[N - 1].endOffset === 0 &&
+                    group[N - 1].startContainer.textContent.length === 0
+                  ) {
+                    group.pop();
+                    N = group.length;
+                  }
+
+                  if (group[N - 1].endOffset === 0) {
+                    // this means that at lest we have a start container that is non-empty
+                    // (because otherwise while-loop above would not terminate)
+                    let startNode = group[N - 1].startContainer;
+                    if (startNode.nodeType === 3)
+                      group[N - 1].setEnd(
+                        startNode,
+                        startNode.textContent.length
+                      );
+                    else if (startNode.nodeType === 1)
+                      group[N - 1].setEndAfter(startNode);
+                  } else {
+                    // this means that there's an endOffset
+                    // so there's a valid end container
+                    let endNode = group[N - 1].endContainer;
+                    let originalEndContent = endNode.textContent;
+
+                    while (
+                      isLabel(endNode.parentNode) &&
+                      endNode.parentNode.textContent.endsWith(
+                        originalEndContent
+                      )
+                    ) {
+                      endNode = endNode.parentNode;
+                    }
+                    if (utils.isDefined(endNode))
+                      group[N - 1].setEndAfter(endNode);
+                  }
+                }
               }
             }
 

@@ -18,6 +18,7 @@ from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.contrib.postgres.fields.jsonb import KeyTransform
 
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
@@ -950,7 +951,9 @@ def data_explorer(request, proj):
     if is_author or is_shared or project.has_participant(request.user):
         is_admin = is_author or is_shared
 
-        flagged_datapoints = Tm.DataAccessLog.objects.filter(project=project).exclude(flags="").order_by('-dt_updated')
+        flagged_datapoints = Tm.DataAccessLog.objects.filter(project=project).annotate(
+            terrors=KeyTransform('text_errors', 'flags')
+        ).exclude(terrors={}).exclude(terrors="").order_by('-dt_updated')
         if not is_admin:
             flagged_datapoints = flagged_datapoints.filter(user=request.user)
 
