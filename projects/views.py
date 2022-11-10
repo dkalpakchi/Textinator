@@ -85,7 +85,7 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
         data = super(LabelLengthJSONView, self).get_context_data(**kwargs)
         return data
 
-label_lengths_chart_json = LabelLengthJSONView.as_view()
+#label_lengths_chart_json = LabelLengthJSONView.as_view()
 
 
 class UserTimingJSONView(BaseColumnsHighChartsView):
@@ -160,7 +160,7 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         data = super(UserTimingJSONView, self).get_context_data(**kwargs)
         return data
 
-user_timing_chart_json = UserTimingJSONView.as_view()
+#user_timing_chart_json = UserTimingJSONView.as_view()
 
 
 class UserProgressJSONView(BaseColumnsHighChartsView):
@@ -245,7 +245,7 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
         })
         return data
 
-user_progress_chart_json = UserProgressJSONView.as_view()
+#user_progress_chart_json = UserProgressJSONView.as_view()
 
 
 class DataSourceSizeJSONView(BaseColumnsHighChartsView):
@@ -271,7 +271,7 @@ class DataSourceSizeJSONView(BaseColumnsHighChartsView):
         data = super(DataSourceSizeJSONView, self).get_context_data(**kwargs)
         return data
 
-datasource_size_chart_json = DataSourceSizeJSONView.as_view()
+#datasource_size_chart_json = DataSourceSizeJSONView.as_view()
 
 ##
 ## Page views

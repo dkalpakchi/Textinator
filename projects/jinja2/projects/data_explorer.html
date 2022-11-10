@@ -62,7 +62,7 @@
         In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_num}} flagged text(s)
       </div>
 
-      <script type="text/javascript" src="{{ static('highcharts/highcharts.js') }}"></script>
+      {# <script type="text/javascript" src="{{ static('highcharts/highcharts.js') }}"></script>
       <script type="text/javascript" src="{{ static('highcharts/modules/no-data-to-display.js') }}"></script>
       {% if project.author == user or project.shared_with(user) %}
         <div class="container columns">
@@ -104,7 +104,7 @@
           </div>
         </div>
       {% endif %}
-    </div>
+    </div> #}
   </article>
 
   {% if flagged_datapoints %}

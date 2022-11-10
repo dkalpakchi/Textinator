@@ -969,7 +969,7 @@
                 // IE, Opera
                 isRightMB = e.button === 2;
 
-              if (!isDeleteButton(e.target) && !isRightMB) {
+              if (!isRightMB) {
                 labelerModule.updateChunkFromSelection();
               }
             },
@@ -1660,7 +1660,7 @@
         }
       },
       mark: function (obj, max_markers) {
-        // TODO: marking from meta information!
+        // if there were problems with latest selection, we might want to try updating it!
         let control = this;
         if (chunks.length > 0 && activeLabels < max_markers) {
           let chunk = this.getActiveChunk();
