@@ -434,7 +434,7 @@
         } else {
           parent.insertBefore(pieces[pieces.length - 1], next);
         }
-      } else {
+      } else if (pieces.length === 1) {
         // if it's only one piece, then it's guaranteed to be a text node
         if (prev == null) {
           if (next != null) {
