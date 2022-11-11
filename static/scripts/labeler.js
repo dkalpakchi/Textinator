@@ -436,8 +436,8 @@
         }
       } else if (pieces.length === 1) {
         // if it's only one piece, then it's guaranteed to be a text node
-        if (prev == null) {
-          if (next != null) {
+        if (next != null) {
+          if (prev == null) {
             if (next.nodeType === 3) {
               parent.replaceChild(
                 document.createTextNode(pieces[0].data + next.data),
@@ -446,30 +446,32 @@
             } else if (next.nodeType === 1) {
               parent.insertBefore(pieces[0], next);
             }
-          }
-        } else {
-          if (prev.nodeType === 1) {
-            // previous is an Element node
-            if (next.nodeType === 3) {
-              parent.replaceChild(
-                document.createTextNode(pieces[0].data + next.data),
-                next
-              );
-            } else if (next.nodeType === 1) {
-              parent.insertBefore(pieces[0], next);
-            }
-          } else if (prev.nodeType === 3) {
-            // previous is a Text node
-            if (next.nodeType === 3) {
-              // next is also a Text node
-              parent.replaceChild(
-                document.createTextNode(prev.data + pieces[0].data + next.data),
-                prev
-              );
-              if (utils.isDefined(next) && !isDeleteButton(next))
-                parent.removeChild(next);
-            } else if (next.nodeType === 1) {
-              parent.insertBefore(pieces[0], next);
+          } else {
+            if (prev.nodeType === 1) {
+              // previous is an Element node
+              if (next.nodeType === 3) {
+                parent.replaceChild(
+                  document.createTextNode(pieces[0].data + next.data),
+                  next
+                );
+              } else if (next.nodeType === 1) {
+                parent.insertBefore(pieces[0], next);
+              }
+            } else if (prev.nodeType === 3) {
+              // previous is a Text node
+              if (next.nodeType === 3) {
+                // next is also a Text node
+                parent.replaceChild(
+                  document.createTextNode(
+                    prev.data + pieces[0].data + next.data
+                  ),
+                  prev
+                );
+                if (utils.isDefined(next) && !isDeleteButton(next))
+                  parent.removeChild(next);
+              } else if (next.nodeType === 1) {
+                parent.insertBefore(pieces[0], next);
+              }
             }
           }
         }
@@ -1522,9 +1524,22 @@
 
               if (startOffset == startContLength) {
                 let startNode = findStartNode(group[0].startContainer);
-                if (!utils.isDefined(startNode) || startNode.nodeType !== 3)
-                  continue;
-                group[0].setStart(startNode, 0);
+                if (utils.isDefined(startNode) && startNode.nodeType !== 3)
+                  group[0].setStart(startNode, 0);
+              }
+            }
+
+            if (group[0].endContainer.nodeType === 1) {
+              let endOffset = group[0].endOffset;
+              let endNode = group[0].endContainer.childNodes[endOffset];
+              let startOffset = group[0].startOffset;
+              let startContLength = group[0].startContainer.textContent.length;
+
+              if (isDeleteButton(endNode) && startOffset == startContLength) {
+                // effectively collapsed selection, because it starts at the end of the
+                // text node of the marker and ends at it delete button
+                group.shift();
+                N--;
               }
             }
 
