@@ -9,6 +9,7 @@ import copy
 import hashlib
 from collections import defaultdict
 from itertools import groupby
+from operator import itemgetter
 
 from django.db import models, transaction
 from django.conf import settings
@@ -488,6 +489,16 @@ class Project(CloneMixin, CommonModel):
             return tabs, groups
         else:
             return fm
+
+    @property
+    def input_markers(self):
+        input_anno_types = map(itemgetter(0), settings.INPUT_ANNOTATION_TYPES)
+        return self.markervariant_set.filter(anno_type__in=input_anno_types)
+
+    @property
+    def span_markers(self):
+        span_anno_types = map(itemgetter(0), settings.SPAN_ANNOTATION_TYPES)
+        return self.markervariant_set.filter(anno_type__in=span_anno_types)
 
     @property
     def marker_groups(self):

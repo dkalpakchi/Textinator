@@ -7,6 +7,7 @@ urlpatterns = [
     path('<proj>/flag/text', views.flag_text, name='flag_text'),
     path('<proj>/flag/batch', views.flag_batch, name='flag_batch'),
     path('<proj>/flagged/search', views.flagged_search, name='flagged_search'),
+    path('<proj>/recorded/search', views.recorded_search, name='recorded_search'),
     path('<proj>/article/new', views.new_article, name='new_article'),
     path('<proj>/article/undo_last', views.undo_last, name='undo_last'),
     path('<proj>/record_datapoint/', views.record_datapoint, name="record_datapoint"),

@@ -356,9 +356,7 @@ FORMATTING_TYPES = [
     ('pt', 'Plain text')
 ]
 
-ANNOTATION_TYPES = [
-    ('m-span', 'Marker (text spans)'),
-    ('m-text', 'Marker (whole text)'),
+INPUT_ANNOTATION_TYPES = [
     ('free-text', 'Short free-text input'),
     ('lfree-text', 'Long free-text input'),
     ('integer', 'Integer'),
@@ -367,6 +365,13 @@ ANNOTATION_TYPES = [
     ('radio', 'Radio buttons'),
     ('check', 'Checkboxes')
 ]
+
+SPAN_ANNOTATION_TYPES = [
+    ('m-span', 'Marker (text spans)'),
+    ('m-text', 'Marker (whole text)'),
+]
+
+ANNOTATION_TYPES = SPAN_ANNOTATION_TYPES + INPUT_ANNOTATION_TYPES
 
 LOGIN_URL = '/{}accounts/login/'.format(ROOT_URLPATH)
 

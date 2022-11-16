@@ -1175,6 +1175,30 @@
           }
 
           // editing & reviewing mode events
+          document.addEventListener(
+            "submit",
+            function (e) {
+              let $form = $(e.target);
+
+              if ($form.attr("id") == "editingSearchForm") {
+                e.preventDefault();
+                $.ajax({
+                  method: $form.method,
+                  url: $form.attr("action"),
+                  contentType: "application/json; charset=utf-8",
+                  dataType: "json",
+                  data: $form.serializeObject(),
+                  success: function (data) {
+                    let $editingBoard = $("#editingBoard");
+                    $editingBoard.find("main").prop("innerHTML", data.template);
+                    labelerModule.fixUI();
+                  },
+                });
+              }
+            },
+            false
+          );
+
           document.addEventListener("click", function (e) {
             let target = e.target,
               closestBatch = getClosestBatch(target),
@@ -1548,15 +1572,18 @@
               let endOffset = group[N - 1].endOffset;
               let endNode = group[N - 1].endContainer.childNodes[endOffset];
 
-              if (endNode.tagName == "BR") {
-                // this is the end of the paragraph, so select the previous node as end container
-                // and set offset to be its length
-                if (endOffset - 1 >= 0) {
-                  endNode = group[N - 1].endContainer.childNodes[endOffset - 1];
-                  group[N - 1].setEnd(endNode, endNode.textContent.length);
-                } else {
-                  endNode = group[N - 1].endContainer.previousSibling;
-                  if (!utils.isDefined(endNode)) continue;
+              if (utils.isDefined(endNode)) {
+                if (endNode.tagName == "BR") {
+                  // this is the end of the paragraph, so select the previous node as end container
+                  // and set offset to be its length
+                  if (endOffset - 1 >= 0) {
+                    endNode =
+                      group[N - 1].endContainer.childNodes[endOffset - 1];
+                    group[N - 1].setEnd(endNode, endNode.textContent.length);
+                  } else {
+                    endNode = group[N - 1].endContainer.previousSibling;
+                    if (!utils.isDefined(endNode)) continue;
+                  }
                 }
               }
             } else if (group[N - 1].endContainer.nodeType === 3) {
@@ -1575,38 +1602,11 @@
                 // means the annotator has most probably accidentally hovered
                 // over the beginning of the next marker
                 let startNode = group[N - 1].startContainer;
-                if (startNode.textContent.length > 0) {
-                  // this means endOffset is 0, but there is a non-empty start container
-                  // then just set the end after this start container or at the end of
-                  // its text node
-                  if (startNode.nodeType === 3)
-                    group[N - 1].setEnd(
-                      startNode,
-                      startNode.textContent.length
-                    );
-                  else if (startNode.nodeType === 1)
-                    group[N - 1].setEndAfter(startNode);
-                } else {
-                  // this means that our start container is also empty
-                  // this means the group became de-facto collapsed, so remove it
-                  group.pop();
-                  N = group.length;
-                  // find the first group, which is not collapsed
-                  // it can either still be with endOffset 0, but a non-empty start container
-                  // or with an empty start container, but endOffset which is non-zero
-                  // or when both conditions are false
-                  while (
-                    group[N - 1].endOffset === 0 &&
-                    group[N - 1].startContainer.textContent.length === 0
-                  ) {
-                    group.pop();
-                    N = group.length;
-                  }
-
-                  if (group[N - 1].endOffset === 0) {
-                    // this means that at lest we have a start container that is non-empty
-                    // (because otherwise while-loop above would not terminate)
-                    let startNode = group[N - 1].startContainer;
+                if (utils.isDefined(startNode)) {
+                  if (startNode.textContent.length > 0) {
+                    // this means endOffset is 0, but there is a non-empty start container
+                    // then just set the end after this start container or at the end of
+                    // its text node
                     if (startNode.nodeType === 3)
                       group[N - 1].setEnd(
                         startNode,
@@ -1615,21 +1615,52 @@
                     else if (startNode.nodeType === 1)
                       group[N - 1].setEndAfter(startNode);
                   } else {
-                    // this means that there's an endOffset
-                    // so there's a valid end container
-                    let endNode = group[N - 1].endContainer;
-                    let originalEndContent = endNode.textContent;
-
+                    // this means that our start container is also empty
+                    // this means the group became de-facto collapsed, so remove it
+                    group.pop();
+                    N = group.length;
+                    // find the first group, which is not collapsed
+                    // it can either still be with endOffset 0, but a non-empty start container
+                    // or with an empty start container, but endOffset which is non-zero
+                    // or when both conditions are false
                     while (
-                      isLabel(endNode.parentNode) &&
-                      endNode.parentNode.textContent.endsWith(
-                        originalEndContent
-                      )
+                      group[N - 1].endOffset === 0 &&
+                      group[N - 1].startContainer.textContent.length === 0
                     ) {
-                      endNode = endNode.parentNode;
+                      group.pop();
+                      N = group.length;
                     }
-                    if (utils.isDefined(endNode))
-                      group[N - 1].setEndAfter(endNode);
+
+                    if (group[N - 1].endOffset === 0) {
+                      // this means that at lest we have a start container that is non-empty
+                      // (because otherwise while-loop above would not terminate)
+                      let startNode = group[N - 1].startContainer;
+                      if (startNode.nodeType === 3)
+                        group[N - 1].setEnd(
+                          startNode,
+                          startNode.textContent.length
+                        );
+                      else if (startNode.nodeType === 1)
+                        group[N - 1].setEndAfter(startNode);
+                    } else {
+                      // this means that there's an endOffset
+                      // so there's a valid end container
+                      let endNode = group[N - 1].endContainer;
+
+                      if (!utils.isDefined(endNode)) continue;
+                      let originalEndContent = endNode.textContent;
+
+                      while (
+                        isLabel(endNode.parentNode) &&
+                        endNode.parentNode.textContent.endsWith(
+                          originalEndContent
+                        )
+                      ) {
+                        endNode = endNode.parentNode;
+                      }
+                      if (utils.isDefined(endNode))
+                        group[N - 1].setEndAfter(endNode);
+                    }
                   }
                 }
               }
@@ -4454,14 +4485,14 @@
                     }, $("#getNewArticle"));
                   }
                 } else if (data["mode"] == "e") {
-                  $("#editingBoard").html(data.template);
-                  $("#editingBoard")
+                  $("#editingBoard .message-body").html(data.template);
+                  $("#editingBoard .message-body")
                     .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
                     .addClass("is-hovered");
                   alert("Your edit is successfully saved!");
                 } else if (data["mode"] == "rev") {
-                  $("#reviewingBoard").html(data.template);
-                  $("#reviewingBoard")
+                  $("#reviewingBoard .message-body").html(data.template);
+                  $("#reviewingBoard .message-body")
                     .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
                     .addClass("is-hovered");
                   alert("Your review is successfully saved!");

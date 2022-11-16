@@ -5,6 +5,7 @@ from collections import defaultdict, OrderedDict
 from django.template.loader import render_to_string
 from django.db.models import F
 from django.core.paginator import Paginator
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
 from .models import *
 
@@ -105,7 +106,7 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
         return (ctx_cache, label_cache), saved_labels
 
 
-def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None, current_uuid=None):
+def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None, current_uuid=None, search_mv_pk=None, search_query=None):
     is_author, is_shared = project.author == user, project.shared_with(user)
 
     if is_author or is_shared:
@@ -128,6 +129,15 @@ def render_editing_board(request, project, user, page, template='partials/compon
         else:
             label_batches, input_batches = None, None
 
+    if search_query:
+        vector = SearchVector("content")
+        query = SearchQuery(search_query)
+        if search_mv_pk:
+            input_batches = input_batches.filter(marker_id=search_mv_pk)
+        input_batches = input_batches.annotate(
+            rank=SearchRank(vector, query)
+        ).filter(rank__gt=0)
+
     if label_batches:
         label_batches = label_batches.values_list('batch_id', flat=True)
     else:
@@ -138,7 +148,10 @@ def render_editing_board(request, project, user, page, template='partials/compon
     else:
         input_batches = []
 
-    batch_ids = set(label_batches) | set(input_batches)
+    if search_query:
+        batch_ids = set(label_batches) & set(input_batches)
+    else:
+        batch_ids = set(label_batches) | set(input_batches)
     batches = Batch.objects.filter(
         pk__in=batch_ids).order_by(F('dt_created').desc(nulls_last=True))
 

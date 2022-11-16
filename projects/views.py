@@ -562,10 +562,11 @@ def record_datapoint(request, proj):
                 mode = original_mode
 
             kwargs = {
-                'current_uuid': batch.uuid
+                'current_uuid': batch.uuid,
+                'template': 'partials/components/areas/_editing_body.html'
             }
             if mode == "rev":
-                kwargs['template'] = 'partials/components/areas/reviewing.html'
+                kwargs['template'] = 'partials/components/areas/_reviewing_body.html'
                 try:
                     kwargs['ds_id'] = int(data['datasource'])
                     kwargs['dp_id'] = int(data['datapoint'])
@@ -588,6 +589,26 @@ def record_datapoint(request, proj):
         'batch': str(batch),
         'mode': mode,
         'trigger_update': batch_info.project.auto_text_switch
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def recorded_search(request, proj):
+    scope = int(request.GET.get("scope", -1))
+    query = request.GET.get("query", "")
+    project = get_object_or_404(Tm.Project, pk=proj)
+
+    if scope <= 0:
+        scope = None
+
+    return JsonResponse({
+        'template': render_editing_board(
+            request, project, request.user, 1,
+            search_mv_pk=scope,
+            search_query=query,
+            template='partials/components/areas/_editing_body.html'
+        )
     })
 
 

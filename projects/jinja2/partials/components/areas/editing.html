@@ -2,31 +2,29 @@
   <div class="message-header">
     <p>{{ _("editing")|capitalize }}</p>
   </div>
-  <div class="message-body">
-    {% if paginator.count > 0 %}
-      {% set current_page = paginator.page(page) %}
-      <ul>
-        {% with mode="editing" %}
-          {% for batch in current_page %}
-            {% if not batch.revision_of %}
-              {% include 'partials/components/controls/_batch_list_item.html' %}
-              {% set revisions = batch.revisions %}
-              {% if revisions.count() > 0 %}
-                <ul>
-                  {% for revision in batch.revisions.all() %}
-                    {% with batch=revision %}
-                      {% include 'partials/components/controls/_batch_list_item.html' %}
-                    {% endwith %}
-                  {% endfor %}
-                </ul>
-              {% endif %}
-            {% endif %}
-          {% endfor %}
-        {% endwith %}
-      </ul>
-    {% else %}
-      <p>Nothing to show</p>
-    {% endif %}
-  </div>
-  {% include 'partials/components/controls/_pagination.html' %}
+  <nav class="search">
+    <form id="editingSearchForm" action="{{ url('projects:recorded_search', kwargs={'proj': project.pk }) }}" method="GET">
+      <div class="field has-addons">
+        <p class="control">
+          <span class="select is-small">
+            <select name="scope">
+              <option value="-1">All</option>
+              {% for m in project.input_markers %}
+                <option value="{{m.pk}}">{{ m.name }}</option>
+              {% endfor %}
+            </select>
+          </span>
+        </p>
+        <div class="control is-expanded">
+          <input class="input is-small" type="text" placeholder="What do you want to search for?" name="query">
+        </div>
+        <div class="control">
+          <input type="submit" class="button is-info is-small" value="Search">
+        </div>
+      </div>
+    </form>
+  </nav>
+  <main>
+    {% include 'partials/components/areas/_editing_body.html' %}
+  </main>
 </article>

@@ -531,6 +531,12 @@ textarea {
   overflow-y: scroll;
 }
 
+.editing-area .message-body {
+  border-width: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 .editing-area ul > ul {
   margin-left: 1.5em;
 }
@@ -564,7 +570,15 @@ textarea {
   color: white;
 }
 
+.editing-area .message-body {
+  padding-top: 0px;
+}
+
 .editing-area .pagination {
+  padding: 1.5em 1.5em 1.25em 1.5em;
+}
+
+.editing-area .search {
   padding: 1.5em 1.5em 1.25em 1.5em;
 }
 
