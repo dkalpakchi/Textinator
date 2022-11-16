@@ -129,14 +129,15 @@ def render_editing_board(request, project, user, page, template='partials/compon
         else:
             label_batches, input_batches = None, None
 
-    if search_query:
+    if search_query or search_mv_pk:
         vector = SearchVector("content")
         query = SearchQuery(search_query)
         if search_mv_pk:
             input_batches = input_batches.filter(marker_id=search_mv_pk)
-        input_batches = input_batches.annotate(
-            rank=SearchRank(vector, query)
-        ).filter(rank__gt=0)
+        if search_query:
+            input_batches = input_batches.annotate(
+                rank=SearchRank(vector, query)
+            ).filter(rank__gt=0)
 
     if label_batches:
         label_batches = label_batches.values_list('batch_id', flat=True)
@@ -148,7 +149,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
     else:
         input_batches = []
 
-    if search_query:
+    if search_query or search_mv_pk:
         batch_ids = set(label_batches) & set(input_batches)
     else:
         batch_ids = set(label_batches) | set(input_batches)
