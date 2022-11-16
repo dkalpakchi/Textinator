@@ -576,6 +576,7 @@ def record_datapoint(request, proj):
             return JsonResponse({
                 'error': False,
                 'mode': mode,
+                'partial': True,
                 'template': render_editing_board(
                     request, batch_info.project, batch_info.user, 1,
                     **kwargs
@@ -595,6 +596,7 @@ def record_datapoint(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def recorded_search(request, proj):
+    page = int(request.GET.get("p", 1))
     scope = int(request.GET.get("scope", -1))
     query = request.GET.get("query", "")
     project = get_object_or_404(Tm.Project, pk=proj)
@@ -603,8 +605,9 @@ def recorded_search(request, proj):
         scope = None
 
     return JsonResponse({
+        'partial': True,
         'template': render_editing_board(
-            request, project, request.user, 1,
+            request, project, request.user, page,
             search_mv_pk=scope,
             search_query=query,
             template='partials/components/areas/_editing_body.html'
@@ -618,6 +621,7 @@ def editing(request, proj):
     page = int(request.GET.get("p", 1))
     project = get_object_or_404(Tm.Project, pk=proj)
     return JsonResponse({
+        'partial': False,
         'template': render_editing_board(request, project, request.user, page)
     })
 

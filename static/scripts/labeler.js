@@ -1191,6 +1191,7 @@
                   success: function (data) {
                     let $editingBoard = $("#editingBoard");
                     $editingBoard.find("main").prop("innerHTML", data.template);
+                    $editingBoard.attr("data-href", $form.attr("action"));
                     labelerModule.fixUI();
                   },
                 });
@@ -1206,17 +1207,27 @@
 
             if (target.tagName == "A" && target.hasAttribute("data-page")) {
               // pagination events
-              let psButton = document.querySelector(
-                "#" + closestPsArea.getAttribute("data-mode") + "ModeButton"
-              );
+              let searchForm =
+                  closestPsArea.querySelector("#editingSearchForm"),
+                searchData = {};
+              if (utils.isDefined(searchForm))
+                searchData = $(searchForm).serializeObject();
+
               $.ajax({
                 type: "GET",
                 url:
-                  psButton.getAttribute("href") +
+                  closestPsArea.getAttribute("data-href") +
                   "?p=" +
                   target.getAttribute("data-page"),
+                dataType: "json",
+                data: searchData,
                 success: function (d) {
-                  closestPsArea.outerHTML = d.template;
+                  if (d.partial) {
+                    let mainPart = closestPsArea.querySelector("main");
+                    mainPart.innerHTML = d.template;
+                  } else {
+                    closestPsArea.outerHTML = d.template;
+                  }
 
                   control.fixUI();
                 },

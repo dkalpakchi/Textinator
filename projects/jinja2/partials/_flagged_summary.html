@@ -14,7 +14,7 @@
             {% endif %}
             <div id="flagged_{{i}}_{{loop.index0}}"></div>
             <script type="text/javascript">
-              const formatter_{{i}}_{{loop.index0}} = new JSONFormatter({{v|tojson|safe}});
+              var formatter_{{i}}_{{loop.index0}} = new JSONFormatter({{v|tojson|safe}});
               document.querySelector("#flagged_{{i}}_{{loop.index0}}").appendChild(formatter_{{i}}_{{loop.index0}}.render());
             </script>
           </div>

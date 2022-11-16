@@ -1,4 +1,4 @@
-<article id="editingBoard" data-mode="editing" data-url="{{ url('projects:get_batch', kwargs={'proj': project.pk}) }}" data-flag-url="{{ url('projects:flag_batch', kwargs={'proj': project.pk}) }}" class="editing-area message is-primary">
+<article id="editingBoard" data-mode="editing" data-url="{{ url('projects:get_batch', kwargs={'proj': project.pk}) }}" data-flag-url="{{ url('projects:flag_batch', kwargs={'proj': project.pk}) }}" data-href="{{ url('projects:editing', kwargs={'proj': project.pk}) }}" class="editing-area message is-primary">
   <div class="message-header">
     <p>{{ _("editing")|capitalize }}</p>
   </div>

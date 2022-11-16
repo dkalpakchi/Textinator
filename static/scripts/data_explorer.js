@@ -28,6 +28,18 @@
     resetSelect: function (sel) {
       sel.selectedIndex = 0;
     },
+    setInnerHTML: function (elm, html) {
+      // taken from: https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml
+      elm.innerHTML = html;
+      Array.from(elm.querySelectorAll("script")).forEach((oldScript) => {
+        const newScript = document.createElement("script");
+        Array.from(oldScript.attributes).forEach((attr) =>
+          newScript.setAttribute(attr.name, attr.value)
+        );
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
+    },
   };
 
   const explorer = {
@@ -102,7 +114,7 @@
               dataType: "json",
               data: JSON.stringify(data),
               success: function (data) {
-                ctx.flaggedArea.res.innerHTML = data.res;
+                utils.setInnerHTML(ctx.flaggedArea.res, data.res);
                 ctx.flaggedArea.res.classList.remove("lds-circle");
               },
             });
