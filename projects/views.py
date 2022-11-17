@@ -616,9 +616,6 @@ def recorded_search(request, proj):
     query = request.GET.get("query", "")
     project = get_object_or_404(Tm.Project, pk=proj)
 
-    if scope <= 0:
-        scope = None
-
     return JsonResponse({
         'partial': True,
         'template': render_editing_board(

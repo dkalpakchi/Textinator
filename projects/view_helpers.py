@@ -3,7 +3,8 @@ import json
 from collections import defaultdict, OrderedDict
 
 from django.template.loader import render_to_string
-from django.db.models import F
+from django.db.models import F, Window, Subquery, OuterRef
+from django.db.models.functions import RowNumber
 from django.core.paginator import Paginator
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
@@ -106,17 +107,46 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
         return (ctx_cache, label_cache), saved_labels
 
 
+def extract_ids(label_batches, input_batches):
+    if label_batches:
+        label_ids = label_batches.values_list('batch_id', flat=True)
+    else:
+        label_ids = []
+
+    if input_batches:
+        input_ids = input_batches.values_list('batch_id', flat=True)
+    else:
+        input_ids = []
+
+    return label_ids, input_ids
+
+
 def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None, current_uuid=None, search_mv_pk=None, search_query=None):
     is_author, is_shared = project.author == user, project.shared_with(user)
 
     if is_author or is_shared:
-        label_batches = Label.objects.filter(marker__project=project)
-        input_batches = Input.objects.filter(marker__project=project)
+        label_batches = Label.objects.filter(marker__project=project).order_by('dt_created')
+        input_batches = Input.objects.filter(marker__project=project).order_by('dt_created')
     else:
-        label_batches = Label.objects.filter(batch__user=user, marker__project=project)
-        input_batches = Input.objects.filter(batch__user=user, marker__project=project)
+        label_batches = Label.objects.filter(batch__user=user, marker__project=project).order_by('dt_created')
+        input_batches = Input.objects.filter(batch__user=user, marker__project=project).order_by('dt_created')
+
+    label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
+
+    # Here we don't use just dataset identifiers, because
+    # there can, of course, be multiple datasets with the same
+    # datapoint IDs
+    relevant_batches = Batch.objects.filter(
+        pk__in=set(label_batch_ids) | set(input_batch_ids)
+    ).annotate(
+        index=Window(
+            expression=RowNumber(),
+            order_by=F('dt_created').asc()
+        )
+    )
 
     if ds_id and dp_id:
+        # reviewing
         if ds_id > 0 and dp_id > 0:
             label_batches = label_batches.filter(
                 context__datasource_id=ds_id,
@@ -130,31 +160,38 @@ def render_editing_board(request, project, user, page, template='partials/compon
             label_batches, input_batches = None, None
 
     if search_query or search_mv_pk:
-        vector = SearchVector("content")
+        if search_mv_pk == 0:
+            vector = SearchVector("context__content")
+        elif search_mv_pk == -1:
+            vector = SearchVector("content", "context__content")
+        else:
+            vector = SearchVector("content")
         query = SearchQuery(search_query)
-        if search_mv_pk:
+        if search_mv_pk and search_mv_pk > 0:
             input_batches = input_batches.filter(marker_id=search_mv_pk)
         if search_query:
             input_batches = input_batches.annotate(
                 rank=SearchRank(vector, query)
             ).filter(rank__gt=0)
 
-    if label_batches:
-        label_batches = label_batches.values_list('batch_id', flat=True)
-    else:
-        label_batches = []
-
-    if input_batches:
-        input_batches = input_batches.values_list('batch_id', flat=True)
-    else:
-        input_batches = []
+    label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
 
     if search_query or search_mv_pk:
-        batch_ids = set(label_batches) & set(input_batches)
+        # TODO: not necessarily true
+        batch_ids = set(label_batch_ids) & set(input_batch_ids)
     else:
-        batch_ids = set(label_batches) | set(input_batches)
-    batches = Batch.objects.filter(
-        pk__in=batch_ids).order_by(F('dt_created').desc(nulls_last=True))
+        batch_ids = set(label_batch_ids) | set(input_batch_ids)
+
+    if batch_ids:
+        sql_string, sql_params = relevant_batches.query.sql_with_params()
+        batches = Batch.objects.raw(
+            "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+            ),
+            list(sql_params) + [str(x) for x in list(batch_ids)]
+        )
+    else:
+        batches = []
 
     p = Paginator(batches, 30)
 

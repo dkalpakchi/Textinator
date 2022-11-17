@@ -1187,6 +1187,15 @@
             function (e) {
               let $form = $(e.target);
 
+              let $main = $form.closest("nav").siblings("main");
+              $main.empty();
+              $main.append(
+                $(
+                  '<div class="lds-ring"><div></div><div></div><div></div><div></div></div>'
+                )
+              );
+              $main.addClass("has-text-centered");
+
               if ($form.attr("id") == "editingSearchForm") {
                 e.preventDefault();
                 $.ajax({
@@ -1197,7 +1206,9 @@
                   data: $form.serializeObject(),
                   success: function (data) {
                     let $editingBoard = $("#editingBoard");
-                    $editingBoard.find("main").prop("innerHTML", data.template);
+                    let $main = $editingBoard.find("main");
+                    $main.prop("innerHTML", data.template);
+                    $main.removeClass("has-text-centered");
                     $editingBoard.attr("data-href", $form.attr("action"));
                     labelerModule.fixUI();
                   },
