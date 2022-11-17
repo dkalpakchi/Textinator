@@ -55,6 +55,9 @@
         return label.firstChild.textContent.trim();
       }
     },
+    expandMode: function (m) {
+      return m == "e" ? "editing" : "reviewing";
+    },
   };
 
   const labelerModule = (function () {
@@ -759,6 +762,10 @@
       contextMenuPlugins: { sharedBetweenMarkers: {} },
       checkedOuterRadio: {}, // to keep tracked of nested radio button groups
       checkedInnerRadio: {},
+      currentPage: {
+        editing: null,
+        reviewing: null,
+      },
       radioCheckSeparator: RADIO_CHECK_SEPARATOR,
       isMarker: isMarker,
       isLabel: isLabel,
@@ -1207,8 +1214,10 @@
 
             if (target.tagName == "A" && target.hasAttribute("data-page")) {
               // pagination events
-              let searchForm =
-                  closestPsArea.querySelector("#editingSearchForm"),
+              let mode = closestPsArea.getAttribute("data-mode");
+              let searchForm = closestPsArea.querySelector(
+                  "#" + mode + "SearchForm"
+                ),
                 searchData = {};
               if (utils.isDefined(searchForm))
                 searchData = $(searchForm).serializeObject();
@@ -1222,6 +1231,7 @@
                 dataType: "json",
                 data: searchData,
                 success: function (d) {
+                  control.currentPage[mode] = target.getAttribute("data-page");
                   if (d.partial) {
                     let mainPart = closestPsArea.querySelector("main");
                     mainPart.innerHTML = d.template;
@@ -4435,6 +4445,24 @@
 
           if (inputFormData["mode"] == "e" || inputFormData["mode"] == "rev") {
             inputFormData["batch"] = labelerModule.getEditingBatch();
+
+            let mode = utils.expandMode(inputFormData["mode"]);
+
+            let searchForm = document.querySelector("#" + mode + "SearchForm");
+            if (utils.isDefined(searchForm)) {
+              let searchData = $(searchForm).serializeObject();
+              for (let key in searchData) inputFormData[key] = searchData[key];
+              console.log(inputFormData);
+            }
+
+            let curPage;
+            if (inputFormData["mode"] == "e") {
+              curPage = labelerModule.currentPage["editing"];
+            } else if (inputFormData["mode"] == "rev") {
+              curPage = labelerModule.currentPage["reviewing"];
+            }
+
+            if (utils.isDefined(curPage)) inputFormData["p"] = curPage;
           }
 
           $.ajax({
@@ -4495,18 +4523,22 @@
                       return true;
                     }, $("#getNewArticle"));
                   }
-                } else if (data["mode"] == "e") {
-                  $("#editingBoard .message-body").html(data.template);
-                  $("#editingBoard .message-body")
+                } else if (data["mode"] == "e" || data["mode"] == "rev") {
+                  let mode = data["mode"] == "e" ? "editing" : "reviewing";
+                  let closestPsArea = document.querySelector(
+                    "#" + mode + "Board"
+                  );
+                  if (data.partial) {
+                    let mainPart = closestPsArea.querySelector("main");
+                    mainPart.innerHTML = data.template;
+                  } else {
+                    closestPsArea.outerHTML = data.template;
+                  }
+                  $(closestPsArea)
                     .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
                     .addClass("is-hovered");
-                  alert("Your edit is successfully saved!");
-                } else if (data["mode"] == "rev") {
-                  $("#reviewingBoard .message-body").html(data.template);
-                  $("#reviewingBoard .message-body")
-                    .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
-                    .addClass("is-hovered");
-                  alert("Your review is successfully saved!");
+                  let item = data["mode"] == "e" ? "edit" : "review";
+                  alert("Your " + item + " is successfully saved!");
                 }
               }
 
@@ -4709,6 +4741,8 @@
           $target.attr("data-mode", "o");
           $target.empty();
           callbackOk($target, $lastCol, mode);
+
+          labelerModule.currentPage[mode] = null;
 
           labelerModule.restoreOriginal();
           labelerModule.clearBatch();

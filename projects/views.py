@@ -454,6 +454,16 @@ def record_datapoint(request, proj):
         is_project_author = batch_info.project.author == batch_info.user
         is_project_shared = batch_info.project.shared_with(batch_info.user)
 
+        try:
+            page = int(data.get('p', 1))
+            scope = int(data.get("scope", -1))
+        except ValueError:
+            page, scope = 1, -1
+        query = data.get("query", "")
+
+        if scope < 0:
+            scope = None
+
         original_mode = mode
         if batch_info.project.editing_as_revision and mode == 'e':
             mode = 'rev'
@@ -563,7 +573,9 @@ def record_datapoint(request, proj):
 
             kwargs = {
                 'current_uuid': batch.uuid,
-                'template': 'partials/components/areas/_editing_body.html'
+                'template': 'partials/components/areas/_editing_body.html',
+                'search_mv_pk': scope,
+                'search_query': query
             }
             if mode == "rev":
                 kwargs['template'] = 'partials/components/areas/_reviewing_body.html'
@@ -578,7 +590,7 @@ def record_datapoint(request, proj):
                 'mode': mode,
                 'partial': True,
                 'template': render_editing_board(
-                    request, batch_info.project, batch_info.user, 1,
+                    request, batch_info.project, batch_info.user, page,
                     **kwargs
                 )
             })
@@ -596,8 +608,11 @@ def record_datapoint(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def recorded_search(request, proj):
-    page = int(request.GET.get("p", 1))
-    scope = int(request.GET.get("scope", -1))
+    try:
+        page = int(request.GET.get("p", 1))
+        scope = int(request.GET.get("scope", -1))
+    except ValueError:
+        page, scope = 1, -1
     query = request.GET.get("query", "")
     project = get_object_or_404(Tm.Project, pk=proj)
 
