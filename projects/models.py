@@ -1349,7 +1349,7 @@ class Batch(Revisable, CommonModel):
         elif lab and lab.marker: return lab.marker.project
         else: return "Empty"
 
-    def get_title(self, regex=None, trim=40):
+    def get_title(self, regex=None):
         inp = Input.objects.filter(batch=self).first()
         lab = Label.objects.filter(batch=self).first()
 
@@ -1357,22 +1357,16 @@ class Batch(Revisable, CommonModel):
             if regex:
                 res = re.search(regex, inp.context.content)
                 display_title = res.group(0).strip()
-                if len(display_title) > trim:
-                    display_title = "{}...".format(display_title[:trim])
                 return display_title if res else "Empty"
             else:
-                content = inp.context.content
-                return "{} ... {}".format(content[:trim//2], content[-trim//2:])
+                return inp.context.content
         elif lab and lab.context:
             if regex:
                 res = re.search(regex, lab.context.content)
                 display_title = res.group(0).strip()
-                if len(display_title) > trim:
-                    display_title = "{}...".format(display_title[:trim])
                 return display_title if res else "Empty"
             else:
-                content = lab.context.content
-                return "{} ... {}".format(content[:trim//2], content[-trim//2:])
+                return lab.context.content
         else:
             return "Empty"
 

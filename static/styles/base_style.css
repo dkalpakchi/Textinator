@@ -964,3 +964,43 @@ div[data-content].is-active {
 .masonry-grid-item {
   margin-bottom: 1em;
 }
+
+/* Adapted from W3Schools */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  display: none;
+  background-color: #555;
+  color: #fff;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 10000;
+  top: 100%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  max-width: 600px;
+  max-height: 400px;
+  white-space: normal;
+  overflow-y: scroll;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  display: block;
+  opacity: 1;
+}
