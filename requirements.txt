@@ -1,5 +1,6 @@
 Babel==2.9.1
 beautifulsoup4==4.9.3
+Celery==5.2.7
 Django==3.2.16
 django-chartjs==2.2.1
 django-clone==3.0.6
@@ -23,6 +24,7 @@ psycopg2-binary
 pymemcache==3.5.2
 PyMySQL==0.9.3
 python-magic==0.4.25
-pytz==2019.3
+pytz==2021.3
+redis==4.2.2
 reportlab==3.6.3
 requests==2.22.0

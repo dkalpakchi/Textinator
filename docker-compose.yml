@@ -8,6 +8,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
   db:
     image: postgres:13.4-alpine
@@ -25,5 +27,22 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:alpine3.16
+    command: redis-server
+    expose:
+     - 6379
+    volumes:
+      - redis_data:/data
+      - redis_conf:/usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+
+
 volumes:
   postgres_data:
+  redis_data:
+  redis_conf:

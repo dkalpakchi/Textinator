@@ -162,8 +162,6 @@ def render_editing_board(request, project, user, page, template='partials/compon
     if search_query or search_mv_pk:
         if search_mv_pk == 0:
             vector = SearchVector("context__content")
-        elif search_mv_pk == -1:
-            vector = SearchVector("content", "context__content")
         else:
             vector = SearchVector("content")
         query = SearchQuery(search_query)
