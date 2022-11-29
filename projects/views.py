@@ -611,6 +611,7 @@ def recorded_search(request, proj):
     try:
         page = int(request.GET.get("p", 1))
         scope = int(request.GET.get("scope", -1))
+        search_type = request.GET.get("search_type", "phr")
     except ValueError:
         page, scope = 1, -1
     query = request.GET.get("query", "")
@@ -622,6 +623,7 @@ def recorded_search(request, proj):
             request, project, request.user, page,
             search_mv_pk=scope,
             search_query=query,
+            search_type=search_type,
             template='partials/components/areas/_editing_body.html'
         )
     })

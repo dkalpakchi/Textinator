@@ -2,6 +2,7 @@
 import json
 from collections import defaultdict, OrderedDict
 
+from django.conf import settings
 from django.template.loader import render_to_string
 from django.db.models import F, Window, Subquery, OuterRef
 from django.db.models.functions import RowNumber
@@ -121,7 +122,17 @@ def extract_ids(label_batches, input_batches):
     return label_ids, input_ids
 
 
-def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None, current_uuid=None, search_mv_pk=None, search_query=None):
+def verbalize_search_type(st):
+    if st == "int":
+        return "plain" # intersection query
+    elif st == "phr":
+        return "phrase" # phrase query
+    elif st == "web":
+        return "websearch" # web-like search with OR allowed
+
+
+def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None,
+                         current_uuid=None, search_mv_pk=None, search_query=None, search_type="p"):
     is_author, is_shared = project.author == user, project.shared_with(user)
 
     if is_author or is_shared:
@@ -159,18 +170,35 @@ def render_editing_board(request, project, user, page, template='partials/compon
         else:
             label_batches, input_batches = None, None
 
+    lang_dict = dict(settings.LANGUAGES)
+    if project.language == 'en':
+        search_config = "{}_lite".format(lang_dict[project.language].lower())
+    else:
+        search_config = lang_dict[project.language].lower()
+
     if search_query or search_mv_pk:
         if search_mv_pk == 0:
-            vector = SearchVector("context__content")
+            vector = SearchVector("context__content", config=search_config)
         else:
-            vector = SearchVector("content")
-        query = SearchQuery(search_query)
+            vector = SearchVector("content", config=search_config)
+
+        query = SearchQuery(
+            search_query,
+            search_type=verbalize_search_type(search_type),
+            config=search_config
+        )
         if search_mv_pk and search_mv_pk > 0:
             input_batches = input_batches.filter(marker_id=search_mv_pk)
         if search_query:
-            input_batches = input_batches.annotate(
-                rank=SearchRank(vector, query)
-            ).filter(rank__gt=0)
+            if search_type == "phr":
+                # phrase queries
+                input_batches = input_batches.annotate(
+                    search=vector
+                ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
+            else:
+                input_batches = input_batches.annotate(
+                    rank=SearchRank(vector, query)
+                ).filter(rank__gt=1e-3) # some of them get like 1e-20, which is why > 0 doesn't work'
 
     label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
 

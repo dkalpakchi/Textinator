@@ -1,5 +1,15 @@
 # Developer guidelines
 
+## Running in development mode
+
+The development version will run the Django's built-in development server and will also map your local folder to that inside the Docker container, so that the changes in the code are immediately reflected without the need to restart the container. You can start Textinator in the dev mode using the following command.
+
+`docker-compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up`
+
+Now if you go to `http://localhost:8000`, you should see Textinator's main page.
+
+The commands to stop the container and take down the DB are the same as in production mode, but you need to replace `prod` with `dev` everywhere.
+
 ## Working with static translations
 
 We use Babel:

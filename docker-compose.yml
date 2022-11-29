@@ -12,7 +12,9 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:13.4-alpine
+    build:
+      context: postgres
+      dockerfile: Dockerfile
     expose:
       - 5432
     volumes:
