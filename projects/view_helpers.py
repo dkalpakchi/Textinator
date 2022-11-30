@@ -203,8 +203,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
     label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
 
     if search_query or search_mv_pk:
-        # TODO: not necessarily true
-        batch_ids = set(label_batch_ids) & set(input_batch_ids)
+        batch_ids = set(input_batch_ids)
     else:
         batch_ids = set(label_batch_ids) | set(input_batch_ids)
 
