@@ -8,6 +8,7 @@ from django.db.models import F, Window, Subquery, OuterRef
 from django.db.models.functions import RowNumber
 from django.core.paginator import Paginator
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.utils import timezone
 
 from .models import *
 
@@ -102,6 +103,10 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
             new_label = Label.objects.create(
                 context=ctx, start=new_start, end=new_end, marker=marker,
                 batch=batch, extra={k: v for k, v in chunk['extra'].items() if v}
+            )
+            new_label.revision_changes = "Added a new marker of type {} [{}]".format(
+                marker.name,
+                timezone.now().strftime('%Y-%m-%d %H:%M:%S %Z')
             )
             label_cache[chunk['id']] = new_label.id
             saved_labels += 1

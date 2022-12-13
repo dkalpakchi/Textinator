@@ -6,6 +6,7 @@ import operator
 from django.db import models, transaction
 from django.utils.translation import gettext_lazy as _
 
+
 class DatapointInfo:
     def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, proj_id=None, is_empty=False, no_data=False, is_dialogue=False, is_delayed=False):
         self.id = dp_id
@@ -71,6 +72,8 @@ class JSONFormConfig:
 
 class Revisable(models.Model):
     revision_of = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='revisions')
+    revision_changes = models.TextField(_("revision changes"), default="",
+        help_text=_("The list of exact changes that were done to the object"))
 
     class Meta:
         abstract = True

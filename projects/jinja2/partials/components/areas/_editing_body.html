@@ -10,7 +10,7 @@
             {% if revisions.count() > 0 %}
               <ul>
                 {% for revision in batch.revisions.all() %}
-                  {% with batch=revision %}
+                  {% with batch=revision,scope="revision" %}
                     {% include 'partials/components/controls/_batch_list_item.html' %}
                   {% endwith %}
                 {% endfor %}

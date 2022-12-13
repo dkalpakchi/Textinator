@@ -1313,7 +1313,7 @@ class Context(CommonModel):
 class Batch(Revisable, CommonModel):
     """
     Each time an annotator submits any annotation(s), an annotation batch is created
-    for this annotator and a unique UUID is assigned tot his batch.
+    for this annotator and a unique UUID is assigned to this batch.
 
     All annotated `Markers` (instantiated as either `Inputs` or `Labels`) and `Relations`
     (instantiated as `LabelRelations`) are then binded to this batch.
@@ -1371,8 +1371,19 @@ class Batch(Revisable, CommonModel):
             return "Empty"
 
     @property
+    def inputs(self):
+        return Input.objects.filter(batch=self)
+
+    @property
     def labels(self):
         return Label.objects.filter(batch=self)
+
+    @property
+    def total_revision_changes(self):
+        input_changes = list(self.inputs.values_list('revision_changes', flat=True))
+        label_changes = list(self.labels.values_list('revision_changes', flat=True))
+        total_changes = [self.revision_changes] + input_changes + label_changes
+        return "\n".join(total_changes).strip()
 
 
 class Input(Orderable, Revisable, CloneMixin, CommonModel):

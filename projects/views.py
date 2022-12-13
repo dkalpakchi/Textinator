@@ -19,6 +19,7 @@ from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.contrib.postgres.fields.jsonb import KeyTransform
+from django.utils import timezone
 
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
@@ -54,7 +55,7 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
     yUnit = "labels/inputs"
 
     def get_labels(self):
-        """Return 7 labels for the x-axis."""
+        """Return labels for the x-axis."""
         self.labels = Tm.Label.objects.filter(marker__project__id=self.pk, undone=False).all()
         self.inputs = Tm.Input.objects.filter(marker__project__id=self.pk).all()
         self.x_axis = sorted(set([len(l.text.split()) for l in self.labels]) | set([len(i.content.split()) for i in self.inputs]))
@@ -67,7 +68,7 @@ class LabelLengthJSONView(BaseColumnsHighChartsView):
         return [m.name for m in self.project.markers.all()]
 
     def get_data(self):
-        """Return 3 datasets to plot."""
+        """Return datasets to plot."""
         data = [[0] * len(self.x_axis) for _ in range(len(self.project.markers.all()))]
         self.l2i = {v: k for k, v in enumerate(self.x_axis)}
         self.p2i = {v.name: k for k, v in enumerate(self.project.markers.all())}
@@ -504,13 +505,14 @@ def record_datapoint(request, proj):
             batch_labels = {l.hash: l for l in Tm.Label.objects.filter(batch=batch)}
 
             # Dealing with inputs
-            inputs = []
+            inputs, processed_hashes = [], set()
             for input_type, changed_inputs in batch_info.inputs():
                 for name, changed in changed_inputs.items():
                     if isinstance(changed, dict):
                         # this means we have changed a previous value
                         try:
                             inp = batch_inputs[changed['hash']]
+                            processed_hashes.add(changed['hash'])
                             if inp.marker.code == name and inp.content != changed['value']:
                                 inp.content = changed['value']
                                 if mode == "rev":
@@ -518,6 +520,10 @@ def record_datapoint(request, proj):
                                     inp.pk = None
                                     inp.batch = revised_batch
                                     inp.revision_of_id = old_pk
+                                    inp.revision_changes += "\nChanged {} [{}]".format(
+                                        inp.marker.name,
+                                        timezone.now().strftime('%Y-%m-%d %H:%M:%S %Z')
+                                    )
                                 inputs.append(inp)
                         except KeyError:
                             # smth is wrong
@@ -547,6 +553,23 @@ def record_datapoint(request, proj):
                 elif mode == "rev":
                     Tm.Input.objects.bulk_create(inputs)
 
+            # Dealing with inputs that are deleted
+            for ihash in batch_inputs:
+                if ihash not in processed_hashes:
+                    # means it was deleted
+                    if mode == "e":
+                        batch_inputs[ihash].delete()
+                    elif mode == "rev":
+                        revised_input = batch_inputs[ihash]
+                        revised_input.content = ""
+                        revised_input.pk = None
+                        revised_input.batch = revised_batch
+                        revised_input.revision_changes += "\nDeleted {} [{}]".format(
+                            batch_inputs[ihash].marker.name,
+                            timezone.now().strftime('%Y-%m-%d %H:%M:%S %Z')
+                        )
+                        revised_input.save()
+
             # Dealing with labels
             for chunk in batch_info.chunks:
                 if chunk.get('deleted', False):
@@ -559,6 +582,7 @@ def record_datapoint(request, proj):
                             revised_label.pk = None
                             revised_label.batch = revised_batch
                             revised_label.undone = True
+                            revised_label.revision_changes = "Deleted {}".format(batch_labels[chunk_hash].marker.name)
                             revised_label.save()
 
             if mode == "e":
