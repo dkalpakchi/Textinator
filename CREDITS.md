@@ -16,7 +16,6 @@ Here are credits to the OSS projects that are still used in the latest version o
 
 ### Extras
 *   [django\_admin\_rangefilter](https://github.com/silentsokolov/django-admin-rangefilter)
-*   [django-chartjs](https://github.com/peopledoc/django-chartjs)
 *   [django-colorfield](https://github.com/fabiocaccamo/django-colorfield)
 *   [django\_filebrowser\_no\_grappelli](https://github.com/smacker/django-filebrowser-no-grappelli)
 *   [django-guardian](https://github.com/django-guardian/django-guardian)
@@ -28,8 +27,9 @@ Here are credits to the OSS projects that are still used in the latest version o
 *   reportlab
 
 ## Previous versions of Textinator
-Here are credits to the OSS projects that were used in the previous versions of Textinator.
+Here are credits to the OSS projects that were used in the previous versions of Textinator
 
 ### Extras
 *   [django\_admin\_json\_editor](https://github.com/abogushov/django-admin-json-editor)
 *   [django-sass-processor](https://github.com/jrief/django-sass-processor)
+*   [django-chartjs](https://github.com/peopledoc/django-chartjs)

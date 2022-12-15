@@ -26,8 +26,6 @@ from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 
-from chartjs.views.columns import BaseColumnsHighChartsView
-
 # from modeltranslation.translator import translator
 
 import projects.models as Tm
@@ -41,6 +39,7 @@ from .view_helpers import (
     BatchInfo, process_inputs, process_marker_groups, process_text_markers,
     process_chunks_and_relations, process_chunk, render_editing_board
 )
+from .tasks import get_label_length_stats
 
 PT2MM = 0.3527777778
 MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -50,46 +49,30 @@ MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
 ## Chart views
 ##
 
-class LabelLengthJSONView(BaseColumnsHighChartsView):
+class LabelLengthJSONView:
     title = "Label/input lengths (words)"
     yUnit = "labels/inputs"
 
+    def __init__(self, data):
+        self.x_axis = data['x_axis']
+        self.providers = data['providers']
+        self.plot_data = data['plot_data']
+
     def get_labels(self):
         """Return labels for the x-axis."""
-        self.labels = Tm.Label.objects.filter(marker__project__id=self.pk, undone=False).all()
-        self.inputs = Tm.Input.objects.filter(marker__project__id=self.pk).all()
-        self.x_axis = sorted(set([len(l.text.split()) for l in self.labels]) | set([len(i.content.split()) for i in self.inputs]))
-        self.project = Tm.Project.objects.get(pk=self.pk)
-        self.participants = self.project.participants.all()
+        print(response.ready)
         return self.x_axis
 
     def get_providers(self):
         """Return names of datasets."""
-        return [m.name for m in self.project.markers.all()]
+        return self.providers
 
     def get_data(self):
         """Return datasets to plot."""
-        data = [[0] * len(self.x_axis) for _ in range(len(self.project.markers.all()))]
-        self.l2i = {v: k for k, v in enumerate(self.x_axis)}
-        self.p2i = {v.name: k for k, v in enumerate(self.project.markers.all())}
-
-        for source in [self.labels, self.inputs]:
-            for l in source:
-                if hasattr(l, 'text'):
-                    data[self.p2i[l.marker.marker.name]][self.l2i[len(l.text.split())]] += 1
-                elif hasattr(l, 'content'):
-                    data[self.p2i[l.marker.marker.name]][self.l2i[len(l.content.split())]] += 1
-        return data
-
-    def get_context_data(self, **kwargs):
-        self.pk = kwargs.get('pk')
-        data = super(LabelLengthJSONView, self).get_context_data(**kwargs)
-        return data
-
-#label_lengths_chart_json = LabelLengthJSONView.as_view()
+        return self.plot_data
 
 
-class UserTimingJSONView(BaseColumnsHighChartsView):
+class UserTimingJSONView:
     title = "User timing (minutes)"
     yUnit = "batches"
 
@@ -161,10 +144,8 @@ class UserTimingJSONView(BaseColumnsHighChartsView):
         data = super(UserTimingJSONView, self).get_context_data(**kwargs)
         return data
 
-#user_timing_chart_json = UserTimingJSONView.as_view()
 
-
-class UserProgressJSONView(BaseColumnsHighChartsView):
+class UserProgressJSONView:
     title = "Progress (%)"
     yUnit = "%"
 
@@ -246,10 +227,8 @@ class UserProgressJSONView(BaseColumnsHighChartsView):
         })
         return data
 
-#user_progress_chart_json = UserProgressJSONView.as_view()
 
-
-class DataSourceSizeJSONView(BaseColumnsHighChartsView):
+class DataSourceSizeJSONView:
     title = "Data source sizes (texts)"
     yUnit = "texts"
 
@@ -271,8 +250,6 @@ class DataSourceSizeJSONView(BaseColumnsHighChartsView):
         self.pk = kwargs.get('pk')
         data = super(DataSourceSizeJSONView, self).get_context_data(**kwargs)
         return data
-
-#datasource_size_chart_json = DataSourceSizeJSONView.as_view()
 
 ##
 ## Page views

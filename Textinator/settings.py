@@ -56,7 +56,6 @@ INSTALLED_APPS = [
     # 'prettyjson',
     'django_registration',
     'tinymce',
-    'chartjs',
     'projects',
     'rangefilter',
     # 'surveys'
@@ -383,3 +382,7 @@ FILEBROWSER_EXTENSIONS = {
     'Video': ['.mov','.wmv','.mpeg','.mpg','.avi','.rm'],
     'Audio': ['.mp3','.mp4','.wav','.aiff','.midi','.m4p']
 }
+
+# Celery configuration
+CELERY_BROKER_URL = 'redis://172.21.0.2:6379/0'
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
