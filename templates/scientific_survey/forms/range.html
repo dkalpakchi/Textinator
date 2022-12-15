@@ -1,0 +1,2 @@
+<input id="id_{{ widget.name }}" class='slider is-fullwidth has-output' name="{{ widget.name }}" type="range" min="{{widget.attrs.min_value}}" max="{{widget.attrs.max_value}}" step="{{widget.attrs.step_size}}"{% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}>
+<output class="tag is-grey" for="id_{{widget.name}}">???</output>

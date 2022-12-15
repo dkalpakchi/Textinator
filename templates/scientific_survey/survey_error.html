@@ -1,0 +1,7 @@
+{% extends 'scientific_survey/base.html' %}
+
+{% block body %}
+There has been some error in handling your responses and they could not be saved. Please contact the person responsible for the survey for further instructions.
+
+<a href="{% url 'survey-list' %}">Back to the list of surveys</a>
+{% endblock %}

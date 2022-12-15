@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, bulmaSlider) {
   $(document).ready(function () {
     $(".survey-description").accordion({
       collapsible: true,
@@ -40,5 +40,7 @@
         });
       }
     });
+
+    bulmaSlider.attach();
   });
-})(jQuery);
+})(window.jQuery, window.bulmaSlider);

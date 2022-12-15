@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
+    'django.forms',
     "compressor",
     # 'prettyjson',
     'django_registration',
@@ -125,6 +126,7 @@ TEMPLATES = [
         },
     }
 ]
+FORM_RENDERER='django.forms.renderers.TemplatesSetting'
 
 WSGI_APPLICATION = 'Textinator.wsgi.application'
 

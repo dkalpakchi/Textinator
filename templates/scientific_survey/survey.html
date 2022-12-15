@@ -1,4 +1,4 @@
-{% extends 'survey/base.html' %}
+{% extends 'scientific_survey/base.html' %}
 {% load i18n %}
 {% load survey_extras %}
 {% load static %}
@@ -11,6 +11,7 @@
     <script type="text/javascript" src="{% static 'scientific_survey/js/flatpickr.min.js' %}"></script>
   {% endif %}
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.2/dist/jquery.validate.min.js"></script>
+  <script type="text/javascript" src="{% static 'bulma-slider/dist/js/bulma-slider.min.js' %}"></script>
   <script type="text/javascript" src="{% static 'scripts/survey.js' %}"></script>
 {% endblock %}
 
@@ -19,6 +20,7 @@
     {{ block.super }}
     <link href="{% static 'scientific_survey/css/flatpickr.min.css'%}" rel="stylesheet" type="text/css"/>
   {% endif %}
+  <link rel="stylesheet" href="{% static 'bulma-slider/dist/css/bulma-slider.min.css' %}">
   <style>
     hr {
       display: block;
@@ -43,11 +45,11 @@
   </div>
   <div class="container mb-5">
     {% if step|add:step >= response_form.steps_count %}
-      <span class="survey-progress-value" style="color: white;">{{step}} / {{response_form.steps_count}}</span>
+      <span class="survey-progress-value" style="color: white;">{{step|add:1}} / {{response_form.steps_count}}</span>
     {% else %}
-      <span class="survey-progress-value">{{step}} / {{response_form.steps_count}}</span>
+      <span class="survey-progress-value">{{step|add:1}} / {{response_form.steps_count}}</span>
     {% endif %}
-    <progress class="progress is-primary" value="{{step}}" max="{{response_form.steps_count}}"></progress>
+    <progress class="progress is-primary" value="{{step|add:1}}" max="{{response_form.steps_count}}"></progress>
   </div>
 	<div>
   {% if step and step != 0 %}
@@ -58,6 +60,7 @@
 	    {% csrf_token %}
       <input type="hidden" name="seed" value="{{response_form.random_seed}}">
       <input type="hidden" name="extra" value="{{response_form.extra}}">
+      <input type="hidden" name="scope" value="{{response_form.scope_category_id}}">
 
       {% for category in categories %}
         {% if category.name == response_form.active_category_name or not response_form.active_category_name %}
@@ -70,12 +73,12 @@
                 <p>{{category.description}}</p>
                 <hr>
               {% endif %}
-              {% include "survey/question.html" with groups=response_form|groups_by_category:category.name %}
+              {% include "scientific_survey/question.html" with groups=response_form|groups_by_category:category.name %}
             </div>
           </article>
         {% endif %}
       {% empty %}
-        {% include "survey/question.html" with groups=response_form.groups_by_question %}
+        {% include "scientific_survey/question.html" with groups=response_form.groups_by_question %}
       {% endfor %}
 
 		  {% if survey.editable_answers or response_form.response is None %}
