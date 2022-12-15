@@ -2,7 +2,7 @@
 
 This project, as it is now, would be impossible without numerous other open-source projects (presented in alphabetical order within each category, hopefully):
 
-## Latest version
+## Latest version (master branch)
 Here are credits to the OSS projects that are still used in the latest version of Textinator.
 
 ### Core
@@ -30,6 +30,6 @@ Here are credits to the OSS projects that are still used in the latest version o
 Here are credits to the OSS projects that were used in the previous versions of Textinator
 
 ### Extras
-*   [django\_admin\_json\_editor](https://github.com/abogushov/django-admin-json-editor)
-*   [django-sass-processor](https://github.com/jrief/django-sass-processor)
-*   [django-chartjs](https://github.com/peopledoc/django-chartjs)
+*   [django\_admin\_json\_editor](https://github.com/abogushov/django-admin-json-editor) (up to v1.1.0)
+*   [django-sass-processor](https://github.com/jrief/django-sass-processor) (up to v1.1.0)
+*   [django-chartjs](https://github.com/peopledoc/django-chartjs) (up to latest)
