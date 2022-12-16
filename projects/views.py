@@ -2,7 +2,6 @@
 import os
 import io
 import time
-import bisect
 import uuid
 import json
 from collections import defaultdict
@@ -26,6 +25,8 @@ from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 
+from celery.result import AsyncResult
+
 # from modeltranslation.translator import translator
 
 import projects.models as Tm
@@ -39,7 +40,7 @@ from .view_helpers import (
     BatchInfo, process_inputs, process_marker_groups, process_text_markers,
     process_chunks_and_relations, process_chunk, render_editing_board
 )
-from .tasks import get_label_length_stats
+from .tasks import get_label_lengths_stats, get_user_timings_stats, get_user_progress_stats, get_data_source_sizes_stats
 
 PT2MM = 0.3527777778
 MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -49,183 +50,34 @@ MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
 ## Chart views
 ##
 
-class LabelLengthJSONView:
-    title = "Label/input lengths (words)"
-    yUnit = "labels/inputs"
-
-    def __init__(self, data):
-        self.x_axis = data['x_axis']
-        self.providers = data['providers']
-        self.plot_data = data['plot_data']
-
-    def get_labels(self):
-        """Return labels for the x-axis."""
-        print(response.ready)
-        return self.x_axis
-
-    def get_providers(self):
-        """Return names of datasets."""
-        return self.providers
-
-    def get_data(self):
-        """Return datasets to plot."""
-        return self.plot_data
+@login_required
+@require_http_methods(["GET"])
+def chart_start(request, pk):
+    task = request.GET.get("task")
+    r = None
+    if task:
+        task_func = globals().get('get_{}_stats'.format(task))
+        if task_func:
+            r = task_func.delay(pk)
+    if r is None:
+        return JsonResponse({ "token": False })
+    else:
+        return JsonResponse({ 'token': r.task_id })
 
 
-class UserTimingJSONView:
-    title = "User timing (minutes)"
-    yUnit = "batches"
-
-    def get_labels(self):
-        """Return 7 labels for the x-axis."""
-        inputs = Tm.Input.objects.filter(marker__project__id=self.pk).order_by('dt_created').all()
-        labels = Tm.Label.objects.filter(marker__project__id=self.pk, undone=False).order_by('dt_created').all()
-        self.inputs_by_user = defaultdict(lambda: defaultdict(list))
-        self.labels_by_user = defaultdict(lambda: defaultdict(list))
-        for inp in inputs:
-            self.inputs_by_user[inp.batch.user.username][str(inp.batch)].append(inp)
-        for lab in labels:
-            self.labels_by_user[lab.batch.user.username][str(lab.batch)].append(lab)
-
-        timings = []
-        for arr in [self.inputs_by_user, self.labels_by_user]:
-            for u in arr:
-                ll = list(arr[u].items())
-                for b1, b2 in zip(ll[:len(ll)], ll[1:]):
-                    l1, l2 = b1[1][0], b2[1][0]
-                    if l1 and l2 and l1.dt_created and l2.dt_created and l1.dt_created.month == l2.dt_created.month and\
-                        l1.dt_created.day == l2.dt_created.day and l1.dt_created.year == l2.dt_created.year:
-                        timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1) # in minutes
-                        if timing > 0 and timing < 120:
-                            # if timing is 0, means they were simply a part of the same batch
-                            # timing < 60 is simply a precaution
-                            timings.append(timing)
-
-        if timings:
-            min_time, max_time = int(min(timings)), int(round(max(timings)))
-            self.x_axis = list(range(min_time, max_time, 1))
-            if self.x_axis:
-                self.x_axis.append(self.x_axis[-1] + 1)
-
-            self.project = Tm.Project.objects.get(pk=self.pk)
-            self.participants = self.project.participants.all()
-            return self.x_axis
-        else:
-            return []
-
-    def get_providers(self):
-        """Return names of datasets."""
-        if hasattr(self, 'participants'):
-            return [p.username for p in self.participants]
-        else:
-            return []
-
-    def get_data(self):
-        if hasattr(self, 'participants'):
-            data = [[0] * len(self.x_axis) for _ in range(len(self.participants))]
-            self.p2i = {v.username: k for k, v in enumerate(self.participants)}
-
-            for arr in [self.inputs_by_user, self.labels_by_user]:
-                for u in arr:
-                    ll = list(arr[u].items())
-                    for b1, b2 in zip(ll[:len(ll)], ll[1:]):
-                        l1, l2 = b1[1][0], b2[1][0]
-                        if l1 and l2 and l1.dt_created and l2.dt_created:
-                            timing = round((l2.dt_created - l1.dt_created).total_seconds() / 60., 1)
-                            if timing > 0 and timing < 120:
-                                pos = bisect.bisect(self.x_axis, timing)
-                                data[self.p2i[u]][pos - 1] += 1
-            return data
-        else:
-            return []
-
-    def get_context_data(self, **kwargs):
-        self.pk = kwargs.get('pk')
-        data = super(UserTimingJSONView, self).get_context_data(**kwargs)
-        return data
-
-
-class UserProgressJSONView:
-    title = "Progress (%)"
-    yUnit = "%"
-
-    def get_labels(self):
-        """Return 7 labels for the x-axis."""
-        logs = Tm.DataAccessLog.objects.filter(project__id=self.pk)
-        submitted_logs = logs.filter(is_submitted=True)
-        skipped_logs = logs.filter(is_skipped=True, is_submitted=False)
-
-        self.submitted_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        self.skipped_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        self.dataset_info = {}
-        self.l2i, i = {}, 0
-        for logs_data, logs_storage in zip(
-            [submitted_logs, skipped_logs],
-            [self.submitted_logs_by_ds_and_user, self.skipped_logs_by_ds_and_user]):
-            for l in logs_data:
-                ds = l.datasource
-                logs_storage[ds.pk][l.user.pk][l.datapoint].append(l)
-                self.dataset_info[ds.pk] = {
-                    'size': ds.size(),
-                    'name': ds.name
-                }
-                if ds.pk not in self.l2i:
-                    self.l2i[ds.pk] = i
-                    i += 1
-        self.x_axis = [self.dataset_info[k]['name'] for k in self.dataset_info]
-
-        self.project = Tm.Project.objects.get(pk=self.pk)
-        self.participants = self.project.participants.all()
-
-        return self.x_axis
-
-    def get_series(self):
-        """Generate HighCharts series from providers and data."""
-        series = []
-        data = self.get_data()
-        providers = self.get_providers()
-        for i, d in enumerate(data):
-            series.append({"name": providers[i] + '_submitted', "data": d[0], 'stack': providers[i]})
-            series.append({"name": providers[i] + '_skipped', "data": d[1], 'stack': providers[i]})
-        return series
-
-    def get_providers(self):
-        """Return names of datasets."""
-        if hasattr(self, 'participants'):
-            return [p.username for p in self.participants]
-        else:
-            return []
-
-    def get_data(self):
-        """Return 3 datasets to plot."""
-        if hasattr(self, 'participants'):
-            data = [[[0] * len(self.x_axis), [0] * len(self.x_axis)] for _ in range(len(self.participants))]
-            self.p2i = {v.pk: k for k, v in enumerate(self.participants)}
-
-            for logs_data, stack in zip([self.submitted_logs_by_ds_and_user, self.skipped_logs_by_ds_and_user], ['submitted', 'skipped']):
-                for ds in logs_data:
-                    ds_logs = logs_data[ds]
-                    for u in ds_logs:
-                        if stack == 'submitted':
-                            data[self.p2i[u]][0][self.l2i[ds]] = round(len(ds_logs[u].keys()) * 100 / self.dataset_info[ds]['size'], 2)
-                        else:
-                            data[self.p2i[u]][1][self.l2i[ds]] = round(len(ds_logs[u].keys()) * 100 / self.dataset_info[ds]['size'], 2)
-            return data
-        else:
-            return []
-
-    def get_context_data(self, **kwargs):
-        self.pk = kwargs.get('pk')
-        data = super(UserProgressJSONView, self).get_context_data(**kwargs)
-        y = self.get_yAxis()
-        y["max"] = 100
-        opt = self.get_plotOptions()
-        opt["column"]["stacking"] = "normal"
-        data.update({
-            "yAxis": y,
-            "plotOptions": opt
-        })
-        return data
+@login_required
+@require_http_methods(["GET"])
+def chart_status(request, pk):
+    task_id = request.GET.get("token")
+    response = {
+        'ready': False
+    }
+    if task_id:
+        res = AsyncResult(task_id)
+        if res.ready():
+            response['ready'] = True
+            response['data'] = res.get()
+    return JsonResponse(response)
 
 
 class DataSourceSizeJSONView:

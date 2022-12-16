@@ -19,7 +19,10 @@ python manage.py update_marker_actions
 python manage.py createsuperuser --noinput
 
 if [ "$TT_ENV" = "dev" ]; then
-	python manage.py runserver 0.0.0.0:8000
+  tmux new-session -d -s textinator_celery
+  tmux send-keys -t textinator_celery "cd /home/tt/Textinator" Enter
+  tmux send-keys -t textinator_celery "python manage.py start_celery_worker" Enter
+  python manage.py runserver 0.0.0.0:8000
 else
 	mkdir -p -- $PREFIX/log/gunicorn
 	gunicorn --access-logfile log/gunicorn/access_log --error-logfile log/gunicorn/error_log -b 0.0.0.0:8000 Textinator.wsgi --timeout 500

@@ -123,6 +123,9 @@ def from_ts(ts):
 def to_list(x):
     return list(x)
 
+def to_camelcase(x):
+    return "".join([w if i == 0 else w.title() for i, w in enumerate(x.split())])
+
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('jinja2.ext.i18n')
@@ -152,6 +155,7 @@ def environment(**options):
     env.filters["is_inside"] = is_inside
     env.filters["from_ts"] = from_ts
     env.filters["to_list"] = to_list
+    env.filters["camelcase"] = to_camelcase
 
     env.install_gettext_translations(translation)
 

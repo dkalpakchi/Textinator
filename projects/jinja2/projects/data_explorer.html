@@ -11,6 +11,7 @@
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script type="text/javascript" src="{{ static('scripts/bulma-collapsible.min.js') }}"></script>
 <script type="text/javascript" src="{{ static('json-formatter-js/dist/json-formatter.umd.js') }}"></script>
+<script type="text/javascript" src="{{ static('chart.js/dist/chart.umd.js') }}"></script>
 <script type="text/javascript" src="{{ static('scripts/data_explorer.js') }}"></script>
 {% endblock %}
 
@@ -62,48 +63,32 @@
         In total: {{total_batches}} batches, {{ total_labels }} label(s), {{ total_relations }} relation(s), {{total_inputs}} input(s), {{flagged_num}} flagged text(s)
       </div>
 
-      {#
       {% if project.author == user or project.shared_with(user) %}
         <div class="container columns">
           <div class="column">
-            <div id="labelLengthsChart" width="300" height="150"></div>
-            <script type="text/javascript">
-              Highcharts.setOptions({lang: {noData: "Not enough data to display"}})
-              $.get('{{ url("projects:label_lengths_chart", kwargs={"pk": project.pk}) }}', function(data) {
-                $("#labelLengthsChart").highcharts(data);
-              });
-            </script>
+            {% with task='label_lengths', y_text='labels/inputs', title='Label/input lengths (words)'%}
+              {% include 'partials/components/areas/chart.html' with context %}
+            {% endwith %}
           </div>
          <div class="column">
-            <div id="userTimingChart" width="300" height="150"></div>
-            <script type="text/javascript">
-              $.get('{{ url("projects:user_timing_chart", kwargs={"pk": project.pk}) }}', function(data) {
-                $("#userTimingChart").highcharts(data);
-              });
-            </script>
+            {% with task='user_timings', y_text='batches', title='User timing (minutes)'%}
+              {% include 'partials/components/areas/chart.html' with context %}
+            {% endwith %}
           </div>
         </div>
         <div class="container columns">
           <div class="column">
-            <div id="userProgressChart" width="300" height="150"></div>
-            <script type="text/javascript">
-              $.get('{{ url("projects:user_progress_chart", kwargs={"pk": project.pk}) }}', function(data) {
-                $("#userProgressChart").highcharts(data);
-              });
-            </script>
+            {% with task='user_progress', y_text='%', title='Progress (%)'%}
+              {% include 'partials/components/areas/chart.html' with context %}
+            {% endwith %}
           </div>
           <div class="column">
-            <div id="datasourceSizeChart" width="300" height="150"></div>
-            <script type="text/javascript">
-              $.get('{{ url("projects:datasource_size_chart", kwargs={"pk": project.pk}) }}', function(data) {
-                data['series'][0]['showInLegend'] = false;
-                $("#datasourceSizeChart").highcharts(data);
-              });
-            </script>
+            {% with task='data_source_sizes', y_text='texts', title='Data source size (texts)'%}
+              {% include 'partials/components/areas/chart.html' with context %}
+            {% endwith %}
           </div>
         </div>
       {% endif %}
-      #}
     </div>
   </article>
 

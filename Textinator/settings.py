@@ -384,5 +384,5 @@ FILEBROWSER_EXTENSIONS = {
 }
 
 # Celery configuration
-CELERY_BROKER_URL = 'redis://172.21.0.2:6379/0'
+CELERY_BROKER_URL = 'redis://textinator_redis_1:6379/0'
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL

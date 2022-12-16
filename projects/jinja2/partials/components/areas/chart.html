@@ -1,0 +1,56 @@
+{% set id=task|replace("_"," "|camelcase) %}
+<div class="chart-container" style="position: relative; width:50%">
+  <canvas id="{{ id }}Chart"></canvas>
+</div>
+
+<script>
+  const ctx_{{id}} = document.getElementById('{{ id }}Chart');
+
+  let {{id}}Chart = new Chart(ctx_{{id}}, {
+    type: 'bar',
+    data: {},
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: '{{ y_text }}'
+          }
+        }
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: '{{ title }}'
+        }
+      }
+    }
+  });
+
+  $.get(
+    "{{ url('projects:chart_start', kwargs={'pk': project.pk}) }}",
+    {'task': "{{ task }}"},
+    function(data) {
+      console.log(data)
+      if (data.token) {
+        let interval = setInterval(function () {
+          $.get(
+            "{{ url('projects:chart_status', kwargs={'pk': project.pk}) }}",
+            data,
+            function(res) {
+              console.log(res);
+              if (res.ready) {
+                clearInterval(interval);
+                {{id}}Chart.data = res.data;
+                {{id}}Chart.update()
+              }
+            }
+          )
+        }, 3000);
+      }
+    }
+  )
+
+</script>
