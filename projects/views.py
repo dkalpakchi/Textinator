@@ -4,6 +4,7 @@ import io
 import time
 import uuid
 import json
+import logging
 from collections import defaultdict
 
 from django.http import JsonResponse, Http404, FileResponse
@@ -46,6 +47,8 @@ PT2MM = 0.3527777778
 MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
                'August', 'September', 'October', 'November', 'December']
 
+logger = logging.getLogger(__name__)
+
 ##
 ## Chart views
 ##
@@ -54,15 +57,25 @@ MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
 @require_http_methods(["GET"])
 def chart_start(request, pk):
     task = request.GET.get("task")
-    r = None
+    token = None
     if task:
-        task_func = globals().get('get_{}_stats'.format(task))
-        if task_func:
-            r = task_func.delay(pk)
-    if r is None:
+        ctask, is_created = Tm.CeleryTask.objects.get_or_create(
+                task=task, project_id=pk, finished=False
+        )
+        if is_created:
+            task_func = globals().get('get_{}_stats'.format(task))
+            if task_func:
+                r = task_func.delay(pk)
+                token = r.task_id
+                ctask.token = token
+                ctask.save()
+        else:
+            token = ctask.token
+
+    if token is None:
         return JsonResponse({ "token": False })
     else:
-        return JsonResponse({ 'token': r.task_id })
+        return JsonResponse({ 'token': token })
 
 
 @login_required
@@ -76,32 +89,23 @@ def chart_status(request, pk):
         res = AsyncResult(task_id)
         if res.ready():
             response['ready'] = True
-            response['data'] = res.get()
+            if res.successful():
+                response['data'] = res.get()
+                response['error'] = False
+            else:
+                response['error'] = True
+                logger.error(res.traceback)
+            try:
+                ctask = Tm.CeleryTask.objects.get(
+                        token=task_id, project_id=pk, finished=False
+                )
+                ctask.finished = True
+                ctask.save()
+            except Tm.CeleryTask.DoesNotExist:
+                logger.error("Celery task with token {} does not exist".format(task_id))
+
     return JsonResponse(response)
 
-
-class DataSourceSizeJSONView:
-    title = "Data source sizes (texts)"
-    yUnit = "texts"
-
-    def get_labels(self):
-        """Return 7 labels for the x-axis."""
-        self.project = Tm.Project.objects.get(pk=self.pk)
-        self.x_axis = list(self.project.datasources.values_list('name', flat=True))
-        return self.x_axis
-
-    def get_providers(self):
-        # set visible: false in JS
-        return [0]
-
-    def get_data(self):
-        """Return 3 datasets to plot."""
-        return [[p.size() for p in self.project.datasources.all()]]
-
-    def get_context_data(self, **kwargs):
-        self.pk = kwargs.get('pk')
-        data = super(DataSourceSizeJSONView, self).get_context_data(**kwargs)
-        return data
 
 ##
 ## Page views

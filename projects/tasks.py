@@ -16,31 +16,50 @@ def get_chartjs_datasets(providers, data):
         })
     return datasets
 
+def count_token_lengths(items, item_type):
+    prop = 'text' if item_type == 'label' else 'content'
+    counts = defaultdict(lambda: defaultdict(int))
+    lengths = set()
+    for item in items.all():
+        text = getattr(item, prop)
+        N_tokens = len(text.split())
+        counts[item.marker.marker.name][N_tokens] += 1
+        lengths.add(N_tokens)
+    return counts, lengths
 
 @shared_task
 def get_label_lengths_stats(project_pk):
-    labels = Tm.Label.objects.filter(marker__project__id=project_pk, undone=False).all()
-    inputs = Tm.Input.objects.filter(marker__project__id=project_pk).all()
-    x_axis = sorted(set([len(l.text.split()) for l in labels]) | set([len(i.content.split()) for i in inputs]))
     project = Tm.Project.objects.get(pk=project_pk)
     participants = project.participants.all()
 
-    data = [[0] * len(x_axis) for _ in range(project.markers.count())]
+    labels = Tm.Label.objects.filter(
+            marker__project__id=project_pk,
+            marker__anno_type='m-span',
+            undone=False
+    )
+    inputs = Tm.Input.objects.filter(
+            marker__project__id=project_pk,
+            marker__anno_type__in=['free-text', 'lfree-text']
+    )
+
+    lab_counts, lab_lengths = count_token_lengths(labels, 'label')
+    inp_counts, inp_lengths = count_token_lengths(inputs, 'input')
+    x_axis = sorted(lab_lengths | inp_lengths)
+    marker_names = sorted(set(lab_counts.keys()) | set(inp_counts.keys()))
+    N_markers = len(marker_names)
+
+    data = [[0] * len(x_axis) for _ in range(N_markers)]
     l2i = {v: k for k, v in enumerate(x_axis)}
-    p2i = {v.name: k for k, v in enumerate(project.markers.all())}
+    p2i = {v: k for k, v in enumerate(marker_names)}
 
-    for source in [labels, inputs]:
-        for l in source:
-            if hasattr(l, 'text'):
-                data[p2i[l.marker.marker.name]][l2i[len(l.text.split())]] += 1
-            elif hasattr(l, 'content'):
-                data[p2i[l.marker.marker.name]][l2i[len(l.content.split())]] += 1
-
-    providers = [m.name for m in project.markers.all()]
+    for marker_counts in [lab_counts, inp_counts]:
+        for mn, counts in marker_counts.items():
+            for length, count in counts.items():
+                data[p2i[mn]][l2i[length]] = count
 
     return {
         'labels': x_axis,
-        'datasets': get_chartjs_datasets(providers, data)
+        'datasets': get_chartjs_datasets(marker_names, data)
     }
 
 

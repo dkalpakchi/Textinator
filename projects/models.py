@@ -1656,3 +1656,11 @@ class UserProfile(CommonModel):
 
     def __str__(self):
         return self.user.username
+
+
+class CeleryTask(CommonModel):
+    task = models.TextField(_("task"), null=False, help_text=_("name of a Celery task"))
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    token = models.CharField(_("token"), max_length=36, help_text=_("Celery task ID"),
+                             null=True, blank=True)
+    finished = models.BooleanField(_("is finished?"), default=False)

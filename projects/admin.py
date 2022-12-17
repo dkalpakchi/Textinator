@@ -607,6 +607,7 @@ class TaskTypeSpecAdmin(CommonModelAdmin):
     form = TaskTypeConfigForm
 
 admin.site.register(Permission)
+admin.site.register(Tm.CeleryTask)
 # admin.site.register(MarkerContextMenuItem)
 
 admin.site.site_header = 'Textinator Admin'

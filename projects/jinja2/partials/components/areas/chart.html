@@ -1,5 +1,5 @@
 {% set id=task|replace("_"," "|camelcase) %}
-<div class="chart-container" style="position: relative; width:50%">
+<div class="explorer-chart-container">
   <canvas id="{{ id }}Chart"></canvas>
 </div>
 
@@ -11,6 +11,7 @@
     data: {},
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
         y: {
           beginAtZero: true,
@@ -43,8 +44,10 @@
               console.log(res);
               if (res.ready) {
                 clearInterval(interval);
-                {{id}}Chart.data = res.data;
-                {{id}}Chart.update()
+                if (!res.error) {
+                  {{id}}Chart.data = res.data;
+                  {{id}}Chart.update()
+                }
               }
             }
           )

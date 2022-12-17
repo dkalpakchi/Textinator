@@ -19,7 +19,7 @@ def restart_celery():
         for pid_file in pid_files:
             os.remove(pid_file)
     subprocess.call(shlex.split(cmd))
-    cmd = 'celery -A Textinator multi start worker --pidfile="{}" --logfile="{}"'.format(
+    cmd = 'celery -A Textinator multi start worker --pidfile={} --logfile={}'.format(
         pid_file_name.format("%n"), log_file_name
     )
     subprocess.call(shlex.split(cmd))

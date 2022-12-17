@@ -86,3 +86,9 @@ span.tag:hover {
     transform: scale(0.8);
   }
 }
+
+.explorer-chart-container {
+  position: relative;
+  height: 40vh;
+  width: 30vw;
+}
