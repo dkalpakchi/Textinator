@@ -8,13 +8,16 @@ Here are credits to the OSS projects that are still used in the latest version o
 ### Core
 
 *   [Babel](http://babel.pocoo.org/en/latest/)
+*   [Celery](https://docs.celeryq.dev/en/stable/)
 *   [Django](https://www.djangoproject.com/)
 *   [django-modeltranslation](https://github.com/deschler/django-modeltranslation)
 *   [django-scientific-survey](https://github.com/dkalpakchi/django-scientific-survey)
 *   [Jinja2](https://jinja2docs.readthedocs.io/en/stable/)
+*   [Redis](https://redis.io/)
 *   [PostgreSQL](https://www.postgresql.org/)
 
 ### Extras
+*   [Chart.js](https://github.com/chartjs/Chart.js)
 *   [django\_admin\_rangefilter](https://github.com/silentsokolov/django-admin-rangefilter)
 *   [django-colorfield](https://github.com/fabiocaccamo/django-colorfield)
 *   [django\_filebrowser\_no\_grappelli](https://github.com/smacker/django-filebrowser-no-grappelli)
@@ -32,4 +35,4 @@ Here are credits to the OSS projects that were used in the previous versions of 
 ### Extras
 *   [django\_admin\_json\_editor](https://github.com/abogushov/django-admin-json-editor) (up to v1.1.0)
 *   [django-sass-processor](https://github.com/jrief/django-sass-processor) (up to v1.1.0)
-*   [django-chartjs](https://github.com/peopledoc/django-chartjs) (up to latest)
+*   [django-chartjs](https://github.com/peopledoc/django-chartjs) (up to v1.2.0)
