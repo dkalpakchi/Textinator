@@ -34,14 +34,12 @@
     "{{ url('projects:chart_start', kwargs={'pk': project.pk}) }}",
     {'task': "{{ task }}"},
     function(data) {
-      console.log(data)
       if (data.token) {
         let interval = setInterval(function () {
           $.get(
             "{{ url('projects:chart_status', kwargs={'pk': project.pk}) }}",
             data,
             function(res) {
-              console.log(res);
               if (res.ready) {
                 clearInterval(interval);
                 if (!res.error) {

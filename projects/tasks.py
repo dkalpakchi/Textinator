@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import bisect
-from collections import defaultdict
+from collections import defaultdict, Counter
+
+from django.db.models import Count
 
 from celery import shared_task
 
@@ -61,7 +63,6 @@ def get_label_lengths_stats(project_pk):
         'labels': x_axis,
         'datasets': get_chartjs_datasets(marker_names, data)
     }
-
 
 @shared_task
 def get_user_timings_stats(project_pk):
@@ -131,50 +132,63 @@ def get_user_timings_stats(project_pk):
     else:
         return {}
 
+def logs2dict(logs):
+    progress_counts = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(int))))
+
+    for l in logs:
+        progress_counts[l['is_submitted']][l['is_skipped']][l['datasource']][l['user_id']] = l['datapoint__count']
+
+    return progress_counts
 
 @shared_task
 def get_user_progress_stats(project_pk):
-    logs = Tm.DataAccessLog.objects.filter(project__id=project_pk)
-    submitted_logs = logs.filter(is_submitted=True)
-    skipped_logs = logs.filter(is_skipped=True, is_submitted=False)
-
-    submitted_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    skipped_logs_by_ds_and_user = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    dataset_info = {}
-    l2i, i = {}, 0
-    for logs_data, logs_storage in zip(
-        [submitted_logs, skipped_logs],
-        [submitted_logs_by_ds_and_user, skipped_logs_by_ds_and_user]):
-        for l in logs_data:
-            ds = l.datasource
-            logs_storage[ds.pk][l.user.pk][l.datapoint].append(l)
-            dataset_info[ds.pk] = {
-                'size': ds.size(),
-                'name': ds.name
-            }
-            if ds.pk not in l2i:
-                l2i[ds.pk] = i
-                i += 1
-    x_axis = [dataset_info[k]['name'] for k in dataset_info]
-
     project = Tm.Project.objects.get(pk=project_pk)
     participants = project.participants
     N_participants = participants.count()
 
+    logs = Tm.DataAccessLog.objects.filter(
+        project_id=project_pk
+    ).values(
+        'datasource', 'user_id', 'is_submitted', 'is_skipped'
+    ).annotate(Count('datapoint'))
+    progress_counts = logs2dict(logs)
+
+    dataset_info = {
+        ds.pk: {'size': ds.size(), 'name': ds.name}
+        for ds in project.datasources.all()
+    }
+    x_axis = [v['name'] for v in dataset_info.values()]
+    N_categories = len(x_axis)
+
     if N_participants > 0:
         providers = [p.username for p in participants.all()]
 
-        data = [[[0] * len(x_axis), [0] * len(x_axis)] for _ in range(N_participants)]
+        data = [[[0] * N_categories, [0] * N_categories] for _ in range(N_participants)]
+        l2i = {pk: i for i, pk in enumerate(dataset_info.keys())}
         p2i = {v.pk: k for k, v in enumerate(participants.all())}
 
-        for logs_data, stack in zip([submitted_logs_by_ds_and_user, skipped_logs_by_ds_and_user], ['submitted', 'skipped']):
+        for stack in ['submitted', 'skipped']:
+            if stack == 'submitted':
+                logs_data, proc_ds = {}, set()
+                for ds in progress_counts[True][False]:
+                    c = Counter()
+                    c.update(progress_counts[True][False][ds])
+                    c.update(progress_counts[True][True][ds])
+                    logs_data[ds] = c
+                    proc_ds.add(ds)
+
+                for ds in progress_counts[True][True]:
+                    if ds not in proc_ds:
+                        logs_data[ds] = progress_counts[True][True][ds]
+            else:
+                logs_data = progress_counts[False][True]
             for ds in logs_data:
                 ds_logs = logs_data[ds]
                 for u in ds_logs:
                     if stack == 'submitted':
-                        data[p2i[u]][0][l2i[ds]] = round(len(ds_logs[u].keys()) * 100 / dataset_info[ds]['size'], 2)
+                        data[p2i[u]][0][l2i[ds]] = round(ds_logs[u] * 100 / dataset_info[ds]['size'], 2)
                     else:
-                        data[p2i[u]][1][l2i[ds]] = round(len(ds_logs[u].keys()) * 100 / dataset_info[ds]['size'], 2)
+                        data[p2i[u]][1][l2i[ds]] = round(ds_logs[u] * 100 / dataset_info[ds]['size'], 2)
 
         series = []
         for i, d in enumerate(data):
@@ -194,7 +208,6 @@ def get_user_progress_stats(project_pk):
         }
     else:
         return {}
-
 
 @shared_task
 def get_data_source_sizes_stats(project_pk):

@@ -24,6 +24,7 @@ if [ "$TT_ENV" = "dev" ]; then
   tmux send-keys -t textinator_celery "python manage.py start_celery_worker" Enter
   python manage.py runserver 0.0.0.0:8000
 else
+  celery -A Textinator multi start worker --pidfile="$HOME/run/celery/Textinator/%n.pid" --logfile="$HOME/log/celery/Textinator/%n%I.log"
 	mkdir -p -- $PREFIX/log/gunicorn
 	gunicorn --access-logfile log/gunicorn/access_log --error-logfile log/gunicorn/error_log -b 0.0.0.0:8000 Textinator.wsgi --timeout 500
 fi
