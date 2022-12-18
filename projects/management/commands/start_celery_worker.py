@@ -12,8 +12,8 @@ from Textinator.celery import app
 
 def restart_celery():
     cmd = 'pkill celery'
-    pid_file_name = "$HOME/run/celery/Textinator/{}.pid"
-    log_file_name = "$HOME/log/celery/Textinator/%n%I.log"
+    pid_file_name = "{}/run/celery/Textinator/{{}}.pid".format(os.environ['HOME'])
+    log_file_name = "{}/log/celery/Textinator/%n%I.log".format(os.environ['HOME'])
     pid_files = glob.glob(pid_file_name.format("*"))
     if len(pid_files) > 0:
         for pid_file in pid_files:
