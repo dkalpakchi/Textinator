@@ -4,12 +4,12 @@
 {% block object-tools-items %}
 {{ block.super }}
 
-<form id="importForm" enctype="multipart/form-data" action="{% url 'survey-import-from-json' %}" method="POST">
+<form id="importForm" enctype="multipart/form-data" action="{% url 'survey-import-from-yaml' %}" method="POST">
   {% csrf_token %}
   <label class="btn btn-outline-success float-right font-weight-normal">
     <i class="fa fa-file-import mr-2"></i>
     <input id="survey_import" name="survey_import" type="file" style="display:none;" onchange="(function() { document.getElementById('importForm').submit(); })();">
-    Import from JSON
+    Import from YAML
   </label>
 </form>
 
