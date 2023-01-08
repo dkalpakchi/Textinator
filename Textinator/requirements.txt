@@ -24,6 +24,7 @@ pymemcache==3.5.2
 PyMySQL==0.9.3
 python-magic==0.4.25
 pytz==2021.3
+pyyaml==6.0
 redis==4.2.2
 reportlab==3.6.3
 requests==2.22.0

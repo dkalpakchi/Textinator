@@ -29,5 +29,6 @@ urlpatterns = [
     #path("<pk>/charts/users/progress", views.user_progress_chart_json, name="user_progress_chart"),
     #path("<pk>/charts/datasources/sizes", views.datasource_size_chart_json, name="datasource_size_chart"),
     path("get/data/<source_id>/<dp_id>", views.get_data, name="get_data"),
+    #path("exports/settings", views.export_settings, name="export_settings"),
     path('', views.IndexView.as_view(), name='index')
 ]

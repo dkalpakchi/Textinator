@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import requests
 import json
 import random
 import string
@@ -8,6 +7,9 @@ import logging
 from pathlib import Path
 
 from django.conf import settings
+
+import requests
+import jsonlines as jsl
 
 
 logger = logging.getLogger(__name__)
@@ -218,6 +220,11 @@ class JsonSource(AbstractDataSource, AllowedDirsMixin):
     def get_source_name(self, dp_id):
         # we know dp_id is for sure an integer
         return self.__mapping[int(dp_id)]
+
+
+class JsonLinesSource(AbstractDataSource, AllowedDirsMixin):
+    def __init__(self, spec_data):
+        pass
 
 
 class TextsAPISource(AbstractDataSource):

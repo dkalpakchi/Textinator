@@ -909,13 +909,19 @@ def async_delete_input(request, proj, inp):
 def export(request, proj):
     try:
         project = Tm.Project.objects.get(pk=proj)
-        exporter = Tex.Exporter(project, config={
+        exporter = Tex.AnnotationExporter(project, config={
             'consolidate_clusters': request.GET.get('consolidate_clusters') == 'on',
             'include_usernames': request.GET.get('include_usernames', False)
         })
         return JsonResponse({"data": exporter.export()})
     except Tm.Project.DoesNotExist:
         raise Http404
+
+
+#@login_required
+#@require_http_methods(["GET"])
+#def export_settings(request):
+
 
 
 @login_required

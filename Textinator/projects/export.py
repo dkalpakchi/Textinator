@@ -29,7 +29,7 @@ def group2hash(group):
         return "{}:{}".format(group['type'], ";".join(["{},{}".format(x['start'], x['end']) for x in nodes]))
 
 
-class Exporter:
+class AnnotationExporter:
     def __init__(self, project, config):
         self.__project = project
         self.__config = {
@@ -280,3 +280,37 @@ class Exporter:
 
     def export(self):
         return getattr(self, "_export_{}".format(self.__project.task_type))()
+
+
+class ProjectSettingsExporter:
+    def __init__(self, proj):
+        self.__proj = proj
+        self.__settings_fields = (
+                'data_order', 'is_open', 'allow_selecting_labels', 'disable_submitted_labels',
+                'disjoint_annotation', 'auto_text_switch', 'allow_editing', 'editing_as_revision',
+                'allow_reviewing', 'editing_title_regex'
+        )
+
+        self.__task_spec = ('task_type', 'modal_configs')
+
+    def export(self):
+        data = {
+            'settings': {},
+            'task_spec': {},
+            'markers': {},
+            'relations': {}
+        }
+
+        for setting in self.__settings_fields:
+            data['settings'][setting] = getattr(self.__proj, setting)
+
+        for task_spec in self.__task_spec:
+            data['task_spec'][task_spec] = getattr(self.__proj, task_spec)
+
+        for marker in self.__proj.markers.all():
+            data['markers'].append(marker.to_json())
+
+        for relation in self.__proj.relations.all():
+            data['relations'].append(relation)
+
+        return data

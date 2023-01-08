@@ -13,6 +13,7 @@ import nested_admin
 # from guardian.admin import GuardedModelAdmin
 
 import projects.models as Tm
+import projects.actions as Ta
 
 
 class CommonModelAdmin(admin.ModelAdmin):
@@ -316,12 +317,6 @@ class ProjectForm(forms.ModelForm):
         return instance
 
 
-def clone_project(modeladmin, request, queryset):
-    for proj in queryset:
-        proj.make_clone({
-            "title": "[CLONE] {}".format(proj.title)
-        })
-clone_project.short_description = "Clone the project"
 
 @admin.register(Tm.Project)
 class ProjectAdmin(nested_admin.NestedModelAdmin):
@@ -356,7 +351,7 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
     exclude = ('is_peer_reviewed',)
     user_can_access_owned_objects_only = True
     user_owned_objects_field = 'author'
-    actions = [clone_project]
+    actions = [Ta.clone_project]
 
     def get_form(self, request, *args, **kwargs):
         form = super(ProjectAdmin, self).get_form(request, *args, **kwargs)
