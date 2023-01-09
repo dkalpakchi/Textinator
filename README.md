@@ -18,7 +18,6 @@ First you will need to [install Docker](https://docs.docker.com/engine/install/)
 1.  Clone this repository by running `git clone https://github.com/dkalpakchi/Textinator.git` or download one of the releases and unpack it.
 2.  Build and run container in either development or production mode, following the instructions in of the corresponding section below.
 
-
 ## Deployment guide
 
 The recommended way of deploying Textinator is through building a production version of the Docker container, as described in the [Deployment guidelines](https://github.com/dkalpakchi/Textinator/blob/master/notes/DEPLOYING.md). Note that the production version is most definitely more secure and reliable than the development version. However, it's not extremely scalable and hosts both database and Textinator instance on the same machine. The ultimate solution would be to use something like Kubernetes, but it is currently not supported out of the box.
@@ -30,7 +29,6 @@ A good starting place for familiarizing yourself with a codebase is via our [API
 ## Contributing
 
 Want to contribute to Textinator? Check out our [Contribution guidelines](https://github.com/dkalpakchi/Textinator/blob/master/notes/CONTRIBUTING.md).
-
 
 ## Internationalization
 

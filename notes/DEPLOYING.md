@@ -1,12 +1,12 @@
 ## Running in production mode
 
-The recommended solution is to use nginx-gunicorn-docker setup, which we provide for out of the box if you run the following command. 
+The recommended solution is to use nginx-gunicorn-docker setup, which we provide for out of the box if you run the following command.
 
 **NOTE** Before running the command, please replace the values within the angle brackets (<>) in the `.env.prod` file! Make sure none of those values are published anywhere, since they will compromise the security of your Textinator instance!
 
 The easiest way to start the server is by running `sh tools/start_prod.sh` after cloning the repository. This command will effectively do the following:
 
-```
+```bash
 cd Textinator
 docker-compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up
 ```

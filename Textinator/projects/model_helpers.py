@@ -3,7 +3,7 @@ import json
 import copy
 import operator
 
-from django.db import models, transaction
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
