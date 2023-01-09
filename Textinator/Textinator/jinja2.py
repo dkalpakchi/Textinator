@@ -64,13 +64,13 @@ def to_markdown(value):
     md = md.replace('<h2>', '<h2 class="title is-5">')
     md = md.replace('<h3>', '<h3 class="title is-6">')
 
+    # This is because it is hard to maintain marking over <p>
+    # so instead we will replace them with <br>
+    md = md.replace("<p>", "").replace("</p>", "<br>")
+
     if PIN_MD_TAG in md:
         scrollable, pinned = md.split(PIN_MD_TAG)
         scrollable, pinned = scrollable.strip(), pinned.strip()
-        if scrollable.startswith("<p>"):
-            scrollable = scrollable[3:]
-        if pinned.endswith("</p>"):
-            pinned = pinned[:-4]
 
         md = "<p class='scrollable'>{}</p><p class='pinned'>{}</p>".format(
                 scrollable, pinned

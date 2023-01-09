@@ -9,6 +9,11 @@
       folders: [],
       key: "",
     },
+    JSL: {
+      files: [],
+      folders: [],
+      key: "",
+    },
     PlainText: {
       texts: [],
     },
@@ -72,6 +77,7 @@
       },
     },
   };
+  schemas["JSL"] = schemas["Json"];
 
   function updateSchema(spec_editor, option) {
     // NOTE: `spec` everywhere is just the name of the field in the model

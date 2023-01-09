@@ -123,6 +123,46 @@ class AbstractDataSource:
             return None
 
 
+class FileBasedSource(AbstractDataSource, AllowedDirsMixin):
+    def __init__(self, spec_data, extension="txt", required_keys=None):
+        super().__init__(spec_data)
+
+        if required_keys:
+            self._required_keys = required_keys
+        self._aux_keys = [('files',), ('folders',)]
+        self.check_constraints()
+
+        self._mapping = []
+
+        self.set_allowed_dirs(self.get_spec('username'))
+        self._files = []
+        if self.get_spec('files'):
+            found_files = self.find_files(self.get_spec('files'))
+
+            for found_file in found_files:
+                self._files.append(found_file)
+
+        if self.get_spec('folders'):
+            found_folders = self.find_folders(self.get_spec('folders'))
+
+            for found_folder in found_folders:
+                self._files.extend(sorted(Path(found_folder).rglob('*.{}'.format(extension))))
+
+        for fname in self._files:
+            self.reader(fname)
+
+    def reader(self, fname):
+        raise NotImplementedError("You need to implement the reader method yourself!")
+
+    def get_random_datapoint(self):
+        idx = random.randint(0, self.size() - 1)
+        return idx, self[idx]
+
+    def get_source_name(self, dp_id):
+        # we know dp_id is for sure an integer
+        return self._mapping[int(dp_id)]
+
+
 class PlainTextSource(AbstractDataSource):
     def __init__(self, spec_data):
         super().__init__(spec_data)
@@ -137,94 +177,45 @@ class PlainTextSource(AbstractDataSource):
         return idx, self[idx]
 
 
-class TextFileSource(AbstractDataSource, AllowedDirsMixin):
+class TextFileSource(FileBasedSource):
     def __init__(self, spec_data):
-        super().__init__(spec_data)
+        super().__init__(spec_data, extension="txt")
 
-        self._aux_keys = [('files',), ('folders',)]
-        self.check_constraints()
-
-        self.__mapping = []
-
-        self.set_allowed_dirs(self.get_spec('username'))
-        self.__files = []
-        if self.get_spec('files'):
-            found_files = self.find_files(self.get_spec('files'))
-
-            for found_file in found_files:
-                self.__files.append(found_file)
-
-        if self.get_spec('folders'):
-            found_folders = self.find_folders(self.get_spec('folders'))
-
-            for found_folder in found_folders:
-                for d, _, files in os.walk(found_folder):
-                    for f in sorted(files):
-                        self.__files.append(os.path.join(d, f))
-
-        for fname in self.__files:
-            # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
-            with open(fname, encoding='utf-8-sig') as f:
-                self._add_datapoint(f.read())
-                self.__mapping.append(os.path.basename(fname))
-
-    def get_random_datapoint(self):
-        idx = random.randint(0, self.size() - 1)
-        return idx, self[idx]
-
-    def get_source_name(self, dp_id):
-        # we know dp_id is for sure an integer
-        return self.__mapping[int(dp_id)]
+    def reader(self, fname):
+        # encoding to remove Byte Order Mark \ufeff (not sure if compatible with others)
+        with open(fname, encoding='utf-8-sig') as f:
+            self._add_datapoint(f.read())
+            self._mapping.append(os.path.basename(fname))
 
 
-class JsonSource(AbstractDataSource, AllowedDirsMixin):
+class JsonSource(FileBasedSource):
     def __init__(self, spec_data):
-        super().__init__(spec_data)
+        super().__init__(spec_data, extension="json", required_keys=["key"])
 
-        self._required_keys = ['key']
-        self._aux_keys = [('files',), ('folders',)]
-        self.check_constraints()
-
-        self.__mapping = []
-
-        self.set_allowed_dirs(self.get_spec('username'))
-        self.__files = []
-        if self.get_spec('files'):
-            found_files = self.find_files(self.get_spec('files'))
-
-            for found_file in found_files:
-                self.__files.append(found_file)
-
-        if self.get_spec('folders'):
-            found_folders = self.find_folders(self.get_spec('folders'))
-
-            for found_folder in found_folders:
-                self.__files.extend(sorted(Path(found_folder).rglob('*.json')))
-
-        for fname in self.__files:
-            d = json.load(open(fname))
-            if isinstance(d, list):
-                for el in d:
-                    # this is all in-memory, of course
-                    # TODO: think of fixing
-                    self._add_datapoint(el[self.get_spec('key')])
-                    self.__mapping.append(os.path.basename(fname))
-            elif isinstance(d, dict):
-                self._add_datapoint(d[self.get_spec('key')])
-                self.__mapping.append(os.path.basename(fname))
-
-    def get_random_datapoint(self):
-        idx = random.randint(0, self.size() - 1)
-        return idx, self[idx]
-
-    def get_source_name(self, dp_id):
-        # we know dp_id is for sure an integer
-        return self.__mapping[int(dp_id)]
+    def reader(self, fname):
+        d = json.load(open(fname))
+        if isinstance(d, list):
+            for el in d:
+                # this is all in-memory, of course
+                # TODO: think of fixing
+                self._add_datapoint(el[self.get_spec('key')])
+                self._mapping.append(os.path.basename(fname))
+        elif isinstance(d, dict):
+            self._add_datapoint(d[self.get_spec('key')])
+            self._mapping.append(os.path.basename(fname))
 
 
-class JsonLinesSource(AbstractDataSource, AllowedDirsMixin):
+class JsonLinesSource(FileBasedSource):
     def __init__(self, spec_data):
-        pass
+        super().__init__(spec_data, extension="jsonl", required_keys=["key"])
+
+    def reader(self, fname):
+        with jsl.open(fname) as reader:
+            for i, obj in enumerate(reader):
+                self._add_datapoint(obj[self.get_spec('key')])
+                self._mapping.append("{}.{}".format(
+                    os.path.basename(fname), i
+                ))
 
 
 class TextsAPISource(AbstractDataSource):
