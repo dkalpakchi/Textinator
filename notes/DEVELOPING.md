@@ -2,9 +2,11 @@
 
 ## Running in development mode
 
-The development version will run the Django's built-in development server and will also map your local folder to that inside the Docker container, so that the changes in the code are immediately reflected without the need to restart the container. You can start Textinator in the dev mode using the following command.
-
-`docker-compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up`
+The development version will run the Django's built-in development server and will also map your local folder to that inside the Docker container, so that the changes in the code are immediately reflected without the need to restart the container. You can start Textinator in the dev mode by running `sh tools/start_dev.sh` after cloning the repo. This will effectively do the following:
+```
+cd Textinator
+docker-compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up
+```
 
 Now if you go to `http://localhost:8000`, you should see Textinator's main page.
 
