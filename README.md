@@ -34,11 +34,10 @@ Want to contribute to Textinator? Check out our [Contribution guidelines](https:
 
 The software is developed in English.
 
-Full translation is available for these languages (in alphabetical order):
-
-*   \[x] Russian thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
-*   \[x] Swedish thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
-*   \[x] Ukrainian thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
+Partial translation is available for these languages (in alphabetical order):
+*   \[ ] Russian thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
+*   \[ ] Swedish thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
+*   \[ ] Ukrainian thanks to [Dmytro Kalpakchi](https://github.com/dkalpakchi)
 
 Upcoming languages
 
