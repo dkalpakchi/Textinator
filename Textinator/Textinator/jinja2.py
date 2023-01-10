@@ -72,6 +72,9 @@ def to_markdown(value):
         scrollable, pinned = md.split(PIN_MD_TAG)
         scrollable, pinned = scrollable.strip(), pinned.strip()
 
+        scrollable = scrollable.replace("\n", "<br>")
+        pinned = pinned.replace("\n", "<br>")
+
         md = "<p class='scrollable'>{}</p><p class='pinned'>{}</p>".format(
                 scrollable, pinned
         )

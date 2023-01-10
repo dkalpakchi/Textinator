@@ -1356,15 +1356,21 @@ class Batch(Revisable, CommonModel):
         if inp and inp.context:
             if regex:
                 res = re.search(regex, inp.context.content)
-                display_title = res.group(0).strip()
-                return display_title if res else "Empty"
+                if res:
+                    display_title = res.group(0).strip()
+                    return display_title
+                else:
+                    return "Empty"
             else:
                 return inp.context.content
         elif lab and lab.context:
             if regex:
                 res = re.search(regex, lab.context.content)
-                display_title = res.group(0).strip()
-                return display_title if res else "Empty"
+                if res:
+                    display_title = res.group(0).strip()
+                    return display_title
+                else:
+                    return "Empty"
             else:
                 return lab.context.content
         else:
