@@ -757,6 +757,7 @@
       textLabelsArea: null,
       markersArea: null,
       selectorArea: null, // the area where the article is
+      interactiveDataArea: null,
       markerGroupsArea: null,
       submitForm: null,
       contextMenuPlugins: { sharedBetweenMarkers: {} },
@@ -779,6 +780,9 @@
         this.actionsArea = this.taskArea.querySelector("#actionsArea");
         this.selectorArea = this.textArea.querySelector("#selector");
         this.textLabelsArea = this.taskArea.querySelector("#textLabels");
+        this.interactiveDataArea = document.querySelector(
+          "textarea#interactiveDataArea"
+        );
         resetTextHTML =
           this.selectorArea == null ? "" : this.selectorArea.innerHTML;
         resetText = this.getContextText(true);
@@ -830,8 +834,17 @@
             viewPortHeight - this.markersArea.offsetTop - 140 + "px";
         }
 
-        this.textArea.style.height =
-          viewPortHeight - this.textArea.offsetTop - 80 + "px";
+        if (this.interactiveDataArea == null) {
+          this.textArea.style.height =
+            viewPortHeight - this.textArea.offsetTop - 80 + "px";
+        } else {
+          this.textArea.style.height =
+            viewPortHeight -
+            this.textArea.offsetTop -
+            this.interactiveDataArea.clientHeight -
+            100 +
+            "px";
+        }
       },
       getContextText: function (forPresentation) {
         if (forPresentation === undefined) {
@@ -848,54 +861,536 @@
         showExtraElements(this.selectorArea, true);
         return ct;
       },
+      initTextAreaEvents: function () {
+        let control = this;
+        this.textArea.addEventListener(
+          "click",
+          function (e) {
+            e.stopPropagation();
+            let target = e.target;
+            if (isDeleteButton(target)) {
+              control.labelDeleteHandler(e);
+              control.updateMarkAllCheckboxes();
+            } else if (isLabel(target)) {
+              if (control.allowSelectingLabels) {
+                let $target = $(target);
+                if (
+                  $target.prop("in_relation") &&
+                  !$target.prop("multiple_possible_relations")
+                ) {
+                  control.showRelationGraph(
+                    parseInt(
+                      target.querySelector('[data-m="r"]').textContent,
+                      10
+                    )
+                  );
+                } else if (!window.getSelection().toString()) {
+                  if (
+                    target.classList.contains("active") &&
+                    $target.prop("selected")
+                  ) {
+                    target.classList.remove("active");
+                    $target.prop("selected", false);
+                    $target.prop("ts", null);
+                  } else {
+                    target.classList.add("active");
+                    $target.prop("ts", Date.now());
+                    $target.prop("selected", true);
+                  }
+                }
+              }
+            } else if (target.hasAttribute("data-rel")) {
+              control.showRelationGraph(
+                parseInt(target.getAttribute("data-rel"), 10)
+              );
+            }
+          },
+          false
+        );
+      },
+      initSelectorAreaEvents: function () {
+        this.selectorArea.addEventListener(
+          "mouseover",
+          function (e) {
+            let target = e.target;
+            if (isLabel(target)) {
+              if (labelerModule.allowSelectingLabels) {
+                e.stopPropagation();
+                if (target.classList.contains("tag"))
+                  if (!$(target).prop("selected")) {
+                    target.classList.add("active");
+                    $(
+                      '[data-i="' + target.getAttribute("data-i") + '"]'
+                    ).addClass("active");
+                  } else if (!$(target.parentNode).prop("selected")) {
+                    target.parentNode.classList.add("active");
+                    $(
+                      '[data-i="' +
+                        target.parentNode.getAttribute("data-i") +
+                        '"]'
+                    ).addClass("active");
+                  }
+              }
+            }
+          },
+          false
+        );
+
+        this.selectorArea.addEventListener(
+          "mouseout",
+          function (e) {
+            let target = e.target;
+            if (isLabel(target)) {
+              if (labelerModule.allowSelectingLabels) {
+                e.stopPropagation();
+                if (target.classList.contains("tag"))
+                  if (!$(target).prop("selected")) {
+                    target.classList.remove("active");
+                    $(
+                      '[data-i="' + target.getAttribute("data-i") + '"]'
+                    ).removeClass("active");
+                  } else if (!$(target.parentNode).prop("selected")) {
+                    target.parentNode.classList.remove("active");
+                    $(
+                      '[data-i="' +
+                        target.parentNode.getAttribute("data-i") +
+                        '"]'
+                    ).removeClass("active");
+                  }
+              }
+            }
+          },
+          false
+        );
+
+        // adding chunk if a piece of text was selected with a mouse
+        this.selectorArea.addEventListener(
+          "mouseup",
+          function (e) {
+            let isRightMB;
+            e = e || window.event;
+
+            if ("which" in e)
+              // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+              isRightMB = e.which === 3;
+            else if ("button" in e)
+              // IE, Opera
+              isRightMB = e.button === 2;
+
+            if (!isRightMB) {
+              labelerModule.updateChunkFromSelection();
+            }
+          },
+          false
+        );
+      },
+      initMarkerAreaOnClick: function () {
+        let control = this;
+        this.markersArea.addEventListener(
+          "click",
+          function (e) {
+            let target = e.target;
+            if (target.nodeName != "INPUT") {
+              let marker = getClosestMarker(target);
+
+              if (utils.isDefined(marker)) {
+                if (marker.getAttribute("data-scope") == "span") {
+                  let mmpi = control.markersArea.getAttribute("data-mmpi");
+                  control.mark(marker, mmpi);
+                  control.updateMarkAllCheckboxes();
+                } else if (marker.getAttribute("data-scope") == "text") {
+                  control.select(marker);
+                }
+              }
+            } else if (target.getAttribute("type") == "radio") {
+              if (!target.hasAttribute("required")) {
+                let memoryInnerRb = control.checkedInnerRadio[target.name];
+                if (utils.isDefined(memoryInnerRb) && memoryInnerRb.checked) {
+                  memoryInnerRb.checked = false;
+
+                  if (target.hasAttribute("data-group")) {
+                    let outerRadio = control.markersArea.querySelector(
+                      "#" + target.getAttribute("data-group")
+                    );
+
+                    // this will fire only when target.checked is true
+                    outerRadio.checked = memoryInnerRb.checked;
+                    delete control.checkedOuterRadio[outerRadio.name];
+                  }
+                  delete control.checkedInnerRadio[target.name];
+                }
+
+                let memoryOuterRb = control.checkedOuterRadio[target.name];
+                if (utils.isDefined(memoryOuterRb) && memoryOuterRb.checked) {
+                  memoryOuterRb.checked = false;
+
+                  if (target.hasAttribute("data-for")) {
+                    let radioFor = target.getAttribute("data-for");
+
+                    if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
+                      control.checkedInnerRadio[radioFor].checked = false;
+                      delete control.checkedInnerRadio[radioFor];
+                    }
+                  }
+                  delete control.checkedOuterRadio[target.name];
+                }
+              }
+            }
+          },
+          false
+        );
+      },
+      initMarkerAreaOnChange: function () {
+        let control = this;
+        this.markersArea.addEventListener(
+          "change",
+          function (e) {
+            e.stopPropagation();
+            let target = e.target;
+            if (target.getAttribute("type") == "checkbox") {
+              let marker = getClosestMarker(target);
+              if (utils.isDefined(marker)) {
+                control.selectorArea
+                  .querySelectorAll(
+                    '[data-s="' + marker.getAttribute("data-s") + '"]'
+                  )
+                  .forEach(function (x) {
+                    let $x = $(x);
+                    if (!$x.prop("in_relation") && !$x.prop("disabled")) {
+                      if (
+                        !target.checked &&
+                        x.classList.contains("active") &&
+                        $x.prop("selected")
+                      ) {
+                        x.classList.remove("active");
+                        $x.prop("selected", false);
+                      } else if (target.checked) {
+                        x.classList.add("active");
+                        $x.prop("selected", true);
+                      }
+                    }
+                  });
+              }
+            } else if (target.getAttribute("type") == "radio") {
+              if (target.hasAttribute("data-for")) {
+                let radioFor = target.getAttribute("data-for");
+                let previousRadio = control.checkedOuterRadio[radioFor];
+                if (utils.isDefined(previousRadio) && previousRadio != target) {
+                  // grab old outer checkbox and uncheck it
+                  previousRadio.checked = false;
+                }
+                // assign new outer checkbox
+                control.checkedOuterRadio[radioFor] = target;
+
+                if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
+                  control.checkedInnerRadio[radioFor].checked = false;
+                }
+                // this is to track unchecking
+                control.checkedOuterRadio[target.name] = target;
+              } else if (target.hasAttribute("data-group")) {
+                let outerRadio = control.markersArea.querySelector(
+                  "#" + target.getAttribute("data-group")
+                );
+
+                // this will fire only when target.checked is true
+                outerRadio.checked = target.checked;
+                control.checkedOuterRadio[target.name] = outerRadio;
+                control.checkedInnerRadio[target.name] = target;
+
+                // this is to track unchecking
+                control.checkedOuterRadio[outerRadio.name] = outerRadio;
+              } else {
+                control.checkedInnerRadio[target.name] = target;
+              }
+            }
+          },
+          false
+        );
+      },
+      initMarkerAreaKeyboardEvents: function () {
+        // TODO: might be potentially rewritten?
+        // adding chunk if a piece of text was selected with a keyboard
+        let control = this;
+        document.addEventListener(
+          "keyup",
+          function (e) {
+            let selection = window.getSelection();
+
+            if (selection && selection.anchorNode != null) {
+              let isArticleAncestor = isAncestor(
+                selection.anchorNode,
+                control.selectorArea
+              );
+
+              if (
+                e.shiftKey &&
+                e.which >= 37 &&
+                e.which <= 40 &&
+                isArticleAncestor
+              ) {
+                labelerModule.updateChunkFromSelection();
+              }
+            }
+            let s = String.fromCharCode(e.which).toUpperCase();
+            let shortcut = null;
+            if (s.trim()) {
+              if (e.shiftKey) {
+                shortcut = document.querySelector(
+                  '[data-shortcut="SHIFT + ' + s + '"]'
+                );
+              } else {
+                shortcut = document.querySelector(
+                  '[data-shortcut="' + s + '"]'
+                );
+              }
+            }
+
+            if (shortcut != null) {
+              if (e.altKey && !e.shiftKey && !e.ctrlKey) {
+                let input = shortcut.querySelector('input[type="checkbox"]');
+                if (utils.isDefined(input)) {
+                  input.checked = !input.checked;
+                  const event = new Event("change", { bubbles: true });
+                  input.dispatchEvent(event);
+                }
+              } else {
+                shortcut.click();
+              }
+            }
+          },
+          false
+        );
+      },
+      initMarkerAreaEvents: function () {
+        if (utils.isDefined(this.markersArea)) {
+          this.initMarkerAreaOnClick();
+          this.initMarkerAreaOnChange();
+          this.initMarkerAreaKeyboardEvents();
+        }
+      },
+      initRelationAreaEvents: function () {
+        if (utils.isDefined(this.relationsArea)) {
+          let control = this;
+          this.relationsArea.addEventListener(
+            "click",
+            function (e) {
+              let relMarker = getClosestRelation(e.target);
+
+              if (utils.isDefined(relMarker)) control.markRelation(relMarker);
+            },
+            false
+          );
+        }
+      },
+      initEditingAndReviewingEvents: function () {
+        let control = this;
+        // editing & reviewing mode events
+        document.addEventListener(
+          "submit",
+          function (e) {
+            let $form = $(e.target);
+
+            let $main = $form.closest("nav").siblings("main");
+            $main.empty();
+            $main.append(
+              $(
+                '<div class="lds-ring"><div></div><div></div><div></div><div></div></div>'
+              )
+            );
+            $main.addClass("has-text-centered");
+
+            if ($form.attr("id") == "editingSearchForm") {
+              e.preventDefault();
+              $.ajax({
+                method: $form.method,
+                url: $form.attr("action"),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: $form.serializeObject(),
+                success: function (data) {
+                  let $editingBoard = $("#editingBoard");
+                  let $main = $editingBoard.find("main");
+                  $main.prop("innerHTML", data.template);
+                  $main.removeClass("has-text-centered");
+                  $editingBoard.attr("data-href", $form.attr("action"));
+                  labelerModule.fixUI();
+                },
+              });
+            }
+          },
+          false
+        );
+
+        document.addEventListener("click", function (e) {
+          let target = e.target,
+            closestBatch = getClosestBatch(target),
+            closestPsArea = getClosestPostSubmitArea(target);
+
+          if (target.tagName == "A" && target.hasAttribute("data-page")) {
+            // pagination events
+            let mode = closestPsArea.getAttribute("data-mode");
+            let searchForm = closestPsArea.querySelector(
+                "#" + mode + "SearchForm"
+              ),
+              searchData = {};
+            if (utils.isDefined(searchForm))
+              searchData = $(searchForm).serializeObject();
+
+            $.ajax({
+              type: "GET",
+              url:
+                closestPsArea.getAttribute("data-href") +
+                "?p=" +
+                target.getAttribute("data-page"),
+              dataType: "json",
+              data: searchData,
+              success: function (d) {
+                control.currentPage[mode] = target.getAttribute("data-page");
+                if (d.partial) {
+                  let mainPart = closestPsArea.querySelector("main");
+                  mainPart.innerHTML = d.template;
+                } else {
+                  closestPsArea.outerHTML = d.template;
+                }
+
+                control.fixUI();
+              },
+              error: function () {
+                console.log("Error while invoking editing mode!");
+              },
+            });
+          } else if (utils.isDefined(closestBatch)) {
+            // clicked on one of the batches
+            let uuid = closestBatch.getAttribute("data-id"),
+              $psArea = $(closestPsArea),
+              $closestBatch = $(closestBatch);
+
+            let purposeNode = getClosestPurposeNode(target);
+
+            if (utils.isDefined(purposeNode)) {
+              let purpose = purposeNode.getAttribute("data-purpose");
+              if (purpose === "s") {
+                // show batch
+                let url = $psArea.attr("data-url"),
+                  $list = $('[id*="Board"] li'),
+                  clickedOnCurrent =
+                    $closestBatch.data("restored") !== undefined &&
+                    $closestBatch.data("restored");
+
+                $list.find('[data-purpose="s"]').removeClass("is-hovered");
+                if (clickedOnCurrent) {
+                  $closestBatch.data("restored", false);
+                  control.restoreOriginal();
+                  control.clearBatch();
+                } else {
+                  purposeNode.classList.add("is-hovered");
+                  $list.each(
+                    (i, n) =>
+                      void (
+                        $(n).data("restored") !== undefined &&
+                        $(n).data("restored", false)
+                      )
+                  );
+                  // The code above is a shorthand for this code below. Note that `void` is necessary to force expression to be evaluated
+                  // and return `undefined` at the end.
+                  // $list.each(function(i, n) {
+                  //   if ($(n).data('restored') !== undefined) {
+                  //     $(n).data('restored', false);
+                  //   }
+                  // });
+                  if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                    control.restoreBatch(uuid, url);
+                  }
+                  $closestBatch.data("restored", true);
+                }
+              } else if (purpose === "f") {
+                // flag a batch as problematic
+                let url = $psArea.attr("data-flag-url"),
+                  csrf = purposeNode.querySelector(
+                    'input[name="csrfmiddlewaretoken"]'
+                  ),
+                  batchButton =
+                    closestBatch.querySelector('[data-purpose="s"]');
+
+                if (closestBatch.hasAttribute("data-flagged")) {
+                  if (closestBatch.getAttribute("data-flagged") == "true") {
+                    // unflag
+                    if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                      control.changeBatchFlag(
+                        uuid,
+                        url,
+                        false,
+                        csrf.value,
+                        function () {
+                          batchButton.classList.remove("is-danger");
+                          if (
+                            closestPsArea.getAttribute("data-mode") == "editing"
+                          )
+                            batchButton.classList.add("is-link");
+                          else if (
+                            closestPsArea.getAttribute("data-mode") ==
+                            "reviewing"
+                          )
+                            batchButton.classList.add("is-dark");
+                          closestBatch.setAttribute("data-flagged", false);
+                          purposeNode.classList.remove("is-active");
+                        }
+                      );
+                    }
+                  } else {
+                    // flag!!!
+                    if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                      control.changeBatchFlag(
+                        uuid,
+                        url,
+                        true,
+                        csrf.value,
+                        function () {
+                          batchButton.classList.add("is-danger");
+                          if (
+                            closestPsArea.getAttribute("data-mode") == "editing"
+                          )
+                            batchButton.classList.remove("is-link");
+                          else if (
+                            closestPsArea.getAttribute("data-mode") ==
+                            "reviewing"
+                          )
+                            batchButton.classList.remove("is-dark");
+                          closestBatch.setAttribute("data-flagged", true);
+                          purposeNode.classList.add("is-active");
+                        }
+                      );
+                    }
+                  }
+                }
+              }
+            }
+          }
+        });
+      },
+      initInteractiveDataAreaEvents: function () {
+        if (this.interactiveDataArea != null) {
+          let control = this;
+          this.interactiveDataArea.addEventListener("input", function (e) {
+            let target = e.target;
+            control.selectorArea.innerHTML = target.value.replace(
+              /\n/gi,
+              "<br>"
+            );
+
+            if (target.value.length === 0) {
+              control.selectorArea.innerHTML = "No input";
+            }
+            control.restart();
+          });
+        }
+      },
       initEvents: function () {
         // event delegation
         if (this.selectorArea != null) {
           let control = this;
-          this.textArea.addEventListener(
-            "click",
-            function (e) {
-              e.stopPropagation();
-              let target = e.target;
-              if (isDeleteButton(target)) {
-                control.labelDeleteHandler(e);
-                control.updateMarkAllCheckboxes();
-              } else if (isLabel(target)) {
-                if (control.allowSelectingLabels) {
-                  let $target = $(target);
-                  if (
-                    $target.prop("in_relation") &&
-                    !$target.prop("multiple_possible_relations")
-                  ) {
-                    control.showRelationGraph(
-                      parseInt(
-                        target.querySelector('[data-m="r"]').textContent,
-                        10
-                      )
-                    );
-                  } else if (!window.getSelection().toString()) {
-                    if (
-                      target.classList.contains("active") &&
-                      $target.prop("selected")
-                    ) {
-                      target.classList.remove("active");
-                      $target.prop("selected", false);
-                      $target.prop("ts", null);
-                    } else {
-                      target.classList.add("active");
-                      $target.prop("ts", Date.now());
-                      $target.prop("selected", true);
-                    }
-                  }
-                }
-              } else if (target.hasAttribute("data-rel")) {
-                control.showRelationGraph(
-                  parseInt(target.getAttribute("data-rel"), 10)
-                );
-              }
-            },
-            false
-          );
+
+          this.initTextAreaEvents();
 
           let deselectActionBtn;
           if (utils.isDefined(this.actionsArea))
@@ -910,462 +1405,13 @@
                 .forEach((x) => x.classList.remove("active"));
             });
 
-          this.selectorArea.addEventListener(
-            "mouseover",
-            function (e) {
-              let target = e.target;
-              if (isLabel(target)) {
-                if (labelerModule.allowSelectingLabels) {
-                  e.stopPropagation();
-                  if (target.classList.contains("tag"))
-                    if (!$(target).prop("selected")) {
-                      target.classList.add("active");
-                      $(
-                        '[data-i="' + target.getAttribute("data-i") + '"]'
-                      ).addClass("active");
-                    } else if (!$(target.parentNode).prop("selected")) {
-                      target.parentNode.classList.add("active");
-                      $(
-                        '[data-i="' +
-                          target.parentNode.getAttribute("data-i") +
-                          '"]'
-                      ).addClass("active");
-                    }
-                }
-              }
-            },
-            false
-          );
+          this.initSelectorAreaEvents();
 
-          this.selectorArea.addEventListener(
-            "mouseout",
-            function (e) {
-              let target = e.target;
-              if (isLabel(target)) {
-                if (labelerModule.allowSelectingLabels) {
-                  e.stopPropagation();
-                  if (target.classList.contains("tag"))
-                    if (!$(target).prop("selected")) {
-                      target.classList.remove("active");
-                      $(
-                        '[data-i="' + target.getAttribute("data-i") + '"]'
-                      ).removeClass("active");
-                    } else if (!$(target.parentNode).prop("selected")) {
-                      target.parentNode.classList.remove("active");
-                      $(
-                        '[data-i="' +
-                          target.parentNode.getAttribute("data-i") +
-                          '"]'
-                      ).removeClass("active");
-                    }
-                }
-              }
-            },
-            false
-          );
+          this.initMarkerAreaEvents();
+          this.initRelationAreaEvents();
 
-          // adding chunk if a piece of text was selected with a mouse
-          this.selectorArea.addEventListener(
-            "mouseup",
-            function (e) {
-              let isRightMB;
-              e = e || window.event;
-
-              if ("which" in e)
-                // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
-                isRightMB = e.which === 3;
-              else if ("button" in e)
-                // IE, Opera
-                isRightMB = e.button === 2;
-
-              if (!isRightMB) {
-                labelerModule.updateChunkFromSelection();
-              }
-            },
-            false
-          );
-
-          // TODO: might be potentially rewritten?
-          // adding chunk if a piece of text was selected with a keyboard
-          document.addEventListener(
-            "keyup",
-            function (e) {
-              let selection = window.getSelection();
-
-              if (selection && selection.anchorNode != null) {
-                let isArticleAncestor = isAncestor(
-                  selection.anchorNode,
-                  control.selectorArea
-                );
-
-                if (
-                  e.shiftKey &&
-                  e.which >= 37 &&
-                  e.which <= 40 &&
-                  isArticleAncestor
-                ) {
-                  labelerModule.updateChunkFromSelection();
-                }
-              }
-              let s = String.fromCharCode(e.which).toUpperCase();
-              let shortcut = null;
-              if (s.trim()) {
-                if (e.shiftKey) {
-                  shortcut = document.querySelector(
-                    '[data-shortcut="SHIFT + ' + s + '"]'
-                  );
-                } else {
-                  shortcut = document.querySelector(
-                    '[data-shortcut="' + s + '"]'
-                  );
-                }
-              }
-
-              if (shortcut != null) {
-                if (e.altKey && !e.shiftKey && !e.ctrlKey) {
-                  let input = shortcut.querySelector('input[type="checkbox"]');
-                  if (utils.isDefined(input)) {
-                    input.checked = !input.checked;
-                    const event = new Event("change", { bubbles: true });
-                    input.dispatchEvent(event);
-                  }
-                } else {
-                  shortcut.click();
-                }
-              }
-            },
-            false
-          );
-
-          if (utils.isDefined(this.markersArea)) {
-            this.markersArea.addEventListener(
-              "click",
-              function (e) {
-                let target = e.target;
-                if (target.nodeName != "INPUT") {
-                  let marker = getClosestMarker(target);
-
-                  if (utils.isDefined(marker)) {
-                    if (marker.getAttribute("data-scope") == "span") {
-                      let mmpi = control.markersArea.getAttribute("data-mmpi");
-                      control.mark(marker, mmpi);
-                      control.updateMarkAllCheckboxes();
-                    } else if (marker.getAttribute("data-scope") == "text") {
-                      control.select(marker);
-                    }
-                  }
-                } else if (target.getAttribute("type") == "radio") {
-                  if (!target.hasAttribute("required")) {
-                    let memoryInnerRb = control.checkedInnerRadio[target.name];
-                    if (
-                      utils.isDefined(memoryInnerRb) &&
-                      memoryInnerRb.checked
-                    ) {
-                      memoryInnerRb.checked = false;
-
-                      if (target.hasAttribute("data-group")) {
-                        let outerRadio = control.markersArea.querySelector(
-                          "#" + target.getAttribute("data-group")
-                        );
-
-                        // this will fire only when target.checked is true
-                        outerRadio.checked = memoryInnerRb.checked;
-                        delete control.checkedOuterRadio[outerRadio.name];
-                      }
-                      delete control.checkedInnerRadio[target.name];
-                    }
-
-                    let memoryOuterRb = control.checkedOuterRadio[target.name];
-                    if (
-                      utils.isDefined(memoryOuterRb) &&
-                      memoryOuterRb.checked
-                    ) {
-                      memoryOuterRb.checked = false;
-
-                      if (target.hasAttribute("data-for")) {
-                        let radioFor = target.getAttribute("data-for");
-
-                        if (
-                          utils.isDefined(control.checkedInnerRadio[radioFor])
-                        ) {
-                          control.checkedInnerRadio[radioFor].checked = false;
-                          delete control.checkedInnerRadio[radioFor];
-                        }
-                      }
-                      delete control.checkedOuterRadio[target.name];
-                    }
-                  }
-                }
-              },
-              false
-            );
-
-            this.markersArea.addEventListener(
-              "change",
-              function (e) {
-                e.stopPropagation();
-                let target = e.target;
-                if (target.getAttribute("type") == "checkbox") {
-                  let marker = getClosestMarker(target);
-                  if (utils.isDefined(marker)) {
-                    control.selectorArea
-                      .querySelectorAll(
-                        '[data-s="' + marker.getAttribute("data-s") + '"]'
-                      )
-                      .forEach(function (x) {
-                        let $x = $(x);
-                        if (!$x.prop("in_relation") && !$x.prop("disabled")) {
-                          if (
-                            !target.checked &&
-                            x.classList.contains("active") &&
-                            $x.prop("selected")
-                          ) {
-                            x.classList.remove("active");
-                            $x.prop("selected", false);
-                          } else if (target.checked) {
-                            x.classList.add("active");
-                            $x.prop("selected", true);
-                          }
-                        }
-                      });
-                  }
-                } else if (target.getAttribute("type") == "radio") {
-                  if (target.hasAttribute("data-for")) {
-                    let radioFor = target.getAttribute("data-for");
-                    let previousRadio = control.checkedOuterRadio[radioFor];
-                    if (
-                      utils.isDefined(previousRadio) &&
-                      previousRadio != target
-                    ) {
-                      // grab old outer checkbox and uncheck it
-                      previousRadio.checked = false;
-                    }
-                    // assign new outer checkbox
-                    control.checkedOuterRadio[radioFor] = target;
-
-                    if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
-                      control.checkedInnerRadio[radioFor].checked = false;
-                    }
-                    // this is to track unchecking
-                    control.checkedOuterRadio[target.name] = target;
-                  } else if (target.hasAttribute("data-group")) {
-                    let outerRadio = control.markersArea.querySelector(
-                      "#" + target.getAttribute("data-group")
-                    );
-
-                    // this will fire only when target.checked is true
-                    outerRadio.checked = target.checked;
-                    control.checkedOuterRadio[target.name] = outerRadio;
-                    control.checkedInnerRadio[target.name] = target;
-
-                    // this is to track unchecking
-                    control.checkedOuterRadio[outerRadio.name] = outerRadio;
-                  } else {
-                    control.checkedInnerRadio[target.name] = target;
-                  }
-                }
-              },
-              false
-            );
-          }
-
-          if (utils.isDefined(this.relationsArea)) {
-            this.relationsArea.addEventListener(
-              "click",
-              function (e) {
-                let relMarker = getClosestRelation(e.target);
-
-                if (utils.isDefined(relMarker)) control.markRelation(relMarker);
-              },
-              false
-            );
-          }
-
-          // editing & reviewing mode events
-          document.addEventListener(
-            "submit",
-            function (e) {
-              let $form = $(e.target);
-
-              let $main = $form.closest("nav").siblings("main");
-              $main.empty();
-              $main.append(
-                $(
-                  '<div class="lds-ring"><div></div><div></div><div></div><div></div></div>'
-                )
-              );
-              $main.addClass("has-text-centered");
-
-              if ($form.attr("id") == "editingSearchForm") {
-                e.preventDefault();
-                $.ajax({
-                  method: $form.method,
-                  url: $form.attr("action"),
-                  contentType: "application/json; charset=utf-8",
-                  dataType: "json",
-                  data: $form.serializeObject(),
-                  success: function (data) {
-                    let $editingBoard = $("#editingBoard");
-                    let $main = $editingBoard.find("main");
-                    $main.prop("innerHTML", data.template);
-                    $main.removeClass("has-text-centered");
-                    $editingBoard.attr("data-href", $form.attr("action"));
-                    labelerModule.fixUI();
-                  },
-                });
-              }
-            },
-            false
-          );
-
-          document.addEventListener("click", function (e) {
-            let target = e.target,
-              closestBatch = getClosestBatch(target),
-              closestPsArea = getClosestPostSubmitArea(target);
-
-            if (target.tagName == "A" && target.hasAttribute("data-page")) {
-              // pagination events
-              let mode = closestPsArea.getAttribute("data-mode");
-              let searchForm = closestPsArea.querySelector(
-                  "#" + mode + "SearchForm"
-                ),
-                searchData = {};
-              if (utils.isDefined(searchForm))
-                searchData = $(searchForm).serializeObject();
-
-              $.ajax({
-                type: "GET",
-                url:
-                  closestPsArea.getAttribute("data-href") +
-                  "?p=" +
-                  target.getAttribute("data-page"),
-                dataType: "json",
-                data: searchData,
-                success: function (d) {
-                  control.currentPage[mode] = target.getAttribute("data-page");
-                  if (d.partial) {
-                    let mainPart = closestPsArea.querySelector("main");
-                    mainPart.innerHTML = d.template;
-                  } else {
-                    closestPsArea.outerHTML = d.template;
-                  }
-
-                  control.fixUI();
-                },
-                error: function () {
-                  console.log("Error while invoking editing mode!");
-                },
-              });
-            } else if (utils.isDefined(closestBatch)) {
-              // clicked on one of the batches
-              let uuid = closestBatch.getAttribute("data-id"),
-                $psArea = $(closestPsArea),
-                $closestBatch = $(closestBatch);
-
-              let purposeNode = getClosestPurposeNode(target);
-
-              if (utils.isDefined(purposeNode)) {
-                let purpose = purposeNode.getAttribute("data-purpose");
-                if (purpose === "s") {
-                  // show batch
-                  let url = $psArea.attr("data-url"),
-                    $list = $('[id*="Board"] li'),
-                    clickedOnCurrent =
-                      $closestBatch.data("restored") !== undefined &&
-                      $closestBatch.data("restored");
-
-                  $list.find('[data-purpose="s"]').removeClass("is-hovered");
-                  if (clickedOnCurrent) {
-                    $closestBatch.data("restored", false);
-                    control.restoreOriginal();
-                    control.clearBatch();
-                  } else {
-                    purposeNode.classList.add("is-hovered");
-                    $list.each(
-                      (i, n) =>
-                        void (
-                          $(n).data("restored") !== undefined &&
-                          $(n).data("restored", false)
-                        )
-                    );
-                    // The code above is a shorthand for this code below. Note that `void` is necessary to force expression to be evaluated
-                    // and return `undefined` at the end.
-                    // $list.each(function(i, n) {
-                    //   if ($(n).data('restored') !== undefined) {
-                    //     $(n).data('restored', false);
-                    //   }
-                    // });
-                    if (utils.isDefined(uuid) && utils.isDefined(url)) {
-                      control.restoreBatch(uuid, url);
-                    }
-                    $closestBatch.data("restored", true);
-                  }
-                } else if (purpose === "f") {
-                  // flag a batch as problematic
-                  let url = $psArea.attr("data-flag-url"),
-                    csrf = purposeNode.querySelector(
-                      'input[name="csrfmiddlewaretoken"]'
-                    ),
-                    batchButton =
-                      closestBatch.querySelector('[data-purpose="s"]');
-
-                  if (closestBatch.hasAttribute("data-flagged")) {
-                    if (closestBatch.getAttribute("data-flagged") == "true") {
-                      // unflag
-                      if (utils.isDefined(uuid) && utils.isDefined(url)) {
-                        control.changeBatchFlag(
-                          uuid,
-                          url,
-                          false,
-                          csrf.value,
-                          function () {
-                            batchButton.classList.remove("is-danger");
-                            if (
-                              closestPsArea.getAttribute("data-mode") ==
-                              "editing"
-                            )
-                              batchButton.classList.add("is-link");
-                            else if (
-                              closestPsArea.getAttribute("data-mode") ==
-                              "reviewing"
-                            )
-                              batchButton.classList.add("is-dark");
-                            closestBatch.setAttribute("data-flagged", false);
-                            purposeNode.classList.remove("is-active");
-                          }
-                        );
-                      }
-                    } else {
-                      // flag!!!
-                      if (utils.isDefined(uuid) && utils.isDefined(url)) {
-                        control.changeBatchFlag(
-                          uuid,
-                          url,
-                          true,
-                          csrf.value,
-                          function () {
-                            batchButton.classList.add("is-danger");
-                            if (
-                              closestPsArea.getAttribute("data-mode") ==
-                              "editing"
-                            )
-                              batchButton.classList.remove("is-link");
-                            else if (
-                              closestPsArea.getAttribute("data-mode") ==
-                              "reviewing"
-                            )
-                              batchButton.classList.remove("is-dark");
-                            closestBatch.setAttribute("data-flagged", true);
-                            purposeNode.classList.add("is-active");
-                          }
-                        );
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          });
+          this.initEditingAndReviewingEvents();
+          this.initInteractiveDataAreaEvents();
         }
       },
       register: function (plugin, label) {

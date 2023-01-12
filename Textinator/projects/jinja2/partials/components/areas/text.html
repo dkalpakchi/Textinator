@@ -16,22 +16,30 @@
       </span>
     </a>
   </div>
+  {% set placeholder_text=_("Please write down some text in the text field below") %}
   {% set all_text_markers=project.markervariant_set.filter(anno_type='free-text').count() == project.markervariant_set.count() %}
-    <div id="selector" class="content message-body selector element{% if all_text_markers %} broad{% endif %}" data-s="{% if dp_info.source_id is not none and not dp_info.is_empty %}{{dp_info.source_id}}{% endif %}" data-dp="{% if dp_info.id is not none and not dp_info.is_empty %}{{dp_info.id}}{% endif %}" data-f="{{dp_info.is_empty}}">
-      {% if dp_info.no_data %}
-        {% include 'partials/_no_data.html' %}
-      {% elif dp_info.is_empty %}
-        {% include 'partials/_great_job.html' %}
+  <div id="selector" class="content message-body selector element{% if all_text_markers %} broad{% endif %}" data-s="{% if dp_info.source_id is not none and not dp_info.is_empty %}{{dp_info.source_id}}{% endif %}" data-dp="{% if dp_info.id is not none and not dp_info.is_empty %}{{dp_info.id}}{% endif %}" data-f="{{dp_info.is_empty}}">
+    {% if dp_info.no_data %}
+      {% if dp_info.is_interactive %}
+        {{placeholder_text}}
       {% else %}
-        {% if dp_info.source_formatting == 'md' %}
-          {{text|to_markdown}}
-        {% elif dp_info.source_formatting == 'ft' %}
-          {{text|to_formatted_text|safe}}
-        {% elif dp_info.is_dialogue %}
-          {{text|safe}}
-        {% else %}
-          {{text|wrap_paragraph|safe}}
-        {% endif %}
+        {% include 'partials/_no_data.html' %}
       {% endif %}
-    </div>
+    {% elif dp_info.is_empty %}
+      {% include 'partials/_great_job.html' %}
+    {% else %}
+      {% if dp_info.source_formatting == 'md' %}
+        {{text|to_markdown}}
+      {% elif dp_info.source_formatting == 'ft' %}
+        {{text|to_formatted_text|safe}}
+      {% elif dp_info.is_dialogue %}
+        {{text|safe}}
+      {% else %}
+        {{text|wrap_paragraph|safe}}
+      {% endif %}
+    {% endif %}
+  </div>
 </article>
+{% if dp_info.is_interactive %}
+  <textarea class="textarea" id="interactiveDataArea" cols="30" rows="10"></textarea>
+{% endif %}

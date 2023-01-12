@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class DatapointInfo:
-    def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, proj_id=None, is_empty=False, no_data=False, is_dialogue=False, is_delayed=False):
+    def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, proj_id=None, is_empty=False, no_data=False, is_dialogue=False, is_delayed=False, is_interactive=False):
         self.id = dp_id
         self.text = text
         if ds:
@@ -30,6 +30,7 @@ class DatapointInfo:
         self.is_dialogue = is_dialogue
         self.project_id = proj_id
         self.is_delayed = is_delayed
+        self.is_interactive = is_interactive
 
     def to_json(self):
         return {
@@ -40,7 +41,8 @@ class DatapointInfo:
             'source_formatting': self.source_formatting,
             'is_empty': self.is_empty,
             'project_id': self.project_id,
-            'is_delayed': self.is_delayed
+            'is_delayed': self.is_delayed,
+            'is_interactive': self.is_interactive
         }
 
 

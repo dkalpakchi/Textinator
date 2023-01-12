@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'django_registration',
     'tinymce',
     'projects',
+    'toolbox',
     'rangefilter',
     # 'surveys'
     # 'django_extensions',
@@ -349,7 +350,8 @@ DATASOURCE_TYPES = [
     ('TextFile', 'Plain text file(s)'),
     ('Json', 'JSON file(s)'),
     ('JsonLines', 'JSON lines'),
-    ('TextsAPI', 'Texts API')
+    ('TextsAPI', 'Texts API'),
+    ('Interact', 'Interactive')
 ]
 
 FORMATTING_TYPES = [

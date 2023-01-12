@@ -26,7 +26,7 @@ COPY --chown=tt . ./Textinator/
 RUN mkdir -p ./Textinator/static_cdn
 RUN mkdir -p ./Textinator/media
 
-RUN pip install -r ./Textinator/requirements.txt
+RUN pip install --default-timeout=100 -r ./Textinator/requirements.txt
 
 # for production purposes
 RUN pip install gunicorn==20.1.0

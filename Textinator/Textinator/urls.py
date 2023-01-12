@@ -36,6 +36,7 @@ paths = [
     path('accounts/', include('django_registration.backends.one_step.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('projects/', include('projects.urls')),
+    path('tools/', include('toolbox.urls')),
     path('tinymce/', include('tinymce.urls')),
     path('users/', include('users.urls')),
     path('i18n/', include('django.conf.urls.i18n')),

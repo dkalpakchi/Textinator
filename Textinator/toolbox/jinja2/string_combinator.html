@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block custom_styles %}
+{% endblock %}
+
+{% block custom_scripts %}
+  <script src="{{ static('scripts/toolbox/scombinator.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="columns">
+  <div class="column">
+    <textarea id="source" class="textarea">
+      What is the capital of Sweden?
+      What is the Sweden's capital?
+    </textarea>
+    <textarea id="target" class="textarea"></textarea>
+    <button id="record" class="button">Record</button>
+    <button id="renew" class="button">Renew</button>
+    <button id="generate" class="button">Generate</button>
+    <div id="transformationMemoryArea"></div>
+  </div>
+  <div class="column">
+    <textarea id="generationArea" class='textarea is-fullheight' name="" cols="30" rows="10"></textarea>
+  </div>
+</div>
+{% endblock %}

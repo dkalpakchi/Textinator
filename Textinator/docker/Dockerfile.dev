@@ -28,8 +28,8 @@ COPY --chown=tt ./requirements-dev.txt ./Textinator/requirements-dev.txt
 RUN mkdir -p ./Textinator/static_cdn
 RUN mkdir -p ./Textinator/media
 
-RUN pip install -r ./Textinator/requirements.txt
-RUN pip install -r ./Textinator/requirements-dev.txt
+RUN pip install --default-timeout=100 -r ./Textinator/requirements.txt
+RUN pip install --default-timeout=100 -r ./Textinator/requirements-dev.txt
 
 RUN npm install --prefix ./Textinator
 

@@ -20,6 +20,7 @@
     TextsAPI: {
       endpoint: "",
     },
+    Interact: {},
   };
 
   let schemas = {
@@ -78,6 +79,7 @@
     },
   };
   schemas["JsonLines"] = schemas["Json"];
+  schemas["Interact"] = {};
 
   function updateSchema(spec_editor, option) {
     // NOTE: `spec` everywhere is just the name of the field in the model
@@ -87,6 +89,7 @@
         element = spec_editor.element;
       spec_editor.destroy();
       schema["title"] = " ";
+      console.log(schema);
       spec_editor = new JSONEditor(element, {
         theme: "spectre",
         schema: schema,

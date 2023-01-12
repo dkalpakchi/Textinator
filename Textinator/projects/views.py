@@ -158,7 +158,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         dp_info = proj.data(u)
 
         logs = None
-        if dp_info.source_id:
+        if dp_info.source_id and not dp_info.is_interactive:
             try:
                 d = Tm.DataSource.objects.get(pk=dp_info.source_id)
             except Tm.DataSource.DoesNotExist:
@@ -266,15 +266,16 @@ def record_datapoint(request, proj):
             raise Http404
 
         # log the submission
-        dal = Tm.DataAccessLog.objects.filter(
-            user=batch_info.user,
-            datapoint=batch_info.datapoint,
-            project=batch_info.project,
-            datasource=batch_info.data_source
-        ).order_by('-dt_updated').first()
-        dal.is_submitted = True
-        dal.is_delayed = False
-        dal.save()
+        if not batch_info.data_source.is_interactive:
+            dal = Tm.DataAccessLog.objects.filter(
+                user=batch_info.user,
+                datapoint=batch_info.datapoint,
+                project=batch_info.project,
+                datasource=batch_info.data_source
+            ).order_by('-dt_updated').first()
+            dal.is_submitted = True
+            dal.is_delayed = False
+            dal.save()
 
         batch = Tm.Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
 
@@ -721,24 +722,25 @@ def new_article(request, proj):
     ds_id = request.POST.get('sId')
     if ds_id:
         data_source = Tm.DataSource.objects.get(pk=ds_id)
-        dp_id = request.POST.get('dpId')
-        save_for_later = request.POST.get('saveForLater') == "true"
-        if dp_id:
-            try:
-                log = Tm.DataAccessLog.objects.get(
-                    user=request.user, project=project,
-                    datasource=data_source, datapoint=str(dp_id), is_skipped=False
-                )
-                log.is_skipped = not save_for_later
-                log.is_delayed = save_for_later
-                log.save()
-            except Tm.DataAccessLog.DoesNotExist:
-                Tm.DataAccessLog.objects.create(
-                    user=request.user, project=project,
-                    datasource=data_source, datapoint=str(dp_id),
-                    is_submitted=False, is_skipped=not save_for_later,
-                    is_delayed=save_for_later
-                )
+        if not data_source.is_interactive:
+            dp_id = request.POST.get('dpId')
+            save_for_later = request.POST.get('saveForLater') == "true"
+            if dp_id:
+                try:
+                    log = Tm.DataAccessLog.objects.get(
+                        user=request.user, project=project,
+                        datasource=data_source, datapoint=str(dp_id), is_skipped=False
+                    )
+                    log.is_skipped = not save_for_later
+                    log.is_delayed = save_for_later
+                    log.save()
+                except Tm.DataAccessLog.DoesNotExist:
+                    Tm.DataAccessLog.objects.create(
+                        user=request.user, project=project,
+                        datasource=data_source, datapoint=str(dp_id),
+                        is_submitted=False, is_skipped=not save_for_later,
+                        is_delayed=save_for_later
+                    )
 
     dp_info = project.data(request.user, True)
     request.session['dp_info_{}'.format(proj)] = dp_info.to_json()

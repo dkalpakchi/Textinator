@@ -103,6 +103,8 @@ class DataSource(CommonModel):
     they need to request a manual deletion.
     """
 
+    INTERACTIVE = "Interact"
+
     class Meta:
         verbose_name = _('data source')
         verbose_name_plural = _('data sources')
@@ -158,6 +160,10 @@ class DataSource(CommonModel):
 
     def __str__(self):
         return "{} ({})".format(self.name, self.language)
+
+    @property
+    def is_interactive(self):
+        return self.source_type == DataSource.INTERACTIVE
 
 
 class MarkerAction(CommonModel):
@@ -624,6 +630,13 @@ class Project(CloneMixin, CommonModel):
 
         datasources = []
         for source in self.datasources.all():
+            if source.is_interactive:
+                return DatapointInfo(
+                    is_interactive=True,
+                    no_data=True,
+                    proj_id=self.pk,
+                    ds_def=source
+                )
             source_data = self.instantiate_source(source)
             if source_data:
                 datasources.append(source_data)
