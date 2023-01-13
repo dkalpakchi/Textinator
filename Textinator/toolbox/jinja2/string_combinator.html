@@ -1,27 +1,51 @@
 {% extends "layout.html" %}
 
 {% block custom_styles %}
+  <link rel="stylesheet" href="{{ static('styles/toolbox/scombinator.css') }}">
 {% endblock %}
 
 {% block custom_scripts %}
-  <script src="{{ static('scripts/toolbox/scombinator.js') }}"></script>
+  <script type="text/javascript" src="{{ static('json-formatter-js/dist/json-formatter.umd.js') }}"></script>
+  <script type="text/javascript" src="{{ static('scripts/toolbox/scombinator.js') }}"></script>
 {% endblock %}
 
 {% block content %}
 <div class="columns">
   <div class="column">
-    <textarea id="source" class="textarea">
-      What is the capital of Sweden?
-      What is the Sweden's capital?
-    </textarea>
-    <textarea id="target" class="textarea"></textarea>
-    <button id="record" class="button">Record</button>
-    <button id="renew" class="button">Renew</button>
-    <button id="generate" class="button">Generate</button>
-    <div id="transformationMemoryArea"></div>
+    <div class="field">
+      <label for='source' class="label">Source strings</label>
+      <textarea id="source" class="textarea">
+        What is the capital of Sweden?
+        What is the Sweden's capital?
+      </textarea>
+    </div>
+    <div class="field">
+      <label for="target" class="label">Rule builder</label>
+      <textarea id="target" class="textarea"></textarea>
+      <form id="recordForm" action="{{ url('toolbox:string_combinator:record') }}" method="POST" class='float-left mt-1 mb-2 mr-2'>
+        {{csrf_input}}
+        <input type="submit" id="record" class="button" value="Record">
+      </form>
+      <button id="generate" class="button mt-1 mb-2">Generate</button>
+    </div>
+    <div>
+      <label class='label'>Transformation bank</label>
+      <div id="transformationMemoryArea" class='transformation-memory'>
+        {% if transformations|length > 0 %}
+          <script id="loadedBank" type="application/json">{{transformations|tojson|safe}}</script>
+        {% else %}
+          <p>Your personal list of transformations will appear here!</p>
+        {% endif %}
+      </div>
+    </div>
   </div>
   <div class="column">
-    <textarea id="generationArea" class='textarea is-fullheight' name="" cols="30" rows="10"></textarea>
+    <form id="generationArea" class='form generation-area'>
+      <fieldset>
+        <p>Here the generated combinations will appear!</p>
+      </fieldset>
+      <input type="submit" class="button" value="Save" disabled>
+    </form>
   </div>
 </div>
 {% endblock %}

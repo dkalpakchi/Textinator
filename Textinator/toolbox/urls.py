@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = 'toolbox'
 urlpatterns = [
-    path('scombinator', views.string_combinator, name='string_combinator'),
+    path('scombinator', include('toolbox.string_combinator.urls')),
 ]

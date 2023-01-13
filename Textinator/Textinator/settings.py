@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'tinymce',
     'projects',
     'toolbox',
+    'toolbox.string_combinator',
     'rangefilter',
     # 'surveys'
     # 'django_extensions',
