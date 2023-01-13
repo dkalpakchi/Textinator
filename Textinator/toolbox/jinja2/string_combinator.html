@@ -2,10 +2,11 @@
 
 {% block custom_styles %}
   <link rel="stylesheet" href="{{ static('styles/toolbox/scombinator.css') }}">
+  <link href="{{ static('jsoneditor/dist/jsoneditor.min.css') }}" rel="stylesheet" type="text/css">
 {% endblock %}
 
 {% block custom_scripts %}
-  <script type="text/javascript" src="{{ static('json-formatter-js/dist/json-formatter.umd.js') }}"></script>
+  <script type="text/javascript" src="{{ static('jsoneditor/dist/jsoneditor.min.js') }}"></script>
   <script type="text/javascript" src="{{ static('scripts/toolbox/scombinator.js') }}"></script>
 {% endblock %}
 

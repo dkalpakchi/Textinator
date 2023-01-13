@@ -1,4 +1,4 @@
-(function ($, JSONFormatter) {
+(function ($, JSONEditor) {
   let utils = {
     isDefined: function (n) {
       return n !== undefined && n !== null;
@@ -272,8 +272,34 @@
       return container;
     },
     showHierarchical: function (data) {
-      const formatter = new JSONFormatter(data);
-      this.generationArea.appendChild(formatter.render());
+      const options = {
+        mode: "tree",
+        onCreateMenu: function (items, node) {
+          const path = node.path;
+
+          // log the current items and node for inspection
+          console.log("items:", items, "node:", node);
+
+          if (path) {
+            let insertIndex = items.findIndex((x) => x.text == "Insert");
+
+            items.splice(insertIndex + 1, 0, {
+              text: "Convert", // the text for the menu item
+              title: "convert element to...", // the HTML title attribute
+              submenu: [
+                {
+                  text: "Object",
+                  title: "Object",
+                },
+              ],
+            });
+          }
+
+          return items;
+        },
+      };
+      const editor = new JSONEditor(this.generationArea, options);
+      editor.set(data);
     },
     transform: function (sources, maxDepth) {
       if (!utils.isDefined(sources) || sources.length === 0 || maxDepth < 0) {
@@ -481,4 +507,4 @@
     combinator.init();
     window.c = combinator;
   });
-})(window.jQuery, window.JSONFormatter);
+})(window.jQuery, window.JSONEditor);

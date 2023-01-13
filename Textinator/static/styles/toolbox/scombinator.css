@@ -8,6 +8,7 @@
 }
 
 .generation-area fieldset {
-  max-height: 800px;
+  height: 500px;
+  max-height: 900px;
   overflow-y: scroll;
 }

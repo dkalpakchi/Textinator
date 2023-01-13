@@ -33,6 +33,7 @@
     "jquery-ui-dist": "^1.13.0",
     "jquery-validation": "^1.19.5",
     "json-formatter-js": "^2.3.4",
+    "jsoneditor": "^9.9.2",
     "medium-zoom": "^1.0.6",
     "shepherd.js": "^3.1.0",
     "tippy.js": "^6.3.7",
