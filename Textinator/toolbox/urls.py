@@ -4,5 +4,5 @@ from . import views
 
 app_name = 'toolbox'
 urlpatterns = [
-    path('scombinator', include('toolbox.string_combinator.urls')),
+    path('scombinator/', include('toolbox.string_combinator.urls')),
 ]

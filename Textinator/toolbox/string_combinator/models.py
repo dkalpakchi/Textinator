@@ -5,10 +5,10 @@ from django.utils.translation import gettext_lazy as _
 
 
 # Create your models here.
-class StringTransformation(models.Model):
+class StringTransformationRule(models.Model):
     class Meta:
-        verbose_name = _('string transformation')
-        verbose_name_plural = _('string transformations')
+        verbose_name = _('string transformation rule')
+        verbose_name_plural = _('string transformation rules')
 
     DELIMETER = "|"
 
@@ -24,9 +24,28 @@ class StringTransformation(models.Model):
         return {
             'action': self.action,
             'from': self.s_from,
-            'to': self.s_to.split('|'),
+            'to': [x for x in self.s_to.split('|') if x],
             'uuid': str(self.uuid)
         }
 
     def __str__(self):
         return "{}: {} -> {}".format(self.action, self.s_from, self.s_to)
+
+
+class StringTransformationSet(models.Model):
+    class Meta:
+        verbose_name = _('string transformation')
+        verbose_name_plural = _('string transformations')
+
+    data = models.JSONField()
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("owner"))
+    batch = models.UUIDField()
+
+    @property
+    def title(self):
+        return next(iter(self.data.keys()))
+
+
+class FailedTransformation(models.Model):
+    transformation = models.ForeignKey(StringTransformationSet, on_delete=models.SET_NULL, null=True, verbose_name=_("transformation"))
+    value = models.TextField(_("value"), help_text=_("String to be filtered out"))

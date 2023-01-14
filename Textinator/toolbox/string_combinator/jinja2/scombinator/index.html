@@ -16,14 +16,17 @@
     <div class="field">
       <label for='source' class="label">Source strings</label>
       <textarea id="source" class="textarea">
+        // from: human
         What is the capital of Sweden?
+        What is the capital of Norway? // comment: about Norway
+        //from: AI
         What is the Sweden's capital?
       </textarea>
     </div>
     <div class="field">
       <label for="target" class="label">Rule builder</label>
       <textarea id="target" class="textarea"></textarea>
-      <form id="recordForm" action="{{ url('toolbox:string_combinator:record') }}" method="POST" class='float-left mt-1 mb-2 mr-2'>
+      <form id="recordForm" action="{{ url('toolbox:string_combinator:record_transformation') }}" method="POST" class='float-left mt-1 mb-2 mr-2'>
         {{csrf_input}}
         <input type="submit" id="record" class="button" value="Record">
       </form>
@@ -41,12 +44,36 @@
     </div>
   </div>
   <div class="column">
-    <form id="generationArea" class='form generation-area'>
-      <fieldset>
-        <p>Here the generated combinations will appear!</p>
-      </fieldset>
-      <input type="submit" class="button" value="Save" disabled>
-    </form>
+    <div class="hero mb-5">
+      <form id="generationArea" action="{{ url('toolbox:string_combinator:record_generation') }}" method="POST" class='form generation-area'>
+        {{csrf_input}}
+        <fieldset>
+          <p>Here the generated combinations will appear!</p>
+        </fieldset>
+      </form>
+    </div>
+    <div class="container">
+      <form id="editingSearchForm" action="{{ url('toolbox:string_combinator:search_generations') }}" method="GET">
+        <div class="field has-addons">
+          <p class="control">
+            <span class="select is-small">
+              <select name="search_type">
+                <option value="phr">Phrase</option>
+                <option value="int">Keywords</option>
+                <option value="web">Web-like</option>
+              </select>
+            </span>
+          </p>
+          <div class="control is-expanded">
+            <input class="input is-small" type="text" placeholder="What do you want to search for?" name="query">
+          </div>
+          <div class="control">
+            <input type="submit" class="button is-info is-small" value="Search">
+          </div>
+        </div>
+      </form>
+      <ul data-url="{{ url('toolbox:string_combinator:load') }}" id="searchResults" class='mt-2'></ul>
+    </div>
   </div>
 </div>
 {% endblock %}

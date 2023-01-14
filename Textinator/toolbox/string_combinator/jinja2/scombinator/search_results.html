@@ -1,0 +1,5 @@
+{% for result in results %}
+  {% with uuid=result.batch, title=result.title %}
+    {% include 'scombinator/partials/_search_result_item.html' %}
+  {% endwith %}
+{% endfor %}

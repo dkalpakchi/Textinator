@@ -1,5 +1,5 @@
 (function ($, JSONEditor) {
-  let utils = {
+  const utils = {
     isDefined: function (n) {
       return n !== undefined && n !== null;
     },
@@ -10,26 +10,160 @@
       }
       return _union;
     },
+    parseComments: function (line) {
+      let l = line.replace(combinator.commentSymbol, "").trim();
+      let o = {};
+      let parts = l.split(";");
+
+      for (let i = 0, len = parts.length; i < len; i++) {
+        let fields = parts[i].split(":");
+        o[fields[0].trim()] = fields[1].trim();
+      }
+      return o;
+    },
+    stringifyComments: function (obj) {
+      let s = "";
+      let keys = Object.keys(obj);
+      for (let i = 0, len = keys.length; i < len; i++) {
+        s += keys[i] + ": " + obj[keys[i]];
+        if (i != len - 1) s += "; ";
+      }
+      return s;
+    },
   };
 
-  let combinator = {
+  const db = {
+    saveRule: function (op) {
+      // saves a tentative rule to DB, so that it becomes permanent
+      if (!utils.isDefined(op)) op = "save";
+
+      let control = combinator;
+
+      $.ajax({
+        method: control.recordForm.getAttribute("method"),
+        url: control.recordForm.getAttribute("action"),
+        dataType: "json",
+        data: {
+          rule: JSON.stringify(control.jsonifyTentative()),
+          op: op,
+          csrfmiddlewaretoken: control.recordForm.querySelector(
+            'input[name="csrfmiddlewaretoken"]'
+          ).value,
+        },
+        success: function (data) {
+          if (utils.isDefined(data) && utils.isDefined(data.uuid)) {
+            control.transformations[data.from].uuid = data.uuid;
+          }
+        },
+        error: function () {
+          console.log("ERROR!");
+        },
+      });
+    },
+    saveTransformations: function () {
+      let control = combinator;
+      let form = control.generationForm;
+
+      if (control.editor instanceof JSONEditor) {
+        $.ajax({
+          method: form.getAttribute("method"),
+          url: form.getAttribute("action"),
+          dataType: "json",
+          data: {
+            batch: control.loaded,
+            data: JSON.stringify(control.editor.get()),
+            csrfmiddlewaretoken: form.querySelector(
+              'input[name="csrfmiddlewaretoken"]'
+            ).value,
+          },
+          success: function (data) {
+            if (data.saved) {
+              alert("Saved successfully!");
+            }
+          },
+          error: function () {
+            console.log("ERROR!");
+          },
+        });
+      }
+    },
+    search: function () {
+      let control = combinator;
+      let form = control.editingSearchForm;
+
+      let formData = new FormData(form);
+
+      $.ajax({
+        method: form.getAttribute("method"),
+        url: form.getAttribute("action"),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        data: Object.fromEntries(formData.entries()),
+        success: function (data) {
+          control.searchResultsArea.innerHTML = data.template;
+          document.querySelectorAll("li[data-id]").forEach(function (x) {
+            x.addEventListener("click", function (e) {
+              let target = e.target;
+              let uuid = target.parentNode.getAttribute("data-id");
+              if (control.loaded == uuid) {
+                target.classList.remove("is-hovered");
+                control.loaded = null;
+                control.restore();
+              } else {
+                db.load(uuid);
+                control.loaded = uuid;
+                target.classList.add("is-hovered");
+              }
+            });
+          });
+        },
+      });
+    },
+    load: function (uuid) {
+      let control = combinator;
+      $.ajax({
+        method: "GET",
+        url: combinator.searchResultsArea.getAttribute("data-url"),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        data: {
+          uuid: uuid,
+        },
+        success: function (res) {
+          control.restore(res.data);
+        },
+      });
+    },
+  };
+
+  const combinator = {
     transformations: {},
     tentative: null,
+    editor: null,
+    loaded: null,
+    commentSymbol: "//",
     maxTransformationDepth: 100,
     placeholders: {
       remove: "[[empty]]",
       space: "*",
     },
     init: function () {
+      this.generationForm = document.querySelector("#generationArea");
+      this.recordForm = document.querySelector("#recordForm");
+      this.editingSearchForm = document.querySelector("#editingSearchForm");
+
       this.sourceArea = document.querySelector("textarea#source");
       this.targetArea = document.querySelector("textarea#target");
-      this.generationArea = document.querySelector("#generationArea fieldset");
-      this.tentative = this.initTransformation();
-      this.recordForm = document.querySelector("#recordForm");
-      this.generateButton = document.querySelector("button#generate");
+      this.generationArea = this.generationForm.querySelector("fieldset");
       this.transformationMemoryArea = document.querySelector(
         "div#transformationMemoryArea"
       );
+      this.searchResultsArea = document.querySelector("ul#searchResults");
+
+      this.generateButton = document.querySelector("button#generate");
+
+      this.tentative = this.initTransformation();
+
       this.initEvents();
       this.preloadRules();
     },
@@ -116,6 +250,7 @@
 
       this.recordForm.addEventListener("submit", function (e) {
         e.preventDefault();
+        e.stopPropagation();
         let ct = control.tentative;
         if (control.checkUpdate(ct.from)) {
           if (ct.action == "remove") {
@@ -127,19 +262,47 @@
             }
           }
           control.tentative = control.transformations[ct.from];
-          control.saveToDb("update");
+          db.saveRule("update");
         } else {
           control.transformations[ct.from] = ct;
-          control.saveToDb();
+          db.saveRule();
         }
         control.tentative = control.initTransformation();
         control.targetArea.value = "";
         control.visualize(false);
       });
 
+      this.generationForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        db.saveTransformations();
+      });
+
+      this.editingSearchForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        db.search();
+      });
+
       this.generateButton.addEventListener("click", function () {
-        let sources = control.sourceArea.value.split("\n");
-        control.generationArea.innerHTML = "";
+        let lines = control.sourceArea.value.split("\n");
+        let previousComment = false;
+        let sources = [];
+        let extra = {};
+
+        for (let i = 0, len = lines.length; i < len; i++) {
+          let line = lines[i].trim();
+          if (line.startsWith(control.commentSymbol)) {
+            if (!previousComment) extra = {};
+            extra = Object.assign(extra, utils.parseComments(line));
+            previousComment = true;
+          } else if (line.length > 0) {
+            sources.push({
+              text: line,
+              extra: extra,
+            });
+            previousComment = false;
+          }
+        }
+
         let res = control.transform(sources, control.maxTransformationDepth);
         control.showHierarchical(res);
       });
@@ -149,157 +312,98 @@
       copy.to = Array.from(copy.to);
       return copy;
     },
-    saveToDb: function (op) {
-      // saves a tentative rule to DB, so that it becomes permanent
-      if (!utils.isDefined(op)) op = "save";
-
-      let control = this;
-
-      $.ajax({
-        method: control.recordForm.getAttribute("method"),
-        url: control.recordForm.getAttribute("action"),
-        dataType: "json",
-        data: {
-          rule: JSON.stringify(control.jsonifyTentative()),
-          op: op,
-          csrfmiddlewaretoken: control.recordForm.querySelector(
-            'input[name="csrfmiddlewaretoken"]'
-          ).value,
-        },
-        success: function (data) {
-          if (utils.isDefined(data) && utils.isDefined(data.uuid)) {
-            control.transformations[data.from].uuid = data.uuid;
-          }
-        },
-        error: function () {
-          console.log("ERROR!");
-        },
-      });
-    },
-    createBulmaControl: function (isExpanded) {
-      if (!utils.isDefined(isExpanded)) isExpanded = false;
-      let control = document.createElement("div");
-      control.className = "control";
-      if (isExpanded) control.className += " is-expanded";
-      return control;
-    },
-    createBulmaButton: function (className, name) {
-      let btn = document.createElement("button");
-      btn.className = className;
-      btn.innerHTML = name;
-      return btn;
-    },
-    createBulmaCheckbox: function (className, name) {
-      let label = document.createElement("label");
-      let inp = document.createElement("input");
-      inp.setAttribute("type", "checkbox");
-      inp.className = "is-hidden";
-      let btn = document.createElement("span");
-      btn.className = className;
-      btn.innerHTML = name;
-
-      inp.addEventListener("change", function (e) {
-        let target = e.target;
-        if (target.checked) {
-          btn.classList.add("is-hovered");
-        } else {
-          btn.classList.remove("is-hovered");
+    fixArrayUI: function (node) {
+      let children = node.childs;
+      if (node.type == "array") {
+        for (let i = 0, len = children.length; i < len; i++) {
+          children[i].dom.field.textContent = i + 1;
         }
-      });
-
-      label.appendChild(inp);
-      label.appendChild(btn);
-      return label;
-    },
-    createBulmaRadio: function (className, name, content, checked) {
-      let label = document.createElement("label");
-      let inp = document.createElement("input");
-      inp.setAttribute("type", "radio");
-      inp.className = "is-hidden";
-      inp.setAttribute("name", name);
-      let btn = document.createElement("span");
-      btn.setAttribute("for", name);
-      btn.className = className;
-      btn.innerHTML = content;
-
-      inp.addEventListener("change", function (e) {
-        let target = e.target;
-        let radioButtons = document.querySelectorAll(
-          '[for="' + target.name + '"]'
-        );
-
-        for (let i = 0, len = radioButtons.length; i < len; i++) {
-          radioButtons[i].classList.remove("is-hovered");
+      } else {
+        for (let i = 0, len = children.length; i < len; i++) {
+          this.fixArrayUI(children[i]);
         }
-
-        if (target.checked) {
-          btn.classList.add("is-hovered");
-        }
-      });
-
-      if (!utils.isDefined) checked = false;
-
-      if (checked) {
-        inp.checked = true;
-        btn.classList.add("is-hovered");
       }
-
-      label.appendChild(inp);
-      label.appendChild(btn);
-      return label;
     },
-    createGenerated: function (s) {
-      let container = document.createElement("div");
-      container.className = "field has-addons";
+    initJsonEditor: function () {
+      if (!utils.isDefined(this.editor)) {
+        this.generationArea.innerHTML = "";
+        let control = this;
+        const options = {
+          mode: "tree",
+          onExpand: function (nodeInfo) {
+            let clickedNode = control.editor.node.findNodeByPath(nodeInfo.path);
+            control.fixArrayUI(clickedNode);
+          },
+          onCreateMenu: function (items, nodeInfo) {
+            let clickedNode = control.editor.node.findNodeByPath(nodeInfo.path);
 
-      let inpControl = this.createBulmaControl(true);
+            function convert(type) {
+              return function () {
+                let value = clickedNode.getValue();
 
-      let inp = document.createElement("input");
-      inp.setAttribute("type", "text");
-      inp.value = s;
-      inp.className = "input is-small";
-      inpControl.appendChild(inp);
+                if (type == "object") {
+                  clickedNode.update({
+                    value: value,
+                  });
+                } else if (type == "array") {
+                  clickedNode.update([value]);
+                }
+              };
+            }
 
-      let noAddonControl = this.createBulmaControl();
-      let noButton = this.createBulmaCheckbox(
-        "button is-danger is-outlined is-small",
-        '<i class="fas fa-times">'
-      );
-      noAddonControl.appendChild(noButton);
-      container.appendChild(noAddonControl);
-      container.appendChild(inpControl);
+            if (nodeInfo.path) {
+              let insertIndex = items.findIndex((x) => x.text == "Insert");
 
-      return container;
+              let convertSubmenu = [
+                {
+                  text: "array",
+                  title: "Array",
+                  className: "jsoneditor-type-array",
+                  click: convert("array"),
+                },
+                {
+                  text: "object",
+                  title: "Object",
+                  className: "jsoneditor-type-object",
+                  click: convert("object"),
+                },
+              ];
+
+              convertSubmenu = convertSubmenu.filter(
+                (x) => x.text != clickedNode.type
+              );
+
+              items.splice(insertIndex + 1, 0, {
+                text: "Convert", // the text for the menu item
+                title: "convert element to...", // the HTML title attribute
+                submenu: convertSubmenu,
+              });
+            }
+
+            return items;
+          },
+        };
+        this.editor = new JSONEditor(this.generationArea, options);
+
+        let saveButton = document.createElement("button");
+        saveButton.setAttribute("type", "button");
+        saveButton.className = "scombinator-save";
+        let saveIcon = document.createElement("i");
+        saveIcon.className = "fas fa-save";
+        saveButton.appendChild(saveIcon);
+        saveButton.addEventListener(
+          "click",
+          function () {
+            db.saveTransformations();
+          },
+          false
+        );
+        this.editor.menu.appendChild(saveButton);
+      }
     },
     showHierarchical: function (data) {
-      const options = {
-        mode: "tree",
-        onCreateMenu: function (items, node) {
-          const path = node.path;
-
-          // log the current items and node for inspection
-          console.log("items:", items, "node:", node);
-
-          if (path) {
-            let insertIndex = items.findIndex((x) => x.text == "Insert");
-
-            items.splice(insertIndex + 1, 0, {
-              text: "Convert", // the text for the menu item
-              title: "convert element to...", // the HTML title attribute
-              submenu: [
-                {
-                  text: "Object",
-                  title: "Object",
-                },
-              ],
-            });
-          }
-
-          return items;
-        },
-      };
-      const editor = new JSONEditor(this.generationArea, options);
-      editor.set(data);
+      this.initJsonEditor();
+      this.editor.set(data);
     },
     transform: function (sources, maxDepth) {
       if (!utils.isDefined(sources) || sources.length === 0 || maxDepth < 0) {
@@ -308,9 +412,24 @@
 
       let res = maxDepth == this.maxTransformationDepth ? {} : new Set();
       for (let i = 0, len = sources.length; i < len; i++) {
-        let source = sources[i].trim();
+        let source;
 
-        if (maxDepth == this.maxTransformationDepth) res[source] = new Set();
+        if (maxDepth == this.maxTransformationDepth) {
+          let parts = sources[i].text.trim().split(this.commentSymbol);
+          source = parts[0].trim();
+          delete sources[i].text;
+          res[source] = sources[i];
+          if (parts.length > 1) {
+            res[source].extra = Object.assign(
+              {},
+              res[source].extra,
+              utils.parseComments(parts[1])
+            );
+          }
+          res[source].transformations = new Set();
+        } else {
+          source = sources[i].trim();
+        }
 
         for (let key in this.transformations) {
           let t = this.transformations[key];
@@ -332,9 +451,9 @@
                 target = target.replaceAll(t.from, toRep);
                 target = target.replaceAll(/ {2,}/gi, " ").trim();
                 if (maxDepth == this.maxTransformationDepth) {
-                  res[source].add(target);
-                  res[source] = utils.setUnion(
-                    res[source],
+                  res[source].transformations.add(target);
+                  res[source].transformations = utils.setUnion(
+                    res[source].transformations,
                     this.transform([target], maxDepth - 1)
                   );
                 } else {
@@ -352,7 +471,7 @@
 
       if (maxDepth == this.maxTransformationDepth) {
         for (var key in res) {
-          res[key] = Array.from(res[key]);
+          res[key].transformations = Array.from(res[key].transformations);
         }
       }
 
@@ -361,7 +480,7 @@
     deleteTransformation: function (i) {
       let oldTentative = Object.assign({}, this.tentative);
       this.tentative = this.transformations[i];
-      this.saveToDb("delete");
+      db.saveRule("delete");
       this.tentative = oldTentative;
       return delete this.transformations[i];
     },
@@ -371,8 +490,11 @@
     deleteTransformationClause: function (i, j) {
       this.transformations[i].to.delete(j);
       let oldTentative = Object.assign({}, this.tentative);
+      if (this.isEmptyTransformation(i)) {
+        this.transformations[i].action = "remove";
+      }
       this.tentative = this.transformations[i];
-      this.saveToDb("update");
+      db.saveRule("update");
       this.tentative = oldTentative;
     },
     createOpNode: function (op) {
@@ -398,15 +520,24 @@
         p.style.color = "grey";
       }
 
-      if (t.action.length > 0) p.innerText = t.action + ": ";
+      if (t.action.length > 0) {
+        let actionSpan = document.createElement("span");
+        actionSpan.setAttribute("data-rel", "action");
+        actionSpan.innerHTML = t.action + ": ";
+        p.appendChild(actionSpan);
+      }
+      let fromSpan;
       if (t.from.length > 0) {
-        p.innerText += t.from + " ";
+        fromSpan = document.createElement("span");
+        fromSpan.setAttribute("data-rel", "from");
+        fromSpan.innerHTML = t.from + " ";
+        p.appendChild(fromSpan);
       }
 
       let to = Array.from(t.to);
 
       if (to.length > 0) {
-        if (t.from.length > 0) p.innerText += " -> ";
+        if (t.from.length > 0) fromSpan.innerHTML += " -> ";
         let span = null;
         for (let toId = 0, len = to.length; toId < len; toId++) {
           span = document.createElement("span");
@@ -438,8 +569,11 @@
             );
 
             if (control.isEmptyTransformation(ruleId)) {
-              rule.parentNode.removeChild(rule);
-              return;
+              control.transformations[ruleId].action = "remove";
+              let fromSpan = rule.querySelector('[data-rel="from"]');
+              fromSpan.innerText = fromSpan.innerText.replace("->", "").trim();
+              let actionSpan = rule.querySelector('[data-rel="action"]');
+              actionSpan.innerText = "remove: ";
             }
 
             rule.removeChild(clause);
@@ -500,6 +634,29 @@
           );
         }
       }
+    },
+    restore: function (data) {
+      if (utils.isDefined(data)) {
+        let sources = Object.keys(data);
+
+        for (let i = 0, len = sources.length; i < len; i++) {
+          if (Object.keys(data[sources[i]].extra).length !== 0) {
+            sources[i] =
+              sources[i] +
+              " " +
+              this.commentSymbol +
+              " " +
+              utils.stringifyComments(data[sources[i]].extra);
+          }
+        }
+
+        this.sourceArea.value = sources.join("\n");
+        this.showHierarchical(data);
+      } else {
+        this.sourceArea.value = "";
+        this.showHierarchical();
+      }
+      this.targetArea.value = "";
     },
   };
 

@@ -8,7 +8,12 @@
 }
 
 .generation-area fieldset {
-  height: 500px;
+  height: 300px;
   max-height: 900px;
   overflow-y: scroll;
+}
+
+.generation-area fieldset .scombinator-save {
+  background-image: none;
+  font-size: 1.2em;
 }
