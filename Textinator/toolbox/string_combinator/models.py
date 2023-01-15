@@ -49,3 +49,6 @@ class StringTransformationSet(models.Model):
 class FailedTransformation(models.Model):
     transformation = models.ForeignKey(StringTransformationSet, on_delete=models.SET_NULL, null=True, verbose_name=_("transformation"))
     value = models.TextField(_("value"), help_text=_("String to be filtered out"))
+
+    def __str__(self):
+        return self.value

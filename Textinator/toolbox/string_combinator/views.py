@@ -23,6 +23,9 @@ def index(request):
     return render(request, 'scombinator/index.html', {
         'transformations': [x.to_json() for x in SCm.StringTransformationRule.objects.filter(
             owner=request.user
+        )],
+        'banned': [x.value for x in SCm.FailedTransformation.objects.filter(
+            transformation__owner=request.user
         )]
     })
 
@@ -71,18 +74,34 @@ def record_transformation(request):
 @require_http_methods(["POST"])
 def record_generation(request):
     req_data = request.POST.get("data")
+    batch = request.POST.get('batch')
     res = {
-        'saved': None
+        'action': None
     }
     if req_data:
         data = json.loads(req_data)
-        SCm.StringTransformationSet.objects.create(
-            data = data,
-            batch = uuid.uuid4(),
-            owner = request.user
-        )
-        res['saved'] = True
-
+        removed = json.loads(request.POST.get('removed'))
+        if batch:
+            obj, is_created = SCm.StringTransformationSet.objects.get_or_create(
+                batch = batch,
+                owner = request.user
+            )
+            obj.data = data
+            obj.save()
+            res['action'] = 'saved' if is_created else 'updated'
+        else:
+            obj = SCm.StringTransformationSet.objects.create(
+                data = data,
+                batch = uuid.uuid4(),
+                owner = request.user
+            )
+            res['action'] = 'saved'
+        if removed:
+            for x in removed:
+                SCm.FailedTransformation.objects.get_or_create(
+                    transformation=obj, value=x
+                )
+        res['batch'] = obj.batch
     return JsonResponse(res);
 
 
@@ -136,7 +155,6 @@ def load_generation(request):
         'data': {}
     }
     if uid:
-        print(uid)
         tr_set = SCm.StringTransformationSet.objects.filter(batch=uid).first()
         res['data'] = tr_set.data
     return JsonResponse(res)

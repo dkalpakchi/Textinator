@@ -35,6 +35,7 @@
     <div>
       <label class='label'>Transformation bank</label>
       <div id="transformationMemoryArea" class='transformation-memory'>
+        <script id="banned" type="application/json">{{banned|tojson|safe}}</script>
         {% if transformations|length > 0 %}
           <script id="loadedBank" type="application/json">{{transformations|tojson|safe}}</script>
         {% else %}

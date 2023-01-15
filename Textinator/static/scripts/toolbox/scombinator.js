@@ -3,6 +3,9 @@
     isDefined: function (n) {
       return n !== undefined && n !== null;
     },
+    title: function (string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    },
     setUnion: function (setA, setB) {
       let _union = new Set(setA);
       for (const elem of setB) {
@@ -65,20 +68,50 @@
       let form = control.generationForm;
 
       if (control.editor instanceof JSONEditor) {
+        let removedSentences = [];
+        let history = control.editor.history;
+
+        for (let i = 0; i <= history.index; i++) {
+          let hEvent = history.history[i];
+          if (hEvent.action != "removeNodes") continue;
+
+          let parentNode = control.editor.node.findNodeByInternalPath(
+            hEvent.params.parentPath
+          );
+
+          if (
+            parentNode.field != "transformations" ||
+            parentNode.type != "array"
+          )
+            continue;
+
+          let affectedNodes = hEvent.params.nodes;
+          for (
+            let nodeId = 0, nodeLen = affectedNodes.length;
+            nodeId < nodeLen;
+            nodeId++
+          ) {
+            removedSentences.push(affectedNodes[nodeId].value);
+            control.banned.add(affectedNodes[nodeId].value);
+          }
+        }
+
         $.ajax({
           method: form.getAttribute("method"),
           url: form.getAttribute("action"),
           dataType: "json",
           data: {
             batch: control.loaded,
+            removed: JSON.stringify(removedSentences),
             data: JSON.stringify(control.editor.get()),
             csrfmiddlewaretoken: form.querySelector(
               'input[name="csrfmiddlewaretoken"]'
             ).value,
           },
           success: function (data) {
-            if (data.saved) {
-              alert("Saved successfully!");
+            if (data.action) {
+              control.loaded = data.batch;
+              alert(utils.title(data.action) + " successfully!");
             }
           },
           error: function () {
@@ -101,10 +134,14 @@
         data: Object.fromEntries(formData.entries()),
         success: function (data) {
           control.searchResultsArea.innerHTML = data.template;
-          document.querySelectorAll("li[data-id]").forEach(function (x) {
+          let searchResultItems = document.querySelectorAll("li[data-id]");
+          searchResultItems.forEach(function (x) {
             x.addEventListener("click", function (e) {
               let target = e.target;
               let uuid = target.parentNode.getAttribute("data-id");
+              searchResultItems.forEach(function (item) {
+                item.querySelector(".button").classList.remove("is-hovered");
+              });
               if (control.loaded == uuid) {
                 target.classList.remove("is-hovered");
                 control.loaded = null;
@@ -141,6 +178,7 @@
     tentative: null,
     editor: null,
     loaded: null,
+    banned: new Set(),
     commentSymbol: "//",
     maxTransformationDepth: 100,
     placeholders: {
@@ -168,6 +206,13 @@
       this.preloadRules();
     },
     preloadRules: function () {
+      let loadedBanned = document.querySelector("script#banned");
+      if (utils.isDefined(loadedBanned)) {
+        let newArrivals = new Set(JSON.parse(loadedBanned.innerText));
+        this.banned = utils.setUnion(this.banned, newArrivals);
+        loadedBanned.parentNode.removeChild(loadedBanned);
+      }
+
       let loadedBank = document.querySelector("script#loadedBank");
       if (utils.isDefined(loadedBank)) {
         let bank = JSON.parse(loadedBank.innerText);
@@ -312,15 +357,23 @@
       copy.to = Array.from(copy.to);
       return copy;
     },
-    fixArrayUI: function (node) {
+    fixJsonEditorArrayUI: function (node) {
       let children = node.childs;
       if (node.type == "array") {
         for (let i = 0, len = children.length; i < len; i++) {
-          children[i].dom.field.textContent = i + 1;
+          let domInfo = children[i].dom;
+          if (utils.isDefined(domInfo)) {
+            let field = domInfo.field;
+            if (utils.isDefined(field)) {
+              children[i].dom.field.textContent = i + 1;
+            }
+          }
         }
       } else {
-        for (let i = 0, len = children.length; i < len; i++) {
-          this.fixArrayUI(children[i]);
+        if (utils.isDefined(children)) {
+          for (let i = 0, len = children.length; i < len; i++) {
+            this.fixJsonEditorArrayUI(children[i]);
+          }
         }
       }
     },
@@ -332,7 +385,9 @@
           mode: "tree",
           onExpand: function (nodeInfo) {
             let clickedNode = control.editor.node.findNodeByPath(nodeInfo.path);
-            control.fixArrayUI(clickedNode);
+            if (clickedNode.type == "array" || nodeInfo.recursive) {
+              control.fixJsonEditorArrayUI(clickedNode);
+            }
           },
           onCreateMenu: function (items, nodeInfo) {
             let clickedNode = control.editor.node.findNodeByPath(nodeInfo.path);
@@ -350,6 +405,17 @@
                 }
               };
             }
+
+            let removeIndex = items.findIndex(
+              (x) => x.className == "jsoneditor-remove"
+            );
+            let originalRemoveCallback = items[removeIndex].click;
+
+            items[removeIndex].click = function () {
+              let parentNode = clickedNode.parent;
+              originalRemoveCallback();
+              control.fixJsonEditorArrayUI(parentNode);
+            };
 
             if (nodeInfo.path) {
               let insertIndex = items.findIndex((x) => x.text == "Insert");
@@ -399,6 +465,19 @@
           false
         );
         this.editor.menu.appendChild(saveButton);
+
+        let originalUndoClicker = this.editor.dom.undo.onclick;
+        let originalRedoClicker = this.editor.dom.redo.onclick;
+
+        this.editor.dom.undo.onclick = function () {
+          originalUndoClicker();
+          control.fixJsonEditorArrayUI(control.editor.node);
+        };
+
+        this.editor.dom.redo.onclick = function () {
+          originalRedoClicker();
+          control.fixJsonEditorArrayUI(control.editor.node);
+        };
       }
     },
     showHierarchical: function (data) {
@@ -450,14 +529,16 @@
 
                 target = target.replaceAll(t.from, toRep);
                 target = target.replaceAll(/ {2,}/gi, " ").trim();
+
                 if (maxDepth == this.maxTransformationDepth) {
-                  res[source].transformations.add(target);
+                  if (!this.banned.has(target))
+                    res[source].transformations.add(target);
                   res[source].transformations = utils.setUnion(
                     res[source].transformations,
                     this.transform([target], maxDepth - 1)
                   );
                 } else {
-                  res.add(target);
+                  if (!this.banned.has(target)) res.add(target);
                   res = utils.setUnion(
                     res,
                     this.transform([target], maxDepth - 1)
