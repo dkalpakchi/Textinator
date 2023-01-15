@@ -39,6 +39,12 @@
           </div>
         </div>
       </div>
+      <div class="field">
+        <label class="checkbox">
+          <input type="checkbox" name="enable_toolbox" {% if user.profile.enable_toolbox %}checked{% endif %}>
+          Enable toolbox (experimental)
+        </label>
+      </div>
       <input type="submit" class="button is-success" value='{{ _("save")|capitalize }}'>
     </form>
 

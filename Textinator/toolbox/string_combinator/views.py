@@ -14,10 +14,12 @@ from django.core.paginator import Paginator
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
 import toolbox.string_combinator.models as SCm
+from toolbox.decorators import toolbox_required
 
 
 # Create your views here.
 @login_required
+@toolbox_required
 @require_http_methods(["GET"])
 def index(request):
     return render(request, 'scombinator/index.html', {
@@ -31,6 +33,7 @@ def index(request):
 
 
 @login_required
+@toolbox_required
 @require_http_methods(["POST"])
 def record_transformation(request):
     op = request.POST.get('op')
@@ -71,6 +74,7 @@ def record_transformation(request):
 
 
 @login_required
+@toolbox_required
 @require_http_methods(["POST"])
 def record_generation(request):
     req_data = request.POST.get("data")
@@ -106,6 +110,7 @@ def record_generation(request):
 
 
 @login_required
+@toolbox_required
 @require_http_methods(["GET"])
 def search_generations(request):
     search_type = request.GET.get("search_type", "int")
@@ -147,6 +152,7 @@ def search_generations(request):
 
 
 @login_required
+@toolbox_required
 @require_http_methods(["GET"])
 def load_generation(request):
     uid = request.GET.get("uuid")
