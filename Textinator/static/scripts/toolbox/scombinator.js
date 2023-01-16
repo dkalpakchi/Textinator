@@ -179,8 +179,9 @@
     editor: null,
     loaded: null,
     banned: new Set(),
+    history: {},
     commentSymbol: "//",
-    maxTransformationDepth: 3,
+    maxTransformationDepth: 100,
     placeholders: {
       remove: "[[empty]]",
       space: "*",
@@ -348,6 +349,7 @@
           }
         }
 
+        control.history = {};
         let res = control.transform(sources, control.maxTransformationDepth);
         control.showHierarchical(res);
       });
@@ -357,38 +359,12 @@
       copy.to = Array.from(copy.to);
       return copy;
     },
-    fixJsonEditorArrayUI: function (node) {
-      let children = node.childs;
-      if (node.type == "array") {
-        for (let i = 0, len = children.length; i < len; i++) {
-          let domInfo = children[i].dom;
-          if (utils.isDefined(domInfo)) {
-            let field = domInfo.field;
-            if (utils.isDefined(field)) {
-              children[i].dom.field.textContent = i + 1;
-            }
-          }
-        }
-      } else {
-        if (utils.isDefined(children)) {
-          for (let i = 0, len = children.length; i < len; i++) {
-            this.fixJsonEditorArrayUI(children[i]);
-          }
-        }
-      }
-    },
     initJsonEditor: function () {
       if (!utils.isDefined(this.editor)) {
         this.generationArea.innerHTML = "";
         let control = this;
         const options = {
           mode: "tree",
-          onExpand: function (nodeInfo) {
-            let clickedNode = control.editor.node.findNodeByPath(nodeInfo.path);
-            if (clickedNode.type == "array" || nodeInfo.recursive) {
-              control.fixJsonEditorArrayUI(clickedNode);
-            }
-          },
           onCreateMenu: function (items, nodeInfo) {
             let clickedNode = control.editor.node.findNodeByPath(nodeInfo.path);
 
@@ -405,17 +381,6 @@
                 }
               };
             }
-
-            let removeIndex = items.findIndex(
-              (x) => x.className == "jsoneditor-remove"
-            );
-            let originalRemoveCallback = items[removeIndex].click;
-
-            items[removeIndex].click = function () {
-              let parentNode = clickedNode.parent;
-              originalRemoveCallback();
-              control.fixJsonEditorArrayUI(parentNode);
-            };
 
             if (nodeInfo.path) {
               let insertIndex = items.findIndex((x) => x.text == "Insert");
@@ -465,19 +430,6 @@
           false
         );
         this.editor.menu.appendChild(saveButton);
-
-        let originalUndoClicker = this.editor.dom.undo.onclick;
-        let originalRedoClicker = this.editor.dom.redo.onclick;
-
-        this.editor.dom.undo.onclick = function () {
-          originalUndoClicker();
-          control.fixJsonEditorArrayUI(control.editor.node);
-        };
-
-        this.editor.dom.redo.onclick = function () {
-          originalRedoClicker();
-          control.fixJsonEditorArrayUI(control.editor.node);
-        };
       }
     },
     showHierarchical: function (data) {
@@ -515,13 +467,22 @@
 
           if (source.includes(t.from)) {
             let to = Array.from(t.to);
+            let toIncludesSource = to.some((x) => source.includes(x));
             for (let toId = 0, toLen = to.length; toId < toLen; toId++) {
-              if (
-                to[toId].length === 0 ||
-                !to.some((x) => source.includes(x))
-              ) {
+              if (to[toId].length === 0 || !toIncludesSource) {
                 let target = source.slice();
                 let toRep = to[toId];
+
+                if (!this.history.hasOwnProperty(t.from))
+                  this.history[t.from] = new Set();
+
+                if (this.history[t.from].has(toRep)) {
+                  // we have already applied this rule once,
+                  // so it's potentially an infinite recursion!
+                  continue;
+                }
+
+                this.history[t.from].add(toRep);
 
                 if (toRep.startsWith(this.placeholders.space)) {
                   toRep = toRep.replace(this.placeholders.space, " ");
@@ -533,16 +494,23 @@
                 if (maxDepth == this.maxTransformationDepth) {
                   if (!this.banned.has(target))
                     res[source].transformations.add(target);
-                  res[source].transformations = utils.setUnion(
-                    res[source].transformations,
-                    this.transform([target], maxDepth - 1)
-                  );
+                  if (!toRep.includes(" ")) {
+                    res[source].transformations = utils.setUnion(
+                      res[source].transformations,
+                      this.transform([target], maxDepth - 1)
+                    );
+
+                    if (res[source].transformations.has(source)) {
+                      res[source].transformations.delete(source);
+                    }
+                  }
                 } else {
                   if (!this.banned.has(target)) res.add(target);
-                  res = utils.setUnion(
-                    res,
-                    this.transform([target], maxDepth - 1)
-                  );
+                  if (!toRep.includes(" "))
+                    res = utils.setUnion(
+                      res,
+                      this.transform([target], maxDepth - 1)
+                    );
                 }
               }
             }
