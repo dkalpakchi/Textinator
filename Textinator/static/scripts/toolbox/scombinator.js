@@ -180,6 +180,7 @@
     loaded: null,
     banned: new Set(),
     commentSymbol: "//",
+    phraseSymbol: "_",
     maxTransformationDepth: 100,
     placeholders: {
       remove: "[[empty]]",
@@ -440,8 +441,24 @@
         return new Set();
       }
 
-      if (!utils.isDefined(history)) history = {};
+      let control = this;
 
+      let phrases;
+
+      if (maxDepth == this.maxTransformationDepth) {
+        phrases = Array.from(
+          new Set(
+            [].concat.apply(
+              [],
+              Object.values(this.transformations).map(function (x) {
+                return Array.from(x.to).filter((x) =>
+                  x.includes(control.phraseSymbol)
+                );
+              })
+            )
+          )
+        );
+      }
       let res = maxDepth == this.maxTransformationDepth ? {} : new Set();
       for (let i = 0, len = sources.length; i < len; i++) {
         let source;
@@ -449,6 +466,18 @@
         if (maxDepth == this.maxTransformationDepth) {
           let parts = sources[i].text.trim().split(this.commentSymbol);
           source = parts[0].trim();
+          // whether the transformation has a phrase which is already defined as a phrase
+          for (
+            let phraseId = 0, phraseLen = phrases.length;
+            phraseId < phraseLen;
+            phraseId++
+          ) {
+            let reg = new RegExp(
+              phrases[phraseId].replace(control.phraseSymbol, " "),
+              "gi"
+            );
+            source = source.replaceAll(reg, phrases[phraseId]);
+          }
           delete sources[i].text;
           res[source] = sources[i];
           if (parts.length > 1) {
@@ -468,12 +497,14 @@
 
           if (source.includes(t.from)) {
             let to = Array.from(t.to);
-            let toIncludesSource = to.some((x) => source.includes(x));
-            for (let toId = 0, toLen = to.length; toId < toLen; toId++) {
-              if (to[toId].length === 0 || !toIncludesSource) {
-                let target = source.slice();
-                let toRep = to[toId];
 
+            for (let toId = 0, toLen = to.length; toId < toLen; toId++) {
+              let target = source.slice();
+              let toRep = to[toId];
+
+              if (toRep.includes(t.from)) continue;
+
+              if (utils.isDefined(history)) {
                 if (!history.hasOwnProperty(t.from))
                   history[t.from] = new Set();
 
@@ -484,35 +515,47 @@
                 }
 
                 history[t.from].add(toRep);
+              }
 
-                if (toRep.startsWith(this.placeholders.space)) {
-                  toRep = toRep.replace(this.placeholders.space, " ");
+              if (toRep.startsWith(this.placeholders.space)) {
+                toRep = toRep.replace(this.placeholders.space, " ");
+              }
+
+              let replaceRegex = new RegExp(
+                "(?<!" +
+                  this.phraseSymbol +
+                  ")" +
+                  t.from +
+                  "(?!" +
+                  this.phraseSymbol +
+                  ")",
+                "gi"
+              );
+
+              target = target.replaceAll(replaceRegex, toRep);
+              target = target.replaceAll(/ {2,}/gi, " ").trim();
+
+              if (maxDepth == this.maxTransformationDepth) {
+                if (!this.banned.has(target))
+                  res[source].transformations.add(target);
+                res[source].transformations = utils.setUnion(
+                  res[source].transformations,
+                  this.transform([target], maxDepth - 1, {})
+                );
+
+                if (res[source].transformations.has(source)) {
+                  res[source].transformations.delete(source);
                 }
-
-                target = target.replaceAll(t.from, toRep);
-                target = target.replaceAll(/ {2,}/gi, " ").trim();
-
-                if (maxDepth == this.maxTransformationDepth) {
-                  if (!this.banned.has(target))
-                    res[source].transformations.add(target);
-                  if (!toRep.includes(" ")) {
-                    res[source].transformations = utils.setUnion(
-                      res[source].transformations,
-                      this.transform([target], maxDepth - 1, history)
-                    );
-
-                    if (res[source].transformations.has(source)) {
-                      res[source].transformations.delete(source);
-                    }
-                  }
-                } else {
-                  if (!this.banned.has(target)) res.add(target);
-                  if (!toRep.includes(" "))
-                    res = utils.setUnion(
-                      res,
-                      this.transform([target], maxDepth - 1, history)
-                    );
-                }
+              } else {
+                if (!this.banned.has(target)) res.add(target);
+                res = utils.setUnion(
+                  res,
+                  this.transform(
+                    [target],
+                    maxDepth - 1,
+                    Object.assign({}, history)
+                  )
+                );
               }
             }
           }
@@ -521,7 +564,23 @@
 
       if (maxDepth == this.maxTransformationDepth) {
         for (var key in res) {
-          res[key].transformations = Array.from(res[key].transformations);
+          res[key].transformations = Array.from(res[key].transformations).map(
+            function (x) {
+              return x.replaceAll(control.phraseSymbol, " ");
+            }
+          );
+          if (key.includes(control.phraseSymbol)) {
+            let keyReg = new RegExp(control.phraseSymbol, "gi");
+            let newKey = key.replaceAll(keyReg, " ");
+            if (key !== newKey) {
+              Object.defineProperty(
+                res,
+                newKey,
+                Object.getOwnPropertyDescriptor(res, key)
+              );
+              delete res[key];
+            }
+          }
         }
       }
 
