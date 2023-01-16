@@ -180,7 +180,7 @@
     loaded: null,
     banned: new Set(),
     commentSymbol: "//",
-    maxTransformationDepth: 100,
+    maxTransformationDepth: 3,
     placeholders: {
       remove: "[[empty]]",
       space: "*",
