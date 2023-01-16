@@ -179,7 +179,6 @@
     editor: null,
     loaded: null,
     banned: new Set(),
-    history: {},
     commentSymbol: "//",
     maxTransformationDepth: 100,
     placeholders: {
@@ -436,10 +435,12 @@
       this.initJsonEditor();
       this.editor.set(data);
     },
-    transform: function (sources, maxDepth) {
+    transform: function (sources, maxDepth, history) {
       if (!utils.isDefined(sources) || sources.length === 0 || maxDepth < 0) {
         return new Set();
       }
+
+      if (!utils.isDefined(history)) history = {};
 
       let res = maxDepth == this.maxTransformationDepth ? {} : new Set();
       for (let i = 0, len = sources.length; i < len; i++) {
@@ -473,16 +474,16 @@
                 let target = source.slice();
                 let toRep = to[toId];
 
-                if (!this.history.hasOwnProperty(t.from))
-                  this.history[t.from] = new Set();
+                if (!history.hasOwnProperty(t.from))
+                  history[t.from] = new Set();
 
-                if (this.history[t.from].has(toRep)) {
+                if (history[t.from].has(toRep)) {
                   // we have already applied this rule once,
                   // so it's potentially an infinite recursion!
                   continue;
                 }
 
-                this.history[t.from].add(toRep);
+                history[t.from].add(toRep);
 
                 if (toRep.startsWith(this.placeholders.space)) {
                   toRep = toRep.replace(this.placeholders.space, " ");
@@ -497,7 +498,7 @@
                   if (!toRep.includes(" ")) {
                     res[source].transformations = utils.setUnion(
                       res[source].transformations,
-                      this.transform([target], maxDepth - 1)
+                      this.transform([target], maxDepth - 1, history)
                     );
 
                     if (res[source].transformations.has(source)) {
@@ -509,7 +510,7 @@
                   if (!toRep.includes(" "))
                     res = utils.setUnion(
                       res,
-                      this.transform([target], maxDepth - 1)
+                      this.transform([target], maxDepth - 1, history)
                     );
                 }
               }
