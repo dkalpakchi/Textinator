@@ -495,8 +495,18 @@
 
         for (let key in this.transformations) {
           let t = this.transformations[key];
+          let replaceRegex = new RegExp(
+            "(?<!" +
+              this.phraseSymbol +
+              ")" +
+              t.from +
+              "(?!" +
+              this.phraseSymbol +
+              ")",
+            "gi"
+          );
 
-          if (source.includes(t.from)) {
+          if (source.search(replaceRegex) !== -1) {
             let to = Array.from(t.to);
 
             for (let toId = 0, toLen = to.length; toId < toLen; toId++) {
@@ -520,19 +530,9 @@
                 toRep = toRep.replace(this.placeholders.space, " ");
               }
 
-              let replaceRegex = new RegExp(
-                "(?<!" +
-                  this.phraseSymbol +
-                  ")" +
-                  t.from +
-                  "(?!" +
-                  this.phraseSymbol +
-                  ")",
-                "gi"
-              );
-
               target = target.replaceAll(replaceRegex, toRep);
               target = target.replaceAll(/ {2,}/gi, " ").trim();
+              target = utils.title(target);
 
               if (maxDepth == this.maxTransformationDepth) {
                 if (!this.banned.has(target))
