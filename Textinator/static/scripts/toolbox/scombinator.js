@@ -306,6 +306,7 @@
             for (let i = 0, len = to.length; i < len; i++) {
               control.transformations[ct.from].to.add(to[i]);
             }
+            control.transformations[ct.from].action = ct.action;
           }
           control.tentative = control.transformations[ct.from];
           db.saveRule("update");
@@ -501,8 +502,6 @@
             for (let toId = 0, toLen = to.length; toId < toLen; toId++) {
               let target = source.slice();
               let toRep = to[toId];
-
-              if (toRep.includes(t.from)) continue;
 
               if (utils.isDefined(history)) {
                 if (!history.hasOwnProperty(t.from))
