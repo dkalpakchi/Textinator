@@ -37,9 +37,12 @@ class StringTransformationSet(models.Model):
         verbose_name = _('string transformation')
         verbose_name_plural = _('string transformations')
 
+    rules = models.ManyToManyField(StringTransformationRule)
+    disabled = models.JSONField(null=True, blank=True)
     data = models.JSONField()
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("owner"))
     batch = models.UUIDField()
+
 
     @property
     def title(self):

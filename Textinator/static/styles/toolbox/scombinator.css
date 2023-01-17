@@ -17,3 +17,11 @@
   background-image: none;
   font-size: 1.2em;
 }
+
+[data-rel] {
+  cursor: pointer;
+}
+
+.disabled {
+  opacity: 0.5;
+}

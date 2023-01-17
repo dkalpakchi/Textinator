@@ -25,7 +25,7 @@ def index(request):
     return render(request, 'scombinator/index.html', {
         'transformations': [x.to_json() for x in SCm.StringTransformationRule.objects.filter(
             owner=request.user
-        )],
+        ).order_by('pk')],
         'banned': [x.value for x in SCm.FailedTransformation.objects.filter(
             transformation__owner=request.user
         )]
@@ -78,19 +78,28 @@ def record_transformation(request):
 @require_http_methods(["POST"])
 def record_generation(request):
     req_data = request.POST.get("data")
+    req_transformations = request.POST.get("transformations")
     batch = request.POST.get('batch')
     res = {
         'action': None
     }
     if req_data:
+        transformations = json.loads(req_transformations) if req_transformations else None
         data = json.loads(req_data)
         removed = json.loads(request.POST.get('removed'))
+        if transformations is not None:
+            active_uuids = [x['uuid'] for x in transformations['active'].values()]
+            active_rules = SCm.StringTransformationRule.objects.filter(uuid__in=active_uuids)
         if batch:
             obj, is_created = SCm.StringTransformationSet.objects.get_or_create(
                 batch = batch,
                 owner = request.user
             )
             obj.data = data
+            if transformations is not None:
+                obj.rules.clear()
+                obj.rules.add(*active_rules)
+                obj.disabled = transformations['disabled']
             obj.save()
             res['action'] = 'saved' if is_created else 'updated'
         else:
@@ -99,6 +108,10 @@ def record_generation(request):
                 batch = uuid.uuid4(),
                 owner = request.user
             )
+            if transformations is not None:
+                obj.rules.add(*active_rules)
+                obj.disabled = transformations['disabled']
+            obj.save()
             res['action'] = 'saved'
         if removed:
             for x in removed:
@@ -158,9 +171,11 @@ def load_generation(request):
     uid = request.GET.get("uuid")
 
     res = {
-        'data': {}
+        'data': {},
+        'disabled': {}
     }
     if uid:
         tr_set = SCm.StringTransformationSet.objects.filter(batch=uid).first()
         res['data'] = tr_set.data
+        res['disabled'] = tr_set.disabled
     return JsonResponse(res)

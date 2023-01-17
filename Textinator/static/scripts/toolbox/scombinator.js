@@ -14,7 +14,7 @@
       return _union;
     },
     parseComments: function (line) {
-      let l = line.replace(combinator.commentSymbol, "").trim();
+      let l = line.replace(combinator.symbols.comment, "").trim();
       let o = {};
       let parts = l.split(";");
 
@@ -55,7 +55,7 @@
         },
         success: function (data) {
           if (utils.isDefined(data) && utils.isDefined(data.uuid)) {
-            control.transformations[data.from].uuid = data.uuid;
+            control.transformations.active[data.from].uuid = data.uuid;
           }
         },
         error: function () {
@@ -96,12 +96,24 @@
           }
         }
 
+        // it's not necessary to transform `to` field in active,
+        // since uuid are the only thing we need
+        // but for the disabled `to` fields are essential,
+        // so we have to transform them
+        let transformations = Object.assign({}, control.transformations);
+        for (let key in transformations.disabled) {
+          transformations.disabled[key].to = Array.from(
+            transformations.disabled[key].to
+          );
+        }
+
         $.ajax({
           method: form.getAttribute("method"),
           url: form.getAttribute("action"),
           dataType: "json",
           data: {
             batch: control.loaded,
+            transformations: JSON.stringify(transformations),
             removed: JSON.stringify(removedSentences),
             data: JSON.stringify(control.editor.get()),
             csrfmiddlewaretoken: form.querySelector(
@@ -168,20 +180,51 @@
         },
         success: function (res) {
           control.restore(res.data);
+          for (let from in res.disabled) {
+            let to = res.disabled[from].to;
+            let fromNode = document.querySelector(
+              '[data-rel="from"][data-val="' + from + '"]'
+            );
+            let ruleDiv = fromNode.parentNode;
+            if (res.disabled[from].whole) {
+              control.disable(ruleDiv, from);
+            }
+            if (to.length > 0) {
+              for (let i = 0, len = to.length; i < len; i++) {
+                let toNode = ruleDiv.querySelector(
+                  '[data-rel="clause"][data-val="' + to[i] + '"]'
+                );
+                control.disable(toNode, from, to[i]);
+              }
+            }
+          }
         },
       });
     },
   };
 
   const combinator = {
-    transformations: {},
+    transformations: {
+      active: {},
+      disabled: {},
+    },
+    attr: {
+      disabled: "data-disabled",
+    },
     tentative: null,
     editor: null,
     loaded: null,
     banned: new Set(),
-    commentSymbol: "//",
-    phraseSymbol: "_",
+    symbols: {
+      comment: "//",
+      phrase: "_",
+      ruleSep: "->",
+    },
     maxTransformationDepth: 100,
+    tabNames: {
+      rules: "rule-builder",
+      generations: "generation-area",
+    },
     placeholders: {
       remove: "[[empty]]",
       space: "*",
@@ -201,10 +244,16 @@
 
       this.generateButton = document.querySelector("button#generate");
 
+      this.tabsArea = document.querySelector(".tabs");
+      this.tabs = this.tabsArea.querySelectorAll("li[data-tab]");
+      this.tabContentsArea = document.querySelector("#tabContent");
+      this.tabContents = document.querySelectorAll("#tabContent > div");
+
       this.tentative = this.initTransformation();
 
       this.initEvents();
       this.preloadRules();
+      this.initUI();
     },
     preloadRules: function () {
       let loadedBanned = document.querySelector("script#banned");
@@ -219,7 +268,7 @@
         let bank = JSON.parse(loadedBank.innerText);
         for (let i = 0, len = bank.length; i < len; i++) {
           bank[i].to = new Set(bank[i].to);
-          this.transformations[bank[i].from] = bank[i];
+          this.transformations.active[bank[i].from] = bank[i];
         }
         loadedBank.parentNode.removeChild(loadedBank);
         this.visualize(false);
@@ -234,7 +283,46 @@
       };
     },
     checkUpdate: function (key) {
-      return this.transformations.hasOwnProperty(key);
+      return this.transformations.active.hasOwnProperty(key);
+    },
+    initUI: function () {
+      let control = this;
+      this.tabs.forEach(function (x) {
+        x.addEventListener("click", function (e) {
+          let target = e.target;
+          if (target.tagName != "LI") target = target.parentNode;
+          let tab = target.getAttribute("data-tab");
+          control.switchTab(tab);
+        });
+      });
+      this.switchTab(this.tabNames.rules);
+    },
+    switchTab: function (tab) {
+      this.tabs.forEach((t) => t.classList.remove("is-active"));
+      this.tabsArea
+        .querySelector('[data-tab="' + tab + '"]')
+        .classList.add("is-active");
+      this.tabContents.forEach((t) => t.classList.remove("is-active"));
+      this.tabContentsArea
+        .querySelector('div[data-content="' + tab + '"]')
+        .classList.add("is-active");
+    },
+    enable: function (node, from, to) {
+      this.enableTransformation(from, to);
+      node.removeAttribute(this.attr.disabled);
+      node.classList.remove("disabled");
+    },
+    disable: function (node, from, to) {
+      this.disableTransformation(from, to);
+      node.setAttribute(this.attr.disabled, true);
+      node.classList.add("disabled");
+    },
+    toggleDisabled: function (node, from, to) {
+      if (node.getAttribute(this.attr.disabled)) {
+        this.enable(node, from, to);
+      } else {
+        this.disable(node, from, to);
+      }
     },
     initEvents: function () {
       let control = this;
@@ -264,8 +352,8 @@
             toRemove = control.tentative["from"];
 
           control.tentative["to"].clear();
-          if (replacement.includes("->")) {
-            let parts = replacement.split("->");
+          if (replacement.includes(control.symbols.ruleSep)) {
+            let parts = replacement.split(control.symbols.ruleSep);
             if (parts.length > 1) {
               control.tentative["action"] = "replace";
               control.tentative["from"] = parts[0].trim();
@@ -300,18 +388,18 @@
         let ct = control.tentative;
         if (control.checkUpdate(ct.from)) {
           if (ct.action == "remove") {
-            control.transformations[ct.from].to.add("");
+            control.transformations.active[ct.from].to.add("");
           } else {
             let to = Array.from(ct.to);
             for (let i = 0, len = to.length; i < len; i++) {
-              control.transformations[ct.from].to.add(to[i]);
+              control.transformations.active[ct.from].to.add(to[i]);
             }
-            control.transformations[ct.from].action = ct.action;
+            control.transformations.active[ct.from].action = ct.action;
           }
-          control.tentative = control.transformations[ct.from];
+          control.tentative = control.transformations.active[ct.from];
           db.saveRule("update");
         } else {
-          control.transformations[ct.from] = ct;
+          control.transformations.active[ct.from] = ct;
           db.saveRule();
         }
         control.tentative = control.initTransformation();
@@ -337,7 +425,7 @@
 
         for (let i = 0, len = lines.length; i < len; i++) {
           let line = lines[i].trim();
-          if (line.startsWith(control.commentSymbol)) {
+          if (line.startsWith(control.symbols.comment)) {
             if (!previousComment) extra = {};
             extra = Object.assign(extra, utils.parseComments(line));
             previousComment = true;
@@ -353,6 +441,25 @@
         control.history = {};
         let res = control.transform(sources, control.maxTransformationDepth);
         control.showHierarchical(res);
+        control.switchTab(control.tabNames.generations);
+      });
+
+      document.addEventListener("click", function (e) {
+        let target = e.target;
+        if (target.hasAttribute("data-rel")) {
+          let rel = target.getAttribute("data-rel");
+          let ruleDiv = target.parentNode;
+          let from = ruleDiv
+            .querySelector('[data-rel="from"]')
+            .getAttribute("data-val");
+
+          if (rel == "action") {
+            control.toggleDisabled(ruleDiv, from);
+          } else if (rel == "clause") {
+            let to = target.innerText.trim();
+            control.toggleDisabled(target, from, to);
+          }
+        }
       });
     },
     jsonifyTentative: function () {
@@ -437,7 +544,36 @@
       this.initJsonEditor();
       this.editor.set(data);
     },
-    transform: function (sources, maxDepth, history) {
+    transform: function (sources, maxDepth, history, taboo) {
+      function remember(src, trg) {
+        if (maxDepth == control.maxTransformationDepth) {
+          if (!control.banned.has(trg)) res[src].transformations.add(trg);
+          res[src].transformations = utils.setUnion(
+            res[src].transformations,
+            control.transform([trg], maxDepth - 1, {}, new Set())
+          );
+
+          if (res[src].transformations.has(src)) {
+            res[src].transformations.delete(src);
+          }
+        } else {
+          if (!control.banned.has(trg)) res.add(trg);
+
+          if (!taboo.has(trg)) {
+            res = utils.setUnion(
+              res,
+              control.transform(
+                [trg],
+                maxDepth - 1,
+                Object.assign({}, history),
+                taboo
+              )
+            );
+            taboo.add(trg);
+          }
+        }
+      }
+
       if (!utils.isDefined(sources) || sources.length === 0 || maxDepth < 0) {
         return new Set();
       }
@@ -451,9 +587,9 @@
           new Set(
             [].concat.apply(
               [],
-              Object.values(this.transformations).map(function (x) {
+              Object.values(this.transformations.active).map(function (x) {
                 return Array.from(x.to).filter((x) =>
-                  x.includes(control.phraseSymbol)
+                  x.includes(control.symbols.phrase)
                 );
               })
             )
@@ -465,7 +601,7 @@
         let source;
 
         if (maxDepth == this.maxTransformationDepth) {
-          let parts = sources[i].text.trim().split(this.commentSymbol);
+          let parts = sources[i].text.trim().split(this.symbols.comment);
           source = parts[0].trim();
           // whether the transformation has a phrase which is already defined as a phrase
           for (
@@ -474,7 +610,7 @@
             phraseId++
           ) {
             let reg = new RegExp(
-              phrases[phraseId].replace(control.phraseSymbol, " "),
+              phrases[phraseId].replace(control.symbols.phrase, " "),
               "gi"
             );
             source = source.replaceAll(reg, phrases[phraseId]);
@@ -493,18 +629,27 @@
           source = sources[i].trim();
         }
 
-        for (let key in this.transformations) {
-          let t = this.transformations[key];
+        for (let key in this.transformations.active) {
+          let t = this.transformations.active[key];
           let replaceRegex = new RegExp(
             "(?<!" +
-              this.phraseSymbol +
+              this.symbols.phrase +
               ")" +
               t.from +
               "(?!" +
-              this.phraseSymbol +
+              this.symbols.phrase +
               ")",
             "gi"
           );
+
+          if (t.action == "remove") {
+            let target = source.slice();
+            target = target.replaceAll(replaceRegex, "");
+            target = target.replaceAll(/ {2,}/gi, " ").trim();
+            target = utils.title(target);
+            remember(source, target);
+            continue;
+          }
 
           if (source.search(replaceRegex) !== -1) {
             let to = Array.from(t.to);
@@ -515,15 +660,18 @@
 
               if (utils.isDefined(history)) {
                 if (!history.hasOwnProperty(t.from))
-                  history[t.from] = new Set();
+                  history[t.from] = {
+                    rules: new Set(),
+                    generated: new Set(),
+                  };
 
-                if (history[t.from].has(toRep)) {
+                if (history[t.from].rules.has(toRep)) {
                   // we have already applied this rule once,
                   // so it's potentially an infinite recursion!
                   continue;
                 }
 
-                history[t.from].add(toRep);
+                history[t.from].rules.add(toRep);
               }
 
               if (toRep.startsWith(this.placeholders.space)) {
@@ -533,29 +681,7 @@
               target = target.replaceAll(replaceRegex, toRep);
               target = target.replaceAll(/ {2,}/gi, " ").trim();
               target = utils.title(target);
-
-              if (maxDepth == this.maxTransformationDepth) {
-                if (!this.banned.has(target))
-                  res[source].transformations.add(target);
-                res[source].transformations = utils.setUnion(
-                  res[source].transformations,
-                  this.transform([target], maxDepth - 1, {})
-                );
-
-                if (res[source].transformations.has(source)) {
-                  res[source].transformations.delete(source);
-                }
-              } else {
-                if (!this.banned.has(target)) res.add(target);
-                res = utils.setUnion(
-                  res,
-                  this.transform(
-                    [target],
-                    maxDepth - 1,
-                    Object.assign({}, history)
-                  )
-                );
-              }
+              remember(source, target);
             }
           }
         }
@@ -565,11 +691,11 @@
         for (var key in res) {
           res[key].transformations = Array.from(res[key].transformations).map(
             function (x) {
-              return x.replaceAll(control.phraseSymbol, " ");
+              return x.replaceAll(control.symbols.phrase, " ");
             }
           );
-          if (key.includes(control.phraseSymbol)) {
-            let keyReg = new RegExp(control.phraseSymbol, "gi");
+          if (key.includes(control.symbols.phrase)) {
+            let keyReg = new RegExp(control.symbols.phrase, "gi");
             let newKey = key.replaceAll(keyReg, " ");
             if (key !== newKey) {
               Object.defineProperty(
@@ -585,23 +711,73 @@
 
       return res;
     },
+    enableTransformation: function (i, j) {
+      if (utils.isDefined(j)) {
+        this.transformations.disabled[i].to.delete(j);
+
+        if (!this.transformations.disabled[i].whole) {
+          if (!this.transformations.active.hasOwnProperty(i)) {
+            this.transformations.active[i] = Object.assign(
+              {},
+              this.transformations.disabled[i]
+            );
+            this.transformations.active[i].to = new Set();
+          }
+          this.transformations.active[i].to.add(j);
+          this.transformations.active[i].action = "replace";
+
+          if (this.transformations.disabled[i].to.size == 0) {
+            delete this.transformations.disabled[i];
+          }
+        }
+      } else {
+        this.transformations.active[i] = Object.assign(
+          {},
+          this.transformations.disabled[i]
+        );
+        delete this.transformations.disabled[i];
+      }
+    },
+    disableTransformation: function (i, j) {
+      if (utils.isDefined(j)) {
+        if (!this.transformations.disabled.hasOwnProperty(i)) {
+          this.transformations.disabled[i] = Object.assign(
+            {},
+            this.transformations.active[i]
+          );
+          this.transformations.disabled[i].to = new Set();
+        }
+        this.transformations.disabled[i].to.add(j);
+        this.transformations.active[i].to.delete(j);
+        if (this.transformations.active[i].to.size == 0) {
+          this.transformations.active[i].action = "remove";
+        }
+      } else {
+        this.transformations.disabled[i] = Object.assign(
+          {},
+          this.transformations.active[i]
+        );
+        this.transformations.disabled[i].whole = true;
+        delete this.transformations.active[i];
+      }
+    },
     deleteTransformation: function (i) {
       let oldTentative = Object.assign({}, this.tentative);
-      this.tentative = this.transformations[i];
+      this.tentative = this.transformations.active[i];
       db.saveRule("delete");
       this.tentative = oldTentative;
-      return delete this.transformations[i];
+      return delete this.transformations.active[i];
     },
     isEmptyTransformation: function (i) {
-      return this.transformations[i].to.size === 0;
+      return this.transformations.active[i].to.size === 0;
     },
     deleteTransformationClause: function (i, j) {
-      this.transformations[i].to.delete(j);
+      this.transformations.active[i].to.delete(j);
       let oldTentative = Object.assign({}, this.tentative);
       if (this.isEmptyTransformation(i)) {
-        this.transformations[i].action = "remove";
+        this.transformations.active[i].action = "remove";
       }
-      this.tentative = this.transformations[i];
+      this.tentative = this.transformations.active[i];
       db.saveRule("update");
       this.tentative = oldTentative;
     },
@@ -630,14 +806,18 @@
 
       if (t.action.length > 0) {
         let actionSpan = document.createElement("span");
-        actionSpan.setAttribute("data-rel", "action");
+        actionSpan.setAttribute(
+          "data-rel",
+          isTentative ? "action/t" : "action"
+        );
         actionSpan.innerHTML = t.action + ": ";
         p.appendChild(actionSpan);
       }
       let fromSpan;
       if (t.from.length > 0) {
         fromSpan = document.createElement("span");
-        fromSpan.setAttribute("data-rel", "from");
+        fromSpan.setAttribute("data-rel", isTentative ? "from/t" : "from");
+        fromSpan.setAttribute("data-val", t.from);
         fromSpan.innerHTML = t.from + " ";
         p.appendChild(fromSpan);
       }
@@ -645,11 +825,13 @@
       let to = Array.from(t.to);
 
       if (to.length > 0) {
-        if (t.from.length > 0) fromSpan.innerHTML += " -> ";
+        if (t.from.length > 0)
+          fromSpan.innerHTML += " " + this.symbols.ruleSep + " ";
         let span = null;
         for (let toId = 0, len = to.length; toId < len; toId++) {
           span = document.createElement("span");
-          span.setAttribute("data-rel", "clause");
+          span.setAttribute("data-rel", isTentative ? "clause/t" : "clause");
+          span.setAttribute("data-val", to[toId]);
           if (span != null && toId > 0) {
             p.appendChild(control.createOpNode("OR"));
           }
@@ -677,9 +859,11 @@
             );
 
             if (control.isEmptyTransformation(ruleId)) {
-              control.transformations[ruleId].action = "remove";
+              control.transformations.active[ruleId].action = "remove";
               let fromSpan = rule.querySelector('[data-rel="from"]');
-              fromSpan.innerText = fromSpan.innerText.replace("->", "").trim();
+              fromSpan.innerText = fromSpan.innerText
+                .replace(control.symbols.ruleSep, "")
+                .trim();
               let actionSpan = rule.querySelector('[data-rel="action"]');
               actionSpan.innerText = "remove: ";
             }
@@ -727,17 +911,17 @@
       if (withTentative === undefined) withTentative = true;
 
       this.transformationMemoryArea.innerHTML = "";
-      let transformations = this.transformations;
+      let transformations = this.transformations.active;
       let control = this;
       for (let key in transformations) {
         let rule = control.visualizeTransformation(transformations[key], key);
-        if (rule !== null) this.transformationMemoryArea.appendChild(rule);
+        if (rule !== null) this.transformationMemoryArea.prepend(rule);
       }
 
       if (withTentative) {
         let ct = control.tentative;
         if (ct.action) {
-          this.transformationMemoryArea.appendChild(
+          this.transformationMemoryArea.prepend(
             control.visualizeTransformation(ct, ct.from, true)
           );
         }
@@ -752,7 +936,7 @@
             sources[i] =
               sources[i] +
               " " +
-              this.commentSymbol +
+              this.symbols.comment +
               " " +
               utils.stringifyComments(data[sources[i]].extra);
           }

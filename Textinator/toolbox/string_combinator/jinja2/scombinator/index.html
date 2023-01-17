@@ -11,64 +11,18 @@
 {% endblock %}
 
 {% block content %}
-<div class="columns">
-  <div class="column">
-    <div class="field">
-      <label for='source' class="label">Source strings</label>
-      <textarea id="source" class="textarea"></textarea>
-    </div>
-    <div class="field">
-      <label for="target" class="label">Rule builder</label>
-      <textarea id="target" class="textarea"></textarea>
-      <form id="recordForm" action="{{ url('toolbox:string_combinator:record_transformation') }}" method="POST" class='float-left mt-1 mb-2 mr-2'>
-        {{csrf_input}}
-        <input type="submit" id="record" class="button" value="Record">
-      </form>
-      <button id="generate" class="button mt-1 mb-2">Generate</button>
-    </div>
-    <div>
-      <label class='label'>Transformation bank</label>
-      <div id="transformationMemoryArea" class='transformation-memory'>
-        <script id="banned" type="application/json">{{banned|tojson|safe}}</script>
-        {% if transformations|length > 0 %}
-          <script id="loadedBank" type="application/json">{{transformations|tojson|safe}}</script>
-        {% else %}
-          <p>Your personal list of transformations will appear here!</p>
-        {% endif %}
-      </div>
-    </div>
+<div class="tabs is-centered mb-2">
+  <ul>
+    <li data-tab="rule-builder" class="is-active"><a>Rule builder</a></li>
+    <li data-tab="generation-area"><a>Generation workshop</a></li>
+  </ul>
+</div>
+<div id="tabContent" class='is-fluid'>
+  <div data-content="rule-builder">
+    {% include 'scombinator/partials/_rule_builder.html' %}
   </div>
-  <div class="column">
-    <div class="hero mb-5">
-      <form id="generationArea" action="{{ url('toolbox:string_combinator:record_generation') }}" method="POST" class='form generation-area'>
-        {{csrf_input}}
-        <fieldset>
-          <p>Here the generated combinations will appear!</p>
-        </fieldset>
-      </form>
-    </div>
-    <div class="container">
-      <form id="editingSearchForm" action="{{ url('toolbox:string_combinator:search_generations') }}" method="GET">
-        <div class="field has-addons">
-          <p class="control">
-            <span class="select is-small">
-              <select name="search_type">
-                <option value="phr">Phrase</option>
-                <option value="int">Keywords</option>
-                <option value="web">Web-like</option>
-              </select>
-            </span>
-          </p>
-          <div class="control is-expanded">
-            <input class="input is-small" type="text" placeholder="What do you want to search for?" name="query">
-          </div>
-          <div class="control">
-            <input type="submit" class="button is-info is-small" value="Search">
-          </div>
-        </div>
-      </form>
-      <ul data-url="{{ url('toolbox:string_combinator:load') }}" id="searchResults" class='mt-2'></ul>
-    </div>
+  <div data-content="generation-area">
+    {% include 'scombinator/partials/_generation_area.html' %}
   </div>
 </div>
 {% endblock %}
