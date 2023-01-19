@@ -209,6 +209,9 @@
       disabled: {},
     },
     attr: {
+      localStorage: {
+        text: "scombinator_text",
+      },
       disabled: "data-disabled",
     },
     tentative: null,
@@ -254,6 +257,11 @@
       this.initEvents();
       this.preloadRules();
       this.initUI();
+
+      let preloadText = localStorage.getItem(this.attr.localStorage.text);
+      if (utils.isDefined(this.attr.localStorage.text)) {
+        this.sourceArea.value = preloadText;
+      }
     },
     preloadRules: function () {
       let loadedBanned = document.querySelector("script#banned");
@@ -310,12 +318,12 @@
     enable: function (node, from, to) {
       this.enableTransformation(from, to);
       node.removeAttribute(this.attr.disabled);
-      node.classList.remove("disabled");
+      node.classList.remove("stroken-red");
     },
     disable: function (node, from, to) {
       this.disableTransformation(from, to);
       node.setAttribute(this.attr.disabled, true);
-      node.classList.add("disabled");
+      node.classList.add("stroken-red");
     },
     toggleDisabled: function (node, from, to) {
       if (node.getAttribute(this.attr.disabled)) {
@@ -326,6 +334,12 @@
     },
     initEvents: function () {
       let control = this;
+      this.sourceArea.addEventListener("keyup", function (e) {
+        let target = e.target;
+        let text = target.value;
+        localStorage.setItem(control.attr.localStorage.text, text);
+      });
+
       this.sourceArea.addEventListener(
         "mouseup",
         function (e) {
@@ -544,33 +558,79 @@
       this.initJsonEditor();
       this.editor.set(data);
     },
-    transform: function (sources, maxDepth, history, taboo) {
+    _mainTransformationLoop: function (source, history, callback) {
+      for (let key in this.transformations.active) {
+        let t = this.transformations.active[key];
+        let replaceRegex = new RegExp(
+          "(?<!" +
+            this.symbols.phrase +
+            ")" +
+            t.from +
+            "(?!" +
+            this.symbols.phrase +
+            ")",
+          "gi"
+        );
+
+        if (t.action == "remove") {
+          let target = source.slice();
+          target = target.replaceAll(replaceRegex, "");
+          target = target.replaceAll(/ {2,}/gi, " ").trim();
+          target = utils.title(target);
+          callback(source, target);
+          continue;
+        }
+
+        if (source.search(replaceRegex) !== -1) {
+          let to = Array.from(t.to);
+
+          for (let toId = 0, toLen = to.length; toId < toLen; toId++) {
+            let target = source.slice();
+            let toRep = to[toId];
+
+            if (utils.isDefined(history)) {
+              if (!history.hasOwnProperty(t.from))
+                history[t.from] = {
+                  rules: new Set(),
+                  generated: new Set(),
+                };
+
+              if (history[t.from].rules.has(toRep)) {
+                // we have already applied this rule once,
+                // so it's potentially an infinite recursion!
+                continue;
+              }
+
+              history[t.from].rules.add(toRep);
+            }
+
+            if (toRep.startsWith(this.placeholders.space)) {
+              toRep = toRep.replace(this.placeholders.space, " ");
+            }
+
+            target = target.replaceAll(replaceRegex, toRep);
+            target = target.replaceAll(/ {2,}/gi, " ").trim();
+            target = utils.title(target);
+            callback(source, target);
+          }
+        }
+      }
+    },
+    _recursiveTransform: function (sources, maxDepth, history, taboo) {
       function remember(src, trg) {
-        if (maxDepth == control.maxTransformationDepth) {
-          if (!control.banned.has(trg)) res[src].transformations.add(trg);
-          res[src].transformations = utils.setUnion(
-            res[src].transformations,
-            control.transform([trg], maxDepth - 1, {}, new Set())
+        if (!control.banned.has(trg)) res.add(trg);
+
+        if (!taboo.has(trg)) {
+          res = utils.setUnion(
+            res,
+            control._recursiveTransform(
+              [trg],
+              maxDepth - 1,
+              Object.assign({}, history),
+              taboo
+            )
           );
-
-          if (res[src].transformations.has(src)) {
-            res[src].transformations.delete(src);
-          }
-        } else {
-          if (!control.banned.has(trg)) res.add(trg);
-
-          if (!taboo.has(trg)) {
-            res = utils.setUnion(
-              res,
-              control.transform(
-                [trg],
-                maxDepth - 1,
-                Object.assign({}, history),
-                taboo
-              )
-            );
-            taboo.add(trg);
-          }
+          taboo.add(trg);
         }
       }
 
@@ -579,137 +639,90 @@
       }
 
       let control = this;
-
-      let phrases;
-
-      if (maxDepth == this.maxTransformationDepth) {
-        phrases = Array.from(
-          new Set(
-            [].concat.apply(
-              [],
-              Object.values(this.transformations.active).map(function (x) {
-                return Array.from(x.to).filter((x) =>
-                  x.includes(control.symbols.phrase)
-                );
-              })
-            )
-          )
-        );
-      }
-      let res = maxDepth == this.maxTransformationDepth ? {} : new Set();
+      let res = new Set();
       for (let i = 0, len = sources.length; i < len; i++) {
-        let source;
+        let source = sources[i].trim();
+        this._mainTransformationLoop(source, history, function (x, y) {
+          remember(x, y);
+        });
+      }
+      return res;
+    },
+    transform: function (sources, maxDepth, history) {
+      function remember(src, trg) {
+        if (!control.banned.has(trg)) res[src].transformations.add(trg);
+        res[src].transformations = utils.setUnion(
+          res[src].transformations,
+          control._recursiveTransform([trg], maxDepth - 1, {}, new Set())
+        );
 
-        if (maxDepth == this.maxTransformationDepth) {
-          let parts = sources[i].text.trim().split(this.symbols.comment);
-          source = parts[0].trim();
-          // whether the transformation has a phrase which is already defined as a phrase
-          for (
-            let phraseId = 0, phraseLen = phrases.length;
-            phraseId < phraseLen;
-            phraseId++
-          ) {
-            let reg = new RegExp(
-              phrases[phraseId].replace(control.symbols.phrase, " "),
-              "gi"
-            );
-            source = source.replaceAll(reg, phrases[phraseId]);
-          }
-          delete sources[i].text;
-          res[source] = sources[i];
-          if (parts.length > 1) {
-            res[source].extra = Object.assign(
-              {},
-              res[source].extra,
-              utils.parseComments(parts[1])
-            );
-          }
-          res[source].transformations = new Set();
-        } else {
-          source = sources[i].trim();
+        if (res[src].transformations.has(src)) {
+          res[src].transformations.delete(src);
         }
+      }
 
-        for (let key in this.transformations.active) {
-          let t = this.transformations.active[key];
-          let replaceRegex = new RegExp(
-            "(?<!" +
-              this.symbols.phrase +
-              ")" +
-              t.from +
-              "(?!" +
-              this.symbols.phrase +
-              ")",
+      let control = this;
+      let phrases = Array.from(
+        new Set(
+          [].concat.apply(
+            [],
+            Object.values(this.transformations.active).map(function (x) {
+              return Array.from(x.to).filter((x) =>
+                x.includes(control.symbols.phrase)
+              );
+            })
+          )
+        )
+      );
+
+      let res = {};
+      for (let i = 0, len = sources.length; i < len; i++) {
+        let parts = sources[i].text.trim().split(this.symbols.comment);
+        let source = parts[0].trim();
+        // whether the transformation has a phrase which is already defined as a phrase
+        for (
+          let phraseId = 0, phraseLen = phrases.length;
+          phraseId < phraseLen;
+          phraseId++
+        ) {
+          let reg = new RegExp(
+            phrases[phraseId].replace(control.symbols.phrase, " "),
             "gi"
           );
-
-          if (t.action == "remove") {
-            let target = source.slice();
-            target = target.replaceAll(replaceRegex, "");
-            target = target.replaceAll(/ {2,}/gi, " ").trim();
-            target = utils.title(target);
-            remember(source, target);
-            continue;
-          }
-
-          if (source.search(replaceRegex) !== -1) {
-            let to = Array.from(t.to);
-
-            for (let toId = 0, toLen = to.length; toId < toLen; toId++) {
-              let target = source.slice();
-              let toRep = to[toId];
-
-              if (utils.isDefined(history)) {
-                if (!history.hasOwnProperty(t.from))
-                  history[t.from] = {
-                    rules: new Set(),
-                    generated: new Set(),
-                  };
-
-                if (history[t.from].rules.has(toRep)) {
-                  // we have already applied this rule once,
-                  // so it's potentially an infinite recursion!
-                  continue;
-                }
-
-                history[t.from].rules.add(toRep);
-              }
-
-              if (toRep.startsWith(this.placeholders.space)) {
-                toRep = toRep.replace(this.placeholders.space, " ");
-              }
-
-              target = target.replaceAll(replaceRegex, toRep);
-              target = target.replaceAll(/ {2,}/gi, " ").trim();
-              target = utils.title(target);
-              remember(source, target);
-            }
-          }
+          source = source.replaceAll(reg, phrases[phraseId]);
         }
-      }
-
-      if (maxDepth == this.maxTransformationDepth) {
-        for (var key in res) {
-          res[key].transformations = Array.from(res[key].transformations).map(
-            function (x) {
-              return x.replaceAll(control.symbols.phrase, " ");
-            }
+        delete sources[i].text;
+        res[source] = sources[i];
+        if (parts.length > 1) {
+          res[source].extra = Object.assign(
+            {},
+            res[source].extra,
+            utils.parseComments(parts[1])
           );
-          if (key.includes(control.symbols.phrase)) {
-            let keyReg = new RegExp(control.symbols.phrase, "gi");
-            let newKey = key.replaceAll(keyReg, " ");
-            if (key !== newKey) {
-              Object.defineProperty(
-                res,
-                newKey,
-                Object.getOwnPropertyDescriptor(res, key)
-              );
-              delete res[key];
-            }
-          }
         }
+        res[source].transformations = new Set();
+
+        this._mainTransformationLoop(source, history, function (x, y) {
+          remember(x, y);
+        });
       }
 
-      return res;
+      let res2 = {};
+      for (var key in res) {
+        res[key].transformations = Array.from(res[key].transformations).map(
+          function (x) {
+            return x.replaceAll(control.symbols.phrase, " ");
+          }
+        );
+        if (key.includes(control.symbols.phrase)) {
+          let keyReg = new RegExp(control.symbols.phrase, "gi");
+          let newKey = key.replaceAll(keyReg, " ");
+          res2[newKey] = Object.assign({}, res[key]);
+        } else {
+          res2[key] = Object.assign({}, res[key]);
+        }
+      }
+      return res2;
     },
     enableTransformation: function (i, j) {
       if (utils.isDefined(j)) {
@@ -881,6 +894,22 @@
 
       if (p.innerText.length > 0) {
         if (!isTentative) {
+          let copyButton = document.createElement("button");
+          copyButton.className = "button is-small mr-2";
+          copyButton.innerText = "Copy";
+
+          copyButton.addEventListener("click", function (e) {
+            let target = e.target,
+              ruleDiv = target.parentNode;
+
+            let reg = new RegExp("DeleteCopy.*:");
+
+            // Copy the text inside the text field
+            navigator.clipboard.writeText(
+              ruleDiv.innerText.replace(reg, "").replace("OR", "|").trim()
+            );
+          });
+
           let deleteButton = document.createElement("button");
           deleteButton.className = "button is-small mr-2";
           deleteButton.innerText = "Delete";
@@ -892,16 +921,22 @@
                 ruleDiv = target.parentNode,
                 idx = ruleDiv.getAttribute("data-i");
 
-              let res = control.deleteTransformation(idx);
-              if (!res) control.tentative = control.initTransformation();
-              ruleDiv.parentNode.removeChild(ruleDiv);
+              let confirmation = confirm(
+                "Are you sure to accept this reply as your favor?"
+              );
+
+              if (confirmation) {
+                let res = control.deleteTransformation(idx);
+                if (!res) control.tentative = control.initTransformation();
+                ruleDiv.parentNode.removeChild(ruleDiv);
+              }
             },
             false
           );
 
+          p.prepend(copyButton);
           p.prepend(deleteButton);
         }
-
         return p;
       } else {
         return null;
@@ -912,10 +947,14 @@
 
       this.transformationMemoryArea.innerHTML = "";
       let transformations = this.transformations.active;
+      let fromKeys = Object.keys(transformations);
+      fromKeys.sort();
       let control = this;
-      for (let key in transformations) {
+      for (let i in fromKeys) {
+        let key = fromKeys[i];
+        if (key.length === 0) continue;
         let rule = control.visualizeTransformation(transformations[key], key);
-        if (rule !== null) this.transformationMemoryArea.prepend(rule);
+        if (rule !== null) this.transformationMemoryArea.appendChild(rule);
       }
 
       if (withTentative) {
