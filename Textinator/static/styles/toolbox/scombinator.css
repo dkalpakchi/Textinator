@@ -27,25 +27,14 @@
 }
 
 .tabs.is-fixed-top {
-  background: white;
-  right: 0;
+  top: 4.2em;
   position: fixed;
-  bottom: 0;
-  width: 200px;
   z-index: 100;
-}
-
-.tabs.is-fixed-top ul {
-  -webkit-flex-direction: column;
-  flex-direction: column;
-}
-
-.tabs.is-fixed-top ul li {
   width: 100%;
 }
 
-.tabs.is-fixed-top ul li a {
-  border-radius: 0 !important;
+.tab-content {
+  margin-top: 2.1em;
 }
 
 .stroken-red {

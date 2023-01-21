@@ -565,7 +565,7 @@
           "(?<!" +
             this.symbols.phrase +
             ")" +
-            t.from +
+            t.from.replaceAll(" ", "( |_)") +
             "(?!" +
             this.symbols.phrase +
             ")",

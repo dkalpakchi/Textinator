@@ -11,13 +11,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="tabs is-fixed-top is-toggle is-small mb-2">
+<div class="tabs is-fixed-top is-centered is-small mb-2">
   <ul>
     <li data-tab="rule-builder" class="is-active"><a>Rule builder</a></li>
     <li data-tab="generation-area"><a>Generation workshop</a></li>
   </ul>
 </div>
-<div id="tabContent" class='is-fluid'>
+<div id="tabContent" class='is-fluid tab-content'>
   <div data-content="rule-builder">
     {% include 'scombinator/partials/_rule_builder.html' %}
   </div>
