@@ -758,10 +758,10 @@
         );
         if (key.includes(control.symbols.phrase)) {
           let keyReg = new RegExp(control.symbols.phrase, "gi");
-          let newKey = key.replaceAll(keyReg, " ");
+          let newKey = utils.title(key.replaceAll(keyReg, " "));
           res2[newKey] = Object.assign({}, res[key]);
         } else {
-          res2[key] = Object.assign({}, res[key]);
+          res2[utils.title(key)] = Object.assign({}, res[key]);
         }
       }
       return res2;
