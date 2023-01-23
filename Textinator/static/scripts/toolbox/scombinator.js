@@ -591,17 +591,24 @@
     },
     isSentenceGrammatical: function (sent) {
       let punctuationRegex = new RegExp("[.,/?!$%^&;:{}=`~]", "g");
-      let s = sent.replaceAll(punctuationRegex, "");
+      let s = sent.slice().replaceAll(punctuationRegex, "");
       s = s.replaceAll(this.symbols.phrase, " ");
       s = s.charAt(0).toLowerCase() + s.slice(1);
+
+      for (let j = 0, len = this.grammarCheckIgnore.length; j < len; j++) {
+        s = s.replaceAll(this.grammarCheckIgnore[j], "");
+      }
+
       let words = s.split(" ");
 
       for (let i = 0, len = words.length; i < len; i++) {
         let word = words[i].trim();
 
-        if (words[i] == words[i - 1]) return false;
+        if (word.length === 0) continue;
 
-        if (this.grammarCheckIgnore.has(word)) continue;
+        if (utils.isDefined(words[i - 1]) && word == words[i - 1].trim())
+          return false;
+
         if (!grammar.check(word)) {
           return false;
         }
@@ -705,9 +712,9 @@
       return res;
     },
     transform: function (sources, maxDepth, history) {
-      this.grammarCheckIgnore = new Set(
-        this.exclusionArea.value.split("\n").map((x) => x.trim())
-      );
+      this.grammarCheckIgnore = this.exclusionArea.value
+        .split("\n")
+        .map((x) => x.trim());
 
       function remember(src, trg) {
         if (!control.banned.has(trg)) res[src].transformations.add(trg);
