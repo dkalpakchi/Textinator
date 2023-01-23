@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.template.loader import render_to_string
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.db.models import F, Window, Subquery, OuterRef
 from django.db.models.functions import RowNumber
 from django.core.paginator import Paginator
@@ -22,13 +23,18 @@ from toolbox.decorators import toolbox_required
 @toolbox_required
 @require_http_methods(["GET"])
 def index(request):
+    p = staticfiles_storage.path('nlp/en_words_aspell.json')
+    with open(p) as f:
+        dictionary = json.load(f)
+
     return render(request, 'scombinator/index.html', {
         'transformations': [x.to_json() for x in SCm.StringTransformationRule.objects.filter(
             owner=request.user
         ).order_by('pk')],
         'banned': [x.value for x in SCm.FailedTransformation.objects.filter(
             transformation__owner=request.user
-        )]
+        )],
+        'dictionary': json.dumps(dictionary)
     })
 
 

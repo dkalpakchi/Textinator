@@ -35,6 +35,21 @@
     },
   };
 
+  const grammar = {
+    words: {
+      en: null,
+    },
+    init: function () {
+      let dict = JSON.parse(
+        document.querySelector("#dictionaryData").textContent.trim()
+      );
+      this.words.en = new Set(dict.words);
+    },
+    check: function (word) {
+      return this.words.en.has(word);
+    },
+  };
+
   const db = {
     saveRule: function (op) {
       // saves a tentative rule to DB, so that it becomes permanent
@@ -211,6 +226,7 @@
     attr: {
       localStorage: {
         text: "scombinator_text",
+        exclude: "scombinator_ignore",
       },
       disabled: "data-disabled",
     },
@@ -252,11 +268,19 @@
       this.tabContentsArea = document.querySelector("#tabContent");
       this.tabContents = document.querySelectorAll("#tabContent > div");
 
+      this.exclusionArea = document.querySelector("textarea#exclusion");
+
       this.tentative = this.initTransformation();
 
       this.initEvents();
       this.preloadRules();
       this.initUI();
+      grammar.init();
+
+      let preloadExclude = localStorage.getItem(this.attr.localStorage.exclude);
+      if (utils.isDefined(this.attr.localStorage.exclude)) {
+        this.exclusionArea.value = preloadExclude;
+      }
 
       let preloadText = localStorage.getItem(this.attr.localStorage.text);
       if (utils.isDefined(this.attr.localStorage.text)) {
@@ -275,6 +299,7 @@
       if (utils.isDefined(loadedBank)) {
         let bank = JSON.parse(loadedBank.innerText);
         for (let i = 0, len = bank.length; i < len; i++) {
+          if (bank[i].from.trim().length === 0) continue;
           bank[i].to = new Set(bank[i].to);
           this.transformations.active[bank[i].from] = bank[i];
         }
@@ -338,6 +363,12 @@
         let target = e.target;
         let text = target.value;
         localStorage.setItem(control.attr.localStorage.text, text);
+      });
+
+      this.exclusionArea.addEventListener("keyup", function (e) {
+        let target = e.target;
+        let text = target.value;
+        localStorage.setItem(control.attr.localStorage.exclude, text);
       });
 
       this.sourceArea.addEventListener(
@@ -558,6 +589,25 @@
       this.initJsonEditor();
       this.editor.set(data);
     },
+    isSentenceGrammatical: function (sent) {
+      let punctuationRegex = new RegExp("[.,/?!$%^&;:{}=`~]", "g");
+      let s = sent.replaceAll(punctuationRegex, "");
+      s = s.replaceAll(this.symbols.phrase, " ");
+      s = s.charAt(0).toLowerCase() + s.slice(1);
+      let words = s.split(" ");
+
+      for (let i = 0, len = words.length; i < len; i++) {
+        let word = words[i].trim();
+
+        if (words[i] == words[i - 1]) return false;
+
+        if (this.grammarCheckIgnore.has(word)) continue;
+        if (!grammar.check(word)) {
+          return false;
+        }
+      }
+      return true;
+    },
     _mainTransformationLoop: function (source, history, callback) {
       for (let key in this.transformations.active) {
         let t = this.transformations.active[key];
@@ -577,7 +627,10 @@
           target = target.replaceAll(replaceRegex, "");
           target = target.replaceAll(/ {2,}/gi, " ").trim();
           target = utils.title(target);
-          callback(source, target);
+
+          if (this.isSentenceGrammatical(target)) {
+            callback(source, target);
+          }
           continue;
         }
 
@@ -611,7 +664,10 @@
             target = target.replaceAll(replaceRegex, toRep);
             target = target.replaceAll(/ {2,}/gi, " ").trim();
             target = utils.title(target);
-            callback(source, target);
+
+            if (this.isSentenceGrammatical(target)) {
+              callback(source, target);
+            }
           }
         }
       }
@@ -621,6 +677,7 @@
         if (!control.banned.has(trg)) res.add(trg);
 
         if (!taboo.has(trg)) {
+          taboo.add(trg);
           res = utils.setUnion(
             res,
             control._recursiveTransform(
@@ -630,7 +687,6 @@
               taboo
             )
           );
-          taboo.add(trg);
         }
       }
 
@@ -649,6 +705,10 @@
       return res;
     },
     transform: function (sources, maxDepth, history) {
+      this.grammarCheckIgnore = new Set(
+        this.exclusionArea.value.split("\n").map((x) => x.trim())
+      );
+
       function remember(src, trg) {
         if (!control.banned.has(trg)) res[src].transformations.add(trg);
         res[src].transformations = utils.setUnion(
@@ -662,35 +722,10 @@
       }
 
       let control = this;
-      let phrases = Array.from(
-        new Set(
-          [].concat.apply(
-            [],
-            Object.values(this.transformations.active).map(function (x) {
-              return Array.from(x.to).filter((x) =>
-                x.includes(control.symbols.phrase)
-              );
-            })
-          )
-        )
-      );
-
       let res = {};
       for (let i = 0, len = sources.length; i < len; i++) {
         let parts = sources[i].text.trim().split(this.symbols.comment);
         let source = parts[0].trim();
-        // whether the transformation has a phrase which is already defined as a phrase
-        for (
-          let phraseId = 0, phraseLen = phrases.length;
-          phraseId < phraseLen;
-          phraseId++
-        ) {
-          let reg = new RegExp(
-            phrases[phraseId].replace(control.symbols.phrase, " "),
-            "gi"
-          );
-          source = source.replaceAll(reg, phrases[phraseId]);
-        }
         delete sources[i].text;
         res[source] = sources[i];
         if (parts.length > 1) {

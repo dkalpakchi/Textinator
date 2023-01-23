@@ -8,6 +8,7 @@
 {% block custom_scripts %}
   <script type="text/javascript" src="{{ static('jsoneditor/dist/jsoneditor.min.js') }}"></script>
   <script type="text/javascript" src="{{ static('scripts/toolbox/scombinator.js') }}"></script>
+  <script id="dictionaryData" type="application/json">{{dictionary|safe}}</script>
 {% endblock %}
 
 {% block content %}
