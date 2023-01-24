@@ -717,6 +717,16 @@
       if (utils.isDefined(node)) {
         node.removeAttribute(ui.attr.disabled);
         node.classList.remove(ui.attr.disabledClass);
+
+        if (node.hasAttribute("data-i")) {
+          // means the whole rule is enabled
+          node
+            .querySelectorAll('[data-rel="clause"][data-disabled="true"]')
+            .forEach(function (x) {
+              x.removeAttribute(ui.attr.disabled);
+              x.classList.remove(ui.attr.disabledClass);
+            });
+        }
       }
     },
     _disable: function (node) {
@@ -1114,21 +1124,23 @@
     },
     enableTransformation: function (i, j) {
       if (utils.isDefined(j)) {
-        this.transformations.disabled[i].to.delete(j);
+        if (this.transformations.disabled.hasOwnProperty(i)) {
+          this.transformations.disabled[i].to.delete(j);
 
-        if (!this.transformations.disabled[i].whole) {
-          if (!this.transformations.active.hasOwnProperty(i)) {
-            this.transformations.active[i] = Object.assign(
-              {},
-              this.transformations.disabled[i]
-            );
-            this.transformations.active[i].to = new Set();
-          }
-          this.transformations.active[i].to.add(j);
-          this.transformations.active[i].action = "replace";
+          if (!this.transformations.disabled[i].whole) {
+            if (!this.transformations.active.hasOwnProperty(i)) {
+              this.transformations.active[i] = Object.assign(
+                {},
+                this.transformations.disabled[i]
+              );
+              this.transformations.active[i].to = new Set();
+            }
+            this.transformations.active[i].to.add(j);
+            this.transformations.active[i].action = "replace";
 
-          if (this.transformations.disabled[i].to.size == 0) {
-            delete this.transformations.disabled[i];
+            if (this.transformations.disabled[i].to.size == 0) {
+              delete this.transformations.disabled[i];
+            }
           }
         }
       } else {
@@ -1151,10 +1163,12 @@
           this.transformations.disabled[i].to = new Set();
         }
         this.transformations.disabled[i].to.add(j);
-        if (utils.isDefined(this.transformations.active[i].to))
-          this.transformations.active[i].to.delete(j);
-        if (this.transformations.active[i].to.size == 0) {
-          this.transformations.active[i].action = "remove";
+        if (this.transformations.active.hasOwnProperty(i)) {
+          if (utils.isDefined(this.transformations.active[i].to))
+            this.transformations.active[i].to.delete(j);
+          if (this.transformations.active[i].to.size == 0) {
+            this.transformations.active[i].action = "remove";
+          }
         }
       } else {
         if (this.transformations.active.hasOwnProperty(i)) {
