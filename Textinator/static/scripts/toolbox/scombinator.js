@@ -238,6 +238,7 @@
       this.searchResultsArea = document.querySelector("ul#searchResults");
 
       this.generateButton = document.querySelector("button#generate");
+      this.renewButton = document.querySelector("button#renew");
 
       this.tabsArea = document.querySelector(".tabs");
       this.tabs = this.tabsArea.querySelectorAll("li[data-tab]");
@@ -325,6 +326,12 @@
       this.editingSearchForm.addEventListener("submit", function (e) {
         e.preventDefault();
         db.search();
+      });
+
+      this.renewButton.addEventListener("click", function () {
+        combinator.loaded = null;
+        ui.restore();
+        ui.searchResultsArea.innerHTML = "";
       });
 
       this.generateButton.addEventListener("click", function () {
