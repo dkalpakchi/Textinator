@@ -33,6 +33,18 @@
       }
       return s;
     },
+    arraysEqual: function (a, b) {
+      // Taken from:
+      // https://stackoverflow.com/questions/3115982/how-to-check-if-two-arrays-are-equal-with-javascript
+      if (a === b) return true;
+      if (a == null || b == null) return false;
+      if (a.length !== b.length) return false;
+
+      for (var i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i]) return false;
+      }
+      return true;
+    },
   };
 
   const grammar = {
@@ -45,10 +57,35 @@
       );
       this.words.en = new Set(dict.words);
     },
-    check: function (word) {
+    checkInDictionary: function (word) {
       return this.words.en.has(word);
     },
+    checkRepeatedWords: function (s, maxWindow) {
+      /*
+       * Checks if there are repeated substrings
+       * with the length up to and including `maxWindow`.
+       *
+       * For example, this means that if we have a string
+       * a b a b c d e f
+       *
+       * The function should return `true` if maxWindow > 1
+       * and `false` otherwise
+       */
+
+      if (!utils.isDefined(maxWindow)) maxWindow = 5;
+
+      let words = s.split(" ").map((x) => x.trim());
+      let numWords = words.length;
+      for (let w = 1; w < maxWindow + 1; w++) {
+        for (let i = w; i < numWords; i++) {
+          if (utils.arraysEqual(words.slice(i, i + w), words.slice(i - w, i)))
+            return true;
+        }
+      }
+      return false;
+    },
   };
+  window.g = grammar;
 
   const db = {
     saveRule: function (op) {
@@ -759,7 +796,6 @@
       this.targetArea.value = "";
     },
   };
-  window.ui = ui;
 
   const combinator = {
     transformations: {
@@ -910,6 +946,8 @@
         s = s.replaceAll(this.grammarCheckIgnore[j], "");
       }
 
+      if (grammar.checkRepeatedWords(s, 7)) return false;
+
       let words = s.split(" ");
 
       for (let i = 0, len = words.length; i < len; i++) {
@@ -917,10 +955,7 @@
 
         if (word.length === 0) continue;
 
-        if (utils.isDefined(words[i - 1]) && word == words[i - 1].trim())
-          return false;
-
-        if (!grammar.check(word)) {
+        if (!grammar.checkInDictionary(word)) {
           return false;
         }
       }
