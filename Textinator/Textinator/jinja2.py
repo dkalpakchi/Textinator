@@ -57,7 +57,8 @@ def display_relation(rel):
 
 def to_markdown(value):
     """Converts newlines into <p> and <br />s."""
-    PIN_MD_TAG = "\n!---!\n"
+    PIN_MD_CORE_TAG = "!---!"
+    PIN_MD_TAG = "\n{}\n".format(PIN_MD_CORE_TAG)
     md = markdown.markdown(value)
     # Bulmify things
     md = md.replace('<h1>', '<h1 class="title is-4">')
@@ -67,16 +68,20 @@ def to_markdown(value):
     # This is because it is hard to maintain marking over <p>
     # so instead we will replace them with <br>
     md = md.replace("<p>", "").replace("</p>", "<br>")
+    md = re.sub(
+        r'{}</li>'.format(PIN_MD_CORE_TAG),
+        '</li>{}'.format(PIN_MD_TAG), md)
 
     if PIN_MD_TAG in md:
         scrollable, pinned = md.split(PIN_MD_TAG)
         scrollable, pinned = scrollable.strip(), pinned.strip()
 
-        scrollable = scrollable.replace("\n", "<br>")
-        pinned = pinned.replace("\n", "<br>")
+        scrollable = re.sub("\n(?!<)", "<br>", scrollable)
+        pinned = re.sub("(</?(li|ol|ul)>)", "", pinned)
+        pinned = re.sub("\n(?!<)", "<br>", pinned)
 
-        md = "<p class='scrollable'>{}</p><p class='pinned'>{}</p>".format(
-                scrollable, pinned
+        md = "<div class='scrollable'>{}</div><div class='pinned'>{}</div>".format(
+            scrollable, pinned
         )
 
     return Markup(md)
