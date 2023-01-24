@@ -55,7 +55,11 @@ def display_relation(rel):
     """)
     return Markup(template.render(rel=rel))
 
-def bulmify(md):
+def to_markdown(value):
+    """Converts newlines into <p> and <br />s."""
+    PIN_MD_TAG = "\n!---!\n"
+    md = markdown.markdown(value)
+    # Bulmify things
     md = md.replace('<h1>', '<h1 class="title is-4">')
     md = md.replace('<h2>', '<h2 class="title is-5">')
     md = md.replace('<h3>', '<h3 class="title is-6">')
@@ -63,23 +67,17 @@ def bulmify(md):
     # This is because it is hard to maintain marking over <p>
     # so instead we will replace them with <br>
     md = md.replace("<p>", "").replace("</p>", "<br>")
-    md = md.replace("\n", "<br>")
-    return md
 
-def to_markdown(value):
-    """Converts newlines into <p> and <br />s."""
-    PIN_MD_TAG = "\n!---!\n"
-    if PIN_MD_TAG in value:
-        value = value.replace(PIN_MD_TAG, "\n{}\n".format(PIN_MD_TAG))
-        scrollable, pinned = value.split(PIN_MD_TAG)
-        scrollable_md = bulmify(markdown.markdown(scrollable)).strip()
-        pinned_md = bulmify(markdown.markdown(pinned)).strip()
+    if PIN_MD_TAG in md:
+        scrollable, pinned = md.split(PIN_MD_TAG)
+        scrollable, pinned = scrollable.strip(), pinned.strip()
+
+        scrollable = scrollable.replace("\n", "<br>")
+        pinned = pinned.replace("\n", "<br>")
 
         md = "<p class='scrollable'>{}</p><p class='pinned'>{}</p>".format(
-            scrollable_md, pinned_md
+                scrollable, pinned
         )
-    else:
-        md = bulmify(markdown.markdown(value)).strip()
 
     return Markup(md)
 
