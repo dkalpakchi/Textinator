@@ -70,13 +70,13 @@ def to_markdown(value):
     """Converts newlines into <p> and <br />s."""
     PIN_MD_TAG = "\n!---!\n"
     if PIN_MD_TAG in value:
-        value = value.replace("\n{}\n".format(PIN_MD_TAG))
+        value = value.replace(PIN_MD_TAG, "\n{}\n".format(PIN_MD_TAG))
         scrollable, pinned = value.split(PIN_MD_TAG)
         scrollable_md = bulmify(markdown.markdown(scrollable)).strip()
         pinned_md = bulmify(markdown.markdown(pinned)).strip()
 
         md = "<p class='scrollable'>{}</p><p class='pinned'>{}</p>".format(
-            scrollable, pinned
+            scrollable_md, pinned_md
         )
     else:
         md = bulmify(markdown.markdown(value)).strip()
