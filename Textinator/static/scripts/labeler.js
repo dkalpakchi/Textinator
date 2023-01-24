@@ -3803,7 +3803,7 @@
           pinnedClassNames = ["scrollable", "pinned"];
         for (let i = 0, len = cnodes.length; i < len; i++) {
           if (
-            cnodes[i].tagName === "P" &&
+            cnodes[i].tagName === "DIV" &&
             pinnedClassNames.includes(cnodes[i].className)
           ) {
             for (let j = 0, len2 = cnodes[i].childNodes.length; j < len2; j++) {
