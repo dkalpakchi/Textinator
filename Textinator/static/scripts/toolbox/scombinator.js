@@ -55,22 +55,20 @@
       // saves a tentative rule to DB, so that it becomes permanent
       if (!utils.isDefined(op)) op = "save";
 
-      let control = combinator;
-
       $.ajax({
-        method: control.recordForm.getAttribute("method"),
-        url: control.recordForm.getAttribute("action"),
+        method: ui.recordForm.getAttribute("method"),
+        url: ui.recordForm.getAttribute("action"),
         dataType: "json",
         data: {
-          rule: JSON.stringify(control.jsonifyTentative()),
+          rule: JSON.stringify(combinator.jsonifyTentative()),
           op: op,
-          csrfmiddlewaretoken: control.recordForm.querySelector(
+          csrfmiddlewaretoken: ui.recordForm.querySelector(
             'input[name="csrfmiddlewaretoken"]'
           ).value,
         },
         success: function (data) {
           if (utils.isDefined(data) && utils.isDefined(data.uuid)) {
-            control.transformations.active[data.from].uuid = data.uuid;
+            combinator.transformations.active[data.from].uuid = data.uuid;
           }
         },
         error: function () {
@@ -79,18 +77,17 @@
       });
     },
     saveTransformations: function () {
-      let control = combinator;
-      let form = control.generationForm;
+      let form = ui.generationForm;
 
-      if (control.editor instanceof JSONEditor) {
+      if (ui.editor instanceof JSONEditor) {
         let removedSentences = [];
-        let history = control.editor.history;
+        let history = ui.editor.history;
 
         for (let i = 0; i <= history.index; i++) {
           let hEvent = history.history[i];
           if (hEvent.action != "removeNodes") continue;
 
-          let parentNode = control.editor.node.findNodeByInternalPath(
+          let parentNode = ui.editor.node.findNodeByInternalPath(
             hEvent.params.parentPath
           );
 
@@ -107,7 +104,7 @@
             nodeId++
           ) {
             removedSentences.push(affectedNodes[nodeId].value);
-            control.banned.add(affectedNodes[nodeId].value);
+            combinator.banned.add(affectedNodes[nodeId].value);
           }
         }
 
@@ -115,7 +112,7 @@
         // since uuid are the only thing we need
         // but for the disabled `to` fields are essential,
         // so we have to transform them
-        let transformations = Object.assign({}, control.transformations);
+        let transformations = Object.assign({}, combinator.transformations);
         for (let key in transformations.disabled) {
           transformations.disabled[key].to = Array.from(
             transformations.disabled[key].to
@@ -127,17 +124,17 @@
           url: form.getAttribute("action"),
           dataType: "json",
           data: {
-            batch: control.loaded,
+            batch: combinator.loaded,
             transformations: JSON.stringify(transformations),
             removed: JSON.stringify(removedSentences),
-            data: JSON.stringify(control.editor.get()),
+            data: JSON.stringify(ui.editor.get()),
             csrfmiddlewaretoken: form.querySelector(
               'input[name="csrfmiddlewaretoken"]'
             ).value,
           },
           success: function (data) {
             if (data.action) {
-              control.loaded = data.batch;
+              combinator.loaded = data.batch;
               alert(utils.title(data.action) + " successfully!");
             }
           },
@@ -148,8 +145,7 @@
       }
     },
     search: function () {
-      let control = combinator;
-      let form = control.editingSearchForm;
+      let form = ui.editingSearchForm;
 
       let formData = new FormData(form);
 
@@ -160,7 +156,7 @@
         dataType: "json",
         data: Object.fromEntries(formData.entries()),
         success: function (data) {
-          control.searchResultsArea.innerHTML = data.template;
+          ui.searchResultsArea.innerHTML = data.template;
           let searchResultItems = document.querySelectorAll("li[data-id]");
           searchResultItems.forEach(function (x) {
             x.addEventListener("click", function (e) {
@@ -169,13 +165,14 @@
               searchResultItems.forEach(function (item) {
                 item.querySelector(".button").classList.remove("is-hovered");
               });
-              if (control.loaded == uuid) {
+              if (combinator.loaded == uuid) {
                 target.classList.remove("is-hovered");
-                control.loaded = null;
-                control.restore();
+                combinator.loaded = null;
+                ui.restore();
+                combinator.unstash();
               } else {
                 db.load(uuid);
-                control.loaded = uuid;
+                combinator.loaded = uuid;
                 target.classList.add("is-hovered");
               }
             });
@@ -184,32 +181,28 @@
       });
     },
     load: function (uuid) {
-      let control = combinator;
       $.ajax({
         method: "GET",
-        url: combinator.searchResultsArea.getAttribute("data-url"),
+        url: ui.searchResultsArea.getAttribute("data-url"),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         data: {
           uuid: uuid,
         },
         success: function (res) {
-          control.restore(res.data);
+          combinator.stash();
+          ui.restore(res.data);
           for (let from in res.disabled) {
             let to = res.disabled[from].to;
-            let fromNode = document.querySelector(
-              '[data-rel="from"][data-val="' + from + '"]'
-            );
-            let ruleDiv = fromNode.parentNode;
+            let fromNode = ui.getFromNode(from);
             if (res.disabled[from].whole) {
-              control.disable(ruleDiv, from);
-            }
-            if (to.length > 0) {
+              ui._disable(fromNode.parentNode);
+              combinator.disableTransformation(from);
+            } else if (to.length > 0) {
               for (let i = 0, len = to.length; i < len; i++) {
-                let toNode = ruleDiv.querySelector(
-                  '[data-rel="clause"][data-val="' + to[i] + '"]'
-                );
-                control.disable(toNode, from, to[i]);
+                let toNode = ui.getToNode(from, to[i]);
+                ui._disable(toNode);
+                combinator.disableTransformation(from, to[i]);
               }
             }
           }
@@ -218,35 +211,18 @@
     },
   };
 
-  const combinator = {
-    transformations: {
-      active: {},
-      disabled: {},
-    },
-    attr: {
-      localStorage: {
-        text: "scombinator_text",
-        exclude: "scombinator_ignore",
-      },
-      disabled: "data-disabled",
-    },
-    tentative: null,
-    editor: null,
-    loaded: null,
-    banned: new Set(),
-    symbols: {
-      comment: "//",
-      phrase: "_",
-      ruleSep: "->",
-    },
-    maxTransformationDepth: 100,
+  const ui = {
     tabNames: {
       rules: "rule-builder",
       generations: "generation-area",
     },
-    placeholders: {
-      remove: "[[empty]]",
-      space: "*",
+    attr: {
+      disabled: "data-disabled",
+      disabledClass: "stroken-red",
+      localStorage: {
+        text: "scombinator_text",
+        exclude: "scombinator_ignore",
+      },
     },
     init: function () {
       this.generationForm = document.querySelector("#generationArea");
@@ -270,13 +246,6 @@
 
       this.exclusionArea = document.querySelector("textarea#exclusion");
 
-      this.tentative = this.initTransformation();
-
-      this.initEvents();
-      this.preloadRules();
-      this.initUI();
-      grammar.init();
-
       let preloadExclude = localStorage.getItem(this.attr.localStorage.exclude);
       if (utils.isDefined(this.attr.localStorage.exclude)) {
         this.exclusionArea.value = preloadExclude;
@@ -286,78 +255,11 @@
       if (utils.isDefined(this.attr.localStorage.text)) {
         this.sourceArea.value = preloadText;
       }
-    },
-    preloadRules: function () {
-      let loadedBanned = document.querySelector("script#banned");
-      if (utils.isDefined(loadedBanned)) {
-        let newArrivals = new Set(JSON.parse(loadedBanned.innerText));
-        this.banned = utils.setUnion(this.banned, newArrivals);
-        loadedBanned.parentNode.removeChild(loadedBanned);
-      }
 
-      let loadedBank = document.querySelector("script#loadedBank");
-      if (utils.isDefined(loadedBank)) {
-        let bank = JSON.parse(loadedBank.innerText);
-        for (let i = 0, len = bank.length; i < len; i++) {
-          if (bank[i].from.trim().length === 0) continue;
-          bank[i].to = new Set(bank[i].to);
-          this.transformations.active[bank[i].from] = bank[i];
-        }
-        loadedBank.parentNode.removeChild(loadedBank);
-        this.visualize(false);
-      }
+      this.initTabs();
+      this.initEvents();
     },
-    initTransformation: function () {
-      return {
-        action: "",
-        from: "",
-        to: new Set(),
-        uuid: "",
-      };
-    },
-    checkUpdate: function (key) {
-      return this.transformations.active.hasOwnProperty(key);
-    },
-    initUI: function () {
-      let control = this;
-      this.tabs.forEach(function (x) {
-        x.addEventListener("click", function (e) {
-          let target = e.target;
-          if (target.tagName != "LI") target = target.parentNode;
-          let tab = target.getAttribute("data-tab");
-          control.switchTab(tab);
-        });
-      });
-      this.switchTab(this.tabNames.rules);
-    },
-    switchTab: function (tab) {
-      this.tabs.forEach((t) => t.classList.remove("is-active"));
-      this.tabsArea
-        .querySelector('[data-tab="' + tab + '"]')
-        .classList.add("is-active");
-      this.tabContents.forEach((t) => t.classList.remove("is-active"));
-      this.tabContentsArea
-        .querySelector('div[data-content="' + tab + '"]')
-        .classList.add("is-active");
-    },
-    enable: function (node, from, to) {
-      this.enableTransformation(from, to);
-      node.removeAttribute(this.attr.disabled);
-      node.classList.remove("stroken-red");
-    },
-    disable: function (node, from, to) {
-      this.disableTransformation(from, to);
-      node.setAttribute(this.attr.disabled, true);
-      node.classList.add("stroken-red");
-    },
-    toggleDisabled: function (node, from, to) {
-      if (node.getAttribute(this.attr.disabled)) {
-        this.enable(node, from, to);
-      } else {
-        this.disable(node, from, to);
-      }
-    },
-    initEvents: function () {
+    initPersistenceEvents: function () {
       let control = this;
       this.sourceArea.addEventListener("keyup", function (e) {
         let target = e.target;
@@ -370,7 +272,9 @@
         let text = target.value;
         localStorage.setItem(control.attr.localStorage.exclude, text);
       });
-
+    },
+    initSourceAreaEvents: function () {
+      let control = this;
       this.sourceArea.addEventListener(
         "mouseup",
         function (e) {
@@ -380,76 +284,37 @@
             selEnd = target.selectionEnd;
 
           if (selEnd - selStart > 0) {
-            let toAdd = Array.from(control.tentative.to);
-            control.tentative["from"] = text.substring(selStart, selEnd).trim();
-            control.tentative["action"] =
+            let toAdd = Array.from(combinator.tentative.to);
+            combinator.tentative["from"] = text
+              .substring(selStart, selEnd)
+              .trim();
+            combinator.tentative["action"] =
               toAdd.length > 0 ? "replace" : "remove";
-            control.visualize();
+            control.visualize(combinator.getState());
           }
         },
         false
       );
-
+    },
+    initTargetAreaEvents: function () {
+      let control = this;
       this.targetArea.addEventListener(
         "input",
         function () {
-          let replacement = control.targetArea.value.trim(),
-            toRemove = control.tentative["from"];
-
-          control.tentative["to"].clear();
-          if (replacement.includes(control.symbols.ruleSep)) {
-            let parts = replacement.split(control.symbols.ruleSep);
-            if (parts.length > 1) {
-              control.tentative["action"] = "replace";
-              control.tentative["from"] = parts[0].trim();
-              let clauses = parts[1].split("|");
-              for (let i = 0, len = clauses.length; i < len; i++) {
-                control.tentative.to.add(clauses[i].trim());
-              }
-            } else {
-              control.tentative["action"] = "remove";
-            }
-          } else {
-            if (replacement.length > 0) {
-              control.tentative["action"] =
-                toRemove.length > 0 ? "replace" : "add";
-              let options = replacement.split("\n");
-              for (let i = 0, len = options.length; i < len; i++) {
-                control.tentative["to"].add(options[i].trim());
-              }
-            } else {
-              control.tentative["action"] = "remove";
-            }
-          }
-
-          control.visualize();
+          combinator.changeTentative(control.targetArea.value.trim());
+          ui.visualize(combinator.getState());
         },
         false
       );
-
+    },
+    initTransfomrationEvents: function () {
+      let control = this;
       this.recordForm.addEventListener("submit", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        let ct = control.tentative;
-        if (control.checkUpdate(ct.from)) {
-          if (ct.action == "remove") {
-            control.transformations.active[ct.from].to.add("");
-          } else {
-            let to = Array.from(ct.to);
-            for (let i = 0, len = to.length; i < len; i++) {
-              control.transformations.active[ct.from].to.add(to[i]);
-            }
-            control.transformations.active[ct.from].action = ct.action;
-          }
-          control.tentative = control.transformations.active[ct.from];
-          db.saveRule("update");
-        } else {
-          control.transformations.active[ct.from] = ct;
-          db.saveRule();
-        }
-        control.tentative = control.initTransformation();
+        combinator.recordRule();
         control.targetArea.value = "";
-        control.visualize(false);
+        ui.visualize(combinator.getState(false));
       });
 
       this.generationForm.addEventListener("submit", function (e) {
@@ -470,7 +335,7 @@
 
         for (let i = 0, len = lines.length; i < len; i++) {
           let line = lines[i].trim();
-          if (line.startsWith(control.symbols.comment)) {
+          if (line.startsWith(combinator.symbols.comment)) {
             if (!previousComment) extra = {};
             extra = Object.assign(extra, utils.parseComments(line));
             previousComment = true;
@@ -483,11 +348,19 @@
           }
         }
 
-        control.history = {};
-        let res = control.transform(sources, control.maxTransformationDepth);
+        combinator.history = {};
+        let res = combinator.transform(sources, control.maxTransformationDepth);
         control.showHierarchical(res);
         control.switchTab(control.tabNames.generations);
       });
+    },
+    initEvents: function () {
+      this.initPersistenceEvents();
+      this.initSourceAreaEvents();
+      this.initTargetAreaEvents();
+      this.initTransfomrationEvents();
+
+      let control = this;
 
       document.addEventListener("click", function (e) {
         let target = e.target;
@@ -499,18 +372,37 @@
             .getAttribute("data-val");
 
           if (rel == "action") {
-            control.toggleDisabled(ruleDiv, from);
+            let wasDisabled = control.toggleState(ruleDiv);
+            combinator.toggleTransformation(wasDisabled, from);
           } else if (rel == "clause") {
             let to = target.innerText.trim();
-            control.toggleDisabled(target, from, to);
+            let wasDisabled = control.toggleState(target);
+            combinator.toggleTransformation(wasDisabled, from, to);
           }
         }
       });
     },
-    jsonifyTentative: function () {
-      let copy = Object.assign({}, this.tentative);
-      copy.to = Array.from(copy.to);
-      return copy;
+    initTabs: function () {
+      let control = this;
+      this.tabs.forEach(function (x) {
+        x.addEventListener("click", function (e) {
+          let target = e.target;
+          if (target.tagName != "LI") target = target.parentNode;
+          let tab = target.getAttribute("data-tab");
+          control.switchTab(tab);
+        });
+      });
+      this.switchTab(this.tabNames.rules);
+    },
+    switchTab: function (tab) {
+      this.tabs.forEach((t) => t.classList.remove("is-active"));
+      this.tabsArea
+        .querySelector('[data-tab="' + tab + '"]')
+        .classList.add("is-active");
+      this.tabContents.forEach((t) => t.classList.remove("is-active"));
+      this.tabContentsArea
+        .querySelector('div[data-content="' + tab + '"]')
+        .classList.add("is-active");
     },
     initJsonEditor: function () {
       if (!utils.isDefined(this.editor)) {
@@ -588,6 +480,418 @@
     showHierarchical: function (data) {
       this.initJsonEditor();
       this.editor.set(data);
+    },
+    createOpNode: function (op) {
+      let opNode = document.createElement("span");
+      opNode.setAttribute("data-rel", "op");
+      opNode.innerText = " " + op + " ";
+      return opNode;
+    },
+    isOpNode: function (n) {
+      return (
+        utils.isDefined(n) &&
+        n.hasAttribute("data-rel") &&
+        n.getAttribute("data-rel") == "op"
+      );
+    },
+    visualizeTransformation: function (t, i, isTentative) {
+      if (!utils.isDefined(isTentative)) isTentative = false;
+
+      let p = document.createElement("div");
+      let control = this;
+      p.setAttribute("data-i", i);
+      if (isTentative) {
+        p.style.color = "grey";
+      }
+
+      if (t.action.length > 0) {
+        let actionSpan = document.createElement("span");
+        actionSpan.setAttribute(
+          "data-rel",
+          isTentative ? "action/t" : "action"
+        );
+        actionSpan.innerHTML = t.action + ": ";
+        p.appendChild(actionSpan);
+      }
+      let fromSpan;
+      if (t.from.length > 0) {
+        fromSpan = document.createElement("span");
+        fromSpan.setAttribute("data-rel", isTentative ? "from/t" : "from");
+        fromSpan.setAttribute("data-val", t.from);
+        fromSpan.innerHTML = t.from + " ";
+        p.appendChild(fromSpan);
+      }
+
+      let to = Array.from(t.to);
+
+      if (to.length > 0) {
+        if (t.from.length > 0)
+          fromSpan.innerHTML += " " + combinator.symbols.ruleSep + " ";
+        let span = null;
+        for (let toId = 0, len = to.length; toId < len; toId++) {
+          span = document.createElement("span");
+          span.setAttribute("data-rel", isTentative ? "clause/t" : "clause");
+          span.setAttribute("data-val", to[toId]);
+          if (span != null && toId > 0) {
+            p.appendChild(control.createOpNode("OR"));
+          }
+          if (to[toId].length === 0) {
+            span.innerHTML = "<i>" + combinator.placeholders.remove + "</i>";
+          } else {
+            span.innerText = to[toId];
+          }
+
+          let delBtn = document.createElement("button");
+          delBtn.className = "delete is-small";
+
+          delBtn.addEventListener("click", function (e) {
+            let target = e.target;
+            let clause = target.parentNode;
+            let rule = clause.parentNode;
+            let ruleId = rule.getAttribute("data-i");
+
+            if (control.isOpNode(clause.nextSibling))
+              rule.removeChild(clause.nextSibling);
+            let clauseRule = clause.innerText.trim();
+
+            let replace2remove = combinator.deleteCallback(ruleId, clauseRule);
+
+            if (replace2remove) {
+              let fromSpan = rule.querySelector('[data-rel="from"]');
+              fromSpan.innerText = fromSpan.innerText
+                .replace(combinator.symbols.ruleSep, "")
+                .trim();
+              let actionSpan = rule.querySelector('[data-rel="action"]');
+              actionSpan.innerText = "remove: ";
+            }
+
+            rule.removeChild(clause);
+            let lastClause = rule.lastChild;
+            if (utils.isDefined(lastClause) && control.isOpNode(lastClause))
+              rule.removeChild(lastClause);
+          });
+
+          span.appendChild(delBtn);
+          p.appendChild(span);
+        }
+      }
+
+      if (p.innerText.length > 0) {
+        if (!isTentative) {
+          let copyButton = document.createElement("button");
+          copyButton.className = "button is-small mr-2";
+          copyButton.innerText = "Copy";
+
+          copyButton.addEventListener("click", function (e) {
+            let target = e.target,
+              ruleDiv = target.parentNode;
+
+            let reg = new RegExp("DeleteCopy.*:");
+
+            // Copy the text inside the text field
+            navigator.clipboard.writeText(
+              ruleDiv.innerText.replace(reg, "").replace("OR", "|").trim()
+            );
+          });
+
+          let deleteButton = document.createElement("button");
+          deleteButton.className = "button is-small mr-2";
+          deleteButton.innerText = "Delete";
+
+          deleteButton.addEventListener(
+            "click",
+            function (e) {
+              let target = e.target,
+                ruleDiv = target.parentNode,
+                idx = ruleDiv.getAttribute("data-i");
+
+              let confirmation = confirm(
+                "Are you sure to accept this reply as your favor?"
+              );
+
+              if (confirmation) {
+                combinator.deleteCallback(idx);
+                ruleDiv.parentNode.removeChild(ruleDiv);
+              }
+            },
+            false
+          );
+
+          p.prepend(copyButton);
+          p.prepend(deleteButton);
+        }
+        return p;
+      } else {
+        return null;
+      }
+    },
+    visualize: function (state) {
+      this.transformationMemoryArea.innerHTML = "";
+
+      for (let i in state.keys.sorted) {
+        let key = state.keys.sorted[i];
+        if (key.length === 0) continue;
+        if (state.keys.disabled.has(key)) {
+          if (state.keys.active.has(key)) {
+            let t = Object.assign({}, state.t.active[key]);
+            t.to = utils.setUnion(t.to, state.t.disabled[key].to);
+            let rule = ui.visualizeTransformation(t, key);
+            if (rule !== null) {
+              ui.transformationMemoryArea.appendChild(rule);
+              let toDisable = Array.from(state.t.disabled[key].to);
+              for (let dId = 0, dLen = toDisable.length; dId < dLen; dId++) {
+                this.disable(key, toDisable[dId]);
+              }
+            }
+          } else {
+            let rule = ui.visualizeTransformation(state.t.disabled[key], key);
+            if (rule !== null) {
+              this.transformationMemoryArea.appendChild(rule);
+              this.disable(key);
+            }
+          }
+        } else if (state.keys.active.has(key)) {
+          let rule = ui.visualizeTransformation(state.t.active[key], key);
+          if (rule !== null) ui.transformationMemoryArea.appendChild(rule);
+        }
+      }
+
+      if (utils.isDefined(state.tentative)) {
+        if (state.tentative.action) {
+          ui.transformationMemoryArea.prepend(
+            ui.visualizeTransformation(
+              state.tentative,
+              state.tentative.from,
+              true
+            )
+          );
+        }
+      }
+    },
+    _enable: function (node) {
+      // callback, which is why we say ui.attr and not this
+      if (utils.isDefined(node)) {
+        node.removeAttribute(ui.attr.disabled);
+        node.classList.remove(ui.attr.disabledClass);
+      }
+    },
+    _disable: function (node) {
+      if (utils.isDefined(node)) {
+        node.setAttribute(ui.attr.disabled, true);
+        node.classList.add(ui.attr.disabledClass);
+      }
+    },
+    getFromNode: function (from) {
+      return document.querySelector(
+        '[data-rel="from"][data-val="' + from + '"]'
+      );
+    },
+    getToNode: function (fromNode, to) {
+      let ruleDiv = fromNode.parentNode;
+      return ruleDiv.querySelector(
+        '[data-rel="clause"][data-val="' + to + '"]'
+      );
+    },
+    _changeState: function (from, to, callback) {
+      // changes state only for the first occurrence
+      // this is because normally the rules are not allowed to duplicate
+      let fromNode = this.getFromNode(from);
+
+      if (utils.isDefined(to)) {
+        let toNode = this.getToNode(fromNode, to);
+        callback(toNode);
+      } else {
+        callback(fromNode.parentNode);
+      }
+    },
+    enable: function (from, to) {
+      this._changeState(from, to, this._enable);
+    },
+    disable: function (from, to) {
+      this._changeState(from, to, this._disable);
+    },
+    toggleState: function (node) {
+      let wasDisabled = node.hasAttribute(this.attr.disabled);
+      if (wasDisabled) {
+        this._enable(node);
+      } else {
+        this._disable(node);
+      }
+      return wasDisabled;
+    },
+    clearDisabled: function () {
+      let control = this;
+      document
+        .querySelectorAll("." + this.attr.disabledClass)
+        .forEach(function (x) {
+          x.classList.remove(control.attr.disabledClass);
+        });
+    },
+    restore: function (data) {
+      this.clearDisabled();
+      if (utils.isDefined(data)) {
+        let sources = Object.keys(data);
+
+        for (let i = 0, len = sources.length; i < len; i++) {
+          if (Object.keys(data[sources[i]].extra).length !== 0) {
+            sources[i] =
+              sources[i] +
+              " " +
+              combinator.symbols.comment +
+              " " +
+              utils.stringifyComments(data[sources[i]].extra);
+          }
+        }
+
+        this.sourceArea.value = sources.join("\n");
+        this.showHierarchical(data);
+      } else {
+        this.sourceArea.value = "";
+        this.showHierarchical();
+      }
+      this.targetArea.value = "";
+    },
+  };
+  window.ui = ui;
+
+  const combinator = {
+    transformations: {
+      active: {},
+      disabled: {},
+    },
+    memory: {},
+    tentative: null,
+    editor: null,
+    loaded: null,
+    banned: new Set(),
+    symbols: {
+      comment: "//",
+      phrase: "_",
+      ruleSep: "->",
+    },
+    maxTransformationDepth: 100,
+    placeholders: {
+      remove: "[[empty]]",
+      space: "*",
+    },
+    init: function () {
+      this.tentative = this.initTransformation();
+
+      ui.init();
+
+      this.preloadRules();
+      grammar.init();
+    },
+    stash: function () {
+      this.memory.active = Object.assign({}, this.transformations.active);
+      this.memory.disabled = Object.assign({}, this.transformations.disabled);
+      this.memory.sourceText = ui.sourceArea.value;
+      this.memory.excluded = ui.exclusionArea.value;
+      this.transformations.disabled = {};
+    },
+    unstash: function () {
+      if (utils.isDefined(this.memory.active)) {
+        this.transformations.active = this.memory.active;
+        delete this.memory.active;
+      }
+
+      if (utils.isDefined(this.memory.disabled)) {
+        this.transformations.disabled = this.memory.disabled;
+        delete this.memory.disabled;
+      }
+      if (utils.isDefined(this.memory.sourceText)) {
+        ui.sourceArea.value = this.memory.sourceText;
+        delete this.memory.sourceText;
+      }
+      if (utils.isDefined(this.memory.excluded)) {
+        ui.exclusionArea.value = this.memory.excluded;
+        delete this.memory.excluded;
+      }
+      ui.visualize(this.getState(false));
+    },
+    preloadRules: function () {
+      let loadedBanned = document.querySelector("script#banned");
+      if (utils.isDefined(loadedBanned)) {
+        let newArrivals = new Set(JSON.parse(loadedBanned.innerText));
+        this.banned = utils.setUnion(this.banned, newArrivals);
+        loadedBanned.parentNode.removeChild(loadedBanned);
+      }
+
+      let loadedBank = document.querySelector("script#loadedBank");
+      if (utils.isDefined(loadedBank)) {
+        let bank = JSON.parse(loadedBank.innerText);
+        for (let i = 0, len = bank.length; i < len; i++) {
+          if (bank[i].from.trim().length === 0) continue;
+          bank[i].to = new Set(bank[i].to);
+          this.transformations.active[bank[i].from] = bank[i];
+        }
+        loadedBank.parentNode.removeChild(loadedBank);
+        ui.visualize(this.getState(false));
+      }
+    },
+    changeTentative: function (replacement) {
+      let toRemove = this.tentative["from"];
+
+      this.tentative["to"].clear();
+      if (replacement.includes(this.symbols.ruleSep)) {
+        let parts = replacement.split(this.symbols.ruleSep);
+        if (parts.length > 1) {
+          this.tentative["action"] = "replace";
+          this.tentative["from"] = parts[0].trim();
+          let clauses = parts[1].split("|");
+          for (let i = 0, len = clauses.length; i < len; i++) {
+            this.tentative.to.add(clauses[i].trim());
+          }
+        } else {
+          this.tentative["action"] = "remove";
+        }
+      } else {
+        if (replacement.length > 0) {
+          this.tentative["action"] = toRemove.length > 0 ? "replace" : "add";
+          let options = replacement.split("\n");
+          for (let i = 0, len = options.length; i < len; i++) {
+            this.tentative["to"].add(options[i].trim());
+          }
+        } else {
+          this.tentative["action"] = "remove";
+        }
+      }
+    },
+    recordRule: function () {
+      let ct = this.tentative;
+      if (this.checkUpdate(ct.from)) {
+        if (ct.action == "remove") {
+          this.transformations.active[ct.from].to.add("");
+        } else {
+          let to = Array.from(ct.to);
+          for (let i = 0, len = to.length; i < len; i++) {
+            this.transformations.active[ct.from].to.add(to[i]);
+          }
+          this.transformations.active[ct.from].action = ct.action;
+        }
+        this.tentative = this.transformations.active[ct.from];
+        db.saveRule("update");
+      } else {
+        this.transformations.active[ct.from] = ct;
+        db.saveRule();
+      }
+      this.tentative = this.initTransformation();
+    },
+    initTransformation: function () {
+      return {
+        action: "",
+        from: "",
+        to: new Set(),
+        uuid: "",
+      };
+    },
+    checkUpdate: function (key) {
+      return this.transformations.active.hasOwnProperty(key);
+    },
+    jsonifyTentative: function () {
+      let copy = Object.assign({}, this.tentative);
+      copy.to = Array.from(copy.to);
+      return copy;
     },
     isSentenceGrammatical: function (sent) {
       let punctuationRegex = new RegExp("[.,/?!$%^&;:{}=`~]", "g");
@@ -712,7 +1016,7 @@
       return res;
     },
     transform: function (sources, maxDepth, history) {
-      this.grammarCheckIgnore = this.exclusionArea.value
+      this.grammarCheckIgnore = ui.exclusionArea.value
         .split("\n")
         .map((x) => x.trim());
 
@@ -786,11 +1090,13 @@
           }
         }
       } else {
-        this.transformations.active[i] = Object.assign(
-          {},
-          this.transformations.disabled[i]
-        );
-        delete this.transformations.disabled[i];
+        if (this.transformations.disabled.hasOwnProperty(i)) {
+          this.transformations.active[i] = Object.assign(
+            {},
+            this.transformations.disabled[i]
+          );
+          delete this.transformations.disabled[i];
+        }
       }
     },
     disableTransformation: function (i, j) {
@@ -803,25 +1109,26 @@
           this.transformations.disabled[i].to = new Set();
         }
         this.transformations.disabled[i].to.add(j);
-        this.transformations.active[i].to.delete(j);
+        if (utils.isDefined(this.transformations.active[i].to))
+          this.transformations.active[i].to.delete(j);
         if (this.transformations.active[i].to.size == 0) {
           this.transformations.active[i].action = "remove";
         }
       } else {
-        this.transformations.disabled[i] = Object.assign(
-          {},
-          this.transformations.active[i]
-        );
+        if (this.transformations.active.hasOwnProperty(i)) {
+          this.transformations.disabled[i] = Object.assign(
+            {},
+            this.transformations.active[i]
+          );
+          delete this.transformations.active[i];
+        }
         this.transformations.disabled[i].whole = true;
-        delete this.transformations.active[i];
       }
     },
-    deleteTransformation: function (i) {
-      let oldTentative = Object.assign({}, this.tentative);
-      this.tentative = this.transformations.active[i];
-      db.saveRule("delete");
-      this.tentative = oldTentative;
-      return delete this.transformations.active[i];
+    toggleTransformation: function (wasDisabled, i, j) {
+      wasDisabled
+        ? this.enableTransformation(i, j)
+        : this.disableTransformation(i, j);
     },
     isEmptyTransformation: function (i) {
       return this.transformations.active[i].to.size === 0;
@@ -836,200 +1143,58 @@
       db.saveRule("update");
       this.tentative = oldTentative;
     },
-    createOpNode: function (op) {
-      let opNode = document.createElement("span");
-      opNode.setAttribute("data-rel", "op");
-      opNode.innerText = " " + op + " ";
-      return opNode;
+    deleteTransformation: function (i) {
+      let oldTentative = Object.assign({}, this.tentative);
+      this.tentative = this.transformations.active[i];
+      db.saveRule("delete");
+      this.tentative = oldTentative;
+      return delete this.transformations.active[i];
     },
-    isOpNode: function (n) {
-      return (
-        utils.isDefined(n) &&
-        n.hasAttribute("data-rel") &&
-        n.getAttribute("data-rel") == "op"
-      );
-    },
-    visualizeTransformation: function (t, i, isTentative) {
-      if (!utils.isDefined(isTentative)) isTentative = false;
-
-      let p = document.createElement("div");
-      let control = this;
-      p.setAttribute("data-i", i);
-      if (isTentative) {
-        p.style.color = "grey";
-      }
-
-      if (t.action.length > 0) {
-        let actionSpan = document.createElement("span");
-        actionSpan.setAttribute(
-          "data-rel",
-          isTentative ? "action/t" : "action"
+    deleteCallback: function (ruleId, clauseRule) {
+      if (utils.isDefined(clauseRule)) {
+        this.deleteTransformationClause(
+          ruleId,
+          clauseRule == this.placeholders.remove ? "" : clauseRule
         );
-        actionSpan.innerHTML = t.action + ": ";
-        p.appendChild(actionSpan);
-      }
-      let fromSpan;
-      if (t.from.length > 0) {
-        fromSpan = document.createElement("span");
-        fromSpan.setAttribute("data-rel", isTentative ? "from/t" : "from");
-        fromSpan.setAttribute("data-val", t.from);
-        fromSpan.innerHTML = t.from + " ";
-        p.appendChild(fromSpan);
-      }
-
-      let to = Array.from(t.to);
-
-      if (to.length > 0) {
-        if (t.from.length > 0)
-          fromSpan.innerHTML += " " + this.symbols.ruleSep + " ";
-        let span = null;
-        for (let toId = 0, len = to.length; toId < len; toId++) {
-          span = document.createElement("span");
-          span.setAttribute("data-rel", isTentative ? "clause/t" : "clause");
-          span.setAttribute("data-val", to[toId]);
-          if (span != null && toId > 0) {
-            p.appendChild(control.createOpNode("OR"));
-          }
-          if (to[toId].length === 0) {
-            span.innerHTML = "<i>" + control.placeholders.remove + "</i>";
-          } else {
-            span.innerText = to[toId];
-          }
-
-          let delBtn = document.createElement("button");
-          delBtn.className = "delete is-small";
-
-          delBtn.addEventListener("click", function (e) {
-            let target = e.target;
-            let clause = target.parentNode;
-            let rule = clause.parentNode;
-            let ruleId = rule.getAttribute("data-i");
-
-            if (control.isOpNode(clause.nextSibling))
-              rule.removeChild(clause.nextSibling);
-            let clauseRule = clause.innerText.trim();
-            control.deleteTransformationClause(
-              ruleId,
-              clauseRule == control.placeholders.remove ? "" : clauseRule
-            );
-
-            if (control.isEmptyTransformation(ruleId)) {
-              control.transformations.active[ruleId].action = "remove";
-              let fromSpan = rule.querySelector('[data-rel="from"]');
-              fromSpan.innerText = fromSpan.innerText
-                .replace(control.symbols.ruleSep, "")
-                .trim();
-              let actionSpan = rule.querySelector('[data-rel="action"]');
-              actionSpan.innerText = "remove: ";
-            }
-
-            rule.removeChild(clause);
-            let lastClause = rule.lastChild;
-            if (utils.isDefined(lastClause) && control.isOpNode(lastClause))
-              rule.removeChild(lastClause);
-          });
-
-          span.appendChild(delBtn);
-          p.appendChild(span);
-        }
-      }
-
-      if (p.innerText.length > 0) {
-        if (!isTentative) {
-          let copyButton = document.createElement("button");
-          copyButton.className = "button is-small mr-2";
-          copyButton.innerText = "Copy";
-
-          copyButton.addEventListener("click", function (e) {
-            let target = e.target,
-              ruleDiv = target.parentNode;
-
-            let reg = new RegExp("DeleteCopy.*:");
-
-            // Copy the text inside the text field
-            navigator.clipboard.writeText(
-              ruleDiv.innerText.replace(reg, "").replace("OR", "|").trim()
-            );
-          });
-
-          let deleteButton = document.createElement("button");
-          deleteButton.className = "button is-small mr-2";
-          deleteButton.innerText = "Delete";
-
-          deleteButton.addEventListener(
-            "click",
-            function (e) {
-              let target = e.target,
-                ruleDiv = target.parentNode,
-                idx = ruleDiv.getAttribute("data-i");
-
-              let confirmation = confirm(
-                "Are you sure to accept this reply as your favor?"
-              );
-
-              if (confirmation) {
-                let res = control.deleteTransformation(idx);
-                if (!res) control.tentative = control.initTransformation();
-                ruleDiv.parentNode.removeChild(ruleDiv);
-              }
-            },
-            false
-          );
-
-          p.prepend(copyButton);
-          p.prepend(deleteButton);
-        }
-        return p;
       } else {
-        return null;
+        let res = this.deleteTransformation(ruleId);
+        if (!res) this.tentative = this.initTransformation();
       }
+
+      let isEmpty = this.isEmptyTransformation(ruleId);
+      if (isEmpty) {
+        this.transformations.active[ruleId].action = "remove";
+      }
+      return isEmpty;
     },
-    visualize: function (withTentative) {
+    getState: function (withTentative) {
       if (withTentative === undefined) withTentative = true;
 
-      this.transformationMemoryArea.innerHTML = "";
       let transformations = this.transformations.active;
-      let fromKeys = Object.keys(transformations);
+      let curDisabled = this.transformations.disabled;
+      let activeKeys = Object.keys(transformations);
+      let disabledKeys = Object.keys(curDisabled);
+      let fromKeys = [];
+      fromKeys.push.apply(fromKeys, activeKeys.concat(disabledKeys));
+      fromKeys = Array.from(new Set(fromKeys));
+      activeKeys = new Set(activeKeys);
+      disabledKeys = new Set(disabledKeys);
       fromKeys.sort();
-      let control = this;
-      for (let i in fromKeys) {
-        let key = fromKeys[i];
-        if (key.length === 0) continue;
-        let rule = control.visualizeTransformation(transformations[key], key);
-        if (rule !== null) this.transformationMemoryArea.appendChild(rule);
-      }
 
-      if (withTentative) {
-        let ct = control.tentative;
-        if (ct.action) {
-          this.transformationMemoryArea.prepend(
-            control.visualizeTransformation(ct, ct.from, true)
-          );
-        }
-      }
-    },
-    restore: function (data) {
-      if (utils.isDefined(data)) {
-        let sources = Object.keys(data);
+      let tentative = withTentative ? this.tentative : null;
 
-        for (let i = 0, len = sources.length; i < len; i++) {
-          if (Object.keys(data[sources[i]].extra).length !== 0) {
-            sources[i] =
-              sources[i] +
-              " " +
-              this.symbols.comment +
-              " " +
-              utils.stringifyComments(data[sources[i]].extra);
-          }
-        }
-
-        this.sourceArea.value = sources.join("\n");
-        this.showHierarchical(data);
-      } else {
-        this.sourceArea.value = "";
-        this.showHierarchical();
-      }
-      this.targetArea.value = "";
+      return {
+        keys: {
+          active: activeKeys,
+          disabled: disabledKeys,
+          sorted: fromKeys,
+        },
+        t: {
+          active: transformations,
+          disabled: curDisabled,
+        },
+        tentative: tentative,
+      };
     },
   };
 
