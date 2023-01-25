@@ -600,7 +600,7 @@
 
             let replace2remove = combinator.deleteCallback(ruleId, clauseRule);
 
-            if (replace2remove) {
+            if (utils.isDefined(replace2remove) && replace2remove) {
               let fromSpan = rule.querySelector('[data-rel="from"]');
               fromSpan.innerText = fromSpan.innerText
                 .replace(combinator.symbols.ruleSep, "")
@@ -650,7 +650,7 @@
                 idx = ruleDiv.getAttribute("data-i");
 
               let confirmation = confirm(
-                "Are you sure to accept this reply as your favor?"
+                "Are you sure you want to delete this rule?"
               );
 
               if (confirmation) {
@@ -1215,6 +1215,7 @@
       } else {
         let res = this.deleteTransformation(ruleId);
         if (!res) this.tentative = this.initTransformation();
+        return null;
       }
 
       let isEmpty = this.isEmptyTransformation(ruleId);

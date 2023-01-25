@@ -29,7 +29,7 @@ def index(request):
 
     return render(request, 'scombinator/index.html', {
         'transformations': [x.to_json() for x in SCm.StringTransformationRule.objects.filter(
-            owner=request.user
+            owner=request.user, deleted=False
         ).order_by('pk')],
         'banned': [x.value for x in SCm.FailedTransformation.objects.filter(
             transformation__owner=request.user
@@ -64,7 +64,10 @@ def record_transformation(request):
             res['error'] = 'not_unique'
             traceback.print_exc()
     elif op == 'delete':
-        SCm.StringTransformationRule.objects.filter(uuid=rule['uuid']).delete()
+        #SCm.StringTransformationRule.objects.filter(uuid=rule['uuid']).delete()
+        tsm = SCm.StringTransformationRule.objects.filter(uuid=rule['uuid']).first()
+        tsm.deleted = True
+        tsm.save()
     else:
         uid = uuid.uuid4()
         SCm.StringTransformationRule.objects.create(

@@ -15,10 +15,11 @@ class StringTransformationRule(models.Model):
     action = models.TextField(_("action"), help_text=_("Action"))
     s_from = models.TextField(_("from"),
         help_text=_("String to be transformed from"))
-    s_to = models.TextField(_("to"),
+    s_to = models.TextField(_("to"), null=True, blank=True,
         help_text=_("String(s) to be transformed into, separated by {}".format(DELIMETER)))
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("owner"))
     uuid = models.UUIDField()
+    deleted = models.BooleanField(default=False)
 
     def to_json(self):
         return {
