@@ -74,7 +74,7 @@ class JSONFormConfig:
 
 class Revisable(models.Model):
     revision_of = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='revisions')
-    revision_changes = models.TextField(_("revision changes"), default="",
+    revision_changes = models.TextField(_("revision changes"), null=True, blank=True,
         help_text=_("The list of exact changes that were done to the object"))
 
     class Meta:
