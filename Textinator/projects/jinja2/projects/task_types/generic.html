@@ -5,7 +5,7 @@
     </div>
     <div class="column is-half">
       {% include 'partials/components/areas/reminders.html' %}
-      {% if dp_info.source_id or dp_info.is_interactive %}
+      {% if dp_info.source_id or dp_info.is_interactive or project.allow_post_editing %}
         {% include 'partials/components/areas/marked_relations.html' %}
         {% include 'partials/components/areas/markers.html' %}
         {% include 'partials/components/areas/relations.html' %}

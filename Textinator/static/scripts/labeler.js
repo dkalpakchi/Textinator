@@ -315,6 +315,14 @@
       );
     }
 
+    function isScrollablePart(node) {
+      return (
+        utils.isDefined(node) &&
+        node.nodeName == "DIV" &&
+        node.className == "scrollable"
+      );
+    }
+
     function isPurposeNode(node) {
       return utils.isDefined(node) && node.hasAttribute("data-purpose");
     }
@@ -3602,7 +3610,17 @@
         }
 
         range.setStart(nodeStart, rStart);
-        range.setEnd(nodeEnd, rEnd);
+        if (
+          isScrollablePart(nodeStart.parentNode) &&
+          nodeStart.parentNode != nodeEnd.parentNode
+        ) {
+          // means the label is at the end of the scrollable part
+          let scrollableChildren = nodeStart.parentNode.childNodes;
+          nodeEnd = scrollableChildren[scrollableChildren.length - 1];
+          range.setEndAfter(nodeEnd);
+        } else {
+          range.setEnd(nodeEnd, rEnd);
+        }
 
         window.getSelection().addRange(range);
         this.updateChunkFromSelection();

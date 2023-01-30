@@ -435,6 +435,7 @@ class Project(CloneMixin, CommonModel):
     editing_title_regex = models.TextField(_("Regular expression for editorial board"), default="", null=True, blank=True,
         help_text=_("The regular expression to be used for searching the annotated texts and using the first found result as a title of the batches to be edited"))
     allow_editing  = models.BooleanField(_("should editing of own annotations be allowed?"), default=True)
+    allow_post_editing = models.BooleanField(_("should editing of own annotations AFTER finishing all of them be allowed?"), default=False)
     editing_as_revision = models.BooleanField(_("should editing be saved as revisions?"), default=False,
         help_text=_("""
         By default editing happens directly in the annotated objects. If this setting is turned on,

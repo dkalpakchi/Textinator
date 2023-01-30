@@ -1,4 +1,4 @@
-{% if not dp_info.is_empty %}
+{% if not dp_info.is_empty or project.allow_post_editing %}
   <article id="actionsArea" class="message is-primary actions-area">
     <div class="message-body">
       {% if project.guidelines %}
@@ -24,19 +24,21 @@
       <form id="inputForm" action="{{ url('projects:record_datapoint', kwargs={'proj': project.pk}) }}">
         {{ csrf_input }}
         <input type="hidden" name="mode" value="r">
-        <a data-type="submit" class='submit button'>
-          <span class="icon"><i class="fas fa-paper-plane"></i></span>
-          <span>{{ _("submit")|capitalize }}</span>
-        </a>
-        {# <a id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>{{ _("undo last")|capitalize }}</span></a> #}
-        <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle">
-          <span class="icon"><i class="fas fa-file-alt"></i></span>
-          <span>{{ _("get next")|capitalize }}</span>
-        </a>
-        <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="skipForLater">
-          <span class="icon"><i class="fas fa-cloud-upload-alt"></i></span>
-          <span>{{ _("save for later")|capitalize }}</span>
-        </a>
+        {% if not dp_info.is_empty %}
+          <a data-type="submit" class='submit button'>
+            <span class="icon"><i class="fas fa-paper-plane"></i></span>
+            <span>{{ _("submit")|capitalize }}</span>
+          </a>
+          {# <a id="undoLast" data-url="{{ url('projects:undo_last', kwargs={'proj': project.pk}) }}" class='button'><span class="icon"><i class="fas fa-undo"></i></span><span>{{ _("undo last")|capitalize }}</span></a> #}
+          <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="getNewArticle">
+            <span class="icon"><i class="fas fa-file-alt"></i></span>
+            <span>{{ _("get next")|capitalize }}</span>
+          </a>
+          <a href="{{ url('projects:new_article', kwargs={'proj': project.pk}) }}" class="button" id="skipForLater">
+            <span class="icon"><i class="fas fa-cloud-upload-alt"></i></span>
+            <span>{{ _("save for later")|capitalize }}</span>
+          </a>
+        {% endif %}
         {% if dp_info.source_spec and dp_info.source_spec.get('meta') %}
           <a href="{{ url('projects:project_meta', kwargs={'proj': dp_info.project_id})}}" target="_blank" id="meta" class="button">
             <span class="icon">
