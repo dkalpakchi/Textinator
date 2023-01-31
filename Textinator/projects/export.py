@@ -13,8 +13,8 @@ def merge2cluster(group):
     return {
         'type': group[0]['type'],
         'nodes': list(nodes.values()),
-        'extra': group[0]['extra'],
-        "annotator": group[0]['annotator']
+        'extra': group[0]['extra'] if 'extra' in group[0] else '',
+        "annotator": group[0]['annotator'] if 'annotator' in group[0] else ''
     }
 
 def group2hash(group):
