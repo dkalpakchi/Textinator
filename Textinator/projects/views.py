@@ -546,7 +546,14 @@ def get_batch(request, proj):
         # context['content'] will give us text without formatting,
         # so we simply query the data source one more time to get with formatting
         ds = Tm.DataSource.objects.get(pk=context['ds_id'])
-        context['content'] = to_markdown(ds.postprocess(ds.get(context['dp_id'])).strip())
+        post_processed_text = ds.postprocess(ds.get(context['dp_id'])).strip()
+
+        if ds.formatting == 'md':
+            context['content'] = to_markdown(post_processed_text)
+        elif ds.formatting == 'ft':
+            context['content'] = to_formatted_text(post_processed_text)
+        else:
+            context['content'] = post_processed_text
 
         return JsonResponse({
             'context': context,

@@ -192,8 +192,13 @@ def render_editing_board(request, project, user, page, template='partials/compon
             search_type=verbalize_search_type(search_type),
             config=search_config
         )
-        if search_mv_pk and search_mv_pk > 0:
-            input_batches = input_batches.filter(marker_id=search_mv_pk)
+        if search_mv_pk:
+            if search_mv_pk > 0:
+                input_batches = input_batches.filter(marker_id=search_mv_pk)
+            elif search_mv_pk == -2:
+                # means search only among flagged
+                input_batches = input_batches.filter(batch__is_flagged=True)
+
         if search_query:
             if search_type == "phr":
                 # phrase queries

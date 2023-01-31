@@ -55,10 +55,11 @@ def display_relation(rel):
     """)
     return Markup(template.render(rel=rel))
 
+PIN_MD_CORE_TAG = "!---!"
+PIN_MD_TAG = "\n{}\n".format(PIN_MD_CORE_TAG)
+
 def to_markdown(value):
     """Converts newlines into <p> and <br />s."""
-    PIN_MD_CORE_TAG = "!---!"
-    PIN_MD_TAG = "\n{}\n".format(PIN_MD_CORE_TAG)
     md = markdown.markdown(value)
     # Bulmify things
     md = md.replace('<h1>', '<h1 class="title is-4">')
@@ -87,7 +88,13 @@ def to_markdown(value):
     return Markup(md)
 
 def to_formatted_text(value):
-    return "<p class='pre-formatted-text'>{}</p>".format(value)
+    if PIN_MD_TAG in value:
+        scrollable, pinned = value.split(PIN_MD_TAG)
+        return "<div class='scrollable pre-formatted-text'>{}</div><div class='pinned pre-formatted-text'>{}</div>".format(
+            scrollable.strip(), pinned.strip()
+        )
+    else:
+        return "<p class='pre-formatted-text'>{}</p>".format(value)
 
 def wrap_paragraph(value):
     return "<p>{}</p>".format(value)
