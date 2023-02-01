@@ -137,7 +137,7 @@ def verbalize_search_type(st):
 
 
 def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None,
-                         current_uuid=None, search_mv_pk=None, search_query=None, search_type="p"):
+                         current_uuid=None, search_mv_pk=None, search_query=None, search_type="phr"):
     is_author, is_shared = project.author == user, project.shared_with(user)
 
     if is_author or is_shared:
