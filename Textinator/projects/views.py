@@ -292,6 +292,7 @@ def record_datapoint(request, proj):
         try:
             page = int(data.get('p', 1))
             scope = int(data.get("scope", -1))
+            search_type = data.get("search_type", "phr")
         except ValueError:
             page, scope = 1, -1
         query = data.get("query", "")
@@ -433,7 +434,8 @@ def record_datapoint(request, proj):
                 'current_uuid': batch.uuid,
                 'template': 'partials/components/areas/_editing_body.html',
                 'search_mv_pk': scope,
-                'search_query': query
+                'search_query': query,
+                'search_type': search_type
             }
             if mode == "rev":
                 kwargs['template'] = 'partials/components/areas/_reviewing_body.html'
