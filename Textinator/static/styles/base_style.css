@@ -1,6 +1,5 @@
 html[is-inside],
 html[is-inside] body {
-  overflow: hidden;
   scrollbar-width: thin;
 }
 
@@ -580,6 +579,10 @@ textarea {
 
 .editing-area .search {
   padding: 1.5em 1.5em 1.25em 1.5em;
+}
+
+.editing-area .search .field.has-addons {
+  flex-wrap: wrap;
 }
 
 .editing-area .button span:last-child {

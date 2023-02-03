@@ -21,7 +21,7 @@
       {% endif %}
       {{title|truncate(40)}}
     </span>
-    <span>
+    <span class='is-hidden-touch'>
       {{batch.labels.count()}} span(s) &nbsp; | &nbsp; {% if is_admin %}{{batch.user.username}}, {% endif %}{{ batch.dt_created|naturaltime }}
     </span>
   </div>

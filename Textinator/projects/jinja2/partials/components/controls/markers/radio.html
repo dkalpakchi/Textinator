@@ -23,7 +23,7 @@
         </label>
       {% else %}
         <label class="radio" for="{{marker.code}}_{{loop.index0}}">
-          <input id="{{marker.code}}_{{loop.index0}}" type="radio" name="{{marker.code}}" value="{{c}}"{% if is_required %}required{% endif %}>
+          <input id="{{marker.code}}_{{loop.index0}}" type="radio" name="{{marker.code}}" value="{{c|strip}}"{% if is_required %}required{% endif %}>
           {{c}}
         </label>
       {% endif %}
