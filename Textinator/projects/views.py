@@ -297,9 +297,6 @@ def record_datapoint(request, proj):
             page, scope = 1, -1
         query = data.get("query", "")
 
-        if scope < 0:
-            scope = None
-
         original_mode = mode
         if batch_info.project.editing_as_revision and mode == 'e':
             mode = 'rev'
@@ -476,6 +473,11 @@ def recorded_search(request, proj):
         page, scope = 1, -1
     query = request.GET.get("query", "")
     project = get_object_or_404(Tm.Project, pk=proj)
+
+    # Scope:
+    # -1 -- Everything except text (flagged or annotation no.)
+    # -2 -- Annotation no.
+    # -3 -- Limit to flagged only
 
     return JsonResponse({
         'partial': True,

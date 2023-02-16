@@ -152,54 +152,67 @@ def render_editing_board(request, project, user, page, template='partials/compon
     # Here we don't use just dataset identifiers, because
     # there can, of course, be multiple datasets with the same
     # datapoint IDs
-    relevant_batches = Batch.objects.filter(
-        pk__in=set(label_batch_ids) | set(input_batch_ids)
-    ).annotate(
-        index=Window(
-            expression=RowNumber(),
-            order_by=F('dt_created').asc()
-        )
+    window_exp = Window(
+        expression=RowNumber(),
+        order_by=F('dt_created').asc()
     )
 
-    if ds_id and dp_id:
-        # reviewing
-        if ds_id > 0 and dp_id > 0:
-            label_batches = label_batches.filter(
-                context__datasource_id=ds_id,
-                context__datapoint=dp_id
-            )
-            input_batches = input_batches.filter(
-                context__datasource_id=ds_id,
-                context__datapoint=dp_id
-            )
-        else:
-            label_batches, input_batches = None, None
+    relevant_batches = Batch.objects.filter(
+        pk__in=set(label_batch_ids) | set(input_batch_ids)
+    ).annotate(index=window_exp)
 
-    lang_dict = dict(settings.LANGUAGES)
-    if project.language == 'en':
-        search_config = "{}_lite".format(lang_dict[project.language].lower())
-    else:
-        search_config = lang_dict[project.language].lower()
-
-    if search_query or search_mv_pk:
-        if search_mv_pk == 0:
-            vector = SearchVector("context__content", config=search_config)
-        else:
-            vector = SearchVector("content", config=search_config)
-
-        query = SearchQuery(
-            search_query,
-            search_type=verbalize_search_type(search_type),
-            config=search_config
+    if search_mv_pk == -2:
+        # search for specific annotation no.
+        sql_string, sql_params = relevant_batches.query.sql_with_params()
+        search_indices = [int(x) for x in search_query.strip().split(",")]
+        batches = Batch.objects.raw(
+            "SELECT * FROM ({}) t1 WHERE t1.index IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                sql_string, ", ".join(["%s" for _ in range(len(search_indices))])
+            ),
+            list(sql_params) + search_indices
         )
+    else:
+        if ds_id and dp_id:
+            # reviewing
+            if ds_id > 0 and dp_id > 0:
+                label_batches = label_batches.filter(
+                    context__datasource_id=ds_id,
+                    context__datapoint=dp_id
+                )
+                input_batches = input_batches.filter(
+                    context__datasource_id=ds_id,
+                    context__datapoint=dp_id
+                )
+            else:
+                label_batches, input_batches = None, None
+
+        lang_dict = dict(settings.LANGUAGES)
+        if project.language == 'en':
+            search_config = "{}_lite".format(lang_dict[project.language].lower())
+        else:
+            search_config = lang_dict[project.language].lower()
+
+        vector = None
         if search_mv_pk:
+            if search_mv_pk == 0:
+                vector = SearchVector("context__content", config=search_config)
+            else:
+                # -2 means search by annotation number
+                vector = SearchVector("content", config=search_config)
+
             if search_mv_pk > 0:
                 input_batches = input_batches.filter(marker_id=search_mv_pk)
-            elif search_mv_pk == -2:
+            elif search_mv_pk == -3:
                 # means search only among flagged
                 input_batches = input_batches.filter(batch__is_flagged=True)
 
-        if search_query:
+        if search_query and vector:
+            query = SearchQuery(
+                search_query,
+                search_type=verbalize_search_type(search_type),
+                config=search_config
+            )
+
             if search_type == "phr":
                 # phrase queries
                 input_batches = input_batches.annotate(
@@ -210,23 +223,23 @@ def render_editing_board(request, project, user, page, template='partials/compon
                     rank=SearchRank(vector, query)
                 ).filter(rank__gt=1e-3) # some of them get like 1e-20, which is why > 0 doesn't work'
 
-    label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
+        label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
 
-    if search_query or search_mv_pk:
-        batch_ids = set(input_batch_ids)
-    else:
-        batch_ids = set(label_batch_ids) | set(input_batch_ids)
+        if search_query or search_mv_pk:
+            batch_ids = set(input_batch_ids)
+        else:
+            batch_ids = set(label_batch_ids) | set(input_batch_ids)
 
-    if batch_ids:
-        sql_string, sql_params = relevant_batches.query.sql_with_params()
-        batches = Batch.objects.raw(
-            "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
-                sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
-            ),
-            list(sql_params) + [str(x) for x in list(batch_ids)]
-        )
-    else:
-        batches = []
+        if batch_ids:
+            sql_string, sql_params = relevant_batches.query.sql_with_params()
+            batches = Batch.objects.raw(
+                "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                    sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+                ),
+                list(sql_params) + [str(x) for x in list(batch_ids)]
+            )
+        else:
+            batches = []
 
     p = Paginator(batches, 30)
 

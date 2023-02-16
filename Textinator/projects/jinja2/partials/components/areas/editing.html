@@ -8,8 +8,9 @@
         <p class="control">
           <span class="select is-small">
             <select name="scope">
-              <option value="-1">Everything except text</option>
-              <option value="-2">Flagged</option>
+              <option value="-1">All annotations</option>
+              <option value="-2">Annotation No.</option>
+              <option value="-3">Flagged</option>
               <option value="0">Text</option>
               {% for m in project.input_markers %}
                 <option value="{{m.pk}}">{{ m.name }}</option>
