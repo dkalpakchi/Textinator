@@ -17,9 +17,6 @@ import secrets
 
 from django.utils.translation import gettext_lazy as _
 
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -265,11 +262,6 @@ TINYMCE_DEFAULT_CONFIG = {
 }
 
 FILEBROWSER_MAX_UPLOAD_SIZE = 20971520 # 20MB
-
-
-pdfmetrics.registerFont(TTFont('ROBOTECH GP',
-    os.path.join(BASE_DIR, 'static', 'styles', 'webfonts', 'ROBOTECH GP.ttf')))
-
 
 CHOICES_SEPARATOR = "|"
 

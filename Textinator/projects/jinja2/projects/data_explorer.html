@@ -20,9 +20,9 @@
   <div>
     <a href="{{ url('projects:detail', kwargs={'pk': project.pk}) }}" class="button is-info">Back to the project</a>
     <a id="guidelinesButton" class="button is-success">{{ _("guidelines")|title }}</a>
-    {% if project.author == user or project.shared_with(user) %}
+    {# {% if project.author == user or project.shared_with(user) %}
       <a href="{{ url('projects:time_report', kwargs={'proj': project.pk}) }}" class="button is-success">Generate a PDF time report</a>
-    {% endif %}
+      {% endif %}#}
   </div>
   <div class="mt-5 box">
     <p class="title">Export data</p>

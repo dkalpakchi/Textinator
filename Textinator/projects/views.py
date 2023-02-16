@@ -21,11 +21,6 @@ from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.utils import timezone
 
-from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, TableStyle
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-
 from celery.result import AsyncResult
 
 # from modeltranslation.translator import translator
@@ -1053,71 +1048,8 @@ def time_report(request, proj):
                 pass
 
     project = Tm.Project.objects.filter(pk=proj).get()
-
-    # Create a file-like buffer to receive PDF data.
-    buffer = io.BytesIO()
-
-    # Create the PDF object, using the buffer as its "file."
-    p = canvas.Canvas(buffer)
-
-    # Draw things on the PDF. Here's where the PDF generation happens.
-    # See the ReportLab documentation for the full list of functionality.
-    p.setFont("ROBOTECH GP", size=36)
-    system_name = "Textinator"
-    p.drawString(A4[0] / 2 - 18 * PT2MM * len(system_name) * 1.1, 0.95 * A4[1], system_name)
-
-    p.setFont("Helvetica", size=14)
-    report_name = f'Time report for project "{project.title}"'
-    p.drawString(A4[0] / 2 - (14 * PT2MM * len(report_name) / 2), 0.92 * A4[1], report_name)
-
-    inputs = Tm.Input.objects.filter(marker__project__id=proj).order_by('dt_created').all()
-    labels = Tm.Label.objects.filter(marker__project__id=proj, undone=False).order_by('dt_created').all()
-    inputs_by_user, labels_by_user = defaultdict(lambda: defaultdict(list)), defaultdict(lambda: defaultdict(list))
-    for i in inputs:
-        inputs_by_user[i.batch.user.username][str(i.batch)].append(i)
-    for l in labels:
-        labels_by_user[l.batch.user.username][str(l.batch)].append(l)
-
-    time_spent = defaultdict(lambda: defaultdict(int))
-    inputs_created = defaultdict(lambda: defaultdict(int))
-    labels_created = defaultdict(lambda: defaultdict(int))
-    data = [['User', 'Month', 'Time (h)', '# of inputs', '# of labels']]
-    for u in labels_by_user:
-        ll = list(labels_by_user[u].items())
-        calc_time(ll, labels_created)
-
-    for u in inputs_by_user:
-        ll = list(inputs_by_user[u].items())
-        calc_time(ll, inputs_created)
-
-    for u, td in time_spent.items():
-        keys = sorted(td.keys())
-        year, month = keys[0].split('/')
-        data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2), inputs_created[u][keys[0]], labels_created[u][keys[0]]])
-        for k in keys[1:]:
-            year, month = k.split('/')
-            data.append(['', f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[k], 2), inputs_created[u][k], labels_created[u][k]])
-
-    LIST_STYLE = TableStyle([
-        ('LINEABOVE', (0,0), (-1,0), 2, colors.black),
-        ('LINEABOVE', (0,1), (-1,-1), 0.25, colors.black),
-        ('LINEBELOW', (0,-1), (-1,-1), 2, colors.black),
-        ('ALIGN', (1,1), (-1,-1), 'RIGHT')]
-    )
-
-    t = Table(data, colWidths=[110, 110, 70, 70, 70])
-    t.setStyle(LIST_STYLE)
-    w, h = t.wrapOn(p, 540, 720)
-    t.drawOn(p, A4[0] / 8, 0.8 * A4[1] - h)
-
-    # Close the PDF object cleanly, and we're done.
-    p.showPage()
-    p.save()
-
-    # FileResponse sets the Content-Disposition header so that browsers
-    # present the option to save the file.
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename='time_report.pdf')
+    # return FileResponse(buffer, as_attachment=True, filename='time_report.pdf')
+    return JsonResponse({})
 
 
 @login_required
