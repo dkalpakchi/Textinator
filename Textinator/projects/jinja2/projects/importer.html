@@ -1,13 +1,12 @@
 {% extends "layout.html" %}
 
 {% block custom_styles %}
-  <link rel="stylesheet" href="{{ static('jquery-ui-dist/jquery-ui.min.css') }}">
 {% endblock %}
 
 {% block custom_scripts %}
-  <script src="{{ static('masonry-layout/dist/masonry.pkgd.min.js') }}"></script>
+  <script type="text/javascript" src="{{ static('scripts/importer.js') }}"></script>
 {% endblock %}
 
 {% block content %}
-  IMPORTER
+  <input id="dataSourceFile" type="file">
 {% endblock %}
