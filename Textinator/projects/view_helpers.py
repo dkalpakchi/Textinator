@@ -193,7 +193,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
             search_config = lang_dict[project.language].lower()
 
         vector = None
-        if search_mv_pk:
+        if search_mv_pk is not None:
             if search_mv_pk == 0:
                 vector = SearchVector("context__content", config=search_config)
             else:

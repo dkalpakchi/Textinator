@@ -1118,3 +1118,12 @@ def time_report(request, proj):
     # present the option to save the file.
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='time_report.pdf')
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def importer(request):
+    if request.method == "GET":
+        return render(request, "projects/importer.html", {})
+    elif request.method == "POST":
+        return JsonResponse({})
