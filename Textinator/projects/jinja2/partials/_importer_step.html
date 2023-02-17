@@ -8,7 +8,11 @@
     </a>
   </header>
   <div id="{{id}}" class="is-collapsible{% if active %} is-active{% endif %}">
-    <div class="card-content"></div>
+    <div class="card-content"{% if no_placeholder %} no-placeholder="true"{% endif %}>
+      {% if content_template %}
+        {% include content_template %}
+      {% endif %}
+    </div>
     <footer class="card-footer">
       <a data-role="selector" data-href="{{id}}" class="card-footer-item">Use selected fields</a>
       <a data-role="reset" data-href="{{id}}" class="card-footer-item">Reset</a>

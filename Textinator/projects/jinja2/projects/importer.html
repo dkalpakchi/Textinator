@@ -18,12 +18,28 @@
       <div id="structureArea"></div>
     </div>
     <div id="stepsArea" class="column">
-      {% with name='Data source', id='dataSourceStep', active=True %}
-        {% include 'partials/_importer_step.html' %}
-      {% endwith %}
-      {% with name='Markers', id='markersStep' %}
-        {% include 'partials/_importer_step.html' %}
-      {% endwith %}
+      <form id="processForm" action="{{ url('projects:import') }}" method="POST">
+        {{ csrf_input }}
+        <button id="process" class="button is-primary">
+          <span class="icon">
+            <i class="fas fa-cog"></i>
+          </span>
+          <span>Process</span>
+        </button>
+        {% with name='Data source', id='dataSourceStep', active=True, content_template='partials/_importer_datasource.html', no_placeholder=True %}
+          {% include 'partials/_importer_step.html' %}
+        {% endwith %}
+        {% with name='Markers', id='markersStep' %}
+          {% include 'partials/_importer_step.html' %}
+        {% endwith %}
+      </form>
     </div>
+  </div>
+  <div class="is-hidden">
+    <select id="markerTemplate">
+      {% for marker in markers %}
+        <option value="{{marker.pk}}">{{marker.name}}</option>
+      {% endfor %}
+    </select>
   </div>
 {% endblock %}

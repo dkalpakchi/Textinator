@@ -1,4 +1,4 @@
-(function (JSONEditor, bulmaCollapsible) {
+(function (JSONEditor, bulmaCollapsible, $) {
   const utils = {
     mime: {
       json: "application/json",
@@ -26,7 +26,6 @@
       return obj;
     },
   };
-  window.utils = utils;
 
   const ui = {
     widgets: {
@@ -37,9 +36,16 @@
       buttons: {
         use: null,
         reset: null,
+        process: null,
       },
       inputs: {
         fileLoader: null,
+      },
+      forms: {
+        process: null,
+      },
+      templates: {
+        markers: null,
       },
     },
     placeholders: {
@@ -53,15 +59,24 @@
       );
       this.widgets.areas.structure = document.querySelector("#structureArea");
       this.widgets.areas.steps = document.querySelector("#stepsArea");
+
       this.widgets.buttons.use = this.widgets.areas.steps.querySelectorAll(
         'a[data-role="selector"]'
       );
       this.widgets.buttons.reset = this.widgets.areas.steps.querySelectorAll(
         'a[data-role="reset"]'
       );
+      this.widgets.buttons.process = document.querySelector("button#process");
+
+      this.widgets.templates.markers = document.querySelector(
+        "select#markerTemplate"
+      );
+
+      this.widgets.forms.process =
+        this.widgets.areas.steps.querySelector("form#processForm");
 
       this.widgets.areas.steps
-        .querySelectorAll(".card-content")
+        .querySelectorAll(".card-content:not([no-placeholder])")
         .forEach(function (x) {
           x.innerHTML = control.placeholders.step;
         });
@@ -79,9 +94,50 @@
         this.editor = new JSONEditor(this.widgets.areas.structure, options);
       }
     },
-    visualizeTemplate: function () {
-      let template = importer.template;
-      console.log(template);
+    visualizeTable: function (container, propName, valName) {
+      let table = document.createElement("table");
+      table.className = "table is-fullwidth";
+      let head = document.createElement("thead");
+      head.classList.add("head");
+      let headers = document.createElement("tr");
+      let propCell = document.createElement("th");
+      let valCell = document.createElement("th");
+      propCell.innerText = propName;
+      valCell.innerText = valName;
+      headers.appendChild(propCell);
+      headers.appendChild(valCell);
+      head.appendChild(headers);
+      table.appendChild(head);
+      table.appendChild(document.createElement("tbody"));
+      container.appendChild(table);
+    },
+    visualizeTemplateForDataSource: function (fields) {
+      let cell = document.querySelector('[data-source="true"]');
+      if (cell.innerHTML.trim().length > 0) {
+        cell.innerHTML += ", ";
+      }
+      cell.innerHTML += fields.join(", ");
+    },
+    visualizeTemplateRowForMarker: function (field) {
+      let row = document.createElement("tr");
+      let pathCell = document.createElement("td");
+      let markerCell = document.createElement("td");
+      pathCell.innerText = field;
+      let clone = this.widgets.templates.markers.cloneNode(true);
+      clone.setAttribute("name", field);
+      markerCell.appendChild(clone);
+      row.appendChild(pathCell);
+      row.appendChild(markerCell);
+      return row;
+    },
+    visualizeTemplateForMarker: function (fields, container) {
+      if (container.childNodes.length == 0) {
+        this.visualizeTable(container, "JSON path", "Marker");
+      }
+      let tbody = container.querySelector("table tbody");
+      for (let i = 0, len = fields.length; i < len; i++) {
+        tbody.appendChild(this.visualizeTemplateRowForMarker(fields[i]));
+      }
     },
     initEvents: function () {
       let control = this;
@@ -113,15 +169,18 @@
           }
 
           let templateKey = href.replace("Step", ""),
-            recordContainer = document.querySelector(
-              "#" + href + " .card-content"
-            );
+            parentContainer = document.querySelector("#" + href),
+            recordContainer = parentContainer.querySelector(".card-content");
 
-          if (importer.template.isRecorded(templateKey)) {
-            recordContainer.innerHTML += ", " + fields.join(", ");
-          } else {
-            recordContainer.innerHTML = fields.join(", ");
+          if (templateKey == "markers") {
+            if (!importer.template.isRecorded(templateKey)) {
+              recordContainer.innerHTML = "";
+            }
+            control.visualizeTemplateForMarker(fields, recordContainer);
+          } else if (templateKey == "dataSource") {
+            control.visualizeTemplateForDataSource(fields, recordContainer);
           }
+          parentContainer.style.height = parentContainer.scrollHeight + "px";
           importer.template.record(templateKey, fields);
         });
       });
@@ -132,14 +191,53 @@
             href = target.getAttribute("data-href");
 
           let templateKey = href.replace("Step", ""),
-            recordContainer = document.querySelector(
-              "#" + href + " .card-content"
-            );
+            parentContainer = document.querySelector("#" + href),
+            recordContainer = parentContainer.querySelector(".card-content");
 
-          recordContainer.innerHTML = control.placeholders.step;
+          parentContainer.style.height = "";
+          if (templateKey == "markers") {
+            recordContainer.innerHTML = control.placeholders.step;
+          } else if (templateKey == "dataSource") {
+            let cell = document.querySelector('[data-source="true"]');
+            cell.innerHTML = "";
+          }
+          parentContainer.style.height = parentContainer.scrollHeight + "px";
           importer.template.reset(templateKey);
         });
       });
+
+      this.widgets.buttons.process.addEventListener(
+        "click",
+        function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          let form = control.widgets.forms.process;
+
+          $.ajax({
+            method: form.getAttribute("method"),
+            url: form.getAttribute("action"),
+            dataType: "json",
+            data: {
+              data: JSON.stringify($(form).serializeObject()),
+              // This assumes that the file on top of the queue
+              // is the one we're working with. OK for starters,
+              // but need a better system later, probably.
+              fileData: JSON.stringify(importer.getLatest()),
+              csrfmiddlewaretoken: form.querySelector(
+                'input[name="csrfmiddlewaretoken"]'
+              ).value,
+            },
+            success: function (data) {
+              alert(data);
+            },
+            error: function () {
+              console.log("ERROR!");
+            },
+          });
+        },
+        false
+      );
 
       document.addEventListener(importer.events.enq, function (e) {
         let obj = e.detail;
@@ -232,10 +330,9 @@
           instance._originalHeight = instance.scrollHeight + "px";
         });
       });
-
+      window.imp = importer;
       window.ui = ui;
-      window.im = importer;
     },
     false
   );
-})(window.JSONEditor, window.bulmaCollapsible);
+})(window.JSONEditor, window.bulmaCollapsible, window.jQuery);

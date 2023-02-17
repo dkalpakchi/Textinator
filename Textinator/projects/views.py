@@ -1056,6 +1056,12 @@ def time_report(request, proj):
 @require_http_methods(["GET", "POST"])
 def importer(request):
     if request.method == "GET":
-        return render(request, "projects/importer.html", {})
+        markers = Tm.Marker.objects.all()
+        return render(request, "projects/importer.html", {
+            'markers': markers
+        })
     elif request.method == "POST":
+        # TODO: add support for JSON lines format in future
+        data = json.loads(request.POST.get('data'))
+        file_data = json.loads(request.POST.get('fileData'))
         return JsonResponse({})
