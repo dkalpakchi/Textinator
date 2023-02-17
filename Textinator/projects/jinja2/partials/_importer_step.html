@@ -1,0 +1,17 @@
+<div class="card">
+  <header class="card-header">
+    <p class="card-header-title">{{name}}</p>
+    <a href="#{{id}}" data-action="collapse" class="card-header-icon is-hidden-fullscreen" aria-label="more options">
+      <span class="icon">
+        <i class="fas fa-angle-down" aria-hidden="true"></i>
+      </span>
+    </a>
+  </header>
+  <div id="{{id}}" class="is-collapsible{% if active %} is-active{% endif %}">
+    <div class="card-content"></div>
+    <footer class="card-footer">
+      <a data-role="selector" data-href="{{id}}" class="card-footer-item">Use selected fields</a>
+      <a data-role="reset" data-href="{{id}}" class="card-footer-item">Reset</a>
+    </footer>
+  </div>
+</div>

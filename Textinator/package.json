@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/dkalpakchi/Textinator#readme",
   "dependencies": {
+    "@creativebulma/bulma-collapsible": "^1.0.4",
     "@creativebulma/bulma-divider": "^1.1.0",
     "@eastdesire/jscolor": "^2.4.8",
     "@fortawesome/fontawesome-free": "^5.9.0",

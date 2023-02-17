@@ -1,12 +1,29 @@
 {% extends "layout.html" %}
 
 {% block custom_styles %}
+  <link href="{{ static('jsoneditor/dist/jsoneditor.min.css') }}" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="{{ static('@creativebulma/bulma-collapsible/dist/css/bulma-collapsible.min.css') }}">
 {% endblock %}
 
 {% block custom_scripts %}
+  <script type="text/javascript" src="{{ static('@creativebulma/bulma-collapsible/dist/js/bulma-collapsible.min.js') }}"></script>
+  <script type="text/javascript" src="{{ static('jsoneditor/dist/jsoneditor.min.js') }}"></script>
   <script type="text/javascript" src="{{ static('scripts/importer.js') }}"></script>
 {% endblock %}
 
 {% block content %}
-  <input id="dataSourceFile" type="file">
+  <div class="columns">
+    <div class="column">
+      <input id="dataSourceFile" type="file">
+      <div id="structureArea"></div>
+    </div>
+    <div id="stepsArea" class="column">
+      {% with name='Data source', id='dataSourceStep', active=True %}
+        {% include 'partials/_importer_step.html' %}
+      {% endwith %}
+      {% with name='Markers', id='markersStep' %}
+        {% include 'partials/_importer_step.html' %}
+      {% endwith %}
+    </div>
+  </div>
 {% endblock %}
