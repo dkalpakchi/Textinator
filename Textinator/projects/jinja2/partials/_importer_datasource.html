@@ -1,3 +1,4 @@
+<input id='sourceFields' type="hidden" name='sourceFields'>
 <table class="table is-fullwidth">
   <thead>
     <th>Property</th>
@@ -19,6 +20,16 @@
     <tr>
       <td>Source</td>
       <td data-source="true"></td>
+    </tr>
+    <tr>
+      <td>Formatting</td>
+      <td>
+        <select name="sourceFormatting">
+          {% for fmt, fmt_name in formats %}
+          <option value="{{fmt}}">{{fmt_name}}</option>
+          {% endfor %}
+        </select>
+      </td>
     </tr>
   </tbody>
 </table>

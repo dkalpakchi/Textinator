@@ -40,6 +40,7 @@
       },
       inputs: {
         fileLoader: null,
+        sourceFields: null,
       },
       forms: {
         process: null,
@@ -54,11 +55,14 @@
     editor: null,
     init: function () {
       let control = this;
+      this.widgets.areas.structure = document.querySelector("#structureArea");
+      this.widgets.areas.steps = document.querySelector("#stepsArea");
+
       this.widgets.inputs.fileLoader = document.querySelector(
         'input[type="file"]#dataSourceFile'
       );
-      this.widgets.areas.structure = document.querySelector("#structureArea");
-      this.widgets.areas.steps = document.querySelector("#stepsArea");
+      this.widgets.inputs.sourceFields =
+        this.widgets.areas.steps.querySelector("input#sourceFields");
 
       this.widgets.buttons.use = this.widgets.areas.steps.querySelectorAll(
         'a[data-role="selector"]'
@@ -117,6 +121,7 @@
         cell.innerHTML += ", ";
       }
       cell.innerHTML += fields.join(", ");
+      this.widgets.inputs.sourceFields.value = cell.innerHTML;
     },
     visualizeTemplateRowForMarker: function (field) {
       let row = document.createElement("tr");
@@ -124,7 +129,7 @@
       let markerCell = document.createElement("td");
       pathCell.innerText = field;
       let clone = this.widgets.templates.markers.cloneNode(true);
-      clone.setAttribute("name", field);
+      clone.setAttribute("data-name", field);
       markerCell.appendChild(clone);
       row.appendChild(pathCell);
       row.appendChild(markerCell);
@@ -200,6 +205,7 @@
           } else if (templateKey == "dataSource") {
             let cell = document.querySelector('[data-source="true"]');
             cell.innerHTML = "";
+            this.widgets.inputs.sourceFields.value = "";
           }
           parentContainer.style.height = parentContainer.scrollHeight + "px";
           importer.template.reset(templateKey);
@@ -212,14 +218,24 @@
           e.preventDefault();
           e.stopPropagation();
 
-          let form = control.widgets.forms.process;
+          let form = control.widgets.forms.process,
+            fdata = $(form).serializeObject();
+
+          let markerSelects = form.querySelectorAll("select[data-name]"),
+            markerMapping = {};
+
+          for (let i = 0, len = markerSelects.length; i < len; i++) {
+            let s = markerSelects[i];
+            markerMapping[s.getAttribute("data-name")] = s.value;
+          }
+          fdata["markerMapping"] = markerMapping;
 
           $.ajax({
             method: form.getAttribute("method"),
             url: form.getAttribute("action"),
             dataType: "json",
             data: {
-              data: JSON.stringify($(form).serializeObject()),
+              data: JSON.stringify(fdata),
               // This assumes that the file on top of the queue
               // is the one we're working with. OK for starters,
               // but need a better system later, probably.

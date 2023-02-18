@@ -26,10 +26,13 @@
           </span>
           <span>Process</span>
         </button>
-        {% with name='Data source', id='dataSourceStep', active=True, content_template='partials/_importer_datasource.html', no_placeholder=True %}
+        {% with allow_interaction=True, name='Data source', id='dataSourceStep', active=True, content_template='partials/_importer_datasource.html', no_placeholder=True %}
           {% include 'partials/_importer_step.html' %}
         {% endwith %}
-        {% with name='Markers', id='markersStep' %}
+        {% with allow_interaction=True, name='Markers', id='markersStep' %}
+          {% include 'partials/_importer_step.html' %}
+        {% endwith %}
+        {% with name='Project', id='projectStep', content_template='partials/_importer_project.html', no_placeholder=True %}
           {% include 'partials/_importer_step.html' %}
         {% endwith %}
       </form>

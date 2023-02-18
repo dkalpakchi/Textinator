@@ -2,6 +2,7 @@
 import os
 import io
 import time
+import datetime as dt
 import uuid
 import json
 import logging
@@ -1058,10 +1059,39 @@ def importer(request):
     if request.method == "GET":
         markers = Tm.Marker.objects.all()
         return render(request, "projects/importer.html", {
-            'markers': markers
+            'markers': markers,
+            'formats': settings.FORMATTING_TYPES
         })
     elif request.method == "POST":
         # TODO: add support for JSON lines format in future
         data = json.loads(request.POST.get('data'))
         file_data = json.loads(request.POST.get('fileData'))
+        print(data)
+
+        # Creating a project
+        p = Tm.Project.objects.create(
+            title=data['title'],
+            short_description=data['description'],
+            language=data['sourceLang'],
+            task_type='generic',
+            dt_publish=timezone.now(),
+            dt_finish=timezone.now() + dt.timedelta(days=7)
+        )
+
+        # Creating a data source and connecting it to the project
+        ds = Tm.DataSource.objects.create(
+            name=data['sourceName'],
+            language=data['sourceLang'],
+            source_type=Tm.DataSource.INTERACTIVE,
+            formatting=data['sourceFormatting']
+        )
+        p.datasources.add(ds)
+
+        # Connecting markers to the project
+        markers = Tm.Marker.objects.filter(
+            pk__in=list(map(int, data['markerMapping'].values()))
+        ).all()
+        p.markers.add(*markers)
+        p.save()
+
         return JsonResponse({})

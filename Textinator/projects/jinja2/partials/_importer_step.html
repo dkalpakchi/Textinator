@@ -13,9 +13,11 @@
         {% include content_template %}
       {% endif %}
     </div>
+    {% if allow_interaction %}
     <footer class="card-footer">
       <a data-role="selector" data-href="{{id}}" class="card-footer-item">Use selected fields</a>
       <a data-role="reset" data-href="{{id}}" class="card-footer-item">Reset</a>
     </footer>
+    {% endif %}
   </div>
 </div>
