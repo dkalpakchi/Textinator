@@ -19,6 +19,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.cache import caches
 from django.db.models import signals
+from django.contrib.postgres.search import SearchVector, SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 
 from tinymce import HTMLField
 from filebrowser.fields import FileBrowseField
@@ -1300,11 +1302,15 @@ class Context(CommonModel):
     class Meta:
         verbose_name = _('context')
         verbose_name_plural = _('contexts')
+        indexes = [
+            GinIndex(fields=['content_vector'])
+        ]
 
     datasource = models.ForeignKey(DataSource, on_delete=models.SET_NULL, null=True, blank=True)
     datapoint = models.CharField(_("datapoint ID"), max_length=64, null=True, blank=True,
         help_text=_("As stored in the original dataset"))
     content = models.TextField(_("content"))
+    content_vector = SearchVectorField(null=True)
 
     @property
     def content_hash(self):

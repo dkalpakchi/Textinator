@@ -195,7 +195,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
         vector = None
         if search_mv_pk is not None:
             if search_mv_pk == 0:
-                vector = SearchVector("context__content", config=search_config)
+                vector = "context__content_vector"
             else:
                 # -2 means search by annotation number
                 vector = SearchVector("content", config=search_config)
@@ -215,9 +215,12 @@ def render_editing_board(request, project, user, page, template='partials/compon
 
             if search_type == "phr":
                 # phrase queries
-                input_batches = input_batches.annotate(
-                    search=vector
-                ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
+                if isinstance(vector, str):
+                    input_batches = input_batches.filter(**{vector: query}) # some of them get like 1e-20, which is why > 0 doesn't work'
+                else:
+                    input_batches = input_batches.annotate(
+                        search=vector
+                    ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
             else:
                 input_batches = input_batches.annotate(
                     rank=SearchRank(vector, query)
