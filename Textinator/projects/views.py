@@ -546,12 +546,15 @@ def get_batch(request, proj):
         # context['content'] will give us text without formatting,
         # so we simply query the data source one more time to get with formatting
         ds = Tm.DataSource.objects.get(pk=context['ds_id'])
-        post_processed_text = ds.postprocess(ds.get(context['dp_id'])).strip()
+        if ds.source_type == Tm.DataSource.INTERACTIVE:
+            post_processed_text = context['content']
+        else:
+            post_processed_text = ds.postprocess(ds.get(context['dp_id'])).strip()
 
         if ds.formatting == 'md':
             context['content'] = to_markdown(post_processed_text)
-        elif ds.formatting == 'ft':
-            context['content'] = to_formatted_text(post_processed_text)
+        #elif ds.formatting == 'ft':
+        #    context['content'] = to_formatted_text(post_processed_text)
         else:
             context['content'] = post_processed_text
 
@@ -777,8 +780,8 @@ def new_article(request, proj):
 
         if dp_info.source_formatting == 'md':
             text = to_markdown(text)
-        elif dp_info.source_formatting == 'ft':
-            text = to_formatted_text(text)
+        #elif dp_info.source_formatting == 'ft':
+        #    text = to_formatted_text(text)
 
     return JsonResponse({
         'text': text,
@@ -1060,13 +1063,24 @@ def importer(request):
         markers = Tm.Marker.objects.all()
         return render(request, "projects/importer.html", {
             'markers': markers,
-            'formats': settings.FORMATTING_TYPES
+            'formats': settings.FORMATTING_TYPES,
+            'anno_types': settings.ANNOTATION_TYPES
         })
     elif request.method == "POST":
         # TODO: add support for JSON lines format in future
         data = json.loads(request.POST.get('data'))
         file_data = json.loads(request.POST.get('fileData'))
-        print(data)
+
+        errors = []
+        if not [x for x in data['sourceFields'].strip().split(",") if x]:
+            errors.append("No source fields for data are provided")
+        if not data['markerMapping']:
+            errors.append("No marker mapping is provided")
+
+        if errors:
+            return JsonResponse(
+                {"errors": errors}
+            )
 
         # Creating a project
         p = Tm.Project.objects.create(
@@ -1088,10 +1102,56 @@ def importer(request):
         p.datasources.add(ds)
 
         # Connecting markers to the project
-        markers = Tm.Marker.objects.filter(
-            pk__in=list(map(int, data['markerMapping'].values()))
-        ).all()
-        p.markers.add(*markers)
+        m2attr = {int(x['marker']): x for x in data['markerMapping'].values()}
+        markers = Tm.Marker.objects.filter(pk__in=m2attr.keys()).all()
+        for m in markers:
+            p.markers.add(m, through_defaults={
+                'anno_type': m2attr[m.pk]['anno'],
+                'choices': m2attr[m.pk]['choices'].split(",")
+            })
         p.save()
+
+        # Create the actual datapoints
+        text_keys = data["sourceFields"].split(",")
+        has_markers = p.markers.count() > 0
+        if has_markers:
+            m2mv = {x.marker.pk: x.pk for x in p.markervariant_set.all()}
+            mv_mapping = data['markerMapping']
+            for k in mv_mapping:
+                mv_mapping[k]['marker'] = m2mv[int(mv_mapping[k]['marker'])]
+
+        inp_anno_types = dict(settings.INPUT_ANNOTATION_TYPES)
+        for i, obj in enumerate(file_data):
+            content = []
+            for tk in text_keys:
+                content.extend(list(Tvh.follow_json_path(obj, tk.strip().split("."))))
+            ctx, _ = Tm.Context.objects.get_or_create(
+                datasource=ds,
+                datapoint=i,
+                content="\n\n".join(content)
+            )
+
+            mv_items = mv_mapping.items()
+            res = [list(Tvh.follow_json_path(obj, json_key.strip().split(".")))
+                   for json_key, spec in mv_items]
+
+            for batch_items in zip(*res):
+                batch = Tm.Batch.objects.create(user=request.user, uuid=uuid.uuid4())
+                for mv_no, (_, spec) in enumerate(mv_items):
+                    if spec['anno'] in inp_anno_types:
+                        # here the assumption is that each object in `res_node` is just a string
+                        Tm.Input.objects.create(
+                            content=batch_items[mv_no], marker_id=spec['marker'], context=ctx, batch=batch
+                        )
+                    else:
+                        # here the assumption is that each object in `res_node` is a dictionary
+                        # {
+                        #   "text": "", "start": x, "end": y
+                        # }
+                        if batch_items[mv_no] and "start" in batch_items[mv_no] and "end" in batch_items[mv_no]:
+                            Tm.Label.objects.create(
+                                start=batch_items[mv_no]["start"], end=batch_items[mv_no]["end"],
+                                marker_id=spec['marker'], context=ctx, batch=batch
+                            )
 
         return JsonResponse({})

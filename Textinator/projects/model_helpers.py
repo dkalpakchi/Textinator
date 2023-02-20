@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 class DatapointInfo:
     def __init__(self, dp_id=None, text=None, ds=None, ds_def=None, proj_id=None, is_empty=False, no_data=False, is_dialogue=False, is_delayed=False, is_interactive=False):
         self.id = dp_id
-        self.text = text
+        self.text = text.replace("\r\n", "\n")
         if ds:
             self.source_size = ds.size()
             self.source_name = ds.get_source_name(self.id)
@@ -23,7 +23,7 @@ class DatapointInfo:
         else:
             self.source_id, self.source_formatting = None, None
 
-        self.source_spec = json.loads(ds_def.spec) if ds_def else None
+        self.source_spec = json.loads(ds_def.spec) if ds_def and ds_def.spec else None
 
         self.is_empty = is_empty
         self.no_data = no_data

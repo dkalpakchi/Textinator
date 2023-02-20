@@ -75,6 +75,9 @@
       this.widgets.templates.markers = document.querySelector(
         "select#markerTemplate"
       );
+      this.widgets.templates.annoTypes = document.querySelector(
+        "select#annoTypeTemplate"
+      );
 
       this.widgets.forms.process =
         this.widgets.areas.steps.querySelector("form#processForm");
@@ -98,18 +101,17 @@
         this.editor = new JSONEditor(this.widgets.areas.structure, options);
       }
     },
-    visualizeTable: function (container, propName, valName) {
+    visualizeTable: function (container, headerNames) {
       let table = document.createElement("table");
       table.className = "table is-fullwidth";
       let head = document.createElement("thead");
       head.classList.add("head");
       let headers = document.createElement("tr");
-      let propCell = document.createElement("th");
-      let valCell = document.createElement("th");
-      propCell.innerText = propName;
-      valCell.innerText = valName;
-      headers.appendChild(propCell);
-      headers.appendChild(valCell);
+      for (let i = 0, len = headerNames.length; i < len; i++) {
+        let cell = document.createElement("th");
+        cell.innerText = headerNames[i];
+        headers.appendChild(cell);
+      }
       head.appendChild(headers);
       table.appendChild(head);
       table.appendChild(document.createElement("tbody"));
@@ -127,17 +129,43 @@
       let row = document.createElement("tr");
       let pathCell = document.createElement("td");
       let markerCell = document.createElement("td");
+      let annoCell = document.createElement("td");
+      let choicesCell = document.createElement("td");
+
       pathCell.innerText = field;
+
       let clone = this.widgets.templates.markers.cloneNode(true);
-      clone.setAttribute("data-name", field);
+      clone.id = "";
+      clone.setAttribute("data-for", field);
+      clone.setAttribute("data-name", "marker");
       markerCell.appendChild(clone);
+
+      clone = this.widgets.templates.annoTypes.cloneNode(true);
+      clone.id = "";
+      clone.setAttribute("data-for", field);
+      clone.setAttribute("data-name", "anno");
+      annoCell.appendChild(clone);
+
+      let choicesInput = document.createElement("input");
+      choicesInput.setAttribute("type", "text");
+      choicesInput.setAttribute("data-for", field);
+      choicesInput.setAttribute("data-name", "choices");
+      choicesCell.appendChild(choicesInput);
+
       row.appendChild(pathCell);
       row.appendChild(markerCell);
+      row.appendChild(annoCell);
+      row.appendChild(choicesInput);
       return row;
     },
     visualizeTemplateForMarker: function (fields, container) {
       if (container.childNodes.length == 0) {
-        this.visualizeTable(container, "JSON path", "Marker");
+        this.visualizeTable(container, [
+          "JSON path",
+          "Marker",
+          "Annotate as",
+          "Select from",
+        ]);
       }
       let tbody = container.querySelector("table tbody");
       for (let i = 0, len = fields.length; i < len; i++) {
@@ -170,7 +198,22 @@
             fields = [];
           for (let i = 0, len = selection.length; i < len; i++) {
             let node = selection[i];
-            fields.push(node.getPath().join("."));
+            let internalPath = node.getInternalPath();
+            let path = [];
+
+            // differentiate between numbers pointing to the array element
+            // or numbers pointing to object key with that number
+            let curNode = control.editor.node.findNodeByInternalPath([
+              internalPath[0],
+            ]);
+            let insideArray = false;
+            for (let j = 1, pLen = internalPath.length; j < pLen; j++) {
+              path.push(insideArray ? "[ ]" : curNode.getName());
+              insideArray = curNode.type == "array";
+              curNode = curNode.childs[internalPath[j]];
+            }
+            path.push(insideArray ? "[ ]" : curNode.getName());
+            fields.push(path.join("."));
           }
 
           let templateKey = href.replace("Step", ""),
@@ -221,12 +264,17 @@
           let form = control.widgets.forms.process,
             fdata = $(form).serializeObject();
 
-          let markerSelects = form.querySelectorAll("select[data-name]"),
+          let markerAttrs = form.querySelectorAll("[data-name]"),
             markerMapping = {};
 
-          for (let i = 0, len = markerSelects.length; i < len; i++) {
-            let s = markerSelects[i];
-            markerMapping[s.getAttribute("data-name")] = s.value;
+          for (let i = 0, len = markerAttrs.length; i < len; i++) {
+            let s = markerAttrs[i],
+              sFor = s.getAttribute("data-for"),
+              sName = s.getAttribute("data-name");
+            if (!markerMapping.hasOwnProperty(sFor)) {
+              markerMapping[sFor] = {};
+            }
+            markerMapping[sFor][sName] = s.value;
           }
           fdata["markerMapping"] = markerMapping;
 
@@ -245,7 +293,7 @@
               ).value,
             },
             success: function (data) {
-              alert(data);
+              alert(JSON.stringify(data));
             },
             error: function () {
               console.log("ERROR!");
@@ -262,13 +310,17 @@
           if (Array.isArray(obj)) {
             // either an array of objects with identical structure (so jsonlines)
             if (utils.haveIdenticalStructure(obj)) {
-              control.editor.set(utils.trimStrings(obj[0], 50));
+              control.editor.set(
+                utils.trimStrings(Object.assign({}, obj[0]), 50)
+              );
             }
           } else if (obj.hasOwnProperty("data") && Array.isArray(obj.data)) {
             // or a json object with a "data" field,
             // which in turn is an array of objects with identical structure
             if (utils.haveIdenticalStructure(obj.data)) {
-              control.editor.set(utils.trimStrings(obj.data[0], 50));
+              control.editor.set(
+                utils.trimStrings(Object.assign({}, obj.data[0]), 50)
+              );
             }
           }
         }

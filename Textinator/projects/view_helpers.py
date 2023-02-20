@@ -26,7 +26,7 @@ class BatchInfo:
         self.radios = json.loads(data['radio'])
         self.checkboxes = json.loads(data['checkboxes'])
         self.datapoint = str(data['datapoint'])
-        self.context = data.get('context')
+        self.context = data.get('context').replace("\r\n", "\n")
 
         try:
             self.project = Project.objects.get(pk=proj)
@@ -407,3 +407,22 @@ def process_text_markers(batch, batch_info, text_markers=None, ctx_cache=None):
                 if m.code == tm_code:
                     Label.objects.create(context=ctx, marker=m, batch=batch)
                     break
+
+
+def follow_json_path(obj, path):
+    if len(path) == 0:
+        yield obj
+        return
+
+    ARRAY_MARKER = "[ ]"
+    if path[0] == ARRAY_MARKER:
+        if not isinstance(obj, list): return
+        for x in obj:
+            batch = []
+            for r in follow_json_path(x, path[1:]):
+                batch.append(r)
+            yield batch[0] if len(batch) == 1 else batch
+    elif path[0] in obj:
+        yield from follow_json_path(obj[path[0]], path[1:])
+    else:
+        return

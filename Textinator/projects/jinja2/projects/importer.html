@@ -44,5 +44,10 @@
         <option value="{{marker.pk}}">{{marker.name}}</option>
       {% endfor %}
     </select>
+    <select id="annoTypeTemplate">
+      {% for atype, aname in anno_types %}
+        <option value="{{atype}}">{{aname}}</option>
+      {% endfor %}
+    </select>
   </div>
 {% endblock %}
