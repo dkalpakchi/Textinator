@@ -517,6 +517,8 @@ class DataAccessLogAdmin(CommonModelAdmin):
 @admin.register(Tm.Marker)
 class MarkerAdmin(CommonModelAdmin):
     exclude = ('suggestion_endpoint', 'code')
+    save_as = True
+    save_and_add = True
 
     def get_form(self, request, *args, **kwargs):
         form = super(MarkerAdmin, self).get_form(request, *args, **kwargs)
