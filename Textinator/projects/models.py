@@ -28,6 +28,8 @@ from colorfield.fields import ColorField
 from model_clone import CloneMixin
 from model_clone.utils import create_copy_of_instance
 
+from Textinator.ext import RegConfigField
+
 from .datasources import *
 from .helpers import *
 from .model_helpers import *
@@ -125,7 +127,7 @@ class DataSource(CommonModel):
     language = models.CharField(_("language"), max_length=10, choices=settings.LANGUAGES,
         help_text=_("Language of this data source")
     )
-    search_config = models.CharField(_("PostgreSQL search config"), max_length=20, null=True, blank=True)
+    search_config = RegConfigField(_("PostgreSQL search config"), null=True, blank=True)
     formatting = models.CharField(_('formatting'), max_length=3, choices=settings.FORMATTING_TYPES,
         help_text=_("text formating of the data source"))
     is_public = models.BooleanField(_("is public?"), default=False,
@@ -137,10 +139,10 @@ class DataSource(CommonModel):
             lang_dict = dict(settings.LANGUAGES)
             sconf_dict = settings.LANG_SEARCH_CONFIG
             search_config = sconf_dict.get(
-                p.language,
-                lang_dict.get(p.language, 'english')
+                self.language,
+                lang_dict.get(self.language, 'english')
             ).lower()
-            self.search_config = "public.{}".format(search_config)
+            self.search_config = search_config
         super(CommonModel, self).save(*args, **kwargs)
 
     @classmethod
@@ -1323,12 +1325,14 @@ class Context(CommonModel):
         help_text=_("As stored in the original dataset"))
     content = models.TextField(_("content"))
     content_vector = SearchVectorField(null=True)
+    search_config = RegConfigField(_("PostgreSQL search config"), null=True, blank=True)
 
     @property
     def content_hash(self):
         return hash_text(self.content)
 
     def save(self, *args, **kwargs):
+        self.search_config = self.datasource.search_config
         super(Context, self).save(*args, **kwargs)
 
     def __str__(self):

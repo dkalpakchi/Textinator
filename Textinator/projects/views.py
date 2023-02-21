@@ -1093,9 +1093,16 @@ def importer(request):
         )
 
         # Creating a data source and connecting it to the project
+        lang_dict = dict(settings.LANGUAGES)
+        sconf_dict = settings.LANG_SEARCH_CONFIG
+        search_config = sconf_dict.get(
+            data['sourceLang'],
+            lang_dict.get(data['sourceLang'], 'english')
+        ).lower()
         ds = Tm.DataSource.objects.create(
             name=data['sourceName'],
             language=data['sourceLang'],
+            search_config=search_config,
             source_type=Tm.DataSource.INTERACTIVE,
             formatting=data['sourceFormatting']
         )

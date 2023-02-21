@@ -21,8 +21,11 @@ def index_langdep_context_content(apps, schema_editor):
             ds.language,
             lang_dict.get(ds.language, 'english')
         ).lower()
-        ds.search_config = "public.{}".format(search_config)
+        ds.search_config = search_config
         ds.save()
+        Context.objects.filter(datasource=ds).update(
+            search_config=search_config
+        )
 
     for p in Project.objects.all():
         if p.language != 'en':
@@ -40,7 +43,7 @@ def index_langdep_context_content(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('projects', '0166_datasource_search_config'),
+        ('projects', '0167_context_search_config'),
     ]
 
     operations = [
@@ -54,7 +57,7 @@ class Migration(migrations.Migration):
               BEFORE INSERT OR UPDATE OF content, content_vector
               ON projects_context
               FOR EACH ROW EXECUTE PROCEDURE
-              tsvector_update_trigger(
+              tsvector_update_trigger_column(
                 content_vector, search_config, content
               );
             ''',
