@@ -187,10 +187,11 @@ def render_editing_board(request, project, user, page, template='partials/compon
                 label_batches, input_batches = None, None
 
         lang_dict = dict(settings.LANGUAGES)
-        if project.language == 'en':
-            search_config = "{}_lite".format(lang_dict[project.language].lower())
-        else:
-            search_config = lang_dict[project.language].lower()
+        sconf_dict = settings.LANG_SEARCH_CONFIG
+        search_config = sconf_dict.get(
+            project.language,
+            lang_dict.get(project.language, 'english')
+        ).lower()
 
         vector = None
         if search_mv_pk is not None:

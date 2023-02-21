@@ -197,6 +197,10 @@ LANGUAGES = [
     ('uk', 'Ukrainian')
 ]
 
+LANG_SEARCH_CONFIG = {
+    'en': 'english_lite'
+}
+
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ] + glob.glob(os.path.join(BASE_DIR, 'locale', 'custom', '*'))

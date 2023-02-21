@@ -125,11 +125,23 @@ class DataSource(CommonModel):
     language = models.CharField(_("language"), max_length=10, choices=settings.LANGUAGES,
         help_text=_("Language of this data source")
     )
+    search_config = models.CharField(_("PostgreSQL search config"), max_length=20, null=True, blank=True)
     formatting = models.CharField(_('formatting'), max_length=3, choices=settings.FORMATTING_TYPES,
         help_text=_("text formating of the data source"))
     is_public = models.BooleanField(_("is public?"), default=False,
         help_text=_("Whether to make data source available to other Textinator users"))
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("owner"))
+
+    def save(self, *args, **kwargs):
+        if not self.search_config:
+            lang_dict = dict(settings.LANGUAGES)
+            sconf_dict = settings.LANG_SEARCH_CONFIG
+            search_config = sconf_dict.get(
+                p.language,
+                lang_dict.get(p.language, 'english')
+            ).lower()
+            self.search_config = "public.{}".format(search_config)
+        super(CommonModel, self).save(*args, **kwargs)
 
     @classmethod
     def type2class(cls, source_type):
