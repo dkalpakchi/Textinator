@@ -293,6 +293,15 @@ def record_datapoint(request, proj):
             page, scope = 1, -1
         query = data.get("query", "")
 
+        if scope is None:
+            scope = list(map(int, data.getlist("scope[]", [])))
+
+        if search_type is None:
+            search_type = data.getlist("search_type[]", "phr")
+
+        if query is None:
+            query = data.getlist("query[]", "")
+
         original_mode = mode
         if batch_info.project.editing_as_revision and mode == 'e':
             mode = 'rev'
@@ -426,9 +435,9 @@ def record_datapoint(request, proj):
             kwargs = {
                 'current_uuid': batch.uuid,
                 'template': 'partials/components/areas/_editing_body.html',
-                'search_mv_pk': scope,
-                'search_query': query,
-                'search_type': search_type
+                'search_mv_pk': Tvh.listify(scope),
+                'search_query': Tvh.listify(query),
+                'search_type': Tvh.listify(search_type)
             }
             if mode == "rev":
                 kwargs['template'] = 'partials/components/areas/_reviewing_body.html'
@@ -463,12 +472,23 @@ def record_datapoint(request, proj):
 def recorded_search(request, proj):
     try:
         page = int(request.GET.get("p", 1))
-        scope = int(request.GET.get("scope", -1))
-        search_type = request.GET.get("search_type", "phr")
+        scope = request.GET.get("scope")
+        search_type = request.GET.get("search_type")
     except ValueError:
         page, scope = 1, -1
-    query = request.GET.get("query", "")
+    query = request.GET.get("query")
     project = get_object_or_404(Tm.Project, pk=proj)
+
+    if scope is None:
+        scope = list(map(int, request.GET.getlist("scope[]", [])))
+    else:
+        scope = int(scope)
+
+    if search_type is None:
+        search_type = request.GET.getlist("search_type[]", "phr")
+
+    if query is None:
+        query = request.GET.getlist("query[]", "")
 
     # Scope:
     # -1 -- Everything except text (flagged or annotation no.)
@@ -479,9 +499,9 @@ def recorded_search(request, proj):
         'partial': True,
         'template': render_editing_board(
             request, project, request.user, page,
-            search_mv_pk=scope,
-            search_query=query,
-            search_type=search_type,
+            search_mv_pks=Tvh.listify(scope),
+            search_queries=Tvh.listify(query),
+            search_types=Tvh.listify(search_type),
             template='partials/components/areas/_editing_body.html'
         )
     })

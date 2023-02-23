@@ -51,6 +51,9 @@ class BatchInfo:
         ]
 
 
+def listify(x):
+    return x if isinstance(x, list) else [x]
+
 def get_or_create_ctx(batch_info, ctx_cache):
     if ctx_cache:
         ctx = retrieve_by_hash(batch_info.context, Context, ctx_cache)
@@ -113,18 +116,13 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
         return (ctx_cache, label_cache), saved_labels
 
 
-def extract_ids(label_batches, input_batches):
-    if label_batches:
-        label_ids = label_batches.values_list('batch_id', flat=True)
+def extract_ids(batches):
+    if batches:
+        batch_ids = batches.values_list('batch_id', flat=True)
     else:
-        label_ids = []
+        batch_ids = []
 
-    if input_batches:
-        input_ids = input_batches.values_list('batch_id', flat=True)
-    else:
-        input_ids = []
-
-    return label_ids, input_ids
+    return batch_ids
 
 
 def verbalize_search_type(st):
@@ -135,10 +133,33 @@ def verbalize_search_type(st):
     elif st == "web":
         return "websearch" # web-like search with OR allowed
 
+def check_empty(var, default):
+    ban = set()
+    if var is None:
+        var = default
+    else:
+        for i, x in enumerate(var):
+            if not x:
+                ban.add(i)
+    return var, ban
+
+def get_unbanned(lst, ban):
+    return [x for i, x in enumerate(lst) if i not in ban]
 
 def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None,
-                         current_uuid=None, search_mv_pk=None, search_query=None, search_type="phr"):
+                         current_uuid=None, search_mv_pks=None, search_queries=None, search_types=None):
     is_author, is_shared = project.author == user, project.shared_with(user)
+
+    # TODO: if this every becomes a speed bottleneck, which I doubt
+    #       re-write and make a linear scan out of it
+    search_mv_pks, ban_mv = check_empty(search_mv_pks, [])
+    search_queries, ban_q = check_empty(search_queries, [])
+    search_types, ban_t = check_empty(search_types, ["phr"])
+    ban = set.union(ban_mv, ban_q, ban_t)
+
+    search_mv_pks = get_unbanned(search_mv_pks, ban)
+    search_queries = get_unbanned(search_queries, ban)
+    search_types = get_unbanned(search_types, ban)
 
     if is_author or is_shared:
         label_batches = Label.objects.filter(marker__project=project).order_by('dt_created')
@@ -147,7 +168,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
         label_batches = Label.objects.filter(batch__user=user, marker__project=project).order_by('dt_created')
         input_batches = Input.objects.filter(batch__user=user, marker__project=project).order_by('dt_created')
 
-    label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
+    label_batch_ids, input_batch_ids = extract_ids(label_batches), extract_ids(input_batches)
 
     # Here we don't use just dataset identifiers, because
     # there can, of course, be multiple datasets with the same
@@ -161,7 +182,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
         pk__in=set(label_batch_ids) | set(input_batch_ids)
     ).annotate(index=window_exp)
 
-    if search_mv_pk == -2:
+    if -2 in search_mv_pks:
         # search for specific annotation no.
         sql_string, sql_params = relevant_batches.query.sql_with_params()
         search_indices = [int(x) for x in search_query.strip().split(",")]
@@ -194,43 +215,46 @@ def render_editing_board(request, project, user, page, template='partials/compon
         ).lower()
 
         vector = None
-        if search_mv_pk is not None:
-            if search_mv_pk == 0:
-                vector = "context__content_vector"
-            else:
-                # -2 means search by annotation number
-                vector = SearchVector("content", config=search_config)
+        if search_mv_pks or search_queries:
+            input_batch_ids = []
+            for search_mv_pk, search_query, search_type in zip(search_mv_pks, search_queries, search_types):
+                search_mv_pk = int(search_mv_pk)
+                if search_mv_pk is not None:
+                    if search_mv_pk == 0:
+                        vector = "context__content_vector"
+                    else:
+                        # -2 means search by annotation number
+                        vector = SearchVector("content", config=search_config)
 
-            if search_mv_pk > 0:
-                input_batches = input_batches.filter(marker_id=search_mv_pk)
-            elif search_mv_pk == -3:
-                # means search only among flagged
-                input_batches = input_batches.filter(batch__is_flagged=True)
+                    if search_mv_pk > 0:
+                        input_batches_clause = input_batches.filter(marker_id=search_mv_pk)
+                    elif search_mv_pk == -3:
+                        # means search only among flagged
+                        input_batches_clause = input_batches.filter(batch__is_flagged=True)
 
-        if search_query and vector:
-            query = SearchQuery(
-                search_query,
-                search_type=verbalize_search_type(search_type),
-                config=search_config
-            )
+                if search_query and vector:
+                    query = SearchQuery(
+                        search_query,
+                        search_type=verbalize_search_type(search_type),
+                        config=search_config
+                    )
 
-            if search_type == "phr":
-                # phrase queries
-                if isinstance(vector, str):
-                    input_batches = input_batches.filter(**{vector: query}) # some of them get like 1e-20, which is why > 0 doesn't work'
-                else:
-                    input_batches = input_batches.annotate(
-                        search=vector
-                    ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
-            else:
-                input_batches = input_batches.annotate(
-                    rank=SearchRank(vector, query)
-                ).filter(rank__gt=1e-3) # some of them get like 1e-20, which is why > 0 doesn't work'
+                    if search_type == "phr":
+                        # phrase queries
+                        if isinstance(vector, str):
+                            input_batches_clause = input_batches_clause.filter(**{vector: query}) # some of them get like 1e-20, which is why > 0 doesn't work'
+                        else:
+                            input_batches_clause = input_batches_clause.annotate(
+                                search=vector
+                            ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
+                    else:
+                        input_batches_clause = input_batches_clause.annotate(
+                            rank=SearchRank(vector, query)
+                        ).filter(rank__gt=1e-3) # some of them get like 1e-20, which is why > 0 doesn't work'
+                ib_ids = extract_ids(input_batches_clause)
+                input_batch_ids.append(set(ib_ids))
 
-        label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
-
-        if search_query or search_mv_pk:
-            batch_ids = set(input_batch_ids)
+            batch_ids = set.intersection(*input_batch_ids) if input_batch_ids else set()
         else:
             batch_ids = set(label_batch_ids) | set(input_batch_ids)
 

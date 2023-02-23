@@ -524,6 +524,10 @@ textarea {
   display: none !important;
 }
 
+.editing-area .card-header {
+  height: 40px;
+}
+
 .editing-area .message-body {
   max-height: 250px;
   -ms-overflow-y: scroll;

@@ -1,0 +1,36 @@
+<div class="field has-addons">
+  <p class="control">
+    <span class="select is-small">
+      <select name="scope">
+        <option value="-1">All annotations</option>
+        <option value="-2">Annotation No.</option>
+        <option value="-3">Flagged</option>
+        <option value="0">Text</option>
+        {% for m in project.input_markers %}
+          <option value="{{m.pk}}">{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </span>
+  </p>
+  <p class="control">
+    <span class="select is-small">
+      <select name="search_type">
+        <option value="phr">Phrase</option>
+        <option value="int">Keywords</option>
+        <option value="web">Web-like</option>
+      </select>
+    </span>
+  </p>
+  <div class="control is-expanded">
+    <input class="input is-small" type="text" placeholder="What do you want to search for?" name="query">
+  </div>
+  {% if has_remove %}
+    <div class="control">
+      <a data-action='removeClause' class="button is-small is-danger">
+        <span class="icon is-small">
+          <i class="fas fa-trash"></i>
+        </span>
+      </a>
+    </div>
+  {% endif %}
+</div>

@@ -1,4 +1,4 @@
-(function ($, d3, tippy, django) {
+(function ($, d3, tippy, django, bulmaCollapsible) {
   const utils = {
     isDefined: function (x) {
       return x != null && x !== undefined;
@@ -343,6 +343,10 @@
       return node == ancestorCand;
     }
 
+    function isFormField(node) {
+      return utils.isDefined(node) && node.classList.contains("field");
+    }
+
     function getEnclosing(node, isOfType) {
       node = node.parentNode;
       while (isOfType(node)) {
@@ -362,6 +366,10 @@
 
     function getEnclosingLabel(node) {
       return getEnclosing(node, isLabel);
+    }
+
+    function getClosestFormField(node) {
+      return getClosest(node, isFormField);
     }
 
     function getClosestBatch(node) {
@@ -840,6 +848,7 @@
           let markersAreaBody = this.markersArea.querySelector(".message-body");
           markersAreaBody.style.maxHeight =
             viewPortHeight - this.markersArea.offsetTop - 140 + "px";
+          console.log(this.markersArea.offsetTop);
         }
 
         if (this.interactiveDataArea == null) {
@@ -1234,39 +1243,75 @@
             closestBatch = getClosestBatch(target),
             closestPsArea = getClosestPostSubmitArea(target);
 
-          if (target.tagName == "A" && target.hasAttribute("data-page")) {
-            // pagination events
-            let mode = closestPsArea.getAttribute("data-mode");
-            let searchForm = closestPsArea.querySelector(
-                "#" + mode + "SearchForm"
-              ),
-              searchData = {};
-            if (utils.isDefined(searchForm))
-              searchData = $(searchForm).serializeObject();
+          if (target.tagName == "I") {
+            target = target.parentNode;
+            if (target.classList.contains("icon")) {
+              target = target.parentNode;
+            }
+          }
 
-            $.ajax({
-              type: "GET",
-              url:
-                closestPsArea.getAttribute("data-href") +
-                "?p=" +
-                target.getAttribute("data-page"),
-              dataType: "json",
-              data: searchData,
-              success: function (d) {
-                control.currentPage[mode] = target.getAttribute("data-page");
-                if (d.partial) {
-                  let mainPart = closestPsArea.querySelector("main");
-                  mainPart.innerHTML = d.template;
-                } else {
-                  closestPsArea.outerHTML = d.template;
-                }
+          if (target.tagName == "A") {
+            e.preventDefault();
+            e.stopPropagation();
+            if (target.id == "addSearchClause") {
+              let esClauseTemplate = document.querySelector(
+                "#editingSearchClauseTemplate .field"
+              );
+              let clone = esClauseTemplate.cloneNode(true);
+              let settings = document.querySelector("#searchSettings form");
+              let submitSearchButton = settings.querySelector(
+                'input[type="submit"]'
+              );
+              settings.insertBefore(clone, submitSearchButton.parentNode);
 
-                control.fixUI();
-              },
-              error: function () {
-                console.log("Error while invoking editing mode!");
-              },
-            });
+              const collapsibles = bulmaCollapsible.attach();
+              collapsibles.forEach(function (instance) {
+                // bug fix
+                instance._originalHeight = instance.element.scrollHeight + "px";
+              });
+            } else if (target.getAttribute("data-action") == "removeClause") {
+              let fieldDiv = getClosestFormField(target);
+              console.log(fieldDiv);
+              if (utils.isDefined(fieldDiv)) fieldDiv.remove();
+              const collapsibles = bulmaCollapsible.attach();
+              collapsibles.forEach(function (instance) {
+                // bug fix
+                instance._originalHeight = "100px";
+              });
+            } else if (target.hasAttribute("data-page")) {
+              // pagination events
+              let mode = closestPsArea.getAttribute("data-mode");
+              let searchForm = closestPsArea.querySelector(
+                  "#" + mode + "SearchForm"
+                ),
+                searchData = {};
+              if (utils.isDefined(searchForm))
+                searchData = $(searchForm).serializeObject();
+
+              $.ajax({
+                type: "GET",
+                url:
+                  closestPsArea.getAttribute("data-href") +
+                  "?p=" +
+                  target.getAttribute("data-page"),
+                dataType: "json",
+                data: searchData,
+                success: function (d) {
+                  control.currentPage[mode] = target.getAttribute("data-page");
+                  if (d.partial) {
+                    let mainPart = closestPsArea.querySelector("main");
+                    mainPart.innerHTML = d.template;
+                  } else {
+                    closestPsArea.outerHTML = d.template;
+                  }
+
+                  control.fixUI();
+                },
+                error: function () {
+                  console.log("Error while invoking editing mode!");
+                },
+              });
+            }
           } else if (utils.isDefined(closestBatch)) {
             // clicked on one of the batches
             let uuid = closestBatch.getAttribute("data-id"),
@@ -4806,6 +4851,15 @@
                     "</span>"
                 )
               );
+              const collapsibles = bulmaCollapsible.attach();
+
+              collapsibles.forEach(function (instance) {
+                instance.on("after:expand", function () {
+                  // bug fix
+                  instance._originalHeight =
+                    instance.element.scrollHeight + "px";
+                });
+              });
               labelerModule.fixUI();
             },
             error: function () {
@@ -4871,4 +4925,10 @@
       );
     });
   });
-})(window.jQuery, window.d3, window.tippy, window.django);
+})(
+  window.jQuery,
+  window.d3,
+  window.tippy,
+  window.django,
+  window.bulmaCollapsible
+);

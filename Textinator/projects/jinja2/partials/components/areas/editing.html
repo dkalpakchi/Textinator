@@ -3,40 +3,34 @@
     <p>{{ _("editing")|capitalize }}</p>
   </div>
   <nav class="search">
-    <form id="editingSearchForm" action="{{ url('projects:recorded_search', kwargs={'proj': project.pk }) }}" method="GET">
-      <div class="field has-addons">
-        <p class="control">
-          <span class="select is-small">
-            <select name="scope">
-              <option value="-1">All annotations</option>
-              <option value="-2">Annotation No.</option>
-              <option value="-3">Flagged</option>
-              <option value="0">Text</option>
-              {% for m in project.input_markers %}
-                <option value="{{m.pk}}">{{ m.name }}</option>
-              {% endfor %}
-            </select>
+    <div class="card">
+      <header class="card-header">
+        <p class="card-header-title is-size-7">Search settings</p>
+        <a href="#searchSettings" data-action="collapse" class="card-header-icon is-hidden-fullscreen" aria-label="more options">
+          <span class="icon">
+            <i class="fas fa-angle-down" aria-hidden="true"></i>
           </span>
-        </p>
-        <p class="control">
-          <span class="select is-small">
-            <select name="search_type">
-              <option value="phr">Phrase</option>
-              <option value="int">Keywords</option>
-              <option value="web">Web-like</option>
-            </select>
-          </span>
-        </p>
-        <div class="control is-expanded">
-          <input class="input is-small" type="text" placeholder="What do you want to search for?" name="query">
-        </div>
-        <div class="control">
-          <input type="submit" class="button is-info is-small" value="Search">
+        </a>
+      </header>
+      <div id="searchSettings" class="is-collapsible" aria-expanded="true">
+        <div class="card-content">
+          <form id="editingSearchForm" action="{{ url('projects:recorded_search', kwargs={'proj': project.pk }) }}" method="GET">
+            {% include 'partials/components/areas/_editing_search_clause.html' %}
+            <div class="control">
+              <input type="submit" class="button is-info is-small" value="Search">
+              <a id="addSearchClause" class="button is-warning is-small">Add AND clause</a>
+            </div>
+          </form>
         </div>
       </div>
-    </form>
+    </div>
   </nav>
   <main>
     {% include 'partials/components/areas/_editing_body.html' %}
   </main>
+  <div id="editingSearchClauseTemplate" class='is-hidden'>
+    {% with has_remove=True %}
+      {% include 'partials/components/areas/_editing_search_clause.html' %}
+    {% endwith %}
+  </div>
 </article>
