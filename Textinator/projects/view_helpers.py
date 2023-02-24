@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import numbers
 from collections import defaultdict, OrderedDict
 
 from django.conf import settings
@@ -139,7 +140,8 @@ def check_empty(var, default):
         var = default
     else:
         for i, x in enumerate(var):
-            if not x:
+            # to accommodate possibilities of 0-indexes
+            if not x and not isinstance(x, numbers.Number):
                 ban.add(i)
     return var, ban
 
@@ -222,6 +224,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
                 if search_mv_pk is not None:
                     if search_mv_pk == 0:
                         vector = "context__content_vector"
+                        input_batches_clause = input_batches
                     else:
                         # -2 means search by annotation number
                         vector = SearchVector("content", config=search_config)
@@ -231,6 +234,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
                     elif search_mv_pk == -3:
                         # means search only among flagged
                         input_batches_clause = input_batches.filter(batch__is_flagged=True)
+
 
                 if search_query and vector:
                     query = SearchQuery(

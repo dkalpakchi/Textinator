@@ -848,7 +848,6 @@
           let markersAreaBody = this.markersArea.querySelector(".message-body");
           markersAreaBody.style.maxHeight =
             viewPortHeight - this.markersArea.offsetTop - 140 + "px";
-          console.log(this.markersArea.offsetTop);
         }
 
         if (this.interactiveDataArea == null) {
