@@ -435,9 +435,9 @@ def record_datapoint(request, proj):
             kwargs = {
                 'current_uuid': batch.uuid,
                 'template': 'partials/components/areas/_editing_body.html',
-                'search_mv_pk': Tvh.listify(scope),
-                'search_query': Tvh.listify(query),
-                'search_type': Tvh.listify(search_type)
+                'search_mv_pks': Tvh.listify(scope),
+                'search_queries': Tvh.listify(query),
+                'search_types': Tvh.listify(search_type)
             }
             if mode == "rev":
                 kwargs['template'] = 'partials/components/areas/_reviewing_body.html'
