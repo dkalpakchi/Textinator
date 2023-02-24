@@ -1223,7 +1223,7 @@
                 url: $form.attr("action"),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
-                data: $form.serializeObject(),
+                data: $form.serializeObjectLists(),
                 success: function (data) {
                   let $editingBoard = $("#editingBoard");
                   let $main = $editingBoard.find("main");
@@ -1286,7 +1286,7 @@
                 ),
                 searchData = {};
               if (utils.isDefined(searchForm))
-                searchData = $(searchForm).serializeObject();
+                searchData = $(searchForm).serializeObjectLists();
 
               $.ajax({
                 type: "GET",
@@ -4572,7 +4572,6 @@
             if (utils.isDefined(searchForm)) {
               let searchData = $(searchForm).serializeObject();
               for (let key in searchData) inputFormData[key] = searchData[key];
-              console.log(inputFormData);
             }
 
             let curPage;
@@ -4584,6 +4583,8 @@
 
             if (utils.isDefined(curPage)) inputFormData["p"] = curPage;
           }
+
+          console.log(inputFormData);
 
           $.ajax({
             method: "POST",
