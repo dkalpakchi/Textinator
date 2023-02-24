@@ -1304,6 +1304,15 @@
                     closestPsArea.outerHTML = d.template;
                   }
 
+                  const collapsibles = bulmaCollapsible.attach();
+
+                  collapsibles.forEach(function (instance) {
+                    instance.on("after:expand", function () {
+                      // bug fix
+                      instance._originalHeight =
+                        instance.element.scrollHeight + "px";
+                    });
+                  });
                   control.fixUI();
                 },
                 error: function () {

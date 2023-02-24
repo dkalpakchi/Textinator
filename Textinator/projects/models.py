@@ -1362,6 +1362,8 @@ class Batch(Revisable, CommonModel):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     is_flagged = models.BooleanField(_("flagged?"), default=False,
         help_text=_("Indicates whether the annotator has flagged the batch as having problems"))
+    extra = models.JSONField(_("extra information"), null=True, blank=True,
+        help_text=_("in a JSON format"))
 
     def __str__(self):
         return str(self.uuid)
@@ -1465,6 +1467,8 @@ class Input(Orderable, Revisable, CloneMixin, CommonModel):
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
+    extra = models.JSONField(_("extra information"), null=True, blank=True,
+        help_text=_("in a JSON format"))
 
     @property
     def hash(self):

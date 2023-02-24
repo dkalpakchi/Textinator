@@ -1,4 +1,3 @@
-<input id='sourceFields' type="hidden" name='sourceFields'>
 <table class="table is-fullwidth">
   <thead>
     <th>Property</th>
@@ -19,7 +18,11 @@
     </tr>
     <tr>
       <td>Source</td>
-      <td data-source="true"></td>
+      <td>
+        {% with href='sourceFields' %}
+          {% include 'partials/_importer_button.html' %}
+        {% endwith %}
+      </td>
     </tr>
     <tr>
       <td>Formatting</td>

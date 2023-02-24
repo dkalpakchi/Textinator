@@ -40,7 +40,6 @@
       },
       inputs: {
         fileLoader: null,
-        sourceFields: null,
       },
       forms: {
         process: null,
@@ -61,12 +60,14 @@
       this.widgets.inputs.fileLoader = document.querySelector(
         'input[type="file"]#dataSourceFile'
       );
-      this.widgets.inputs.sourceFields =
-        this.widgets.areas.steps.querySelector("input#sourceFields");
 
       this.widgets.buttons.use = this.widgets.areas.steps.querySelectorAll(
         'a[data-role="selector"]'
       );
+      this.widgets.buttons.useForField =
+        this.widgets.areas.steps.querySelectorAll(
+          'a[data-role="fieldSelector"]'
+        );
       this.widgets.buttons.reset = this.widgets.areas.steps.querySelectorAll(
         'a[data-role="reset"]'
       );
@@ -117,13 +118,18 @@
       table.appendChild(document.createElement("tbody"));
       container.appendChild(table);
     },
-    visualizeTemplateForDataSource: function (fields) {
-      let cell = document.querySelector('[data-source="true"]');
+    visualizeTemplateForField: function (cell, fields, templateKey) {
       if (cell.innerHTML.trim().length > 0) {
         cell.innerHTML += ", ";
       }
       cell.innerHTML += fields.join(", ");
-      this.widgets.inputs.sourceFields.value = cell.innerHTML;
+      console.log(templateKey);
+      let inp = document.querySelector('input[type="hidden"]#' + templateKey);
+      console.log(inp);
+
+      if (inp.getAttribute("data-role") == "fieldSelectorInput") {
+        inp.value = cell.innerHTML;
+      }
     },
     visualizeTemplateRowForMarker: function (field) {
       let row = document.createElement("tr");
@@ -225,10 +231,47 @@
               recordContainer.innerHTML = "";
             }
             control.visualizeTemplateForMarker(fields, recordContainer);
-          } else if (templateKey == "dataSource") {
-            control.visualizeTemplateForDataSource(fields, recordContainer);
           }
           parentContainer.style.height = parentContainer.scrollHeight + "px";
+          importer.template.record(templateKey, fields);
+        });
+      });
+
+      this.widgets.buttons.useForField.forEach(function (x) {
+        x.addEventListener("click", function (e) {
+          let target = e.target,
+            valueField = target.previousElementSibling,
+            selection = control.editor.multiselection.nodes,
+            fields = [];
+
+          if (
+            !utils.isDefined(valueField) ||
+            valueField.getAttribute("data-prop") != "value"
+          )
+            return;
+
+          for (let i = 0, len = selection.length; i < len; i++) {
+            let node = selection[i];
+            let internalPath = node.getInternalPath();
+            let path = [];
+
+            // differentiate between numbers pointing to the array element
+            // or numbers pointing to object key with that number
+            let curNode = control.editor.node.findNodeByInternalPath([
+              internalPath[0],
+            ]);
+            let insideArray = false;
+            for (let j = 1, pLen = internalPath.length; j < pLen; j++) {
+              path.push(insideArray ? "[ ]" : curNode.getName());
+              insideArray = curNode.type == "array";
+              curNode = curNode.childs[internalPath[j]];
+            }
+            path.push(insideArray ? "[ ]" : curNode.getName());
+            fields.push(path.join("."));
+          }
+
+          let templateKey = target.getAttribute("data-href");
+          control.visualizeTemplateForField(valueField, fields, templateKey);
           importer.template.record(templateKey, fields);
         });
       });
@@ -245,10 +288,25 @@
           parentContainer.style.height = "";
           if (templateKey == "markers") {
             recordContainer.innerHTML = control.placeholders.step;
-          } else if (templateKey == "dataSource") {
-            let cell = document.querySelector('[data-source="true"]');
-            cell.innerHTML = "";
-            this.widgets.inputs.sourceFields.value = "";
+          } else {
+            let parentNode = target.parentNode;
+            while (
+              utils.isDefined(parentNode) &&
+              parentNode.getAttribute("data-role") !== "importerStep"
+            ) {
+              parentNode = parentNode.parentNode;
+            }
+
+            if (utils.isDefined(parentNode)) {
+              let cells = parentNode.querySelectorAll('[data-prop="value"]');
+              cells.forEach(function (c) {
+                c.innerHTML = "";
+              });
+              let inputs = parentNode.querySelectorAll('input[type="text"]');
+              inputs.forEach(function (inp) {
+                inp.value = "";
+              });
+            }
           }
           parentContainer.style.height = parentContainer.scrollHeight + "px";
           importer.template.reset(templateKey);

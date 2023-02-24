@@ -6,6 +6,7 @@ import datetime as dt
 import uuid
 import json
 import logging
+import itertools
 from collections import defaultdict
 
 from django.http import JsonResponse, Http404, FileResponse
@@ -1161,6 +1162,10 @@ def importer(request):
             mv_items = mv_mapping.items()
             res = [list(Tvh.follow_json_path(obj, json_key.strip().split(".")))
                    for json_key, spec in mv_items]
+            res.extend(
+                [list(Tvh.follow_json_path(obj, batch_extra.split(".")))
+                 for batch_extra in data["markerExtras"].split(",")]
+            )
 
             for batch_items in zip(*res):
                 batch = Tm.Batch.objects.create(user=request.user, uuid=uuid.uuid4())
@@ -1168,7 +1173,8 @@ def importer(request):
                     if spec['anno'] in inp_anno_types:
                         # here the assumption is that each object in `res_node` is just a string
                         Tm.Input.objects.create(
-                            content=batch_items[mv_no], marker_id=spec['marker'], context=ctx, batch=batch
+                            content=batch_items[mv_no], marker_id=spec['marker'],
+                            context=ctx, batch=batch, extra=batch_items[-1]
                         )
                     else:
                         # here the assumption is that each object in `res_node` is a dictionary
@@ -1176,9 +1182,12 @@ def importer(request):
                         #   "text": "", "start": x, "end": y
                         # }
                         if batch_items[mv_no] and "start" in batch_items[mv_no] and "end" in batch_items[mv_no]:
-                            Tm.Label.objects.create(
+                            m =Tm.Label.objects.create(
                                 start=batch_items[mv_no]["start"], end=batch_items[mv_no]["end"],
-                                marker_id=spec['marker'], context=ctx, batch=batch
+                                marker_id=spec['marker'], context=ctx, batch=batch, extra=batch_items[-1]
                             )
+                batch.extra = list(itertools.chain(*[list(Tvh.follow_json_path(obj, batch_extra.split(".")))
+                                for batch_extra in data["batchExtras"].split(",")]))
+                batch.save()
 
         return JsonResponse({})
