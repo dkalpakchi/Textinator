@@ -1270,7 +1270,6 @@
               });
             } else if (target.getAttribute("data-action") == "removeClause") {
               let fieldDiv = getClosestFormField(target);
-              console.log(fieldDiv);
               if (utils.isDefined(fieldDiv)) fieldDiv.remove();
               const collapsibles = bulmaCollapsible.attach();
               collapsibles.forEach(function (instance) {
@@ -4591,8 +4590,6 @@
 
             if (utils.isDefined(curPage)) inputFormData["p"] = curPage;
           }
-
-          console.log(inputFormData);
 
           $.ajax({
             method: "POST",
