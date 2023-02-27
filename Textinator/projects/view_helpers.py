@@ -186,6 +186,9 @@ def render_editing_board(request, project, user, page, template='partials/compon
 
     if -2 in search_mv_pks:
         # search for specific annotation no.
+        sq_id = search_mv_pks.index(-2)
+        search_query = search_queries[sq_id]
+
         sql_string, sql_params = relevant_batches.query.sql_with_params()
         search_indices = [int(x) for x in search_query.strip().split(",")]
         batches = Batch.objects.raw(
