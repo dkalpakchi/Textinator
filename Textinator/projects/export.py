@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+from collections import defaultdict
+
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
+
 from .models import *
 
 
@@ -34,7 +39,8 @@ class AnnotationExporter:
         self.__project = project
         self.__config = {
             'consolidate_clusters': False,
-            'include_usernames': False
+            'include_usernames': False,
+            'include_batch_no': False
         }
         self.__config.update(config)
 
@@ -240,6 +246,14 @@ class AnnotationExporter:
             ).values_list('batch', flat=True)
 
             batches = Batch.objects.filter(pk__in=set(label_batches) | set(input_batches)).prefetch_related('label_set', 'input_set')
+
+            if self.__config['include_batch_no']:
+                window_exp = Window(
+                    expression=RowNumber(),
+                    order_by=F('dt_created').asc()
+                )
+                batches = batches.annotate(index=window_exp)
+
             resp = {}
             for batch in batches:
                 labels = batch.label_set
@@ -248,11 +262,14 @@ class AnnotationExporter:
 
                 if labels.count() or inputs.count():
                     context_id = inputs.first().context_id if inputs.count() else labels.first().context_id
+
                     if context_id not in resp:
                         resp[context_id] = {
                             "context": inputs.first().context.content if inputs.count() else labels.first().context.content,
                             "annotations": []
                         }
+                        if self.__config["include_batch_no"]:
+                            resp[context_id]["num"] = batch.index
 
                     ann = {}
                     exclude_labels = set()
@@ -275,7 +292,6 @@ class AnnotationExporter:
                         ann["annotator"] = batch.user.username
 
                     resp[context_id]["annotations"].append(ann)
-
         return list(resp.values())
 
     def export(self):

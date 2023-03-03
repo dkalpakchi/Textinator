@@ -45,6 +45,14 @@
               </label>
             </div>
           </div>
+          <div class="field">
+            <div class="control">
+              <label class="checkbox">
+                <input type="checkbox" name="include_batch_no">
+                Include batch numbers (as in editing board)
+              </label>
+            </div>
+          </div>
         </div>
       </div>
       <a data-url="{{ url('projects:data_exporter', kwargs={'proj': project.pk}) }}" class="button is-success" download>Export as JSON</a>

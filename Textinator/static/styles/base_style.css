@@ -529,7 +529,7 @@ textarea {
 }
 
 .editing-area .message-body {
-  max-height: 250px;
+  max-height: 150px;
   -ms-overflow-y: scroll;
   overflow-y: scroll;
 }

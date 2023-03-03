@@ -940,11 +940,14 @@ def async_delete_input(request, proj, inp):
 @login_required
 @require_http_methods(["GET"])
 def export(request, proj):
+    print(request.GET)
+    print(request.GET.get('include_usernames'))
     try:
         project = Tm.Project.objects.get(pk=proj)
         exporter = Tex.AnnotationExporter(project, config={
             'consolidate_clusters': request.GET.get('consolidate_clusters') == 'on',
-            'include_usernames': request.GET.get('include_usernames', False)
+            'include_usernames': request.GET.get('include_usernames') == 'on',
+            'include_batch_no': request.GET.get('include_batch_no') == 'on'
         })
         return JsonResponse({"data": exporter.export()})
     except Tm.Project.DoesNotExist:
