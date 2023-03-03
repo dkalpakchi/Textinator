@@ -764,10 +764,28 @@
       else return node;
     }
 
+    const ui = {
+      collapsibles: null,
+      initCollapsibles: function () {
+        if (!utils.isDefined(this.collapsibles)) {
+          const collapsibles = bulmaCollapsible.attach();
+          this.collapsibles = collapsibles;
+        }
+
+        this.collapsibles.forEach(function (instance) {
+          instance.on("after:expand", function () {
+            // bug fix
+            instance._originalHeight = instance.element.scrollHeight + "px";
+          });
+        });
+      },
+    };
+
     return {
       allowSelectingLabels: false,
-      disableSubmittedLabels: false,
+      diisableSubmittedLabels: false,
       drawingType: {},
+      ui: ui,
       initLineHeight: undefined,
       taskArea: null,
       textLabelsArea: null,
@@ -1263,19 +1281,18 @@
               );
               settings.insertBefore(clone, submitSearchButton.parentNode);
 
-              const collapsibles = bulmaCollapsible.attach();
-              collapsibles.forEach(function (instance) {
-                // bug fix
-                instance._originalHeight = instance.element.scrollHeight + "px";
-              });
+              if (utils.isDefined(control.ui.collapsibles)) {
+                control.ui.collapsibles.forEach(function (instance) {
+                  // bug fix
+                  instance._originalHeight =
+                    instance.element.scrollHeight + "px";
+                  instance.collapse();
+                  instance.expand();
+                });
+              }
             } else if (target.getAttribute("data-action") == "removeClause") {
               let fieldDiv = getClosestFormField(target);
               if (utils.isDefined(fieldDiv)) fieldDiv.remove();
-              const collapsibles = bulmaCollapsible.attach();
-              collapsibles.forEach(function (instance) {
-                // bug fix
-                instance._originalHeight = "100px";
-              });
             } else if (target.hasAttribute("data-page")) {
               // pagination events
               let mode = closestPsArea.getAttribute("data-mode");
@@ -1303,15 +1320,11 @@
                     closestPsArea.outerHTML = d.template;
                   }
 
-                  const collapsibles = bulmaCollapsible.attach();
-
-                  collapsibles.forEach(function (instance) {
-                    instance.on("after:expand", function () {
-                      // bug fix
-                      instance._originalHeight =
-                        instance.element.scrollHeight + "px";
+                  if (utils.isDefined(control.ui.collapsibles)) {
+                    control.ui.collapsibles.forEach(function (instance) {
+                      instance.collapse();
                     });
-                  });
+                  }
                   control.fixUI();
                 },
                 error: function () {
@@ -4857,15 +4870,8 @@
                     "</span>"
                 )
               );
-              const collapsibles = bulmaCollapsible.attach();
 
-              collapsibles.forEach(function (instance) {
-                instance.on("after:expand", function () {
-                  // bug fix
-                  instance._originalHeight =
-                    instance.element.scrollHeight + "px";
-                });
-              });
+              labelerModule.ui.initCollapsibles();
               labelerModule.fixUI();
             },
             error: function () {
@@ -4878,6 +4884,8 @@
           callbackOk($target, $lastCol, mode);
 
           labelerModule.currentPage[mode] = null;
+
+          labelerModule.ui.collapsibles = null;
 
           labelerModule.restoreOriginal();
           labelerModule.clearBatch();
