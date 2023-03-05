@@ -972,8 +972,7 @@ def flag_text(request, proj):
 
     dal, _ = Tm.DataAccessLog.objects.get_or_create(
         user=request.user, datapoint=str(dp_id),
-        project=project, datasource=data_source,
-        is_submitted=False
+        project=project, datasource=data_source
     )
     if not dal.flags:
         dal.flags = {}
