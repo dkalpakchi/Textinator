@@ -1210,6 +1210,8 @@ class DataAccessLog(CommonModel):
         help_text=_("Indicates whether the datapoint was skipped by an annotator"))
     is_delayed = models.BooleanField(_("is saved for later?"), default=False,
         help_text=_("Indicates whether the datapoint for skipped and saved for later by an annotator"))
+    is_deleted = models.BooleanField(_("is marked as deleted?"), default=False,
+        help_text=_("Indicates whether the log was programmatically marked as deleted (can't be set manually)"))
 
     @property
     def text_errors(self):

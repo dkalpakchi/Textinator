@@ -387,7 +387,8 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
 @admin.register(Tm.Context)
 class ContextAdmin(CommonModelAdmin):
     _list_filter = [
-        'datasource'
+        'datasource',
+        'datapoint'
     ]
     list_display = ['id', 'content']
     search_fields = ['content']

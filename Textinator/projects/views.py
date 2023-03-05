@@ -10,6 +10,7 @@ import itertools
 from collections import defaultdict
 
 from django.http import JsonResponse, Http404, FileResponse
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
@@ -970,10 +971,29 @@ def flag_text(request, proj):
     project = Tm.Project.objects.get(pk=proj)
     data_source = Tm.DataSource.objects.get(pk=ds_id)
 
-    dal, _ = Tm.DataAccessLog.objects.get_or_create(
+    dal = Tm.DataAccessLog.objects.filter(
         user=request.user, datapoint=str(dp_id),
-        project=project, datasource=data_source
+        project=project, datasource=data_source,
+        is_deleted=False
     )
+
+    N = dal.count()
+    if N == 1:
+        dal = dal.get()
+    elif N == 0:
+        dal = Tm.DataAccessLog.objects.create(
+            user=request.user, datapoint=str(dp_id),
+            project=project, datasource=data_source,
+        )
+    else:
+        dals = dal.order_by('dt_created')
+        dal = dals.first()
+        for log in dals.filter(~Q(pk=dal.pk)):
+            dal.flags.update(log.flags)
+            log.is_deleted = True
+            log.save()
+        dal.save()
+
     if not dal.flags:
         dal.flags = {}
     flags = dal.flags
