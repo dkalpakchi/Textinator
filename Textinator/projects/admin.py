@@ -509,7 +509,9 @@ class DataSourceAdmin(CommonModelAdmin):
 class DataAccessLogAdmin(CommonModelAdmin):
     _list_filter = [
         'user',
-        'project'
+        'project',
+        'datapoint',
+        'datasource'
     ]
     list_display = ['id', 'user', 'project']
 

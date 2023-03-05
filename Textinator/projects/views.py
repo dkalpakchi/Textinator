@@ -967,7 +967,7 @@ def flag_text(request, proj):
     dp_id = request.POST.get('dp_id')
     ds_id = request.POST.get('ds_id')
 
-    project = Tm.Project.objects.filter(pk=proj).get()
+    project = Tm.Project.objects.get(pk=proj)
     data_source = Tm.DataSource.objects.get(pk=ds_id)
 
     dal, _ = Tm.DataAccessLog.objects.get_or_create(
