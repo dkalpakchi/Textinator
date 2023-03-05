@@ -1321,9 +1321,8 @@
                   }
 
                   if (utils.isDefined(control.ui.collapsibles)) {
-                    control.ui.collapsibles.forEach(function (instance) {
-                      instance.collapse();
-                    });
+                    control.ui.collapsibles = null;
+                    control.ui.initCollapsibles();
                   }
                   control.fixUI();
                 },
@@ -4673,9 +4672,11 @@
                   } else {
                     closestPsArea.outerHTML = data.template;
                   }
-                  $(closestPsArea)
-                    .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
-                    .addClass("is-hovered");
+                  let batch = closestPsArea.querySelector(
+                    '[data-id="' + labelerModule.getEditingBatch() + '"]'
+                  );
+                  batch.classList.add("is-hovered");
+                  batch.scrollIntoView();
                   let item = data["mode"] == "e" ? "edit" : "review";
                   alert("Your " + item + " is successfully saved!");
                 }
