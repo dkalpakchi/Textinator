@@ -766,6 +766,7 @@
 
     const ui = {
       collapsibles: null,
+      getClosestBatch: getClosestBatch,
       initCollapsibles: function () {
         if (!utils.isDefined(this.collapsibles)) {
           const collapsibles = bulmaCollapsible.attach();
@@ -777,11 +778,23 @@
             // bug fix
             instance._originalHeight = instance.element.scrollHeight + "px";
           });
+          instance.on("after:collapse", function () {
+            // TODO: this is a bit of a hack, figure out why this hack is needed
+            let i = 0;
+            let handle = setInterval(function () {
+              labeler.fixUI();
+              i++;
+              if (i == 2) {
+                clearInterval(handle);
+                console.log("cleared!");
+              }
+            }, 200);
+          });
         });
       },
     };
 
-    return {
+    const labeler = {
       allowSelectingLabels: false,
       diisableSubmittedLabels: false,
       drawingType: {},
@@ -1337,7 +1350,13 @@
               $psArea = $(closestPsArea),
               $closestBatch = $(closestBatch);
 
-            let purposeNode = getClosestPurposeNode(target);
+            let purposeNode;
+
+            if (isBatch(target)) {
+              purposeNode = target.querySelector("[data-purpose]");
+            } else {
+              purposeNode = getClosestPurposeNode(target);
+            }
 
             if (utils.isDefined(purposeNode)) {
               let purpose = purposeNode.getAttribute("data-purpose");
@@ -1438,6 +1457,10 @@
               }
             }
           }
+        });
+
+        document.addEventListener("change", function (e) {
+          let target = e.target;
         });
       },
       initInteractiveDataAreaEvents: function () {
@@ -4408,6 +4431,8 @@
         });
       },
     };
+
+    return labeler;
   })();
 
   $(document).ready(function () {
@@ -4676,9 +4701,29 @@
                     '[data-id="' + labelerModule.getEditingBatch() + '"]'
                   );
                   batch.classList.add("is-hovered");
-                  batch.scrollIntoView();
                   let item = data["mode"] == "e" ? "edit" : "review";
                   alert("Your " + item + " is successfully saved!");
+
+                  let seqEditingHandle =
+                    document.querySelector("#sequentialEditing");
+                  if (
+                    utils.isDefined(seqEditingHandle) &&
+                    seqEditingHandle.checked
+                  ) {
+                    closestPsArea
+                      .querySelector("#editingBody")
+                      .bulmaCollapsible()
+                      .collapse();
+
+                    if (utils.isDefined(batch.nextElementSibling))
+                      batch.nextElementSibling.click();
+                    else
+                      alert(
+                        "You have finished the page! Please choose a new one."
+                      );
+                  } else {
+                    batch.scrollIntoView();
+                  }
                 }
               }
 
@@ -4697,6 +4742,8 @@
           });
         }
       });
+
+    window.lm = labelerModule;
 
     // get a new article from the data source(s)
     $("#getNewArticle").on("click", function (e) {
@@ -4873,7 +4920,6 @@
               );
 
               labelerModule.ui.initCollapsibles();
-              labelerModule.fixUI();
             },
             error: function () {
               console.log("Error while invoking " + actionTitle + " mode!");

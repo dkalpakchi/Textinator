@@ -40,7 +40,8 @@ class AnnotationExporter:
         self.__config = {
             'consolidate_clusters': False,
             'include_usernames': False,
-            'include_batch_no': False
+            'include_batch_no': False,
+            'include_flags': False
         }
         self.__config.update(config)
 
@@ -264,10 +265,19 @@ class AnnotationExporter:
                     context_id = inputs.first().context_id if inputs.count() else labels.first().context_id
 
                     if context_id not in resp:
+                        ctx = inputs.first().context if inputs.count() else labels.first().context
                         resp[context_id] = {
-                            "context": inputs.first().context.content if inputs.count() else labels.first().context.content,
+                            "context": ctx.content,
                             "annotations": []
                         }
+                        if self.__config["include_flags"]:
+                            resp[context_id]["flags"] = {}
+                            dals = DataAccessLog.objects.filter(
+                                datapoint=ctx.datapoint, datasource_id=ctx.datasource_id,
+                                is_deleted=False
+                            )
+                            for dal in dals.all():
+                                resp[context_id]['flags'].update(dal.flags)
                         if self.__config["include_batch_no"]:
                             resp[context_id]["num"] = batch.index
 
