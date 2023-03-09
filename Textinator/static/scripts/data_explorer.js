@@ -105,7 +105,9 @@
           function (e) {
             e.preventDefault();
             let data = $(ctx.flaggedArea.form).serializeObject();
+            ctx.flaggedArea.res.innerHTML = "<div></div>";
             ctx.flaggedArea.res.classList.add("lds-circle");
+            ctx.flaggedArea.form.parentNode.classList.add("has-text-centered");
             $.ajax({
               method: ctx.flaggedArea.form.method,
               headers: { "X-CSRFToken": data.csrfmiddlewaretoken },
@@ -116,6 +118,9 @@
               success: function (data) {
                 utils.setInnerHTML(ctx.flaggedArea.res, data.res);
                 ctx.flaggedArea.res.classList.remove("lds-circle");
+                ctx.flaggedArea.form.parentNode.classList.remove(
+                  "has-text-centered"
+                );
               },
             });
           },

@@ -131,19 +131,10 @@
               </div>
             </div>
           </form>
-          <div class="flagged-wrapper">
-            <table class="table is-fullwidth is-hoverable">
-              <thead>
-                <th>User</th>
-                <th>Comment</th>
-                <th>Action</th>
-              </thead>
-              <tbody id="flaggedResults">
-                {% with flagged_datapoints=flagged_datapoints %}
-                  {% include 'partials/_flagged_summary.html' %}
-                {% endwith %}
-              </tbody>
-            </table>
+          <div id="flaggedResults">
+            {% with flagged_datapoints=flagged_datapoints %}
+              {% include 'partials/_flagged_summary.html' %}
+            {% endwith %}
           </div>
         </div>
       </article>
