@@ -2,15 +2,18 @@
 <div class="flagged-wrapper">
   <table class="table is-fullwidth is-hoverable">
     <thead>
+      <th>Action</th>
       <th>User</th>
       <th>Comment</th>
-      <th>Action</th>
     </thead>
     <tbody>
       {% for flagged in flagged_datapoints %}
         {% set i = loop.index0 %}
         {% if flagged.text_errors %}
           <tr>
+            <td>
+              <a target="_blank" href="{{ url('projects:get_data', kwargs={'source_id': flagged.datasource_id, 'dp_id': flagged.datapoint}) }}">Show text</a>
+            </td>
             <td>{{ flagged.user.username }}</td>
             <td>
               {% for k in flagged.text_errors.keys()|sort|reverse %}
@@ -28,9 +31,6 @@
                   </script>
                 </div>
               {% endfor %}
-            </td>
-            <td>
-              <a target="_blank" href="{{ url('projects:get_data', kwargs={'source_id': flagged.datasource_id, 'dp_id': flagged.datapoint}) }}">Show text</a>
             </td>
           </tr>
         {% endif %}
