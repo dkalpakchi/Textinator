@@ -92,3 +92,11 @@ span.tag:hover {
   height: 40vh;
   width: 30vw;
 }
+
+span.json-formatter-string {
+  display: inline-block;
+  max-width: 900px;
+  width: 70%;
+  overflow-x: clip;
+  text-overflow: ellipsis;
+}

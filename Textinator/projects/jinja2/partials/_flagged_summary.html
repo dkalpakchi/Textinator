@@ -2,8 +2,8 @@
 <div class="flagged-wrapper">
   <table class="table is-fullwidth is-hoverable">
     <thead>
-      <th>Action</th>
-      <th>User</th>
+      <th style="width: 100px;">Action</th>
+      <th style="width: 100px;">User</th>
       <th>Comment</th>
     </thead>
     <tbody>
@@ -12,7 +12,8 @@
         {% if flagged.text_errors %}
           <tr>
             <td>
-              <a target="_blank" href="{{ url('projects:get_data', kwargs={'source_id': flagged.datasource_id, 'dp_id': flagged.datapoint}) }}">Show text</a>
+              <a target="_blank" href="{{ url('projects:get_data', kwargs={'source_id': flagged.datasource_id, 'dp_id': flagged.datapoint}) }}">Show text</a><br>
+              <a target="_blank" href="{{ url('admin:projects_dataaccesslog_change', args=(flagged.pk,)) }}">Edit</a>
             </td>
             <td>{{ flagged.user.username }}</td>
             <td>
