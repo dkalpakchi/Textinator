@@ -1332,10 +1332,6 @@
                     closestPsArea.outerHTML = d.template;
                   }
 
-                  if (utils.isDefined(control.ui.collapsibles)) {
-                    control.ui.collapsibles = null;
-                    control.ui.initCollapsibles();
-                  }
                   control.fixUI();
                 },
                 error: function () {
@@ -4733,17 +4729,21 @@
                   alert("Your " + item + " is successfully saved!");
 
                   if (isSequentialEditing) {
-                    closestPsArea
-                      .querySelector("#editingBody")
-                      .bulmaCollapsible()
-                      .collapse();
-
                     if (utils.isDefined(nextBatchId)) {
                       let nextBatch = closestPsArea.querySelector(
                         '[data-id="' + nextBatchId + '"]'
                       );
-                      if (utils.isDefined(nextBatch)) nextBatch.click();
-                      else
+                      if (utils.isDefined(nextBatch)) {
+                        nextBatch.click();
+                        if (utils.isDefined(labelerModule.ui.collapsibles))
+                          labelerModule.ui.collapsibles.forEach(
+                            function (inst) {
+                              if (inst.element.id == "editingBody") {
+                                inst.collapse();
+                              }
+                            }
+                          );
+                      } else
                         alert(
                           "Error during editing, please, do NOT edit more before contacting your system administrator!"
                         );
