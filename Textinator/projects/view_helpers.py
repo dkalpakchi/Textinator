@@ -149,19 +149,22 @@ def get_unbanned(lst, ban):
     return [x for i, x in enumerate(lst) if i not in ban]
 
 def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None,
-                         current_uuid=None, search_mv_pks=None, search_queries=None, search_types=None):
+                         current_uuid=None, search_dict=None):
     is_author, is_shared = project.author == user, project.shared_with(user)
 
-    # TODO: if this every becomes a speed bottleneck, which I doubt
-    #       re-write and make a linear scan out of it
-    search_mv_pks, ban_mv = check_empty(search_mv_pks, [])
-    search_queries, ban_q = check_empty(search_queries, [])
-    search_types, ban_t = check_empty(search_types, ["phr"])
-    ban = set.union(ban_mv, ban_q, ban_t)
+    if search_dict is None:
+        search_mv_pks, search_queries, search_types = [], [], []
+    else:
+        # TODO: if this every becomes a speed bottleneck, which I doubt
+        #       re-write and make a linear scan out of it
+        search_mv_pks, ban_mv = check_empty(search_dict['scope'], [])
+        search_queries, ban_q = check_empty(search_dict['query'], [])
+        search_types, ban_t = check_empty(search_dict['search_type'], ["phr"])
+        ban = set.union(ban_mv, ban_q, ban_t)
 
-    search_mv_pks = get_unbanned(search_mv_pks, ban)
-    search_queries = get_unbanned(search_queries, ban)
-    search_types = get_unbanned(search_types, ban)
+        search_mv_pks = get_unbanned(search_mv_pks, ban)
+        search_queries = get_unbanned(search_queries, ban)
+        search_types = get_unbanned(search_types, ban)
 
     if is_author or is_shared:
         label_batches = Label.objects.filter(marker__project=project).order_by('dt_created')
@@ -237,6 +240,8 @@ def render_editing_board(request, project, user, page, template='partials/compon
                     elif search_mv_pk == -3:
                         # means search only among flagged
                         input_batches_clause = input_batches.filter(batch__is_flagged=True)
+                    elif search_mv_pk == -1:
+                        input_batches_clause = input_batches
 
 
                 if search_query and vector:
@@ -458,3 +463,37 @@ def follow_json_path(obj, path):
         yield from follow_json_path(obj[path[0]], path[1:])
     else:
         return
+
+
+def process_recorded_search_args(request_dict):
+    try:
+        page = int(request_dict.get("p", 1))
+        scope = request_dict.get("scope")
+        search_type = request_dict.get("search_type")
+    except ValueError:
+        page, scope = 1, -1
+    query = request_dict.get("query")
+
+    if scope is None:
+        scope = list(map(int, request_dict.getlist("scope[]", [])))
+    else:
+        scope = int(scope)
+
+    if search_type is None:
+        search_type = request_dict.getlist("search_type[]", "phr")
+
+    if query is None:
+        query = request_dict.getlist("query[]", "")
+
+    # Scope:
+    # -1 -- Everything except text (flagged or annotation no.)
+    # -2 -- Annotation no.
+    # -3 -- Limit to flagged only
+    return {
+        'page': page,
+        'search_dict': {
+            'scope': listify(scope),
+            'query': listify(query),
+            'search_type': listify(search_type)
+        }
+    }

@@ -4601,6 +4601,13 @@
           10
         );
 
+        let editPageBtn = document.querySelector(
+          "#editingBoard a[data-page].is-current"
+        );
+
+        if (utils.isDefined(editPageBtn))
+          inputFormData["p"] = editPageBtn.getAttribute("data-page");
+
         if (labelerModule.hasNewInfo(inputFormData)) {
           labelerModule.getMarkerTypes().forEach(function (x) {
             inputFormData[x] = JSON.stringify(inputFormData[x]);
@@ -4690,34 +4697,57 @@
                   let closestPsArea = document.querySelector(
                     "#" + mode + "Board"
                   );
+                  let batch = null; // current batch
+                  let nextBatchId = null;
+
+                  let seqEditingHandle =
+                    document.querySelector("#sequentialEditing");
+                  let isSequentialEditing =
+                    utils.isDefined(seqEditingHandle) &&
+                    seqEditingHandle.checked;
+
+                  // Select next batch to be edited
+                  if (isSequentialEditing) {
+                    batch = closestPsArea.querySelector(
+                      '[data-id="' + labelerModule.getEditingBatch() + '"]'
+                    );
+                    let nextBatch = batch.nextElementSibling;
+                    if (utils.isDefined(nextBatch))
+                      nextBatchId = nextBatch.getAttribute("data-id");
+                  } else {
+                    nextBatchId = labelerModule.getEditingBatch();
+                  }
+
                   if (data.partial) {
                     let mainPart = closestPsArea.querySelector("main");
                     mainPart.innerHTML = data.template;
                   } else {
                     closestPsArea.outerHTML = data.template;
                   }
-                  let batch = closestPsArea.querySelector(
+
+                  batch = closestPsArea.querySelector(
                     '[data-id="' + labelerModule.getEditingBatch() + '"]'
                   );
                   if (utils.isDefined(batch)) batch.classList.add("is-hovered");
-                  console.log(labelerModule.getEditingBatch());
                   let item = data["mode"] == "e" ? "edit" : "review";
                   alert("Your " + item + " is successfully saved!");
 
-                  let seqEditingHandle =
-                    document.querySelector("#sequentialEditing");
-                  if (
-                    utils.isDefined(seqEditingHandle) &&
-                    seqEditingHandle.checked
-                  ) {
+                  if (isSequentialEditing) {
                     closestPsArea
                       .querySelector("#editingBody")
                       .bulmaCollapsible()
                       .collapse();
 
-                    if (utils.isDefined(batch.nextElementSibling))
-                      batch.nextElementSibling.click();
-                    else
+                    if (utils.isDefined(nextBatchId)) {
+                      let nextBatch = closestPsArea.querySelector(
+                        '[data-id="' + nextBatchId + '"]'
+                      );
+                      if (utils.isDefined(nextBatch)) nextBatch.click();
+                      else
+                        alert(
+                          "Error during editing, please, do NOT edit more before contacting your system administrator!"
+                        );
+                    } else
                       alert(
                         "You have finished the page! Please choose a new one."
                       );

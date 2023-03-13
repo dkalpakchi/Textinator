@@ -287,22 +287,7 @@ def record_datapoint(request, proj):
         is_project_author = batch_info.project.author == batch_info.user
         is_project_shared = batch_info.project.shared_with(batch_info.user)
 
-        try:
-            page = int(data.get('p', 1))
-            scope = int(data.get("scope", -1))
-            search_type = data.get("search_type", "phr")
-        except ValueError:
-            page, scope = 1, -1
-        query = data.get("query", "")
-
-        if scope is None:
-            scope = list(map(int, data.getlist("scope[]", [])))
-
-        if search_type is None:
-            search_type = data.getlist("search_type[]", "phr")
-
-        if query is None:
-            query = data.getlist("query[]", "")
+        params = Tvh.process_recorded_search_args(data)
 
         original_mode = mode
         if batch_info.project.editing_as_revision and mode == 'e':
@@ -437,9 +422,7 @@ def record_datapoint(request, proj):
             kwargs = {
                 'current_uuid': batch.uuid,
                 'template': 'partials/components/areas/_editing_body.html',
-                'search_mv_pks': Tvh.listify(scope),
-                'search_queries': Tvh.listify(query),
-                'search_types': Tvh.listify(search_type)
+                'search_dict': params['search_dict']
             }
             if mode == "rev":
                 kwargs['template'] = 'partials/components/areas/_reviewing_body.html'
@@ -454,7 +437,7 @@ def record_datapoint(request, proj):
                 'mode': mode,
                 'partial': True,
                 'template': render_editing_board(
-                    request, batch_info.project, batch_info.user, page,
+                    request, batch_info.project, batch_info.user, params['page'],
                     **kwargs
                 )
             })
@@ -472,38 +455,14 @@ def record_datapoint(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def recorded_search(request, proj):
-    try:
-        page = int(request.GET.get("p", 1))
-        scope = request.GET.get("scope")
-        search_type = request.GET.get("search_type")
-    except ValueError:
-        page, scope = 1, -1
-    query = request.GET.get("query")
     project = get_object_or_404(Tm.Project, pk=proj)
-
-    if scope is None:
-        scope = list(map(int, request.GET.getlist("scope[]", [])))
-    else:
-        scope = int(scope)
-
-    if search_type is None:
-        search_type = request.GET.getlist("search_type[]", "phr")
-
-    if query is None:
-        query = request.GET.getlist("query[]", "")
-
-    # Scope:
-    # -1 -- Everything except text (flagged or annotation no.)
-    # -2 -- Annotation no.
-    # -3 -- Limit to flagged only
+    params = Tvh.process_recorded_search_args(request.GET)
 
     return JsonResponse({
         'partial': True,
         'template': render_editing_board(
-            request, project, request.user, page,
-            search_mv_pks=Tvh.listify(scope),
-            search_queries=Tvh.listify(query),
-            search_types=Tvh.listify(search_type),
+            request, project, request.user, params['page'],
+            search_dict=params['search_dict'],
             template='partials/components/areas/_editing_body.html'
         )
     })
