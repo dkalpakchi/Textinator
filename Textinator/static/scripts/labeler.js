@@ -786,7 +786,6 @@
               i++;
               if (i == 2) {
                 clearInterval(handle);
-                console.log("cleared!");
               }
             }, 200);
           });
@@ -4700,7 +4699,8 @@
                   let batch = closestPsArea.querySelector(
                     '[data-id="' + labelerModule.getEditingBatch() + '"]'
                   );
-                  batch.classList.add("is-hovered");
+                  if (utils.isDefined(batch)) batch.classList.add("is-hovered");
+                  console.log(labelerModule.getEditingBatch());
                   let item = data["mode"] == "e" ? "edit" : "review";
                   alert("Your " + item + " is successfully saved!");
 
