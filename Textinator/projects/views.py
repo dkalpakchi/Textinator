@@ -1023,11 +1023,11 @@ def flagged_search(request, proj):
     if query:
         if text_search:
             raw_sql = """
-                SELECT pda.id, ts_rank(pc.content_vector, plainto_tsquery(%s)) AS rank, (pda.flags->'text_errors')
+                SELECT pda.id, ts_rank(pc.content_vector, phraseto_tsquery(pc.search_config, %s)) AS rank, (pda.flags->'text_errors')
                 FROM projects_dataaccesslog pda
                 INNER JOIN projects_context pc
                 ON (pda.datasource_id=pc.datasource_id AND pda.datapoint=pc.datapoint)
-                WHERE (pda.flags->'text_errors') <> '{}' AND (pda.flags->'text_errors' IS NOT NULL) AND ts_rank(pc.content_vector, plainto_tsquery(%s)) > 0
+                WHERE (pda.flags->'text_errors') <> '{}' AND (pda.flags->'text_errors' IS NOT NULL) AND pc.content_vector @@ phraseto_tsquery(pc.search_config, %s)
                 ORDER BY rank DESC"""
             sql_params = [query, query]
             res = Tm.DataAccessLog.objects.raw(raw_sql, sql_params)
