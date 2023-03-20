@@ -1323,7 +1323,7 @@ class Context(CommonModel):
         ]
 
     datasource = models.ForeignKey(DataSource, on_delete=models.SET_NULL, null=True, blank=True)
-    datapoint = models.CharField(_("datapoint ID"), max_length=64, null=True, blank=True,
+    datapoint = models.IntegerField(_("datapoint ID"), null=True, blank=True,
         help_text=_("As stored in the original dataset"))
     content = models.TextField(_("content"))
     content_vector = SearchVectorField(null=True)

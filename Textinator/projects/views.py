@@ -34,6 +34,7 @@ import projects.datasources as Tds
 import projects.helpers as Th
 import projects.export as Tex
 
+from Textinator.ext import rawqueryset_count
 from Textinator.jinja2 import to_markdown, to_formatted_text
 from .view_helpers import (
     BatchInfo, process_inputs, process_marker_groups, process_text_markers,
@@ -1006,6 +1007,7 @@ def flag_batch(request, proj):
 def flagged_search(request, proj):
     project = Tm.Project.objects.get(pk=proj)
     data = json.loads(request.body)
+    text_search = data.get("text_search")
     query = data.get('query')
 
     is_author, is_shared = project.author == request.user, project.shared_with(request.user)
@@ -1019,15 +1021,30 @@ def flagged_search(request, proj):
             flagged = flagged.filter(user=request.user)
 
     if query:
-        vector = SearchVector('flags')
-        query = SearchQuery(query)
-        res = flagged.annotate(
-            search=vector
-        ).filter(
-            search=query
-        ).annotate(
-            rank=SearchRank(vector, query)
-        ).order_by('-rank')
+        if text_search:
+            raw_sql = """
+                SELECT pda.id, ts_rank(pc.content_vector, plainto_tsquery(%s)) AS rank, (pda.flags->'text_errors')
+                FROM projects_dataaccesslog pda
+                INNER JOIN projects_context pc
+                ON (pda.datasource_id=pc.datasource_id AND pda.datapoint=pc.datapoint)
+                WHERE (pda.flags->'text_errors') <> '{}' AND (pda.flags->'text_errors' IS NOT NULL) AND ts_rank(pc.content_vector, plainto_tsquery(%s)) > 0
+                ORDER BY rank DESC"""
+            sql_params = [query, query]
+            res = Tm.DataAccessLog.objects.raw(raw_sql, sql_params)
+            res.raw_count = rawqueryset_count(raw_sql, sql_params)
+            res.count = lambda: res.raw_count
+        else:
+            vector = SearchVector('flags')
+            query = SearchQuery(query)
+            res = flagged.annotate(
+                search=vector
+            ).filter(
+                search=query
+            ).annotate(
+                rank=SearchRank(vector, query)
+            ).filter(
+                rank__gt=0
+            ).order_by('-rank')
     else:
         res = flagged.order_by('-dt_created')
     return JsonResponse({

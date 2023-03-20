@@ -120,8 +120,16 @@
           </p>
         </div>
         <div class="message-body">
-          <form id="flaggedSearchForm" method="POST" data-action="{{ url('projects:flagged_search', kwargs={'proj': project.pk})}}">
+          <form id="flaggedSearchForm" class='has-text-left' method="POST" data-action="{{ url('projects:flagged_search', kwargs={'proj': project.pk})}}">
             {{csrf_input}}
+            <div class="field">
+              <div class="control">
+                <label class="checkbox">
+                  <input type="checkbox" name="text_search">
+                  Search inside texts of flagged datapoints (can be slow)
+                </label>
+              </div>
+            </div>
             <div class="field has-addons">
               <div class="control is-expanded">
                 <input name="query" class="input" type="text" placeholder="Search within flagged texts">
