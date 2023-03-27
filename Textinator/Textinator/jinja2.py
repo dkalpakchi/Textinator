@@ -55,8 +55,20 @@ def display_relation(rel):
     """)
     return Markup(template.render(rel=rel))
 
-PIN_MD_CORE_TAG = "!---!"
-PIN_MD_TAG = "\n{}\n".format(PIN_MD_CORE_TAG)
+# TODO: re-think custom tags
+CUSTOM_MD_TAGS = {
+    'pin': {
+        'core': "!---!",
+        'template': "<div class='scrollable'>{scrollable}</div><div class='pinned'>{pinned}</div>"
+    },
+    'pin_up': {
+        'core': "!-^-!",
+        'template': "<div class='pinned'>{pinned}</div><div class='scrollable'>{scrollable}</div>"
+    }
+}
+
+for tag in CUSTOM_MD_TAGS:
+    CUSTOM_MD_TAGS[tag]['tag'] = "\n{}\n".format(CUSTOM_MD_TAGS[tag]['core'])
 
 def to_markdown(value):
     """Converts newlines into <p> and <br />s."""
@@ -68,22 +80,25 @@ def to_markdown(value):
 
     # This is because it is hard to maintain marking over <p>
     # so instead we will replace them with <br>
-    md = md.replace("<p>", "").replace("</p>", "<br>")
-    md = re.sub(
-        r'{}</li>'.format(PIN_MD_CORE_TAG),
-        '</li>{}'.format(PIN_MD_TAG), md)
+    for spec in CUSTOM_MD_TAGS.values():
+        md = md.replace("<p>", "")\
+                .replace("(?!{})</p>".format(spec['core']), "<br>")\
+                .replace("</p>", "")
+        md = re.sub(
+            r'{}</li>'.format(spec['core']),
+            '</li>{}'.format(spec['tag']), md)
 
-    if PIN_MD_TAG in md:
-        scrollable, pinned = md.split(PIN_MD_TAG)
-        scrollable, pinned = scrollable.strip(), pinned.strip()
+        if spec['tag'] in md:
+            scrollable, pinned = md.split(spec['tag'])
+            scrollable, pinned = scrollable.strip(), pinned.strip()
 
-        scrollable = re.sub("\n(?!<)", "<br>", scrollable)
-        pinned = re.sub("(</?(li|ol|ul)>)", "", pinned)
-        pinned = re.sub("\n(?!<)", "<br>", pinned)
+            scrollable = re.sub("\n(?!<)", "<br>", scrollable)
+            pinned = re.sub("(</?(li|ol|ul)>)", "", pinned)
+            pinned = re.sub("\n(?!<)", "<br>", pinned)
 
-        md = "<div class='scrollable'>{}</div><div class='pinned'>{}</div>".format(
-            scrollable, pinned
-        )
+            md = spec['template'].format(
+                scrollable=scrollable, pinned=pinned
+            )
 
     return Markup(md)
 
@@ -114,12 +129,12 @@ def lang_translated_name(code):
 def markify(score):
     if isinstance(score, int):
         mapping = [
-            ('times', 'danger', '', ''),
-            ('check', 'orange', '[', ']'),
-            ('check', 'darkyellow', '(', ')'),
-            ('check', 'success', '', '')
+            ('none', 'times', 'danger', '', ''),
+            ('limited', 'check', 'orange', '[', ']'),
+            ('moderate', 'check', 'darkyellow', '(', ')'),
+            ('extensive', 'check', 'success', '', '')
         ]
-        return '<span class="icon has-text-{1}">{2}<i class="fas fa-{0}"></i>{3}</span>'.format(*mapping[score])
+        return '<span title="{0}" class="icon has-text-{2}">{3}<i class="fas fa-{1}"></i>{4}</span>'.format(*mapping[score])
     else:
         if score == 'docker':
             return '<i class="fab fa-{}"></i>'.format(score)

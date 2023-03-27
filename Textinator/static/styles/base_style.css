@@ -187,6 +187,24 @@ pre {
   width: 80%;
 }
 
+.guidelines.modal .modal-content.half {
+  width: 45%;
+}
+
+.guidelines.modal .modal-content.left.half {
+  margin: unset;
+  margin-right: auto;
+}
+
+.guidelines.modal .modal-content.right.half {
+  margin: unset;
+  margin-left: auto;
+}
+
+.guidelines.modal .modal-content.center {
+  margin: 0 auto;
+}
+
 .guidelines.card {
   height: 100%;
 }

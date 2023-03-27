@@ -26,7 +26,7 @@
                 Textinator
               </h1>
               <h2 class="subtitle">
-                Conquering NLP annotations
+                Making reproducible NLP annotations easier
               </h2>
               <a href="{{url('django_registration_register')}}" class='button is-rounded is-success'>Join us!</a>
               <a href="{{url('login')}}" class='button is-rounded is-info'>Login</a>
@@ -81,15 +81,15 @@
         <table class="table is-hoverable is-fullwidth">
           <thead>
             <th>Annotation tool</th>
-            <th><span class="icon is-size-3"><i class="fas fa-umbrella"></i></span></th>
-            <th><span class="icon is-size-3"><i class="fas fa-language"></i></span></th>
-            <th><span class="icon is-size-3"><i class="fas fa-tools"></i></span></th>
-            <th><span class="icon is-size-3"><i class="fas fa-poll"></i></span></th>
-            <th><span class="icon is-size-3"><i class="fas fa-vial"></i></span></th>
-            <th><span class="icon is-size-3"><i class="fas fa-users-cog"></i></span></th>
-            <th><span class="icon is-size-3"><i class="fas fa-book"></i></span></th>
-            <th><span class="icon is-size-3"><i class="fas fa-magic"></i></span></th>
-            <th><span class="icon is-size-3"><i class="fas fa-upload"></i></span></th>
+            <th title="Task type coverage"><span class="icon is-size-3"><i class="fas fa-umbrella"></i></span></th>
+            <th title="Internationalization"><span class="icon is-size-3"><i class="fas fa-language"></i></span></th>
+            <th title="Customization"><span class="icon is-size-3"><i class="fas fa-tools"></i></span></th>
+            <th title="Annotation progress tracking"><span class="icon is-size-3"><i class="fas fa-poll"></i></span></th>
+            <th title="Quality assurance"><span class="icon is-size-3"><i class="fas fa-vial"></i></span></th>
+            <th title="Administration quality"><span class="icon is-size-3"><i class="fas fa-users-cog"></i></span></th>
+            <th title="Documentation quality"><span class="icon is-size-3"><i class="fas fa-book"></i></span></th>
+            <th title="Intelligent assistance"><span class="icon is-size-3"><i class="fas fa-magic"></i></span></th>
+            <th title="Deployment mode"><span class="icon is-size-3"><i class="fas fa-upload"></i></span></th>
           </thead>
           <tbody>
             {% for tool in oss_tools %}
@@ -103,6 +103,9 @@
           </tbody>
         </table>
       </div>
+      <div class="has-text-centered">
+        Read more in our LREC 2022 paper: <a href="https://aclanthology.org/2022.lrec-1.90.pdf">https://aclanthology.org/2022.lrec-1.90.pdf</a>
+      </div>
     </section>
 
     <footer class="footer">
@@ -111,7 +114,7 @@
           &#169; {{now.year}} <strong>Textinator</strong> by Dmytro Kalpakchi
         </p>
         <p>
-          Division of Speech, Music and Hearing, KTH Royal Institute of Technology.
+          Originated during PhD studies at the Division of Speech, Music and Hearing, KTH Royal Institute of Technology, Stockholm, Sweden.
         </p>
       </div>
     </footer>

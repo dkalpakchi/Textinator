@@ -6,7 +6,7 @@
         if (x.scrollHeight > x.clientHeight) {
           clearTimeout(scrollTimer);
           let $button = $(
-              "<button class='scrolling is-link button'>Show more</button>"
+              "<button class='scrolling is-info button'>Show more</button>"
             ),
             $el = $(x),
             top = $el.scrollTop();
@@ -50,6 +50,22 @@
 
     $("#guidelinesButton").on("click", function () {
       $(".guidelines.modal").addClass("is-active");
+      $("[data-align]").on("click", function () {
+        let $e = $(this),
+          alignAttr = $e.attr("data-align"),
+          $referent = $("#" + $e.attr("data-id"));
+
+        $("[data-align]").removeClass("is-info is-selected");
+
+        if (alignAttr == "left") {
+          $referent.removeClass("right half center").addClass("left half");
+        } else if (alignAttr == "right") {
+          $referent.removeClass("left half center").addClass("right half");
+        } else {
+          $referent.removeClass("left right half").addClass("center");
+        }
+        $e.addClass("is-info is-selected");
+      });
     });
 
     $(".modal-close").on("click", function () {

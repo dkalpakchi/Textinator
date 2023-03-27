@@ -1,11 +1,31 @@
 <div class="guidelines modal">
   <div class="modal-background"></div>
-  <div class="modal-content">
+  <div id="guidelinesModal" class="modal-content">
     <div class="guidelines card">
       <header class="card-header">
         <p class="card-header-title">
           {{project.title}}
         </p>
+        <div class="buttons has-addons pr-1 pt-1">
+          <button data-align="left" data-id="guidelinesModal" class="button">
+            <span class="icon is-small">
+              <i class="mdi mdi-dock-left"></i>
+            </span>
+            <span>{{ _("left")|title }}</span>
+          </button>
+          <button data-align="center" data-id="guidelinesModal" class="button is-info is-selected">
+            <span class="icon is-small">
+              <i class="mdi mdi-image-filter-center-focus-strong"></i>
+            </span>
+            <span>{{ _("center")|title }}</span>
+          </button>
+          <button data-align="right" data-id="guidelinesModal" class="button">
+            <span class="icon is-small">
+              <i class="mdi mdi-dock-right"></i>
+            </span>
+            <span>{{ _("right")|title }}</span>
+          </button>
+        </div>
       </header>
       <div class="card-content">
         <div class="button-scrolling content">
