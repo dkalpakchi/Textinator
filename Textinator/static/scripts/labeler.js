@@ -1234,7 +1234,11 @@
         document.addEventListener(
           "submit",
           function (e) {
+            e.preventDefault();
+
             let $form = $(e.target);
+            let data = $form.serializeObjectLists();
+            data["random"] = data["random"][0];
 
             let $main = $form.closest("nav").siblings("main");
             $main.empty();
@@ -1252,13 +1256,14 @@
                 url: $form.attr("action"),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
-                data: $form.serializeObjectLists(),
+                data: data,
                 success: function (data) {
                   let $editingBoard = $("#editingBoard");
                   let $main = $editingBoard.find("main");
                   $main.prop("innerHTML", data.template);
                   $main.removeClass("has-text-centered");
                   $editingBoard.attr("data-href", $form.attr("action"));
+                  $("input[type='hidden'][name='random']").val(0);
                   labelerModule.fixUI();
                 },
               });
@@ -1282,7 +1287,10 @@
           if (target.tagName == "A") {
             e.preventDefault();
             e.stopPropagation();
-            if (target.id == "addSearchClause") {
+            if (target.id == "sampleResults") {
+              $("input[type='hidden'][name='random']").val(1);
+              $('#editingSearchForm input[type="submit"]').click();
+            } else if (target.id == "addSearchClause") {
               let esClauseTemplate = document.querySelector(
                 "#editingSearchClauseTemplate .field"
               );
@@ -1333,6 +1341,8 @@
                   }
 
                   control.fixUI();
+                  control.ui.collapsibles = null;
+                  control.ui.initCollapsibles();
                 },
                 error: function () {
                   console.log("Error while invoking editing mode!");

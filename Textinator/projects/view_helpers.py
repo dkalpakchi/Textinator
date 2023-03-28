@@ -154,7 +154,14 @@ def render_editing_board(request, project, user, page, template='partials/compon
 
     if search_dict is None:
         search_mv_pks, search_queries, search_types = [], [], []
+        is_random_order, search_flagged = False, False
     else:
+        try:
+            is_random_order = int(search_dict['random']) == 1
+        except ValueError:
+            is_random_order = False
+        search_flagged = search_dict['search_flagged']
+
         # TODO: if this every becomes a speed bottleneck, which I doubt
         #       re-write and make a linear scan out of it
         search_mv_pks, ban_mv = check_empty(search_dict['scope'], [])
@@ -222,6 +229,11 @@ def render_editing_board(request, project, user, page, template='partials/compon
             lang_dict.get(project.language, 'english')
         ).lower()
 
+        if search_flagged:
+            # means search only among flagged
+            input_batches = input_batches.filter(batch__is_flagged=True)
+            input_batch_ids = extract_ids(input_batches)
+
         vector = None
         if search_mv_pks or search_queries:
             input_batch_ids = []
@@ -237,9 +249,6 @@ def render_editing_board(request, project, user, page, template='partials/compon
 
                     if search_mv_pk > 0:
                         input_batches_clause = input_batches.filter(marker_id=search_mv_pk)
-                    elif search_mv_pk == -3:
-                        # means search only among flagged
-                        input_batches_clause = input_batches.filter(batch__is_flagged=True)
                     elif search_mv_pk == -1:
                         input_batches_clause = input_batches
 
@@ -267,17 +276,27 @@ def render_editing_board(request, project, user, page, template='partials/compon
                 input_batch_ids.append(set(ib_ids))
 
             batch_ids = set.intersection(*input_batch_ids) if input_batch_ids else set()
+        elif search_flagged:
+            batch_ids = set(input_batch_ids)
         else:
             batch_ids = set(label_batch_ids) | set(input_batch_ids)
 
         if batch_ids:
             sql_string, sql_params = relevant_batches.query.sql_with_params()
-            batches = Batch.objects.raw(
-                "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
-                    sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
-                ),
-                list(sql_params) + [str(x) for x in list(batch_ids)]
-            )
+            if is_random_order:
+                batches = Batch.objects.raw(
+                    "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY random() LIMIT 3;".format(
+                        sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+                    ),
+                    list(sql_params) + [str(x) for x in list(batch_ids)]
+                )
+            else:
+                batches = Batch.objects.raw(
+                    "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                        sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+                    ),
+                    list(sql_params) + [str(x) for x in list(batch_ids)]
+                )
         else:
             batches = []
 
@@ -494,6 +513,8 @@ def process_recorded_search_args(request_dict):
         'search_dict': {
             'scope': listify(scope),
             'query': listify(query),
-            'search_type': listify(search_type)
+            'search_type': listify(search_type),
+            'random': request_dict.get("random", 0),
+            'search_flagged': request_dict.getlist("search_flagged[]", ["off"])[0] == "on"
         }
     }

@@ -783,6 +783,14 @@ label.error {
  * Bulma extensions
  */
 
+.checkbox.is-small {
+  font-size: 0.8em;
+}
+
+.checkbox.is-small input[type="checkbox"] {
+  transform: scale(0.85);
+}
+
 .is-tiny {
   font-size: 0.55rem;
 }
