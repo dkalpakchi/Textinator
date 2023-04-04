@@ -196,4 +196,7 @@ def environment(**options):
     # i18n template functions
     env.install_gettext_callables(gettext=gettext, ngettext=ngettext,
         newstyle=True)
+
+    env.trim_blocks = True
+    env.lstrip_blocks = True
     return env

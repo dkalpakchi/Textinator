@@ -11,6 +11,8 @@ from django.conf import settings
 import requests
 import jsonlines as jsl
 
+from .helpers import follow
+
 
 logger = logging.getLogger(__name__)
 
@@ -194,14 +196,16 @@ class JsonSource(FileBasedSource):
 
     def reader(self, fname):
         d = json.load(open(fname))
-        if isinstance(d, list):
-            for el in d:
+        res = follow(d, self.get_spec('key'), flat=True)
+
+        if isinstance(res, list):
+            for el in res:
                 # this is all in-memory, of course
                 # TODO: think of fixing
-                self._add_datapoint(el[self.get_spec('key')])
+                self._add_datapoint(el)
                 self._mapping.append(os.path.basename(fname))
-        elif isinstance(d, dict):
-            self._add_datapoint(d[self.get_spec('key')])
+        elif isinstance(res, str):
+            self._add_datapoint(res)
             self._mapping.append(os.path.basename(fname))
 
 
