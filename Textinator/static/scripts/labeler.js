@@ -898,12 +898,20 @@
         }
 
         showExtraElements(this.selectorArea, false);
-        let ct =
-          this.selectorArea == null
-            ? ""
-            : forPresentation
-            ? this.selectorArea.innerText.trim()
-            : this.selectorArea.textContent.trim();
+        let ct = "";
+        if (utils.isDefined(this.selectorArea)) {
+          let scrollable = this.selectorArea.querySelector(".scrollable");
+          let hasScrollable = utils.isDefined(scrollable);
+          if (forPresentation) {
+            ct = (
+              hasScrollable ? scrollable : this.selectorArea
+            ).innerText.trim();
+          } else {
+            ct = (
+              hasScrollable ? scrollable : this.selectorArea
+            ).textContent.trim();
+          }
+        }
         showExtraElements(this.selectorArea, true);
         return ct;
       },
@@ -4782,8 +4790,6 @@
           });
         }
       });
-
-    window.lm = labelerModule;
 
     // get a new article from the data source(s)
     $("#getNewArticle").on("click", function (e) {

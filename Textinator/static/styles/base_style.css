@@ -418,6 +418,12 @@ textarea {
   overflow: auto;
 }
 
+.selector .pinned:first-child {
+  height: 15%;
+  border-bottom: 1px solid grey;
+  margin-bottom: 1.5rem;
+}
+
 .container.tt-workspace {
   padding-left: 24px;
   padding-right: 7rem;
