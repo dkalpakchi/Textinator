@@ -3954,7 +3954,7 @@
             // Attempt to close a multi-paragraph marking
             let keys2del = [];
             for (let candLabelId in state.multip) {
-              if (state.acc + cnodeLength > span_labels[candLabelId]["end"]) {
+              if (state.acc + cnodeLength >= span_labels[candLabelId]["end"]) {
                 // if the candLabelId label ends within this paragraph,
                 // we found the suitable paragraph to render it!
                 let multiData = state.multip[candLabelId],
@@ -4028,7 +4028,7 @@
                         curIdtLength += 1;
                         if (pOffsetId + 1 < multiData.parBreaks.length)
                           pOffsetId++;
-                        else pOffset = -100;
+                        else pOffsetId = -100;
                       }
 
                       if (!dStartNodeDefined && dStart < dAcc + curIdtLength) {
