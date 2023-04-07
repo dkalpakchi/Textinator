@@ -1246,7 +1246,8 @@
 
             let $form = $(e.target);
             let data = $form.serializeObjectLists();
-            data["random"] = data["random"][0];
+            if (data.hasOwnProperty("random"))
+              data["random"] = data["random"][0];
 
             let $main = $form.closest("nav").siblings("main");
             $main.empty();
@@ -1271,7 +1272,6 @@
                   $main.prop("innerHTML", data.template);
                   $main.removeClass("has-text-centered");
                   $editingBoard.attr("data-href", $form.attr("action"));
-                  $("input[type='hidden'][name='random']").val(0);
                   labelerModule.fixUI();
                 },
               });
@@ -1295,10 +1295,7 @@
           if (target.tagName == "A") {
             e.preventDefault();
             e.stopPropagation();
-            if (target.id == "sampleResults") {
-              $("input[type='hidden'][name='random']").val(1);
-              $('#editingSearchForm input[type="submit"]').click();
-            } else if (target.id == "addSearchClause") {
+            if (target.id == "addSearchClause") {
               let esClauseTemplate = document.querySelector(
                 "#editingSearchClauseTemplate .field"
               );
@@ -3916,13 +3913,15 @@
           }
         });
 
-        // Step 2: unfold scrollable and pinned parts -- these must be viewed as one text
+        // Step 2: unfold scrollable and skip pinned parts
         let flatCnodes = [],
-          pinnedClassNames = ["scrollable", "pinned"];
+          acceptClassNames = ["scrollable"],
+          skipClassNames = ["pinned"];
         for (let i = 0, len = cnodes.length; i < len; i++) {
+          if (skipClassNames.includes(cnodes[i].className)) continue;
           if (
             cnodes[i].tagName === "DIV" &&
-            pinnedClassNames.includes(cnodes[i].className)
+            acceptClassNames.includes(cnodes[i].className)
           ) {
             for (let j = 0, len2 = cnodes[i].childNodes.length; j < len2; j++) {
               flatCnodes.push(cnodes[i].childNodes[j]);
@@ -4636,6 +4635,13 @@
             if (utils.isDefined(searchForm)) {
               let searchData = $(searchForm).serializeObject();
               for (let key in searchData) inputFormData[key] = searchData[key];
+
+              if (inputFormData["random"] == "on") {
+                // we want to keep exactly the same batches shown then
+                inputFormData["batch_ids"] = Array.from(
+                  document.querySelectorAll('li[data-mode="e"]')
+                ).map((x) => x.getAttribute("data-id"));
+              }
             }
 
             let curPage;

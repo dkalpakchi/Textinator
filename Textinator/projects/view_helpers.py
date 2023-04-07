@@ -157,7 +157,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
         is_random_order, search_flagged = False, False
     else:
         try:
-            is_random_order = int(search_dict['random']) == 1
+            is_random_order = search_dict['random'] == 'on'
         except ValueError:
             is_random_order = False
         search_flagged = search_dict['search_flagged']
@@ -194,7 +194,15 @@ def render_editing_board(request, project, user, page, template='partials/compon
         pk__in=set(label_batch_ids) | set(input_batch_ids)
     ).annotate(index=window_exp)
 
-    if -2 in search_mv_pks:
+    if search_dict is not None and search_dict.get('batch_ids', []):
+        sql_string, sql_params = relevant_batches.query.sql_with_params()
+        batches = Batch.objects.raw(
+            "SELECT * FROM ({}) t1 WHERE t1.uuid IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                sql_string, ", ".join(["%s" for _ in range(len(search_dict['batch_ids']))])
+            ),
+            list(sql_params) + search_dict['batch_ids']
+        )
+    elif -2 in search_mv_pks:
         # search for specific annotation no.
         sq_id = search_mv_pks.index(-2)
         search_query = search_queries[sq_id]
@@ -285,7 +293,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
             sql_string, sql_params = relevant_batches.query.sql_with_params()
             if is_random_order:
                 batches = Batch.objects.raw(
-                    "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY random() LIMIT 3;".format(
+                    "SELECT * FROM (SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY random() LIMIT 5) s ORDER BY s.dt_created DESC NULLS LAST;".format(
                         sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
                     ),
                     list(sql_params) + [str(x) for x in list(batch_ids)]
@@ -489,6 +497,7 @@ def process_recorded_search_args(request_dict):
         page = int(request_dict.get("p", 1))
         scope = request_dict.get("scope")
         search_type = request_dict.get("search_type")
+        batch_ids = request_dict.get("batch_ids")
     except ValueError:
         page, scope = 1, -1
     query = request_dict.get("query")
@@ -504,6 +513,9 @@ def process_recorded_search_args(request_dict):
     if query is None:
         query = request_dict.getlist("query[]", "")
 
+    if batch_ids is None:
+        batch_ids = request_dict.getlist("batch_ids[]", [])
+
     # Scope:
     # -1 -- Everything except text (flagged or annotation no.)
     # -2 -- Annotation no.
@@ -514,7 +526,8 @@ def process_recorded_search_args(request_dict):
             'scope': listify(scope),
             'query': listify(query),
             'search_type': listify(search_type),
-            'random': request_dict.get("random", 0),
-            'search_flagged': request_dict.getlist("search_flagged[]", ["off"])[0] == "on"
+            'random': request_dict.get("random", 'off'),
+            'search_flagged': request_dict.getlist("search_flagged[]", ["off"])[0] == "on",
+            'batch_ids': batch_ids
         }
     }

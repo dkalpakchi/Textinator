@@ -30,14 +30,14 @@
                   <input type="checkbox" name="search_flagged">
                   Search only among flagged
                 </label>
+                <label class="checkbox is-small">
+                  <input type="checkbox" name="random">
+                  Sample 5 results
+                </label>
               </div>
               {% include 'partials/components/areas/_editing_search_clause.html' %}
               <div class="control">
                 <input type="submit" class="button is-info is-small" value="Search">
-                <a id="sampleResults" class="button is-info is-small">
-                  <input type="hidden" name="random" value=0>
-                  Sample 3 results
-                </a>
                 <a id="addSearchClause" class="button is-warning is-small">Add AND clause</a>
               </div>
             </form>
