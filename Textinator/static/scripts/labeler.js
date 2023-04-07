@@ -3698,7 +3698,7 @@
           return false;
         }
 
-        if (rEnd - rStart < 0) {
+        if (nodeStart == nodeEnd && rEnd - rStart < 0) {
           console.error(
             "Restoration Error: attempting to mark a span of size " +
               (rEnd - rStart)
