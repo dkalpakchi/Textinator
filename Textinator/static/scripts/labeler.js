@@ -3685,8 +3685,7 @@
       restoreMarkedSpan: function (
         nodeStart,
         nodeEnd,
-        spanLabels,
-        labelId,
+        spanLabel,
         subValueStart,
         subValueEnd
       ) {
@@ -3706,8 +3705,8 @@
           nodeEnd = nodeEnd.childNodes[childLen - 2];
         }
 
-        let rStart = spanLabels[labelId]["start"] - subValueStart;
-        let rEnd = spanLabels[labelId]["end"] - subValueEnd;
+        let rStart = spanLabel["start"] - subValueStart;
+        let rEnd = spanLabel["end"] - subValueEnd;
 
         if (rEnd > getNodeLength(nodeEnd)) {
           console.error(
@@ -3748,17 +3747,17 @@
         this.updateChunkFromSelection();
 
         let activeChunk = this.getActiveChunk();
-        activeChunk["hash"] = spanLabels[labelId]["hash"];
+        activeChunk["hash"] = spanLabel["hash"];
         activeChunk["updated"] = false;
 
-        let code = spanLabels[labelId]["marker"]["code"],
+        let code = spanLabel["marker"]["code"],
           mmpi = this.markersArea.getAttribute("data-mmpi");
         this.mark(
           this.markersArea.querySelector('.marker[data-s="' + code + '"]'),
           mmpi
         );
 
-        if (spanLabels[labelId].undone) {
+        if (spanLabel.undone) {
           this.disableChunk(this.getActiveChunk());
         }
         return true;
@@ -3790,30 +3789,32 @@
           level: numOverlapping,
         };
       },
-      getClosestTextNode: function (cnodes, id, spanLabels, labelId, iAcc) {
+      getClosestTextNode: function (curNode, spanLabel, checkStart, iAcc) {
         // this operates within paragraph only!
-        let textNode = cnodes[id];
-        let cLength = getNodeLength(textNode);
+        let cLength = getNodeLength(curNode);
         let errors = 0;
+
+        if (!utils.isDefined(checkStart)) checkStart = true;
 
         let cAcc = iAcc;
         while (
-          textNode !== null &&
-          cAcc + cLength <= spanLabels[labelId]["start"]
+          curNode !== null &&
+          ((checkStart && cAcc + cLength <= spanLabel["start"]) ||
+            (!checkStart && cAcc + cLength < spanLabel["end"]))
         ) {
           cAcc += cLength;
-          textNode = textNode.nextSibling;
-          cLength = getNodeLength(textNode);
+          curNode = curNode.nextSibling;
+          cLength = getNodeLength(curNode);
         }
 
-        if (textNode === null) {
+        if (curNode === null) {
           console.error(
             "Restoration Error: reached the end of the markable, while trying to find the closest text node"
           );
         }
 
         return {
-          node: textNode,
+          node: curNode,
           acc: cAcc,
           errors: errors,
         };
@@ -3960,9 +3961,7 @@
             Object.keys(state.multip).length > 0
           ) {
             let cnodeLength = getNodeLength(cnodes[cId]);
-            if (cnodeLength === 0 && cnodes[cId].tagName === "BR") {
-              cnodeLength = 1;
-
+            if (cnodes[cId].tagName === "BR") {
               for (let candLabelId in state.multip) {
                 if (!state.processed[candLabelId].closed) {
                   state.multip[candLabelId].parBreaks.push(state.acc);
@@ -3981,17 +3980,15 @@
 
                 // TODO: return here
                 let startSearchRes = control.getClosestTextNode(
-                  cnodes,
-                  startInfo["nodeId"],
-                  span_labels,
-                  candLabelId,
+                  cnodes[startInfo["nodeId"]],
+                  span_labels[candLabelId],
+                  true,
                   startInfo["innerAcc"]
                 );
                 let endSearchRes = control.getClosestTextNode(
-                  cnodes,
-                  cId,
-                  span_labels,
-                  candLabelId,
+                  cnodes[cId],
+                  span_labels[candLabelId],
+                  false,
                   state.acc
                 );
                 state.errors += startSearchRes.errors + endSearchRes.errors;
@@ -3999,8 +3996,7 @@
                 let hasRestored = control.restoreMarkedSpan(
                   startSearchRes.node,
                   endSearchRes.node,
-                  span_labels,
-                  candLabelId,
+                  span_labels[candLabelId],
                   startSearchRes.acc,
                   endSearchRes.acc
                 );
@@ -4072,8 +4068,7 @@
                       let isRestored = control.restoreMarkedSpan(
                         dStartNode,
                         dEndNode,
-                        span_labels,
-                        dInfo.id,
+                        span_labels[dInfo.id],
                         dStartAcc + startInfo["innerAcc"],
                         dEndAcc + startInfo["innerAcc"]
                       );
@@ -4185,36 +4180,44 @@
                   false
                 );
 
-                let textNode = undefined;
+                let startNode = undefined,
+                  endNode = undefined;
                 if (overlap.level === 0) {
                   // if no overlap, just select the text node and proceed
-                  if (state.numInner[cId] === 0) {
-                    if (cnodes[cId].nodeType === 1) {
-                      textNode =
-                        cnodes[cId].childNodes[
-                          cnodes[cId].childNodes.length - 1
-                        ];
+                  if (cnodes[cId].nodeType === 1) {
+                    // TODO: select the correct text node here,
+                    // not just the last one!
+                    if (cnodes[cId].childNodes.length == 1) {
+                      // this is the usual case when the only node is a text node
+                      startNode = cnodes[cId].childNodes[0];
+                      endNode = startNode;
                     } else {
-                      textNode = cnodes[cId];
+                      // if we have more than 1 node, things get complicated
+                      // because suddenly we have many candidate nodes
+                      // and furthermore, the label can start in one of them
+                      // and finish in another node
+
+                      startNode = control.getClosestTextNode(
+                        cnodes[cId].childNodes[0],
+                        span_labels[state.curLabelId],
+                        true,
+                        state.acc
+                      );
+
+                      endNode = control.getClosestTextNode(
+                        cnodes[cId].childNodes[0],
+                        span_labels[state.curLabelId],
+                        false,
+                        state.acc
+                      );
+                      state.likelyErrors += startNode.errors + endNode.errors;
                     }
                   } else {
-                    // this means something was already rendered within this paragarph,
-                    // so now the paragraph is split into multiple text nodes
-                    // if it were an overlap, it would come into a different branch
-                    // of the outer if-statement, so for this part, it means
-                    // that we're still within the same paragraph (initial cnodes[i])
-                    // but we need to grab the last text node of the original paragraph
-                    // that was created after the label split the original cnodes[i] up
-                    let searchRes = control.getClosestTextNode(
-                      cnodes,
-                      cId,
-                      span_labels,
-                      state.curLabelId,
-                      state.acc
-                    );
-                    textNode = searchRes.node;
-                    innerAcc = searchRes.acc;
-                    state.likelyErrors += searchRes.errors;
+                    startNode = {
+                      node: cnodes[cId],
+                      acc: innerAcc,
+                    };
+                    endNode = startNode;
                   }
                 } else {
                   // if there is an overlap, find a parent,
@@ -4224,6 +4227,7 @@
                     minDist = Infinity,
                     sameLevelDist = Infinity,
                     sameLevelId = undefined;
+
                   overlap.mask.forEach(function (hasOverlap, i) {
                     let label = span_labels[state.processed[i]["id"]],
                       dist =
@@ -4265,7 +4269,18 @@
 
                     if (utils.isDefined(tagItem)) {
                       let tagNodes = tagItem.childNodes;
-                      textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
+                      startNode = control.getClosestTextNode(
+                        tagNodes[0],
+                        span_labels[state.curLabelId],
+                        true,
+                        innerAcc
+                      );
+                      endNode = control.getClosestTextNode(
+                        tagNodes[0],
+                        span_labels[state.curLabelId],
+                        false,
+                        innerAcc
+                      );
 
                       // this is to render nodes that are nested on the same level
                       if (
@@ -4278,8 +4293,9 @@
                           }
                         }
 
-                        if (span_labels[sameLevelId]["end"] > innerAcc)
+                        if (span_labels[sameLevelId]["end"] > innerAcc) {
                           innerAcc = span_labels[sameLevelId]["end"];
+                        }
                       }
                     } else if (!state.processed[minDistId].closed) {
                       // if current label depends on rendering a non-closed label,
@@ -4309,29 +4325,28 @@
                   } else {
                     // if it's not defined, find the closest of the split nodes
                     let searchRes = control.getClosestTextNode(
-                      cnodes,
-                      cId,
-                      span_labels,
-                      state.curLabelId,
+                      cnodes[cId],
+                      span_labels[state.curLabelId],
+                      true,
                       state.acc
                     );
-                    textNode = searchRes.node;
+                    startNode = searchRes;
+                    endNode = startNode;
                     innerAcc = searchRes.acc;
                     state.likelyErrors += searchRes.errors;
                   }
                 }
 
-                if (utils.isDefined(textNode)) {
+                if (utils.isDefined(startNode) && utils.isDefined(endNode)) {
                   // the only case when we don't come here
                   // is when the parent is a multi-paragraph label
                   // this is handled separately
                   let hasRestored = control.restoreMarkedSpan(
-                    textNode,
-                    textNode,
-                    span_labels,
-                    state.curLabelId,
-                    innerAcc,
-                    innerAcc
+                    startNode.node,
+                    endNode.node,
+                    span_labels[state.curLabelId],
+                    startNode.acc,
+                    endNode.acc
                   );
 
                   if (hasRestored) {
