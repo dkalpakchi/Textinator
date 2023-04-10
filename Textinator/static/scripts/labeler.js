@@ -117,11 +117,27 @@
       }
     }
 
-    function getSelectionLength(range) {
-      return range.toString().length;
+    // This function was used before getRangeLength
+    // but it didn't work, because it turned out
+    // range.toString() doesn't care about newlines!
+    // See more:
+    // - https://github.com/timdown/rangy/issues/306
+    // - https://stackoverflow.com/questions/1146730/problem-detecting-newlines-in-javascript-range-object
+    //
+    // Solution: replaced with getRangeLength
+    //
+    // function getSelectionLength(range) {
+    //   return range.toString().length;
+    // }
+
+    function getRangeLength(range) {
+      let fragment = range.cloneContents();
+      let lens = Array.from(fragment.childNodes).map(getNodeLength);
+      return lens.reduce((a, b) => a + b, 0);
     }
 
     // hide those that will influence textContent
+    // crucial for making textContent handle newlines correctly!
     function showExtraElements(selectorArea, makeVisible) {
       let $sel = $(selectorArea),
         $relNum = $sel.find('[data-m="r"]'),
@@ -151,36 +167,45 @@
       }
     }
 
+    function getNodeLength(node) {
+      let len = 0;
+      showExtraElements(node, false);
+      if (node.nodeType === 1) {
+        if (
+          (node.tagName == "SPAN" && node.classList.contains("tag")) ||
+          LINE_ENDING_TAGS.includes(node.tagName)
+        ) {
+          // if there is a label, need to remove the possible relation label
+          // This is why normally we would use innerText here and not textContent
+          // but now we hid extra elements already, we could just use textContent
+          // since it's faster
+          len += node.textContent.length;
+          // +1 because P is replaced by '\n'
+          if (LINE_ENDING_TAGS.includes(node.tagName)) len += 1;
+        } else if (node.tagName == "BR") {
+          len += 1;
+        } else if (node.tagName != "SCRIPT" && node.tagName != "BUTTON") {
+          // we don't need to account for invisible parts in any cases,
+          // other than the ones from the previous else if statement
+          // also sometimes a browser will correct typos like double spaces automatically
+          // but because .surroundContents happens on the TEXT_NODE with all
+          // typos included, we want the original TEXT_CONTENT to be here
+          len += node.textContent.length;
+        }
+      } else if (node.nodeType === 3) {
+        // TEXT_NODE
+        len += node.length;
+      }
+      showExtraElements(node, true);
+      return len;
+    }
+
     function previousTextLength(node) {
       function getPrevLength(prev, onlyElements) {
         if (onlyElements === undefined) onlyElements = false;
         let len = 0;
         while (prev != null) {
-          if (prev.nodeType === 1) {
-            // ELEMENT_NODE
-            if (
-              (prev.tagName == "SPAN" && prev.classList.contains("tag")) ||
-              LINE_ENDING_TAGS.includes(prev.tagName)
-            ) {
-              // if there is a label, need to remove the possible relation label
-              // This is why normally we would use innerText here and not textContent
-              // but now we hid extra elements already, we could just use textContent
-              // since it's faster
-              len += prev.textContent.length;
-              // +1 because P is replaced by '\n'
-              if (LINE_ENDING_TAGS.includes(prev.tagName)) len += 1;
-            } else if (prev.tagName != "SCRIPT" && prev.tagName != "BUTTON") {
-              // we don't need to account for invisible parts in any cases,
-              // other than the ones from the previous else if statement
-              // also sometimes a browser will correct typos like double spaces automatically
-              // but because .surroundContents happens on the TEXT_NODE with all
-              // typos included, we want the original TEXT_CONTENT to be here
-              len += prev.textContent.length;
-            }
-          } else if (prev.nodeType === 3) {
-            // TEXT_NODE
-            len += prev.length;
-          }
+          len += getNodeLength(prev);
           prev = onlyElements
             ? prev.previousElementSibling
             : prev.previousSibling;
@@ -1630,7 +1655,7 @@
         chunk["submittable"] = true; // whether it is possible to submit
         chunk["independent"] = marker.getAttribute("data-indep") === "true";
         chunk["start"] = previousTextLength(node, false);
-        chunk["end"] = chunk["start"] + node.textContent.length;
+        chunk["end"] = chunk["start"] + getNodeLength(node);
         chunks.push(chunk);
       },
       updateChunkFromSelection: function () {
@@ -1727,7 +1752,7 @@
             } else if (group[0].startContainer.nodeType === 3) {
               // means it's a text node, so the offset is the number of chars
               let startOffset = group[0].startOffset;
-              let startContLength = group[0].startContainer.textContent.length;
+              let startContLength = getNodeLength(group[0].startContainer);
 
               if (startOffset == startContLength) {
                 let startNode = findStartNode(group[0].startContainer);
@@ -1740,7 +1765,7 @@
               let endOffset = group[0].endOffset;
               let endNode = group[0].endContainer.childNodes[endOffset];
               let startOffset = group[0].startOffset;
-              let startContLength = group[0].startContainer.textContent.length;
+              let startContLength = getNodeLength(group[0].startContainer);
 
               if (isDeleteButton(endNode) && startOffset == startContLength) {
                 // effectively collapsed selection, because it starts at the end of the
@@ -1762,7 +1787,7 @@
                   if (endOffset - 1 >= 0) {
                     endNode =
                       group[N - 1].endContainer.childNodes[endOffset - 1];
-                    group[N - 1].setEnd(endNode, endNode.textContent.length);
+                    group[N - 1].setEnd(endNode, getNodeLength(endNode));
                   } else {
                     endNode = group[N - 1].endContainer.previousSibling;
                     if (!utils.isDefined(endNode)) continue;
@@ -1772,7 +1797,7 @@
             } else if (group[N - 1].endContainer.nodeType === 3) {
               // means it's a text node, so the offset is the number of chars
               let endOffset = group[N - 1].endOffset;
-              let endContLength = group[N - 1].endContainer.textContent.length;
+              let endContLength = getNodeLength(group[N - 1].endContainer);
 
               if (
                 endOffset == endContLength &&
@@ -1791,10 +1816,7 @@
                     // then just set the end after this start container or at the end of
                     // its text node
                     if (startNode.nodeType === 3)
-                      group[N - 1].setEnd(
-                        startNode,
-                        startNode.textContent.length
-                      );
+                      group[N - 1].setEnd(startNode, getNodeLength(startNode));
                     else if (startNode.nodeType === 1)
                       group[N - 1].setEndAfter(startNode);
                   } else {
@@ -1821,7 +1843,7 @@
                       if (startNode.nodeType === 3)
                         group[N - 1].setEnd(
                           startNode,
-                          startNode.textContent.length
+                          getNodeLength(startNode)
                         );
                       else if (startNode.nodeType === 1)
                         group[N - 1].setEndAfter(startNode);
@@ -1862,9 +1884,12 @@
             );
 
             chunk["start"] = chunk["range"].startOffset;
+            window.g = group;
             chunk["end"] =
               chunk["start"] +
-              group.map(getSelectionLength).reduce((a, b) => a + b, 0);
+              group.map(getRangeLength).reduce((a, b) => a + b, 0);
+            //group.map(getSelectionLength).reduce((a, b) => a + b, 0);
+            // range.toString() does not maintain newlines at all, so we
 
             chunk["marked"] = false;
             chunk["label"] = null;
@@ -1923,7 +1948,7 @@
                 nodeAfterEnd = end.nextSibling;
               if (nodeAfterEnd != null) {
                 // means we're at the delete button
-                if (chunk["range"].endOffset == end.textContent.length) {
+                if (chunk["range"].endOffset == getNodeLength(end)) {
                   let start = chunk["range"].startContainer,
                     originalText = end.textContent,
                     startOffset = start == end ? chunk["range"].startOffset : 0,
@@ -3672,7 +3697,7 @@
           let childLen = nodeStart.childNodes.length;
 
           for (let idx = 0; idx < childLen - 2; idx++) {
-            let diffLen = nodeStart.childNodes[idx].textContent.length;
+            let diffLen = getNodeLength(nodeStart.childNodes[idx]);
             subValueStart += diffLen;
             subValueEnd += diffLen;
           }
@@ -3684,7 +3709,7 @@
         let rStart = spanLabels[labelId]["start"] - subValueStart;
         let rEnd = spanLabels[labelId]["end"] - subValueEnd;
 
-        if (rEnd > nodeEnd.textContent.length) {
+        if (rEnd > getNodeLength(nodeEnd)) {
           console.error(
             "Restoration Error: attempting to mark a span that is larger than the available size"
           );
@@ -3765,16 +3790,10 @@
           level: numOverlapping,
         };
       },
-      getTextNodeLength: function (node) {
-        let cLength = node.textContent.length;
-        if (cLength === 0 && node.tagName === "BR") cLength = 1;
-        return cLength;
-      },
       getClosestTextNode: function (cnodes, id, spanLabels, labelId, iAcc) {
         // this operates within paragraph only!
-        let control = this;
         let textNode = cnodes[id];
-        let cLength = this.getTextNodeLength(textNode);
+        let cLength = getNodeLength(textNode);
         let errors = 0;
 
         let cAcc = iAcc;
@@ -3784,7 +3803,7 @@
         ) {
           cAcc += cLength;
           textNode = textNode.nextSibling;
-          cLength = control.getTextNodeLength(textNode);
+          cLength = getNodeLength(textNode);
         }
 
         if (textNode === null) {
@@ -3940,7 +3959,7 @@
             state.curLabelId < numLabels ||
             Object.keys(state.multip).length > 0
           ) {
-            let cnodeLength = cnodes[cId].textContent.length;
+            let cnodeLength = getNodeLength(cnodes[cId]);
             if (cnodeLength === 0 && cnodes[cId].tagName === "BR") {
               cnodeLength = 1;
 
@@ -4015,7 +4034,7 @@
 
                     let pOffsetId = 0;
                     for (let idt = 0; idt < tagNodes.length - 1; idt++) {
-                      let curIdtLength = tagNodes[idt].textContent.length;
+                      let curIdtLength = getNodeLength(tagNodes[idt]);
 
                       // this is most probably <br>, which was already accounted for
                       if (curIdtLength === 0) continue;
@@ -4596,11 +4615,15 @@
         let inputFormData = $inputForm.serializeObject();
 
         // if there's an input form field, then create input_context
-        // the reason why we use false as a param to getContextText
-        // is to because sometimes browser will auto-correct small mistakes
+        // the reason why we use `false` as a param to getContextText
+        // (which makes us rely on `textContent` instaed of `innerText`)
+        // is because sometimes browser will auto-correct small mistakes
         // like double spaces, which are present in the data,
         // but when .surroundContext happens, it does so on the TEXT_NODE
-        // which contains the original uncorrected text
+        // which contains the original uncorrected text.
+        // The flip-side of the problem is that `textContent` removes
+        // the newlines, unlike `innerText`, but this is handled inside
+        // the `getContextText` function
         inputFormData["context"] = labelerModule.getContextText(false);
 
         $.extend(inputFormData, labelerModule.getSubmittableDict());
@@ -5010,6 +5033,8 @@
         }
       });
     });
+
+    window.lm = labelerModule;
 
     $("#reviewingModeButton").on("click", function (e) {
       e.preventDefault();
