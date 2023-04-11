@@ -140,20 +140,19 @@
     // crucial for making textContent handle newlines correctly!
     function showExtraElements(selectorArea, makeVisible) {
       let $sel = $(selectorArea),
-        $relNum = $sel.find('[data-m="r"]'),
-        $delBtn = $sel.find("button.delete"),
-        $meta = $sel.find("[data-meta]"),
-        $br = $sel.find("br"),
-        $pinned = $sel.find(".pinned");
+        $relNum = $sel.find('[data-m="r"]').addBack('[data-m="r"]'),
+        $delBtn = $sel.find("button.delete").addBack("button.delete"),
+        $meta = $sel.find("[data-meta]").addBack("[data-meta]"),
+        $br = $sel.find("br").addBack("br"),
+        $pinned = $sel.find(".pinned").addBack(".pinned");
 
       if (makeVisible) {
         $relNum.show();
         $delBtn.show();
         $meta.show();
         $br.each(function (i, x) {
-          x.previousSibling.remove();
+          x.textContent = "";
         });
-        $br.show();
         $pinned.each(function (i, x) {
           x.previousSibling.remove();
         });
@@ -161,15 +160,24 @@
         $relNum.hide();
         $delBtn.hide();
         $meta.hide();
-        $br.before(document.createTextNode("\n"));
-        $br.hide();
+        $br.each(function (i, x) {
+          x.textContent = "\n";
+        });
         $pinned.before(document.createTextNode("\n\n"));
       }
+      ui.extraElementsVisible = makeVisible;
     }
 
     function getNodeLength(node) {
+      /*
+       * This function calculates the length of the nodes textContent
+       * including possible newline characters.
+       */
+
       let len = 0;
-      showExtraElements(node, false);
+      let originalVisibility = ui.extraElementsVisible;
+      if (originalVisibility) showExtraElements(node, false);
+
       if (node.nodeType === 1) {
         if (
           (node.tagName == "SPAN" && node.classList.contains("tag")) ||
@@ -182,8 +190,6 @@
           len += node.textContent.length;
           // +1 because P is replaced by '\n'
           if (LINE_ENDING_TAGS.includes(node.tagName)) len += 1;
-        } else if (node.tagName == "BR") {
-          len += 1;
         } else if (node.tagName != "SCRIPT" && node.tagName != "BUTTON") {
           // we don't need to account for invisible parts in any cases,
           // other than the ones from the previous else if statement
@@ -196,7 +202,8 @@
         // TEXT_NODE
         len += node.length;
       }
-      showExtraElements(node, true);
+
+      if (originalVisibility) showExtraElements(node, originalVisibility);
       return len;
     }
 
@@ -791,6 +798,7 @@
 
     const ui = {
       collapsibles: null,
+      extraElementsVisible: true,
       getClosestBatch: getClosestBatch,
       initCollapsibles: function () {
         if (!utils.isDefined(this.collapsibles)) {
@@ -1884,7 +1892,6 @@
             );
 
             chunk["start"] = chunk["range"].startOffset;
-            window.g = group;
             chunk["end"] =
               chunk["start"] +
               group.map(getRangeLength).reduce((a, b) => a + b, 0);
@@ -4196,7 +4203,6 @@
                       // because suddenly we have many candidate nodes
                       // and furthermore, the label can start in one of them
                       // and finish in another node
-
                       startNode = control.getClosestTextNode(
                         cnodes[cId].childNodes[0],
                         span_labels[state.curLabelId],
@@ -4213,11 +4219,20 @@
                       state.likelyErrors += startNode.errors + endNode.errors;
                     }
                   } else {
-                    startNode = {
-                      node: cnodes[cId],
-                      acc: innerAcc,
-                    };
-                    endNode = startNode;
+                    startNode = control.getClosestTextNode(
+                      cnodes[cId],
+                      span_labels[state.curLabelId],
+                      true,
+                      state.acc
+                    );
+
+                    endNode = control.getClosestTextNode(
+                      cnodes[cId],
+                      span_labels[state.curLabelId],
+                      false,
+                      state.acc
+                    );
+                    state.likelyErrors += startNode.errors + endNode.errors;
                   }
                 } else {
                   // if there is an overlap, find a parent,
@@ -5048,8 +5063,6 @@
         }
       });
     });
-
-    window.lm = labelerModule;
 
     $("#reviewingModeButton").on("click", function (e) {
       e.preventDefault();
