@@ -3796,14 +3796,19 @@
           level: numOverlapping,
         };
       },
-      getClosestTextNode: function (curNode, spanLabel, checkStart, iAcc) {
+      getClosestTextNode: function (
+        curNode,
+        spanLabel,
+        checkStart,
+        prevLength
+      ) {
         // this operates within paragraph only!
         let cLength = getNodeLength(curNode);
         let errors = 0;
 
         if (!utils.isDefined(checkStart)) checkStart = true;
 
-        let cAcc = iAcc;
+        let cAcc = prevLength;
         while (
           curNode !== null &&
           ((checkStart && cAcc + cLength <= spanLabel["start"]) ||
@@ -4192,8 +4197,6 @@
                 if (overlap.level === 0) {
                   // if no overlap, just select the text node and proceed
                   if (cnodes[cId].nodeType === 1) {
-                    // TODO: select the correct text node here,
-                    // not just the last one!
                     if (cnodes[cId].childNodes.length == 1) {
                       // this is the usual case when the only node is a text node
                       startNode = cnodes[cId].childNodes[0];
@@ -4284,17 +4287,18 @@
 
                     if (utils.isDefined(tagItem)) {
                       let tagNodes = tagItem.childNodes;
+                      let prevLength = previousTextLength(tagNodes[0]);
                       startNode = control.getClosestTextNode(
                         tagNodes[0],
                         span_labels[state.curLabelId],
                         true,
-                        innerAcc
+                        prevLength
                       );
                       endNode = control.getClosestTextNode(
                         tagNodes[0],
                         span_labels[state.curLabelId],
                         false,
-                        innerAcc
+                        prevLength
                       );
 
                       // this is to render nodes that are nested on the same level
@@ -4492,7 +4496,6 @@
         });
       },
     };
-
     return labeler;
   })();
 

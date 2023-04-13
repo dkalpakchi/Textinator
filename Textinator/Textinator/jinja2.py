@@ -69,9 +69,16 @@ CUSTOM_MD_TAGS = {
 
 for tag in CUSTOM_MD_TAGS:
     CUSTOM_MD_TAGS[tag]['tag'] = "\n{}\n".format(CUSTOM_MD_TAGS[tag]['core'])
+    CUSTOM_MD_TAGS[tag]['replace'] = "%/{}/%".format(CUSTOM_MD_TAGS[tag]['core'])
 
 def to_markdown(value):
     """Converts newlines into <p> and <br />s."""
+    # replace all newlines from custom tags to keep them
+    for tag in CUSTOM_MD_TAGS.values():
+        if tag['tag'] in value:
+            value = value.replace(tag['tag'], tag['replace'])
+
+    value = value.replace("\n", "<br>")
     md = markdown.markdown(value)
     # Bulmify things
     md = md.replace('<h1>', '<h1 class="title is-4">')
@@ -86,10 +93,10 @@ def to_markdown(value):
                 .replace("</p>", "")
         md = re.sub(
             r'{}</li>'.format(spec['core']),
-            '</li>{}'.format(spec['tag']), md)
+            '</li>{}'.format(spec['replace']), md)
 
-        if spec['tag'] in md:
-            scrollable, pinned = md.split(spec['tag'])
+        if spec['replace'] in md:
+            scrollable, pinned = md.split(spec['replace'])
             scrollable, pinned = scrollable.strip(), pinned.strip()
 
             scrollable = re.sub("\n(?!<)", "<br>", scrollable)
