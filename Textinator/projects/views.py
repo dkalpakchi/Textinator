@@ -272,9 +272,13 @@ def record_datapoint(request, proj):
                 project=batch_info.project,
                 datasource=batch_info.data_source
             ).order_by('-dt_updated').first()
-            dal.is_submitted = True
-            dal.is_delayed = False
-            dal.save()
+            if dal is None:
+                if not request.user.is_superuser:
+                    return JsonResponse({"error": "Access denied"})
+            else:
+                dal.is_submitted = True
+                dal.is_delayed = False
+                dal.save()
 
         batch = Tm.Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
 
