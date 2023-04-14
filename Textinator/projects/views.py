@@ -395,6 +395,14 @@ def record_datapoint(request, proj):
                         )
                         revised_input.save()
 
+            # First save new labels, before deleting old
+            # To avoid the case that when all labels have been removed from the batch
+            # and there were no inputs, the batch self-destroys
+            if mode == "e":
+                process_chunks_and_relations(batch, batch_info)
+            elif mode == "rev":
+                process_chunks_and_relations(revised_batch, batch_info)
+
             # Dealing with labels
             for chunk in batch_info.chunks:
                 if chunk.get('deleted', False):
@@ -410,10 +418,6 @@ def record_datapoint(request, proj):
                             revised_label.revision_changes = "Deleted {}".format(batch_labels[chunk_hash].marker.name)
                             revised_label.save()
 
-            if mode == "e":
-                process_chunks_and_relations(batch, batch_info)
-            elif mode == "rev":
-                process_chunks_and_relations(revised_batch, batch_info)
 
             batch.save() # this updates dt_updated
 
