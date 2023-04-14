@@ -1613,8 +1613,9 @@ def delete_batch_if_empty(sender, **kwargs):
     except Batch.DoesNotExist:
         logger.warning("Tried to delete batch, but didn't find it")
 
-signals.post_delete.connect(delete_batch_if_empty, sender=Label, dispatch_uid='project.models.label_delete_batches')
-signals.post_delete.connect(delete_batch_if_empty, sender=Input, dispatch_uid='project.models.input_delete_batches')
+# TODO: in some cases this can actually hurdle user experience, so make a switch in settings to enable this behavior
+#signals.post_delete.connect(delete_batch_if_empty, sender=Label, dispatch_uid='project.models.label_delete_batches')
+#signals.post_delete.connect(delete_batch_if_empty, sender=Input, dispatch_uid='project.models.input_delete_batches')
 
 
 class LabelRelation(CommonModel):
