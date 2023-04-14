@@ -169,6 +169,11 @@ def render_editing_board(request, project, user, page, template='partials/compon
         search_types, ban_t = check_empty(search_dict['search_type'], ["phr"])
         ban = set.union(ban_mv, ban_q, ban_t)
 
+        # if there is a non-empty search, unban it
+        if "nemp" in search_types:
+            nemp_index = {i for i, x in enumerate(search_types) if x == "nemp"}
+            ban = ban - nemp_index
+
         search_mv_pks = get_unbanned(search_mv_pks, ban)
         search_queries = get_unbanned(search_queries, ban)
         search_types = get_unbanned(search_types, ban)
@@ -262,24 +267,28 @@ def render_editing_board(request, project, user, page, template='partials/compon
 
 
                 if search_query and vector:
-                    query = SearchQuery(
-                        search_query,
-                        search_type=verbalize_search_type(search_type),
-                        config=search_config
-                    )
+                    if search_type == "nemp":
+                        # check non-empty ones
+                        input_batches_clause = input_batches_clause.exclude(vector__isnull=True)
+                    else:
+                        query = SearchQuery(
+                            search_query,
+                            search_type=verbalize_search_type(search_type),
+                            config=search_config
+                        )
 
-                    if search_type == "phr":
-                        # phrase queries
-                        if isinstance(vector, str):
-                            input_batches_clause = input_batches_clause.filter(**{vector: query}) # some of them get like 1e-20, which is why > 0 doesn't work'
+                        if search_type == "phr":
+                            # phrase queries
+                            if isinstance(vector, str):
+                                input_batches_clause = input_batches_clause.filter(**{vector: query}) # some of them get like 1e-20, which is why > 0 doesn't work'
+                            else:
+                                input_batches_clause = input_batches_clause.annotate(
+                                    search=vector
+                                ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
                         else:
                             input_batches_clause = input_batches_clause.annotate(
-                                search=vector
-                            ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
-                    else:
-                        input_batches_clause = input_batches_clause.annotate(
-                            rank=SearchRank(vector, query)
-                        ).filter(rank__gt=1e-3) # some of them get like 1e-20, which is why > 0 doesn't work'
+                                rank=SearchRank(vector, query)
+                            ).filter(rank__gt=1e-3) # some of them get like 1e-20, which is why > 0 doesn't work'
                 ib_ids = extract_ids(input_batches_clause)
                 input_batch_ids.append(set(ib_ids))
 
