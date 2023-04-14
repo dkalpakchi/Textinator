@@ -508,7 +508,7 @@ def process_recorded_search_args(request_dict):
         search_type = request_dict.get("search_type")
         batch_ids = request_dict.get("batch_ids")
     except ValueError:
-        page, scope = 1, -1
+        page, scope, search_type, batch_ids = 1, -1, None, None
     query = request_dict.get("query")
 
     if scope is None:
