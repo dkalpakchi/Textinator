@@ -1358,15 +1358,16 @@
                   "#" + mode + "SearchForm"
                 ),
                 searchData = {};
+              let page = target.getAttribute("data-page");
               if (utils.isDefined(searchForm))
                 searchData = $(searchForm).serializeObjectLists();
 
+              if (page == "#goToPage")
+                page = document.querySelector(page).value;
+
               $.ajax({
                 type: "GET",
-                url:
-                  closestPsArea.getAttribute("data-href") +
-                  "?p=" +
-                  target.getAttribute("data-page"),
+                url: closestPsArea.getAttribute("data-href") + "?p=" + page,
                 dataType: "json",
                 data: searchData,
                 success: function (d) {
