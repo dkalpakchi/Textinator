@@ -1201,6 +1201,13 @@
         document.addEventListener(
           "keyup",
           function (e) {
+            let target = e.target;
+
+            if (target.id == "goToPage" && e.keyCode == 13) {
+              document.querySelector('[data-page="#goToPage"]').click();
+              return;
+            }
+
             let selection = window.getSelection();
 
             if (selection && selection.anchorNode != null) {
@@ -1371,7 +1378,7 @@
                 dataType: "json",
                 data: searchData,
                 success: function (d) {
-                  control.currentPage[mode] = target.getAttribute("data-page");
+                  control.currentPage[mode] = page;
                   if (d.partial) {
                     let mainPart = closestPsArea.querySelector("main");
                     mainPart.innerHTML = d.template;
