@@ -22,11 +22,13 @@ REDIS_URLS="textinator_redis_1 textinator-redis-1"
 
 for url in $REDIS_URLS
 do
-  if ping -c 1 $url &> /dev/null
+  if ping -c 5 $url &> /dev/null
   then
-    echo "Chose $url for Redis!"
+    echo "[Redis] Success for $url -- chosen!"
     export REDIS_URL=$url
     break
+  else
+    echo "[Redis] Couldn't ping $url -- ignoring"
   fi
 done
 
