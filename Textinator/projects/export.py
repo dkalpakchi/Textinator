@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from collections import defaultdict
+from collections import defaultdict, abc
 
 from django.db.models import F, Window
 from django.db.models.functions import RowNumber
@@ -7,8 +7,20 @@ from django.db.models.functions import RowNumber
 from .models import *
 
 
+# Taken from:
+# https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+def dict_update(d, u):
+    for k, v in u.items():
+        if isinstance(v, abc.Mapping):
+            d[k] = dict_update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
+
+
 def have_the_same_relation(group):
     return len(set([r['type'] for r in group])) == 1
+
 
 def merge2cluster(group):
     nodes = {}
@@ -21,6 +33,7 @@ def merge2cluster(group):
         'extra': group[0]['extra'] if 'extra' in group[0] else '',
         "annotator": group[0]['annotator'] if 'annotator' in group[0] else ''
     }
+
 
 def group2hash(group):
     if isinstance(group, list):
@@ -277,7 +290,9 @@ class AnnotationExporter:
                                 is_deleted=False
                             )
                             for dal in dals.all():
-                                resp[context_id]['flags'].update(dal.flags)
+                                resp[context_id]['flags'] = dict_update(
+                                    resp[context_id]['flags'], dal.flags
+                                )
                         if self.__config["include_batch_no"]:
                             resp[context_id]["num"] = batch.index
 
