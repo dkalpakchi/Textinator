@@ -3745,6 +3745,8 @@
           return false;
         }
 
+        if (nodeStart.tagName == "BR") nodeStart = nodeStart.nextSibling;
+
         range.setStart(nodeStart, rStart);
         if (
           isScrollablePart(nodeStart.parentNode) &&
@@ -3824,12 +3826,24 @@
         ) {
           cAcc += cLength;
           curNode = curNode.nextSibling;
-          cLength = getNodeLength(curNode);
+          cLength = utils.isDefined(curNode) ? getNodeLength(curNode) : null;
         }
 
         if (curNode === null) {
           console.error(
             "Restoration Error: reached the end of the markable, while trying to find the closest text node"
+          );
+        }
+
+        if (curNode.nodeType == 1) {
+          // we are inside the label, find the closest text node inside
+          // so the label might end up being an overlapping one,
+          // hence find the text node inside the label that fits the best
+          return this.getClosestTextNode(
+            curNode.childNodes[0],
+            spanLabel,
+            checkStart,
+            cAcc
           );
         }
 
