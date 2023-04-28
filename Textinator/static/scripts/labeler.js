@@ -3759,7 +3759,6 @@
 
         if (nodeStart.tagName == "BR") nodeStart = nodeStart.nextSibling;
 
-        console.log(nodeStart, nodeEnd);
         range.setStart(nodeStart, rStart);
         if (
           isScrollablePart(nodeStart.parentNode) &&
@@ -3796,15 +3795,30 @@
           offEnd: rEnd,
         };
       },
+      checkFutureOverlap: function (state, spanLabels) {
+        return spanLabels
+          .slice(state.curLabelId + 1)
+          .map(function (x) {
+            let s1 = spanLabels[state.curLabelId],
+              s2 = x;
+            return (
+              (s1["start"] >= s2["start"] && s1["end"] <= s2["end"]) ||
+              (s2["start"] >= s1["start"] && s2["end"] <= s1["end"]) ||
+              (s1["start"] <= s2["end"] && s2["start"] <= s1["start"]) ||
+              (s2["start"] <= s1["end"] && s1["start"] <= s2["start"])
+            );
+          })
+          .some((x) => x);
+      },
       getOverlappingSpans: function (state, spanLabels) {
         return state.processed.map(function (x) {
           let s1 = spanLabels[state.curLabelId],
             s2 = spanLabels[x["id"]];
           return (
             (s1["start"] >= s2["start"] && s1["end"] <= s2["end"]) ||
-            (s2["start"] >= s1["start"] && s2["end"] <= s1["end"])
-            //(s1["start"] <= s2["end"] && s2["start"] <= s1["start"]) ||
-            //(s2["start"] <= s1["end"] && s1["start"] <= s2["start"])
+            (s2["start"] >= s1["start"] && s2["end"] <= s1["end"]) ||
+            (s1["start"] <= s2["end"] && s2["start"] <= s1["start"]) ||
+            (s2["start"] <= s1["end"] && s1["start"] <= s2["start"])
           );
         });
       },
@@ -4039,6 +4053,9 @@
             // Attempt to close a multi-paragraph marking
             let keys2del = [];
             for (let candLabelId in state.multip) {
+              let atTheEnd = state.multip[candLabelId].renderAtTheEnd;
+              if (utils.isDefined(atTheEnd) && atTheEnd && cId !== len - 1)
+                continue;
               if (state.acc + cnodeLength >= span_labels[candLabelId]["end"]) {
                 // if the candLabelId label ends within this paragraph,
                 // we found the suitable paragraph to render it!
@@ -4091,18 +4108,19 @@
                     let tagItem = document.querySelector(
                       'span.tag[data-i="' + state.c2i[candLabelId] + '"]'
                     );
+                    let prevLength = previousTextLength(tagItem.childNodes[0]);
 
                     let dStartRes = control.getClosestTextNode(
                       tagItem.childNodes[0],
                       span_labels[dInfo.id],
                       true,
-                      startInfo["acc"]
+                      prevLength
                     );
                     let dEndRes = control.getClosestTextNode(
                       tagItem.childNodes[0],
                       span_labels[dInfo.id],
                       false,
-                      startInfo["acc"]
+                      prevLength
                     );
                     state.errors += dStartRes.errors + dEndRes.errors;
 
@@ -4180,24 +4198,43 @@
                   for (let i in overlap.mask) {
                     if (overlap.mask[i]) {
                       let proc = state.processed[i];
-                      if (proc.multip && !proc.closed) {
-                        if (state.multip.hasOwnProperty(proc["id"])) {
-                          state.multip[proc["id"]].delayed.push({
-                            id: state.curLabelId,
-                          });
-                        } else {
-                          // this means that the nested nodes probably start in the same node
-                          state.multip[proc["id"]] = {
+                      if (proc.multip) {
+                        if (proc.closed) {
+                          // if it was closed, this means that we found its starting
+                          // paragraph, but not yet reached the ending one, so wait
+                          state.multip[state.curLabelId] = {
                             start: {
                               nodeId: cId,
                               acc: state.acc,
                             },
-                            delayed: [
-                              {
-                                id: state.curLabelId,
-                              },
-                            ],
+                            delayed: [],
+                            renderAtTheEnd: control.checkFutureOverlap(
+                              state,
+                              span_labels
+                            ),
                           };
+                        } else {
+                          // if the overlapping marker was not yet closed
+                          // add the current marker in into the delay list
+                          // of the overlapping marker
+                          if (state.multip.hasOwnProperty(proc["id"])) {
+                            state.multip[proc["id"]].delayed.push({
+                              id: state.curLabelId,
+                            });
+                          } else {
+                            // this means that the nested nodes probably start in the same node
+                            state.multip[proc["id"]] = {
+                              start: {
+                                nodeId: cId,
+                                acc: state.acc,
+                              },
+                              delayed: [
+                                {
+                                  id: state.curLabelId,
+                                },
+                              ],
+                            };
+                          }
                         }
                       }
                     }
@@ -4321,17 +4358,19 @@
 
                     if (utils.isDefined(tagItem)) {
                       let tagNodes = tagItem.childNodes;
+                      let prevLength = previousTextLength(tagNodes[0]);
+
                       startNode = control.getClosestTextNode(
                         tagNodes[0],
                         span_labels[state.curLabelId],
                         true,
-                        state.acc
+                        prevLength
                       );
                       endNode = control.getClosestTextNode(
                         tagNodes[0],
                         span_labels[state.curLabelId],
                         false,
-                        state.acc
+                        prevLength
                       );
 
                       // this is to render nodes that are nested on the same level
