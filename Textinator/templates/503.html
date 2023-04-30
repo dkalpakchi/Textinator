@@ -1,0 +1,17 @@
+{% load static %}
+<html>
+  <head>
+    <link rel="stylesheet" href="{% static 'bulma/css/bulma.min.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/base_style.css' %}">
+  </head>
+  <body>
+    <section class="hero main-gradient is-fullheight">
+      <div class="hero-body">
+        <div class="box has-text-centered is-vcentered margin-center">
+          <h1 class="logo">Maintenance</h1>
+          <p>{{ _("The website is currently under maintenance, please come back later.") }} </p>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

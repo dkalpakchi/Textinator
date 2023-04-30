@@ -7,6 +7,7 @@ django-colorfield==0.4.5
 django-compressor==3.0
 django-guardian==2.4.0
 django-jazzmin==2.4.8
+django-maintenancemode==0.11.7
 django-modeltranslation==0.17.3
 django-nested-admin==3.3.3
 django-registration==3.1.2
@@ -20,6 +21,7 @@ jinja2==3.0.3
 jsonlines==3.0.0
 Markdown==3.1.1
 Pillow==9.4.0
+pinax-announcements==4.0.0
 psycopg2-binary
 pymemcache==3.5.2
 PyMySQL==0.9.3
