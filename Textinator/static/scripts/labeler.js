@@ -4178,41 +4178,39 @@
           for (let i in overlap.mask) {
             if (overlap.mask[i]) {
               let proc = state.processed[i];
-              if (proc.multip) {
-                if (proc.closed) {
-                  // if it was closed, this means that we found its starting
-                  // paragraph, but not yet reached the ending one, so wait
-                  let shouldRenderAtTheEnd = control.checkFutureOverlap(state);
-                  state.multip[state.curLabelId] = {
-                    start: {
-                      nodeId: shouldRenderAtTheEnd ? 0 : state.cnodeId,
-                      acc: shouldRenderAtTheEnd ? 0 : state.acc,
-                    },
-                    delayed: [],
-                    renderAtTheEnd: shouldRenderAtTheEnd,
-                  };
+              if (proc.closed) {
+                // if it was closed, this means that we found its starting
+                // paragraph, but not yet reached the ending one, so wait
+                let shouldRenderAtTheEnd = control.checkFutureOverlap(state);
+                state.multip[state.curLabelId] = {
+                  start: {
+                    nodeId: shouldRenderAtTheEnd ? 0 : state.cnodeId,
+                    acc: shouldRenderAtTheEnd ? 0 : state.acc,
+                  },
+                  delayed: [],
+                  renderAtTheEnd: shouldRenderAtTheEnd,
+                };
+              } else {
+                // if the overlapping marker was not yet closed
+                // add the current marker in into the delay list
+                // of the overlapping marker
+                if (utils.hasProp(state.multip, proc["id"])) {
+                  state.multip[proc["id"]].delayed.push({
+                    id: state.curLabelId,
+                  });
                 } else {
-                  // if the overlapping marker was not yet closed
-                  // add the current marker in into the delay list
-                  // of the overlapping marker
-                  if (utils.hasProp(state.multip, proc["id"])) {
-                    state.multip[proc["id"]].delayed.push({
-                      id: state.curLabelId,
-                    });
-                  } else {
-                    // this means that the nested nodes probably start in the same node
-                    state.multip[proc["id"]] = {
-                      start: {
-                        nodeId: state.cnodeId,
-                        acc: state.acc,
+                  // this means that the nested nodes probably start in the same node
+                  state.multip[proc["id"]] = {
+                    start: {
+                      nodeId: state.cnodeId,
+                      acc: state.acc,
+                    },
+                    delayed: [
+                      {
+                        id: state.curLabelId,
                       },
-                      delayed: [
-                        {
-                          id: state.curLabelId,
-                        },
-                      ],
-                    };
-                  }
+                    ],
+                  };
                 }
               }
             }
@@ -4517,6 +4515,8 @@
                   if (restoredInfo.isRestored) {
                     state.numInner[cId]++; // a default counter for labels within this paragraph, nested or not
                     state.c2i[state.curLabelId] = control.getActiveChunk().id;
+
+                    state.processed[state.curLabelId].closed = true;
                   } else {
                     state.likelyErrors++;
                   }
