@@ -42,7 +42,7 @@
     defaultobj: function (creator) {
       return new Proxy(Object(), {
         get(obj, prop) {
-          if (!obj.hasOwnProperty(prop)) obj[prop] = creator();
+          if (!utils.hasProp(obj, prop)) obj[prop] = creator();
           return obj[prop];
         },
       });
@@ -57,6 +57,9 @@
     },
     expandMode: function (m) {
       return m == "e" ? "editing" : "reviewing";
+    },
+    hasProp: function (obj, p) {
+      return Object.prototype.hasOwnProperty.call(obj, p);
     },
   };
 
@@ -94,7 +97,7 @@
       for (let i in arr) {
         let found = true;
         for (let k in obj) {
-          found = found && arr[i].hasOwnProperty(k) && obj[k] == arr[i][k];
+          found = found && utils.hasProp(arr[i], k) && obj[k] == arr[i][k];
           if (!found) break;
         }
         if (found) return true;
@@ -647,11 +650,11 @@
       for (let c in chunks) {
         let chunk = chunks[c];
         if (
-          !chunk.hasOwnProperty("batch") &&
+          !utils.hasProp(chunk, "batch") &&
           !chunk.submittable &&
           !isInRelations(chunk)
         ) {
-          if (cnt.hasOwnProperty(chunk.label)) cnt[chunk.label]++;
+          if (utils.hasProp(cnt, chunk.label)) cnt[chunk.label]++;
           else cnt[chunk.label] = 1;
         }
       }
@@ -1286,7 +1289,7 @@
 
             let $form = $(e.target);
             let data = $form.serializeObjectLists();
-            if (data.hasOwnProperty("random"))
+            if (utils.hasProp(data, "random"))
               data["random"] = data["random"][0];
 
             let $main = $form.closest("nav").siblings("main");
@@ -1509,10 +1512,6 @@
             }
           }
         });
-
-        document.addEventListener("change", function (e) {
-          let target = e.target;
-        });
       },
       initInteractiveDataAreaEvents: function () {
         if (this.interactiveDataArea != null) {
@@ -1567,7 +1566,8 @@
           this.contextMenuPlugins[label] = {};
         if (plugin.storeFor == "relation") {
           if (
-            !this.contextMenuPlugins["sharedBetweenMarkers"].hasOwnProperty(
+            !utils.hasProp(
+              this.contextMenuPlugins["sharedBetweenMarkers"],
               plugin.name
             )
           )
@@ -1930,7 +1930,6 @@
       },
       mark: function (obj, max_markers) {
         // if there were problems with latest selection, we might want to try updating it!
-        let control = this;
         if (chunks.length > 0 && activeLabels < max_markers) {
           let chunk = this.getActiveChunk();
 
@@ -2685,7 +2684,7 @@
       },
       updateRelationSwitcher: function (x, relationId, removeId) {
         let relSpan = undefined;
-        if (x.hasOwnProperty("dom")) relSpan = x.dom.querySelector("[data-m]");
+        if (utils.hasProp(x, "dom")) relSpan = x.dom.querySelector("[data-m]");
         else relSpan = x.querySelector("[data-m]");
 
         if (removeId < 0) removeId = undefined;
@@ -2712,7 +2711,7 @@
               relSpan.textContent = rr.length > 1 ? "+" : rr[0];
             else {
               relSpan.textContent = "";
-              let $x = $(x.hasOwnProperty("dom") ? x.dom : x);
+              let $x = $(utils.hasProp(x, "dom") ? x.dom : x);
               $x.prop("in_relation", false);
               $x.attr("id", "");
               $(relSpan).remove();
@@ -2738,7 +2737,7 @@
             relSpan._tippy.destroy();
           }
 
-          const instance = tippy(relSpan, {
+          tippy(relSpan, {
             content: content,
             interactive: true,
             placement: "bottom",
@@ -2850,7 +2849,7 @@
               checkForMultiplePossibleRelations(control.relationsArea, s)
             );
 
-            if (!nodes.hasOwnProperty(s)) {
+            if (!utils.hasProp(nodes, s)) {
               nodes[s] = [];
             }
             nodes[s].push({
@@ -2868,7 +2867,7 @@
                 otherNodes = relations[newRelationId].d3.nodes;
 
               for (let ons in otherNodes) {
-                if (!nodes.hasOwnProperty(ons)) nodes[ons] = [];
+                if (!utils.hasProp(nodes, ons)) nodes[ons] = [];
 
                 if (ons == s) {
                   for (let i in otherNodes[ons]) {
@@ -2922,14 +2921,14 @@
                 continue;
               }
 
-              if (!sketch.nodes.hasOwnProperty(between[i][from]))
+              if (!utils.hasProp(sketch.nodes, between[i][from]))
                 sketch.nodes[between[i][from]] = [];
               sketch.nodes[between[i][from]].push.apply(
                 sketch.nodes[between[i][from]],
                 nodes[between[i][from]]
               );
               if (nodes[between[i][from]] != nodes[between[i][to]]) {
-                if (!sketch.nodes.hasOwnProperty(between[i][to]))
+                if (!utils.hasProp(sketch.nodes, between[i][to]))
                   sketch.nodes[between[i][to]] = [];
                 sketch.nodes[between[i][to]].push.apply(
                   sketch.nodes[between[i][to]],
@@ -2972,7 +2971,7 @@
               j += sketches[i].nodes[key].length;
             }
 
-            if (relations.hasOwnProperty(newRelationId)) {
+            if (utils.hasProp(relations, newRelationId)) {
               for (let k in sketches[i].nodes) {
                 let nn = sketches[i].nodes[k];
                 for (let a = 0, len_a = nn.length; a < len_a; a++) {
@@ -2982,7 +2981,7 @@
                       nn[a]
                     )
                   ) {
-                    if (!relations[newRelationId].d3.nodes.hasOwnProperty(k))
+                    if (!utils.hasProp(relations[newRelationId].d3.nodes, k))
                       relations[newRelationId].d3.nodes[k] = [];
                     relations[newRelationId].d3.nodes[k].push(nn[a]);
                   }
@@ -3465,7 +3464,7 @@
                 ? x.name.replace("_ocat", "")
                 : x.name;
               if (x.hasAttribute("data-h")) {
-                if (radioButtons.hasOwnProperty(name)) {
+                if (utils.hasProp(radioButtons, name)) {
                   radioButtons[name].value += getRadioButtonValue(x);
                 } else {
                   radioButtons[name] = {
@@ -3474,7 +3473,7 @@
                   };
                 }
               } else {
-                if (radioButtons.hasOwnProperty(name)) {
+                if (utils.hasProp(radioButtons, name)) {
                   radioButtons[name] += getRadioButtonValue(x);
                 } else {
                   radioButtons[name] = getRadioButtonValue(x);
@@ -3487,7 +3486,7 @@
             .filter((i, x) => x.checked)
             .each(function (i, x) {
               // simulate serializeHashedObject here
-              if (!checkBoxes.hasOwnProperty(x.name)) {
+              if (!utils.hasProp(checkBoxes, x.name)) {
                 if (x.hasAttribute("data-h"))
                   checkBoxes[x.name] = {
                     hash: x.getAttribute("data-h"),
@@ -3516,7 +3515,7 @@
           sharedRelPlugins = {};
         for (let p in this.contextMenuPlugins["sharedBetweenMarkers"]) {
           let cp = this.contextMenuPlugins["sharedBetweenMarkers"][p];
-          if (cp.hasOwnProperty("storeFor")) {
+          if (utils.hasProp(cp, "storeFor")) {
             if (cp.storeFor == "label") {
               sharedLabelPlugins[p] = cp;
             } else if (cp.storeFor == "relation") {
@@ -3526,7 +3525,7 @@
         }
 
         for (let i = 0, len = submittableChunks.length; i < len; i++) {
-          if (!submittableChunks[i].hasOwnProperty("extra"))
+          if (!utils.hasProp(submittableChunks[i], "extra"))
             submittableChunks[i]["extra"] = {};
           let plugins = this.contextMenuPlugins[submittableChunks[i].label];
 
@@ -3795,11 +3794,11 @@
           offEnd: rEnd,
         };
       },
-      checkFutureOverlap: function (state, spanLabels) {
-        return spanLabels
+      checkFutureOverlap: function (state) {
+        return state.spanLabels
           .slice(state.curLabelId + 1)
           .map(function (x) {
-            let s1 = spanLabels[state.curLabelId],
+            let s1 = state.spanLabels[state.curLabelId],
               s2 = x;
             return (
               (s1["start"] >= s2["start"] && s1["end"] <= s2["end"]) ||
@@ -3810,10 +3809,10 @@
           })
           .some((x) => x);
       },
-      getOverlappingSpans: function (state, spanLabels) {
+      getOverlappingSpans: function (state) {
         return state.processed.map(function (x) {
-          let s1 = spanLabels[state.curLabelId],
-            s2 = spanLabels[x["id"]];
+          let s1 = state.spanLabels[state.curLabelId],
+            s2 = state.spanLabels[x["id"]];
           return (
             (s1["start"] >= s2["start"] && s1["end"] <= s2["end"]) ||
             (s2["start"] >= s1["start"] && s2["end"] <= s1["end"]) ||
@@ -3822,8 +3821,8 @@
           );
         });
       },
-      updateProcessed: function (state, spanLabels, isMultiParagraph) {
-        let areOverlapping = this.getOverlappingSpans(state, spanLabels),
+      updateProcessed: function (state, isMultiParagraph) {
+        let areOverlapping = this.getOverlappingSpans(state, state.spanLabels),
           numOverlapping = areOverlapping.reduce((a, b) => a + b, 0);
 
         if (!utils.isDefined(isMultiParagraph)) isMultiParagraph = false;
@@ -3845,6 +3844,13 @@
         checkStart,
         prevLength
       ) {
+        if (!utils.isDefined(curNode))
+          return {
+            node: null,
+            acc: prevLength,
+            errors: 1,
+          };
+
         // this operates within paragraph only!
         let cLength = getNodeLength(curNode);
         let errors = 0;
@@ -3852,12 +3858,12 @@
         if (!utils.isDefined(checkStart)) checkStart = true;
 
         let cAcc = prevLength;
+        let prevNode;
         if (
           (checkStart && cAcc + cLength > spanLabel["start"]) ||
           (!checkStart && cAcc + cLength >= spanLabel["end"])
         ) {
           // if we are already in a suitable node, try to tighten the circle
-          let prevNode;
           while (
             curNode !== null &&
             ((checkStart && cAcc + cLength > spanLabel["start"]) ||
@@ -3878,15 +3884,28 @@
               (!checkStart && cAcc + cLength < spanLabel["end"]))
           ) {
             cAcc += cLength;
+            prevNode = curNode;
             curNode = curNode.nextSibling;
             cLength = utils.isDefined(curNode) ? getNodeLength(curNode) : null;
           }
         }
 
         if (curNode === null) {
-          console.error(
-            "Restoration Error: reached the end of the markable, while trying to find the closest text node"
-          );
+          let parNode = prevNode.parentNode;
+
+          if (utils.isDefined(parNode)) {
+            return this.getClosestTextNode(
+              parNode.nextSibling,
+              spanLabel,
+              checkStart,
+              cAcc
+            );
+          } else {
+            console.error(
+              "Unrecoverable Restoration Error: reached the end of the markable, while trying to find the closest text node"
+            );
+            errors++;
+          }
         }
 
         if (utils.isDefined(curNode) && curNode.nodeType == 1) {
@@ -3993,35 +4012,7 @@
           }
         }
       },
-      restoreSpanMarkers: function (span_labels) {
-        let state = {
-          acc: 0, // the accumulator variable, pointing at where the current text node starts
-          curLabelId: 0, // id of the current label
-          processed: [], // labels that are not nested into one another
-          c2i: {}, // mapping between internal labels and those on the webpage
-          multip: {}, // multi-paragraph nodes are stored here
-          numInner: {},
-          likelyErrors: 0,
-        };
-        let numLabels = span_labels.length,
-          cnodes = this.selectorArea.childNodes,
-          control = this;
-
-        // Step 1: define the order of re-labeling
-        // - from top to bottom
-        // - starting from the outer ones to the inner ones
-        span_labels.sort(function (x, y) {
-          if (x["start"] == y["start"]) {
-            // otherwise, by length, with longest coming first
-            return y["end"] - y["start"] - (x["end"] - x["start"]);
-          } else {
-            // by default sort by a starting coordinate
-            // with earliest coming first
-            return x["start"] - y["start"];
-          }
-        });
-
-        // Step 2: unfold scrollable and skip pinned parts
+      flattenNodes: function (cnodes) {
         let flatCnodes = [],
           acceptClassNames = ["scrollable"],
           skipClassNames = ["pinned"];
@@ -4036,142 +4027,261 @@
             }
           }
         }
-        if (flatCnodes.length > 0) cnodes = flatCnodes;
-
-        // Step 3: actually labeling
-        // - labels within one paragraph are rendered directly as they are
-        // - multi-paragraph labels (and those dependent on them) are rendered asap
-        // - rendering should happen from the outer to the inner ones, from top to bottom
-        for (let cId = 0, len = cnodes.length; cId < len; cId++) {
-          state.numInner[cId] = 0;
+        return flatCnodes;
+      },
+      restoreMultipMarkers: function (state) {
+        let cId = state.cnodeId;
+        let control = this;
+        let keys2del = [];
+        for (let candLabelId in state.multip) {
+          let atTheEnd = state.multip[candLabelId].renderAtTheEnd;
           if (
-            state.curLabelId < numLabels ||
-            Object.keys(state.multip).length > 0
+            utils.isDefined(atTheEnd) &&
+            atTheEnd &&
+            cId < state.totalNodes - 1
+          )
+            continue;
+          if (
+            state.acc + state.cnodeLength >=
+            state.spanLabels[candLabelId]["end"]
           ) {
-            let cnodeLength = getNodeLength(cnodes[cId]);
+            // if the candLabelId label ends within this paragraph,
+            // we found the suitable paragraph to render it!
+            let multiData = state.multip[candLabelId],
+              startInfo = multiData["start"],
+              hasRestored = false,
+              restoredInfo = null,
+              startSearchRes,
+              endSearchRes;
 
-            // Attempt to close a multi-paragraph marking
-            let keys2del = [];
-            for (let candLabelId in state.multip) {
-              let atTheEnd = state.multip[candLabelId].renderAtTheEnd;
-              if (utils.isDefined(atTheEnd) && atTheEnd && cId !== len - 1)
-                continue;
-              if (state.acc + cnodeLength >= span_labels[candLabelId]["end"]) {
-                // if the candLabelId label ends within this paragraph,
-                // we found the suitable paragraph to render it!
-                let multiData = state.multip[candLabelId],
-                  startInfo = multiData["start"],
-                  hasRestored = false,
-                  restoredInfo = null,
-                  startSearchRes,
-                  endSearchRes;
+            if (!state.processed[candLabelId].closed) {
+              // TODO: return here
+              startSearchRes = control.getClosestTextNode(
+                atTheEnd
+                  ? control.selectorArea.childNodes[0]
+                  : state.cnodes[startInfo["nodeId"]],
+                state.spanLabels[candLabelId],
+                true,
+                atTheEnd ? 0 : startInfo["acc"]
+              );
+              endSearchRes = control.getClosestTextNode(
+                atTheEnd
+                  ? control.selectorArea.childNodes[0]
+                  : state.cnodes[cId],
+                state.spanLabels[candLabelId],
+                false,
+                atTheEnd ? 0 : state.acc
+              );
+              state.errors += startSearchRes.errors + endSearchRes.errors;
 
-                if (!state.processed[candLabelId].closed) {
-                  // TODO: return here
-                  startSearchRes = control.getClosestTextNode(
-                    cnodes[startInfo["nodeId"]],
-                    span_labels[candLabelId],
-                    true,
-                    startInfo["acc"]
+              restoredInfo = control.restoreMarkedSpan(
+                startSearchRes.node,
+                endSearchRes.node,
+                state.spanLabels[candLabelId],
+                startSearchRes.acc,
+                endSearchRes.acc
+              );
+              hasRestored = restoredInfo.isRestored;
+            }
+
+            if (hasRestored || state.processed[candLabelId].closed) {
+              state.c2i[candLabelId] = control.getActiveChunk().id;
+              state.processed[candLabelId].closed = true;
+              state.numInner[cId]++;
+              keys2del.push(candLabelId);
+
+              for (let dId in multiData.delayed) {
+                // need to re-select tagItem on account of
+                // having added new spans in the previous iteration
+                let dInfo = multiData.delayed[dId];
+
+                if (state.processed[dInfo.id].closed) continue;
+
+                let tagItem = document.querySelector(
+                  'span.tag[data-i="' + state.c2i[candLabelId] + '"]'
+                );
+                let prevLength = previousTextLength(tagItem.childNodes[0]);
+
+                let dStartRes = control.getClosestTextNode(
+                  tagItem.childNodes[0],
+                  state.spanLabels[dInfo.id],
+                  true,
+                  prevLength
+                );
+                let dEndRes = control.getClosestTextNode(
+                  tagItem.childNodes[0],
+                  state.spanLabels[dInfo.id],
+                  false,
+                  prevLength
+                );
+                state.errors += dStartRes.errors + dEndRes.errors;
+
+                if (
+                  utils.isDefined(dStartRes.node) &&
+                  utils.isDefined(dEndRes.node)
+                ) {
+                  let restoredInfo = control.restoreMarkedSpan(
+                    dStartRes.node,
+                    dEndRes.node,
+                    state.spanLabels[dInfo.id],
+                    dStartRes.acc,
+                    dEndRes.acc
                   );
-                  endSearchRes = control.getClosestTextNode(
-                    cnodes[cId],
-                    span_labels[candLabelId],
-                    false,
-                    state.acc
-                  );
-                  state.errors += startSearchRes.errors + endSearchRes.errors;
 
-                  restoredInfo = control.restoreMarkedSpan(
-                    startSearchRes.node,
-                    endSearchRes.node,
-                    span_labels[candLabelId],
-                    startSearchRes.acc,
-                    endSearchRes.acc
-                  );
-                  hasRestored = restoredInfo.isRestored;
-                }
+                  if (restoredInfo.isRestored) {
+                    state.c2i[dInfo.id] = control.getActiveChunk().id;
 
-                if (hasRestored || state.processed[candLabelId].closed) {
-                  state.c2i[candLabelId] = control.getActiveChunk().id;
-                  state.processed[candLabelId].closed = true;
-                  state.numInner[cId]++;
-                  keys2del.push(candLabelId);
-
-                  for (let dId in multiData.delayed) {
-                    // need to re-select tagItem on account of
-                    // having added new spans in the previous iteration
-                    let dInfo = multiData.delayed[dId];
-
-                    if (state.processed[dInfo.id].closed) continue;
-
-                    let tagItem = document.querySelector(
-                      'span.tag[data-i="' + state.c2i[candLabelId] + '"]'
-                    );
-                    let prevLength = previousTextLength(tagItem.childNodes[0]);
-
-                    let dStartRes = control.getClosestTextNode(
-                      tagItem.childNodes[0],
-                      span_labels[dInfo.id],
-                      true,
-                      prevLength
-                    );
-                    let dEndRes = control.getClosestTextNode(
-                      tagItem.childNodes[0],
-                      span_labels[dInfo.id],
-                      false,
-                      prevLength
-                    );
-                    state.errors += dStartRes.errors + dEndRes.errors;
-
-                    if (
-                      utils.isDefined(dStartRes.node) &&
-                      utils.isDefined(dEndRes.node)
-                    ) {
-                      let restoredInfo = control.restoreMarkedSpan(
-                        dStartRes.node,
-                        dEndRes.node,
-                        span_labels[dInfo.id],
-                        dStartRes.acc,
-                        dEndRes.acc
-                      );
-
-                      if (restoredInfo.isRestored) {
-                        state.c2i[dInfo.id] = control.getActiveChunk().id;
-
-                        state.processed[dInfo.id].closed = true;
-                      } else {
-                        state.likelyErrors++;
-                      }
-                    } else {
-                      state.likelyErrors++;
-                    }
+                    state.processed[dInfo.id].closed = true;
+                  } else {
+                    state.likelyErrors++;
                   }
                 } else {
                   state.likelyErrors++;
                 }
               }
+            } else {
+              state.likelyErrors++;
             }
+          }
+        }
 
-            for (let keyId in keys2del) delete state.multip[keys2del[keyId]];
+        for (let keyId in keys2del) delete state.multip[keys2del[keyId]];
+      },
+      recordMultip: function (state) {
+        let overlap = this.updateProcessed(
+          state,
+          true // isMultiParagraph
+        );
+        let control = this;
 
+        if (overlap.level === 0) {
+          state.multip[state.curLabelId] = {
+            start: {
+              nodeId: state.cnodeId,
+              acc: state.acc,
+            },
+            delayed: [], // here we store nodes with rendering being delayed, because this multip-node was not been able to render
+          };
+        } else {
+          for (let i in overlap.mask) {
+            if (overlap.mask[i]) {
+              let proc = state.processed[i];
+              if (proc.multip) {
+                if (proc.closed) {
+                  // if it was closed, this means that we found its starting
+                  // paragraph, but not yet reached the ending one, so wait
+                  let shouldRenderAtTheEnd = control.checkFutureOverlap(state);
+                  state.multip[state.curLabelId] = {
+                    start: {
+                      nodeId: shouldRenderAtTheEnd ? 0 : state.cnodeId,
+                      acc: shouldRenderAtTheEnd ? 0 : state.acc,
+                    },
+                    delayed: [],
+                    renderAtTheEnd: shouldRenderAtTheEnd,
+                  };
+                } else {
+                  // if the overlapping marker was not yet closed
+                  // add the current marker in into the delay list
+                  // of the overlapping marker
+                  if (utils.hasProp(state.multip, proc["id"])) {
+                    state.multip[proc["id"]].delayed.push({
+                      id: state.curLabelId,
+                    });
+                  } else {
+                    // this means that the nested nodes probably start in the same node
+                    state.multip[proc["id"]] = {
+                      start: {
+                        nodeId: state.cnodeId,
+                        acc: state.acc,
+                      },
+                      delayed: [
+                        {
+                          id: state.curLabelId,
+                        },
+                      ],
+                    };
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      restoreSpanMarkers: function (span_labels) {
+        let control = this;
+        let state = {
+          cnodeId: 0, // current node ID
+          cnodeLength: 0, // length of text in the current node
+          totalNodes: 0, // number of total available nodes
+          acc: 0, // the accumulator variable, pointing at where the current text node starts
+          curLabelId: 0, // id of the current label
+          processed: [], // labels that are not nested into one another
+          c2i: {}, // mapping between internal labels and those on the webpage
+          multip: {}, // multi-paragraph nodes are stored here
+          numInner: {},
+          likelyErrors: 0,
+          spanLabels: span_labels,
+          numLabels: span_labels.length,
+          cnodes: control.selectorArea.childNodes,
+        };
+
+        // Step 1: define the order of re-labeling
+        // - from top to bottom
+        // - starting from the outer ones to the inner ones
+        state.spanLabels.sort(function (x, y) {
+          if (x["start"] == y["start"]) {
+            // otherwise, by length, with longest coming first
+            return y["end"] - y["start"] - (x["end"] - x["start"]);
+          } else {
+            // by default sort by a starting coordinate
+            // with earliest coming first
+            return x["start"] - y["start"];
+          }
+        });
+
+        // Step 2: unfold scrollable and skip pinned parts
+        let flatCnodes = this.flattenNodes(state.cnodes);
+        if (flatCnodes.length > 0) state.cnodes = flatCnodes;
+        state.totalNodes = state.cnodes.length;
+
+        // Step 3: actually labeling
+        // - labels within one paragraph are rendered directly as they are
+        // - multi-paragraph labels (and those dependent on them) are rendered asap
+        // - rendering should happen from the outer to the inner ones, from top to bottom
+        while (
+          state.cnodeId < state.totalNodes ||
+          state.curLabelId < state.numLabels ||
+          Object.keys(state.multip).length > 0
+        ) {
+          let cId = state.cnodeId;
+          state.numInner[cId] = 0;
+          if (
+            state.curLabelId < state.numLabels ||
+            Object.keys(state.multip).length > 0
+          ) {
+            state.cnodeLength = getNodeLength(state.cnodes[cId]);
+
+            // Attempt to close a multi-paragraph marking
+            this.restoreMultipMarkers(state);
             if (
-              state.curLabelId >= numLabels &&
+              state.curLabelId >= state.numLabels &&
               Object.keys(state.multip).length == 0
             )
               break;
 
             if (
-              utils.isDefined(span_labels[state.curLabelId]) &&
-              state.acc + cnodeLength > span_labels[state.curLabelId]["start"]
+              utils.isDefined(state.spanLabels[state.curLabelId]) &&
+              state.acc + state.cnodeLength >
+                state.spanLabels[state.curLabelId]["start"]
             ) {
               // If the current markable starts within the current paragraph,
               // we might have found an element to mark!
 
               while (
-                span_labels[state.curLabelId]["end"] >
-                  state.acc + cnodeLength &&
-                state.acc + cnodeLength > span_labels[state.curLabelId]["start"]
+                state.spanLabels[state.curLabelId]["end"] >
+                  state.acc + state.cnodeLength &&
+                state.acc + state.cnodeLength >
+                  state.spanLabels[state.curLabelId]["start"]
               ) {
                 // while the end of the current markable is not within the current paragraph,
                 // but the beginning of the markable is, keep iterating until finding
@@ -4180,129 +4290,69 @@
                 // If we are within this while-loop, it means it's a multi-paragraph node
                 // record this node keep iterating
 
-                let overlap = control.updateProcessed(
-                  state,
-                  span_labels,
-                  true // isMultiParagraph
-                );
-
-                if (overlap.level === 0) {
-                  state.multip[state.curLabelId] = {
-                    start: {
-                      nodeId: cId,
-                      acc: state.acc,
-                    },
-                    delayed: [], // here we store nodes with rendering being delayed, because this multip-node was not been able to render
-                  };
-                } else {
-                  for (let i in overlap.mask) {
-                    if (overlap.mask[i]) {
-                      let proc = state.processed[i];
-                      if (proc.multip) {
-                        if (proc.closed) {
-                          // if it was closed, this means that we found its starting
-                          // paragraph, but not yet reached the ending one, so wait
-                          state.multip[state.curLabelId] = {
-                            start: {
-                              nodeId: cId,
-                              acc: state.acc,
-                            },
-                            delayed: [],
-                            renderAtTheEnd: control.checkFutureOverlap(
-                              state,
-                              span_labels
-                            ),
-                          };
-                        } else {
-                          // if the overlapping marker was not yet closed
-                          // add the current marker in into the delay list
-                          // of the overlapping marker
-                          if (state.multip.hasOwnProperty(proc["id"])) {
-                            state.multip[proc["id"]].delayed.push({
-                              id: state.curLabelId,
-                            });
-                          } else {
-                            // this means that the nested nodes probably start in the same node
-                            state.multip[proc["id"]] = {
-                              start: {
-                                nodeId: cId,
-                                acc: state.acc,
-                              },
-                              delayed: [
-                                {
-                                  id: state.curLabelId,
-                                },
-                              ],
-                            };
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
+                control.recordMultip(state);
 
                 state.curLabelId++;
                 state.numInner[cId]++;
-                if (state.curLabelId >= numLabels) break;
+                if (state.curLabelId >= state.numLabels) break;
               }
 
               if (
-                state.curLabelId >= numLabels ||
-                state.acc + cnodeLength < span_labels[state.curLabelId]["start"]
+                state.curLabelId >= state.numLabels ||
+                state.acc + state.cnodeLength <
+                  state.spanLabels[state.curLabelId]["start"]
               ) {
                 // if the current markable is suddenly out of the current paragraph's bounds,
                 // advance the accumulator and move on
                 //
                 // NOTE: typically, advancing acc is done at the end of the loop's iteration,
                 //       but here we force the iteration to finish, hence the update
-                state.acc += cnodeLength;
+                state.acc += state.cnodeLength;
+                if (state.cnodeId < state.totalNodes) state.cnodeId++;
                 continue;
               }
 
               while (
-                state.curLabelId < numLabels &&
-                span_labels[state.curLabelId]["end"] <= state.acc + cnodeLength
+                state.curLabelId < state.numLabels &&
+                state.spanLabels[state.curLabelId]["end"] <=
+                  state.acc + state.cnodeLength
               ) {
                 // If the current markable ends within bounds of this paragraph,
                 // we attempt to render all nodes within this paragraph.
                 // NOTE: some of them are impossible to render, because
                 //       their parents are multi-paragraph nodes,
                 //       in which case, store them as delayed
-                let overlap = control.updateProcessed(
-                  state,
-                  span_labels,
-                  false
-                );
+                let overlap = control.updateProcessed(state, false);
 
                 let startNode = undefined,
                   endNode = undefined;
                 if (overlap.level === 0) {
                   // if no overlap, just select the text node and proceed
-                  if (cnodes[cId].nodeType === 1) {
+                  if (state.cnodes[cId].nodeType === 1) {
                     startNode = control.getClosestTextNode(
-                      cnodes[cId].childNodes[0],
-                      span_labels[state.curLabelId],
+                      state.cnodes[cId].childNodes[0],
+                      state.spanLabels[state.curLabelId],
                       true,
                       state.acc
                     );
 
                     endNode = control.getClosestTextNode(
-                      cnodes[cId].childNodes[0],
-                      span_labels[state.curLabelId],
+                      state.cnodes[cId].childNodes[0],
+                      state.spanLabels[state.curLabelId],
                       false,
                       state.acc
                     );
                   } else {
                     startNode = control.getClosestTextNode(
-                      cnodes[cId],
-                      span_labels[state.curLabelId],
+                      state.cnodes[cId],
+                      state.spanLabels[state.curLabelId],
                       true,
                       state.acc
                     );
 
                     endNode = control.getClosestTextNode(
-                      cnodes[cId],
-                      span_labels[state.curLabelId],
+                      state.cnodes[cId],
+                      state.spanLabels[state.curLabelId],
                       false,
                       state.acc
                     );
@@ -4318,14 +4368,15 @@
                     sameLevelId = undefined;
 
                   overlap.mask.forEach(function (hasOverlap, i) {
-                    let label = span_labels[state.processed[i]["id"]],
+                    let label = state.spanLabels[state.processed[i]["id"]],
                       dist =
                         Math.abs(
-                          label["end"] - span_labels[state.curLabelId]["end"]
+                          label["end"] -
+                            state.spanLabels[state.curLabelId]["end"]
                         ) +
                         Math.abs(
                           label["start"] -
-                            span_labels[state.curLabelId]["start"]
+                            state.spanLabels[state.curLabelId]["start"]
                         );
 
                     if (hasOverlap) {
@@ -4362,13 +4413,13 @@
 
                       startNode = control.getClosestTextNode(
                         tagNodes[0],
-                        span_labels[state.curLabelId],
+                        state.spanLabels[state.curLabelId],
                         true,
                         prevLength
                       );
                       endNode = control.getClosestTextNode(
                         tagNodes[0],
-                        span_labels[state.curLabelId],
+                        state.spanLabels[state.curLabelId],
                         false,
                         prevLength
                       );
@@ -4389,10 +4440,23 @@
                       // the non-closed one is either multi-paragraph (1st if)
                       // or depends on a multi-paragraph (2nd if)
                       if (state.processed[minDistId].multip) {
-                        state.multip[minDistId].delayed.push({
-                          id: state.curLabelId,
-                          acc: state.acc,
-                        });
+                        if (utils.hasProp(state.multip, minDistId)) {
+                          state.multip[minDistId].delayed.push({
+                            id: state.curLabelId,
+                            acc: state.acc,
+                          });
+                        } else {
+                          let shouldRenderAtTheEnd =
+                            control.checkFutureOverlap(state);
+                          state.multip[minDistId] = {
+                            start: {
+                              nodeId: shouldRenderAtTheEnd ? 0 : cId,
+                              acc: shouldRenderAtTheEnd ? 0 : state.acc,
+                            },
+                            delayed: [],
+                            renderAtTheEnd: shouldRenderAtTheEnd,
+                          };
+                        }
                       } else {
                         for (let candMaster in state.multip) {
                           if (
@@ -4412,8 +4476,8 @@
                   } else {
                     // if it's not defined, find the closest of the split nodes
                     let searchRes = control.getClosestTextNode(
-                      cnodes[cId],
-                      span_labels[state.curLabelId],
+                      state.cnodes[cId],
+                      state.spanLabels[state.curLabelId],
                       true,
                       state.acc
                     );
@@ -4435,7 +4499,7 @@
                   let restoredInfo = control.restoreMarkedSpan(
                     startNode.node,
                     endNode.node,
-                    span_labels[state.curLabelId],
+                    state.spanLabels[state.curLabelId],
                     startNode.acc,
                     endNode.acc
                   );
@@ -4450,10 +4514,11 @@
                 state.curLabelId++;
               }
             }
-            state.acc += cnodeLength;
+            state.acc += state.cnodeLength;
           } else {
             break;
           }
+          if (state.cnodeId < state.totalNodes) state.cnodeId++;
         }
 
         if (state.likelyErrors > 0) {
@@ -4988,7 +5053,7 @@
       let data = $form.serializeObject();
       let csrf = data["csrfmiddlewaretoken"];
 
-      if (data.hasOwnProperty("csrfmiddlewaretoken"))
+      if (utils.hasProp(data, "csrfmiddlewaretoken"))
         delete data["csrfmiddlewaretoken"];
 
       let keys = Object.keys(data);

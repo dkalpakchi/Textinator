@@ -507,6 +507,7 @@ def process_recorded_search_args(request_dict):
         scope = request_dict.get("scope")
         search_type = request_dict.get("search_type")
         batch_ids = request_dict.get("batch_ids")
+        search_flagged = request_dict.get("search_flagged")
     except ValueError:
         page, scope, search_type, batch_ids = 1, -1, None, None
     query = request_dict.get("query")
@@ -518,6 +519,9 @@ def process_recorded_search_args(request_dict):
 
     if search_type is None:
         search_type = request_dict.getlist("search_type[]", "phr")
+
+    if search_flagged is None:
+        search_flagged = request_dict.getlist("search_flagged[]", ["off"])[0]
 
     if query is None:
         query = request_dict.getlist("query[]", "")
@@ -536,7 +540,7 @@ def process_recorded_search_args(request_dict):
             'query': listify(query),
             'search_type': listify(search_type),
             'random': request_dict.get("random", 'off'),
-            'search_flagged': request_dict.getlist("search_flagged[]", ["off"])[0] == "on",
+            'search_flagged': search_flagged == "on",
             'batch_ids': batch_ids
         }
     }
