@@ -1,0 +1,45 @@
+<div class="columns">
+  <div class="column">
+    <div class="field">
+      <label for='source' class="label is-flex is-align-items-center">
+        <span class='is-flex-grow-1'>Source strings</span>
+        <button id="renew" class="button is-small">Start new</button>
+      </label>
+      <textarea id="source" class="textarea is-fullheight" rows="30"></textarea>
+    </div>
+  </div>
+  <div class="column">
+    <div class="columns">
+      <div class="column">
+        <div class="field">
+          <label for="target" class="label">Rule builder</label>
+          <textarea id="target" class="textarea"></textarea>
+          <form id="recordForm" action="{{ url('toolbox:string_combinator:record_transformation') }}" method="POST" class='float-left mt-1 mb-2 mr-2'>
+            {{csrf_input}}
+            <input type="submit" id="record" class="button" value="Record">
+          </form>
+          <button id="generate" class="button mt-1 mb-2">Generate</button>
+          <div class="float-right">
+          </div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="field">
+          <label for="exclusion" class="label">Exclude from grammar check</label>
+          <textarea id="exclusion" class="textarea"></textarea>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label class='label'>Transformation bank</label>
+      <div id="transformationMemoryArea" class='transformation-memory'>
+        <script id="banned" type="application/json">{{banned|tojson|safe}}</script>
+        {% if transformations|length > 0 %}
+          <script id="loadedBank" type="application/json">{{transformations|tojson|safe}}</script>
+        {% else %}
+          <p>Your personal list of transformations will appear here!</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

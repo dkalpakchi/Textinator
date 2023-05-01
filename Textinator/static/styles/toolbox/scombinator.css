@@ -1,0 +1,44 @@
+.float-left {
+  float: left;
+}
+
+.transformation-memory {
+  max-height: 500px;
+  overflow-y: scroll;
+}
+
+.generation-area fieldset {
+  height: 600px;
+  max-height: 900px;
+  overflow-y: scroll;
+}
+
+.generation-area fieldset .scombinator-save {
+  background-image: none;
+  font-size: 1.2em;
+}
+
+[data-rel] {
+  cursor: pointer;
+}
+
+.disabled {
+  opacity: 0.5;
+}
+
+.tabs.is-fixed-top {
+  top: 4.2em;
+  position: fixed;
+  z-index: 10;
+  width: 100%;
+}
+
+.tab-content {
+  margin-top: 2.1em;
+}
+
+.stroken-red {
+  text-decoration: line-through;
+  text-decoration-color: red;
+  text-decoration-thickness: 0.15em;
+}

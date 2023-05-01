@@ -1,5 +1,17 @@
 {% if paginator.num_pages > 1 %}
   <nav class="pagination is-small is-rounded" role="navigation" aria-label="pagination">
+    <div class="column is-2">
+      <div class="field has-addons">
+        <p class="control">
+          <input id="goToPage" class="input is-small" type="number" placeholder="Page">
+        </p>
+        <p class="control">
+          <a data-page="#goToPage" class="button is-small">
+            Go
+          </a>
+        </p>
+      </div>
+    </div>
     {% if current_page.has_previous() %}
       <a class="button pagination-previous" data-page="{{page-1}}">Previous</a>
     {% endif %}

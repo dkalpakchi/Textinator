@@ -27,7 +27,6 @@ Here are credits to the OSS projects that are still used in the latest version o
 *   [django-registration](https://github.com/ubernostrum/django-registration/)
 *   [django-rosetta](https://pypi.org/project/django-rosetta/)
 *   [django-tinymce4-lite](https://github.com/romanvm/django-tinymce4-lite)
-*   reportlab
 
 ## Previous versions of Textinator
 Here are credits to the OSS projects that were used in the previous versions of Textinator
@@ -36,3 +35,4 @@ Here are credits to the OSS projects that were used in the previous versions of 
 *   [django\_admin\_json\_editor](https://github.com/abogushov/django-admin-json-editor) (up to v1.1.0)
 *   [django-sass-processor](https://github.com/jrief/django-sass-processor) (up to v1.1.0)
 *   [django-chartjs](https://github.com/peopledoc/django-chartjs) (up to v1.2.0)
+*   reportlab (up to v1.2.1)

@@ -19,12 +19,16 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.cache import caches
 from django.db.models import signals
+from django.contrib.postgres.search import SearchVector, SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 
 from tinymce import HTMLField
 from filebrowser.fields import FileBrowseField
 from colorfield.fields import ColorField
 from model_clone import CloneMixin
 from model_clone.utils import create_copy_of_instance
+
+from Textinator.ext import RegConfigField
 
 from .datasources import *
 from .helpers import *
@@ -103,6 +107,8 @@ class DataSource(CommonModel):
     they need to request a manual deletion.
     """
 
+    INTERACTIVE = "Interact"
+
     class Meta:
         verbose_name = _('data source')
         verbose_name_plural = _('data sources')
@@ -121,11 +127,23 @@ class DataSource(CommonModel):
     language = models.CharField(_("language"), max_length=10, choices=settings.LANGUAGES,
         help_text=_("Language of this data source")
     )
+    search_config = RegConfigField(_("PostgreSQL search config"), null=True, blank=True)
     formatting = models.CharField(_('formatting'), max_length=3, choices=settings.FORMATTING_TYPES,
         help_text=_("text formating of the data source"))
     is_public = models.BooleanField(_("is public?"), default=False,
         help_text=_("Whether to make data source available to other Textinator users"))
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name=_("owner"))
+
+    def save(self, *args, **kwargs):
+        if not self.search_config:
+            lang_dict = dict(settings.LANGUAGES)
+            sconf_dict = settings.LANG_SEARCH_CONFIG
+            search_config = sconf_dict.get(
+                self.language,
+                lang_dict.get(self.language, 'english')
+            ).lower()
+            self.search_config = search_config
+        super(CommonModel, self).save(*args, **kwargs)
 
     @classmethod
     def type2class(cls, source_type):
@@ -158,6 +176,10 @@ class DataSource(CommonModel):
 
     def __str__(self):
         return "{} ({})".format(self.name, self.language)
+
+    @property
+    def is_interactive(self):
+        return self.source_type == DataSource.INTERACTIVE
 
 
 class MarkerAction(CommonModel):
@@ -429,6 +451,7 @@ class Project(CloneMixin, CommonModel):
     editing_title_regex = models.TextField(_("Regular expression for editorial board"), default="", null=True, blank=True,
         help_text=_("The regular expression to be used for searching the annotated texts and using the first found result as a title of the batches to be edited"))
     allow_editing  = models.BooleanField(_("should editing of own annotations be allowed?"), default=True)
+    allow_post_editing = models.BooleanField(_("should editing of own annotations AFTER finishing all of them be allowed?"), default=False)
     editing_as_revision = models.BooleanField(_("should editing be saved as revisions?"), default=False,
         help_text=_("""
         By default editing happens directly in the annotated objects. If this setting is turned on,
@@ -624,6 +647,13 @@ class Project(CloneMixin, CommonModel):
 
         datasources = []
         for source in self.datasources.all():
+            if source.is_interactive:
+                return DatapointInfo(
+                    is_interactive=True,
+                    no_data=True,
+                    proj_id=self.pk,
+                    ds_def=source
+                )
             source_data = self.instantiate_source(source)
             if source_data:
                 datasources.append(source_data)
@@ -1180,6 +1210,8 @@ class DataAccessLog(CommonModel):
         help_text=_("Indicates whether the datapoint was skipped by an annotator"))
     is_delayed = models.BooleanField(_("is saved for later?"), default=False,
         help_text=_("Indicates whether the datapoint for skipped and saved for later by an annotator"))
+    is_deleted = models.BooleanField(_("is marked as deleted?"), default=False,
+        help_text=_("Indicates whether the log was programmatically marked as deleted (can't be set manually)"))
 
     @property
     def text_errors(self):
@@ -1286,17 +1318,23 @@ class Context(CommonModel):
     class Meta:
         verbose_name = _('context')
         verbose_name_plural = _('contexts')
+        indexes = [
+            GinIndex(fields=['content_vector'])
+        ]
 
     datasource = models.ForeignKey(DataSource, on_delete=models.SET_NULL, null=True, blank=True)
-    datapoint = models.CharField(_("datapoint ID"), max_length=64, null=True, blank=True,
+    datapoint = models.IntegerField(_("datapoint ID"), null=True, blank=True,
         help_text=_("As stored in the original dataset"))
     content = models.TextField(_("content"))
+    content_vector = SearchVectorField(null=True)
+    search_config = RegConfigField(_("PostgreSQL search config"), null=True, blank=True)
 
     @property
     def content_hash(self):
         return hash_text(self.content)
 
     def save(self, *args, **kwargs):
+        self.search_config = self.datasource.search_config
         super(Context, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -1326,6 +1364,8 @@ class Batch(Revisable, CommonModel):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     is_flagged = models.BooleanField(_("flagged?"), default=False,
         help_text=_("Indicates whether the annotator has flagged the batch as having problems"))
+    extra = models.JSONField(_("extra information"), null=True, blank=True,
+        help_text=_("in a JSON format"))
 
     def __str__(self):
         return str(self.uuid)
@@ -1356,15 +1396,21 @@ class Batch(Revisable, CommonModel):
         if inp and inp.context:
             if regex:
                 res = re.search(regex, inp.context.content)
-                display_title = res.group(0).strip()
-                return display_title if res else "Empty"
+                if res:
+                    display_title = res.group(0).strip()
+                    return display_title
+                else:
+                    return "Empty"
             else:
                 return inp.context.content
         elif lab and lab.context:
             if regex:
                 res = re.search(regex, lab.context.content)
-                display_title = res.group(0).strip()
-                return display_title if res else "Empty"
+                if res:
+                    display_title = res.group(0).strip()
+                    return display_title
+                else:
+                    return "Empty"
             else:
                 return lab.context.content
         else:
@@ -1423,6 +1469,8 @@ class Input(Orderable, Revisable, CloneMixin, CommonModel):
     marker = models.ForeignKey(MarkerVariant, on_delete=models.CASCADE, blank=True, null=True)
     context = models.ForeignKey(Context, on_delete=models.CASCADE, blank=True, null=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, null=True)
+    extra = models.JSONField(_("extra information"), null=True, blank=True,
+        help_text=_("in a JSON format"))
 
     @property
     def hash(self):
@@ -1565,8 +1613,9 @@ def delete_batch_if_empty(sender, **kwargs):
     except Batch.DoesNotExist:
         logger.warning("Tried to delete batch, but didn't find it")
 
-signals.post_delete.connect(delete_batch_if_empty, sender=Label, dispatch_uid='project.models.label_delete_batches')
-signals.post_delete.connect(delete_batch_if_empty, sender=Input, dispatch_uid='project.models.input_delete_batches')
+# TODO: in some cases this can actually hurdle user experience, so make a switch in settings to enable this behavior
+#signals.post_delete.connect(delete_batch_if_empty, sender=Label, dispatch_uid='project.models.label_delete_batches')
+#signals.post_delete.connect(delete_batch_if_empty, sender=Input, dispatch_uid='project.models.input_delete_batches')
 
 
 class LabelRelation(CommonModel):

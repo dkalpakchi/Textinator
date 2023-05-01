@@ -43,6 +43,13 @@
         <span class="icon is-small"><i class="fas fa-list-alt" aria-hidden="true"></i></span>
         <span>{{ _("surveys")|capitalize }}</span>
       </a>
+
+      {% if user.profile.enable_toolbox %}
+        <a class="navbar-item" href="{{ url('toolbox:index') }}">
+          <span class="icon is-small"><i class="fas fa-tools" aria-hidden="true"></i></span>
+          <span>{{ _("toolbox")|capitalize }}</span>
+        </a>
+      {% endif %}
     </div>
 
 
@@ -73,6 +80,10 @@
             </a>
           {% endif %}
           {% if user.is_staff %}
+            <a href="{{ url('projects:import') }}" class="navbar-item">
+              <span class="icon is-small"><i class="fas fa-file-import"></i></span>
+              <span>{{ _("data importer")|capitalize }}</span>
+            </a>
             {% if project and user.has_perm('projects.view_project') %}
             <a href="{{ url('admin:projects_project_change', kwargs={'object_id': project.id}) }}" class='admin navbar-item'>
             {% else %}

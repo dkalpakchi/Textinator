@@ -1,5 +1,5 @@
 <div class="message-body">
-  {% if paginator.count > 0 %}
+  {% if paginator.count > 0 and page <= paginator.num_pages %}
     {% set current_page = paginator.page(page) %}
     <ul>
       {% with mode="editing" %}

@@ -18,6 +18,20 @@ python manage.py seed_default
 python manage.py update_marker_actions
 python manage.py createsuperuser --noinput
 
+REDIS_URLS="textinator_redis_1 textinator-redis-1"
+
+for url in $REDIS_URLS
+do
+  if ping -c 5 $url &> /dev/null
+  then
+    echo "[Redis] Success for $url -- chosen!"
+    export REDIS_URL=$url
+    break
+  else
+    echo "[Redis] Couldn't ping $url -- ignoring"
+  fi
+done
+
 if [ "$TT_ENV" = "dev" ]; then
   tmux new-session -d -s textinator_celery
   tmux send-keys -t textinator_celery "cd /home/tt/Textinator" Enter

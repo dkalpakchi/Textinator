@@ -3,7 +3,7 @@ FROM python:alpine3.16
 
 # install psycopg2 dependencies and other dependencies
 RUN apk update \
-    && apk add build-base postgresql-dev gcc python3-dev musl-dev git jpeg-dev zlib-dev gettext nodejs npm memcached supervisor busybox-extras
+    && apk add build-base postgresql-dev gcc python3-dev musl-dev git jpeg-dev zlib-dev gettext nodejs npm memcached supervisor busybox-extras iputils
 
 RUN apk add linux-headers
 
@@ -26,7 +26,7 @@ COPY --chown=tt . ./Textinator/
 RUN mkdir -p ./Textinator/static_cdn
 RUN mkdir -p ./Textinator/media
 
-RUN pip install -r ./Textinator/requirements.txt
+RUN pip install --default-timeout=100 -r ./Textinator/requirements.txt
 
 # for production purposes
 RUN pip install gunicorn==20.1.0

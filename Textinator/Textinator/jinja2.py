@@ -55,31 +55,68 @@ def display_relation(rel):
     """)
     return Markup(template.render(rel=rel))
 
+# TODO: re-think custom tags
+CUSTOM_MD_TAGS = {
+    'pin': {
+        'core': "!---!",
+        'template': "<div class='scrollable'>{scrollable}</div><div class='pinned'>{pinned}</div>"
+    },
+    'pin_up': {
+        'core': "!-^-!",
+        'template': "<div class='pinned'>{pinned}</div><div class='scrollable'>{scrollable}</div>"
+    }
+}
+
+for tag in CUSTOM_MD_TAGS:
+    CUSTOM_MD_TAGS[tag]['tag'] = "\n{}\n".format(CUSTOM_MD_TAGS[tag]['core'])
+    CUSTOM_MD_TAGS[tag]['replace'] = "%/{}/%".format(CUSTOM_MD_TAGS[tag]['core'])
+
 def to_markdown(value):
     """Converts newlines into <p> and <br />s."""
-    PIN_MD_TAG = "\n!---!\n"
+    # replace all newlines from custom tags to keep them
+    for tag in CUSTOM_MD_TAGS.values():
+        if tag['tag'] in value:
+            value = value.replace(tag['tag'], tag['replace'])
+
+    value = value.replace("\n", "<br>")
     md = markdown.markdown(value)
     # Bulmify things
     md = md.replace('<h1>', '<h1 class="title is-4">')
     md = md.replace('<h2>', '<h2 class="title is-5">')
     md = md.replace('<h3>', '<h3 class="title is-6">')
 
-    if PIN_MD_TAG in md:
-        scrollable, pinned = md.split(PIN_MD_TAG)
-        scrollable, pinned = scrollable.strip(), pinned.strip()
-        if scrollable.startswith("<p>"):
-            scrollable = scrollable[3:]
-        if pinned.endswith("</p>"):
-            pinned = pinned[:-4]
+    # This is because it is hard to maintain marking over <p>
+    # so instead we will replace them with <br>
+    for spec in CUSTOM_MD_TAGS.values():
+        md = md.replace("<p>", "")\
+                .replace("(?!{})</p>".format(spec['core']), "<br>")\
+                .replace("</p>", "")
+        md = re.sub(
+            r'{}</li>'.format(spec['core']),
+            '</li>{}'.format(spec['replace']), md)
 
-        md = "<p class='scrollable'>{}</p><p class='pinned'>{}</p>".format(
-                scrollable, pinned
-        )
+        if spec['replace'] in md:
+            scrollable, pinned = md.split(spec['replace'])
+            scrollable, pinned = scrollable.strip(), pinned.strip()
+
+            scrollable = re.sub("\n(?!<)", "<br>", scrollable)
+            pinned = re.sub("(</?(li|ol|ul)>)", "", pinned)
+            pinned = re.sub("\n(?!<)", "<br>", pinned)
+
+            md = spec['template'].format(
+                scrollable=scrollable, pinned=pinned
+            )
 
     return Markup(md)
 
 def to_formatted_text(value):
-    return "<p class='pre-formatted-text'>{}</p>".format(value)
+    if PIN_MD_TAG in value:
+        scrollable, pinned = value.split(PIN_MD_TAG)
+        return "<div class='scrollable pre-formatted-text'>{}</div><div class='pinned pre-formatted-text'>{}</div>".format(
+            scrollable.strip(), pinned.strip()
+        )
+    else:
+        return "<p class='pre-formatted-text'>{}</p>".format(value)
 
 def wrap_paragraph(value):
     return "<p>{}</p>".format(value)
@@ -99,12 +136,12 @@ def lang_translated_name(code):
 def markify(score):
     if isinstance(score, int):
         mapping = [
-            ('times', 'danger', '', ''),
-            ('check', 'orange', '[', ']'),
-            ('check', 'darkyellow', '(', ')'),
-            ('check', 'success', '', '')
+            ('none', 'times', 'danger', '', ''),
+            ('limited', 'check', 'orange', '[', ']'),
+            ('moderate', 'check', 'darkyellow', '(', ')'),
+            ('extensive', 'check', 'success', '', '')
         ]
-        return '<span class="icon has-text-{1}">{2}<i class="fas fa-{0}"></i>{3}</span>'.format(*mapping[score])
+        return '<span title="{0}" class="icon has-text-{2}">{3}<i class="fas fa-{1}"></i>{4}</span>'.format(*mapping[score])
     else:
         if score == 'docker':
             return '<i class="fab fa-{}"></i>'.format(score)
@@ -125,6 +162,9 @@ def to_list(x):
 
 def to_camelcase(x):
     return "".join([w if i == 0 else w.title() for i, w in enumerate(x.split())])
+
+def strip(x):
+    return str(x).strip()
 
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
@@ -156,10 +196,14 @@ def environment(**options):
     env.filters["from_ts"] = from_ts
     env.filters["to_list"] = to_list
     env.filters["camelcase"] = to_camelcase
+    env.filters['strip'] = strip
 
     env.install_gettext_translations(translation)
 
     # i18n template functions
     env.install_gettext_callables(gettext=gettext, ngettext=ngettext,
         newstyle=True)
+
+    env.trim_blocks = True
+    env.lstrip_blocks = True
     return env

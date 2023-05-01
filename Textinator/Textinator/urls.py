@@ -36,10 +36,12 @@ paths = [
     path('accounts/', include('django_registration.backends.one_step.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('projects/', include('projects.urls')),
+    path('tools/', include('toolbox.urls')),
     path('tinymce/', include('tinymce.urls')),
     path('users/', include('users.urls')),
     path('i18n/', include('django.conf.urls.i18n')),
     path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
+    path("announcements/", include("pinax.announcements.urls", namespace="pinax_announcements")),
 ]
 
 if 'scientific_survey' in settings.INSTALLED_APPS:

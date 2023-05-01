@@ -1,6 +1,5 @@
 html[is-inside],
 html[is-inside] body {
-  overflow: hidden;
   scrollbar-width: thin;
 }
 
@@ -186,6 +185,24 @@ pre {
 .guidelines.modal .modal-content {
   max-width: 1200px;
   width: 80%;
+}
+
+.guidelines.modal .modal-content.half {
+  width: 45%;
+}
+
+.guidelines.modal .modal-content.left.half {
+  margin: unset;
+  margin-right: auto;
+}
+
+.guidelines.modal .modal-content.right.half {
+  margin: unset;
+  margin-left: auto;
+}
+
+.guidelines.modal .modal-content.center {
+  margin: 0 auto;
 }
 
 .guidelines.card {
@@ -401,6 +418,12 @@ textarea {
   overflow: auto;
 }
 
+.selector .pinned:first-child {
+  height: 15%;
+  border-bottom: 1px solid grey;
+  margin-bottom: 1.5rem;
+}
+
 .container.tt-workspace {
   padding-left: 24px;
   padding-right: 7rem;
@@ -525,8 +548,12 @@ textarea {
   display: none !important;
 }
 
+.editing-area .card-header {
+  height: 40px;
+}
+
 .editing-area .message-body {
-  max-height: 250px;
+  max-height: 150px;
   -ms-overflow-y: scroll;
   overflow-y: scroll;
 }
@@ -580,6 +607,10 @@ textarea {
 
 .editing-area .search {
   padding: 1.5em 1.5em 1.25em 1.5em;
+}
+
+.editing-area .search .field.has-addons {
+  flex-wrap: wrap;
 }
 
 .editing-area .button span:last-child {
@@ -757,6 +788,14 @@ label.error {
 /**
  * Bulma extensions
  */
+
+.checkbox.is-small {
+  font-size: 0.8em;
+}
+
+.checkbox.is-small input[type="checkbox"] {
+  transform: scale(0.85);
+}
 
 .is-tiny {
   font-size: 0.55rem;

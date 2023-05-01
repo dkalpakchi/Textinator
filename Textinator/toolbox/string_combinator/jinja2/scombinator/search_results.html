@@ -1,0 +1,9 @@
+{% if results %}
+  {% for result in results %}
+    {% with uuid=result.batch, title=result.title %}
+      {% include 'scombinator/partials/_search_result_item.html' %}
+    {% endwith %}
+  {% endfor %}
+{% else %}
+  <p>Unfortunately, nothing was found!</p>
+{% endif %}

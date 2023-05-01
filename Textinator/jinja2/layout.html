@@ -28,6 +28,7 @@
   </head>
   <body root='{{root_url}}'>
     {% include 'partials/_navbar.html' %}
+    {% include 'partials/_announcements.html' %}
     <div class="container is-fluid{% if is_inside_project %} tt-workspace{% endif %}">
       {% block content %}{% endblock %}
     </div>

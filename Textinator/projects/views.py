@@ -2,12 +2,15 @@
 import os
 import io
 import time
+import datetime as dt
 import uuid
 import json
 import logging
+import itertools
 from collections import defaultdict
 
 from django.http import JsonResponse, Http404, FileResponse
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
@@ -21,11 +24,6 @@ from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.utils import timezone
 
-from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, TableStyle
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-
 from celery.result import AsyncResult
 
 # from modeltranslation.translator import translator
@@ -36,6 +34,7 @@ import projects.datasources as Tds
 import projects.helpers as Th
 import projects.export as Tex
 
+from Textinator.ext import rawqueryset_count
 from Textinator.jinja2 import to_markdown, to_formatted_text
 from .view_helpers import (
     BatchInfo, process_inputs, process_marker_groups, process_text_markers,
@@ -158,7 +157,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         dp_info = proj.data(u)
 
         logs = None
-        if dp_info.source_id:
+        if dp_info.source_id and not dp_info.is_interactive:
             try:
                 d = Tm.DataSource.objects.get(pk=dp_info.source_id)
             except Tm.DataSource.DoesNotExist:
@@ -266,15 +265,20 @@ def record_datapoint(request, proj):
             raise Http404
 
         # log the submission
-        dal = Tm.DataAccessLog.objects.filter(
-            user=batch_info.user,
-            datapoint=batch_info.datapoint,
-            project=batch_info.project,
-            datasource=batch_info.data_source
-        ).order_by('-dt_updated').first()
-        dal.is_submitted = True
-        dal.is_delayed = False
-        dal.save()
+        if not batch_info.data_source.is_interactive:
+            dal = Tm.DataAccessLog.objects.filter(
+                user=batch_info.user,
+                datapoint=batch_info.datapoint,
+                project=batch_info.project,
+                datasource=batch_info.data_source
+            ).order_by('-dt_updated').first()
+            if dal is None:
+                if not request.user.is_superuser:
+                    return JsonResponse({"error": "Access denied"})
+            else:
+                dal.is_submitted = True
+                dal.is_delayed = False
+                dal.save()
 
         batch = Tm.Batch.objects.create(uuid=uuid.uuid4(), user=batch_info.user)
 
@@ -288,15 +292,7 @@ def record_datapoint(request, proj):
         is_project_author = batch_info.project.author == batch_info.user
         is_project_shared = batch_info.project.shared_with(batch_info.user)
 
-        try:
-            page = int(data.get('p', 1))
-            scope = int(data.get("scope", -1))
-        except ValueError:
-            page, scope = 1, -1
-        query = data.get("query", "")
-
-        if scope < 0:
-            scope = None
+        params = Tvh.process_recorded_search_args(data)
 
         original_mode = mode
         if batch_info.project.editing_as_revision and mode == 'e':
@@ -386,6 +382,14 @@ def record_datapoint(request, proj):
                 elif mode == "rev":
                     Tm.Input.objects.bulk_create(inputs)
 
+            # First save new labels, before deleting old
+            # To avoid the case that when all labels have been removed from the batch
+            # and there were no inputs, the batch self-destroys
+            if mode == "e":
+                process_chunks_and_relations(batch, batch_info)
+            elif mode == "rev":
+                process_chunks_and_relations(revised_batch, batch_info)
+
             # Dealing with inputs that are deleted
             for ihash in batch_inputs:
                 if ihash not in processed_hashes:
@@ -403,7 +407,7 @@ def record_datapoint(request, proj):
                         )
                         revised_input.save()
 
-            # Dealing with labels
+            # Dealing with labels to be deleted
             for chunk in batch_info.chunks:
                 if chunk.get('deleted', False):
                     chunk_hash = chunk.get('hash')
@@ -418,10 +422,6 @@ def record_datapoint(request, proj):
                             revised_label.revision_changes = "Deleted {}".format(batch_labels[chunk_hash].marker.name)
                             revised_label.save()
 
-            if mode == "e":
-                process_chunks_and_relations(batch, batch_info)
-            elif mode == "rev":
-                process_chunks_and_relations(revised_batch, batch_info)
 
             batch.save() # this updates dt_updated
 
@@ -431,8 +431,7 @@ def record_datapoint(request, proj):
             kwargs = {
                 'current_uuid': batch.uuid,
                 'template': 'partials/components/areas/_editing_body.html',
-                'search_mv_pk': scope,
-                'search_query': query
+                'search_dict': params['search_dict']
             }
             if mode == "rev":
                 kwargs['template'] = 'partials/components/areas/_reviewing_body.html'
@@ -447,7 +446,7 @@ def record_datapoint(request, proj):
                 'mode': mode,
                 'partial': True,
                 'template': render_editing_board(
-                    request, batch_info.project, batch_info.user, page,
+                    request, batch_info.project, batch_info.user, params['page'],
                     **kwargs
                 )
             })
@@ -465,22 +464,14 @@ def record_datapoint(request, proj):
 @login_required
 @require_http_methods(["GET"])
 def recorded_search(request, proj):
-    try:
-        page = int(request.GET.get("p", 1))
-        scope = int(request.GET.get("scope", -1))
-        search_type = request.GET.get("search_type", "phr")
-    except ValueError:
-        page, scope = 1, -1
-    query = request.GET.get("query", "")
     project = get_object_or_404(Tm.Project, pk=proj)
+    params = Tvh.process_recorded_search_args(request.GET)
 
     return JsonResponse({
         'partial': True,
         'template': render_editing_board(
-            request, project, request.user, page,
-            search_mv_pk=scope,
-            search_query=query,
-            search_type=search_type,
+            request, project, request.user, params['page'],
+            search_dict=params['search_dict'],
             template='partials/components/areas/_editing_body.html'
         )
     })
@@ -545,7 +536,17 @@ def get_batch(request, proj):
         # context['content'] will give us text without formatting,
         # so we simply query the data source one more time to get with formatting
         ds = Tm.DataSource.objects.get(pk=context['ds_id'])
-        context['content'] = to_markdown(ds.postprocess(ds.get(context['dp_id'])).strip())
+        if ds.source_type == Tm.DataSource.INTERACTIVE:
+            post_processed_text = context['content']
+        else:
+            post_processed_text = ds.postprocess(ds.get(context['dp_id'])).strip()
+
+        if ds.formatting == 'md':
+            context['content'] = to_markdown(post_processed_text)
+        #elif ds.formatting == 'ft':
+        #    context['content'] = to_formatted_text(post_processed_text)
+        else:
+            context['content'] = post_processed_text
 
         return JsonResponse({
             'context': context,
@@ -721,24 +722,25 @@ def new_article(request, proj):
     ds_id = request.POST.get('sId')
     if ds_id:
         data_source = Tm.DataSource.objects.get(pk=ds_id)
-        dp_id = request.POST.get('dpId')
-        save_for_later = request.POST.get('saveForLater') == "true"
-        if dp_id:
-            try:
-                log = Tm.DataAccessLog.objects.get(
-                    user=request.user, project=project,
-                    datasource=data_source, datapoint=str(dp_id), is_skipped=False
-                )
-                log.is_skipped = not save_for_later
-                log.is_delayed = save_for_later
-                log.save()
-            except Tm.DataAccessLog.DoesNotExist:
-                Tm.DataAccessLog.objects.create(
-                    user=request.user, project=project,
-                    datasource=data_source, datapoint=str(dp_id),
-                    is_submitted=False, is_skipped=not save_for_later,
-                    is_delayed=save_for_later
-                )
+        if not data_source.is_interactive:
+            dp_id = request.POST.get('dpId')
+            save_for_later = request.POST.get('saveForLater') == "true"
+            if dp_id:
+                try:
+                    log = Tm.DataAccessLog.objects.get(
+                        user=request.user, project=project,
+                        datasource=data_source, datapoint=str(dp_id), is_skipped=False
+                    )
+                    log.is_skipped = not save_for_later
+                    log.is_delayed = save_for_later
+                    log.save()
+                except Tm.DataAccessLog.DoesNotExist:
+                    Tm.DataAccessLog.objects.create(
+                        user=request.user, project=project,
+                        datasource=data_source, datapoint=str(dp_id),
+                        is_submitted=False, is_skipped=not save_for_later,
+                        is_delayed=save_for_later
+                    )
 
     dp_info = project.data(request.user, True)
     request.session['dp_info_{}'.format(proj)] = dp_info.to_json()
@@ -768,8 +770,8 @@ def new_article(request, proj):
 
         if dp_info.source_formatting == 'md':
             text = to_markdown(text)
-        elif dp_info.source_formatting == 'ft':
-            text = to_formatted_text(text)
+        #elif dp_info.source_formatting == 'ft':
+        #    text = to_formatted_text(text)
 
     return JsonResponse({
         'text': text,
@@ -911,7 +913,9 @@ def export(request, proj):
         project = Tm.Project.objects.get(pk=proj)
         exporter = Tex.AnnotationExporter(project, config={
             'consolidate_clusters': request.GET.get('consolidate_clusters') == 'on',
-            'include_usernames': request.GET.get('include_usernames', False)
+            'include_usernames': request.GET.get('include_usernames') == 'on',
+            'include_batch_no': request.GET.get('include_batch_no') == 'on',
+            'include_flags': request.GET.get('include_flags') == 'on'
         })
         return JsonResponse({"data": exporter.export()})
     except Tm.Project.DoesNotExist:
@@ -931,14 +935,32 @@ def flag_text(request, proj):
     dp_id = request.POST.get('dp_id')
     ds_id = request.POST.get('ds_id')
 
-    project = Tm.Project.objects.filter(pk=proj).get()
+    project = Tm.Project.objects.get(pk=proj)
     data_source = Tm.DataSource.objects.get(pk=ds_id)
 
-    dal, _ = Tm.DataAccessLog.objects.get_or_create(
+    dal = Tm.DataAccessLog.objects.filter(
         user=request.user, datapoint=str(dp_id),
         project=project, datasource=data_source,
-        is_submitted=False
+        is_deleted=False
     )
+
+    N = dal.count()
+    if N == 1:
+        dal = dal.get()
+    elif N == 0:
+        dal = Tm.DataAccessLog.objects.create(
+            user=request.user, datapoint=str(dp_id),
+            project=project, datasource=data_source,
+        )
+    else:
+        dals = dal.order_by('dt_created')
+        dal = dals.first()
+        for log in dals.filter(~Q(pk=dal.pk)):
+            dal.flags.update(log.flags)
+            log.is_deleted = True
+            log.save()
+        dal.save()
+
     if not dal.flags:
         dal.flags = {}
     flags = dal.flags
@@ -993,6 +1015,7 @@ def flag_batch(request, proj):
 def flagged_search(request, proj):
     project = Tm.Project.objects.get(pk=proj)
     data = json.loads(request.body)
+    text_search = data.get("text_search")
     query = data.get('query')
 
     is_author, is_shared = project.author == request.user, project.shared_with(request.user)
@@ -1006,15 +1029,30 @@ def flagged_search(request, proj):
             flagged = flagged.filter(user=request.user)
 
     if query:
-        vector = SearchVector('flags')
-        query = SearchQuery(query)
-        res = flagged.annotate(
-            search=vector
-        ).filter(
-            search=query
-        ).annotate(
-            rank=SearchRank(vector, query)
-        ).order_by('-rank')
+        if text_search:
+            raw_sql = """
+                SELECT pda.id, ts_rank(pc.content_vector, phraseto_tsquery(pc.search_config, %s)) AS rank, (pda.flags->'text_errors')
+                FROM projects_dataaccesslog pda
+                INNER JOIN projects_context pc
+                ON (pda.datasource_id=pc.datasource_id AND pda.datapoint=pc.datapoint)
+                WHERE (pda.flags->'text_errors') <> '{}' AND (pda.flags->'text_errors' IS NOT NULL) AND pc.content_vector @@ phraseto_tsquery(pc.search_config, %s)
+                ORDER BY rank DESC"""
+            sql_params = [query, query]
+            res = Tm.DataAccessLog.objects.raw(raw_sql, sql_params)
+            res.raw_count = rawqueryset_count(raw_sql, sql_params)
+            res.count = lambda: res.raw_count
+        else:
+            vector = SearchVector('flags')
+            query = SearchQuery(query)
+            res = flagged.annotate(
+                search=vector
+            ).filter(
+                search=query
+            ).annotate(
+                rank=SearchRank(vector, query)
+            ).filter(
+                rank__gt=0
+            ).order_by('-rank')
     else:
         res = flagged.order_by('-dt_created')
     return JsonResponse({
@@ -1040,68 +1078,121 @@ def time_report(request, proj):
                 pass
 
     project = Tm.Project.objects.filter(pk=proj).get()
+    # return FileResponse(buffer, as_attachment=True, filename='time_report.pdf')
+    return JsonResponse({})
 
-    # Create a file-like buffer to receive PDF data.
-    buffer = io.BytesIO()
 
-    # Create the PDF object, using the buffer as its "file."
-    p = canvas.Canvas(buffer)
+@login_required
+@require_http_methods(["GET", "POST"])
+def importer(request):
+    if request.method == "GET":
+        markers = Tm.Marker.objects.all()
+        return render(request, "projects/importer.html", {
+            'markers': markers,
+            'formats': settings.FORMATTING_TYPES,
+            'anno_types': settings.ANNOTATION_TYPES
+        })
+    elif request.method == "POST":
+        # TODO: add support for JSON lines format in future
+        data = json.loads(request.POST.get('data'))
+        file_data = json.loads(request.POST.get('fileData'))
 
-    # Draw things on the PDF. Here's where the PDF generation happens.
-    # See the ReportLab documentation for the full list of functionality.
-    p.setFont("ROBOTECH GP", size=36)
-    system_name = "Textinator"
-    p.drawString(A4[0] / 2 - 18 * PT2MM * len(system_name) * 1.1, 0.95 * A4[1], system_name)
+        errors = []
+        if not [x for x in data['sourceFields'].strip().split(",") if x]:
+            errors.append("No source fields for data are provided")
+        if not data['markerMapping']:
+            errors.append("No marker mapping is provided")
 
-    p.setFont("Helvetica", size=14)
-    report_name = f'Time report for project "{project.title}"'
-    p.drawString(A4[0] / 2 - (14 * PT2MM * len(report_name) / 2), 0.92 * A4[1], report_name)
+        if errors:
+            return JsonResponse(
+                {"errors": errors}
+            )
 
-    inputs = Tm.Input.objects.filter(marker__project__id=proj).order_by('dt_created').all()
-    labels = Tm.Label.objects.filter(marker__project__id=proj, undone=False).order_by('dt_created').all()
-    inputs_by_user, labels_by_user = defaultdict(lambda: defaultdict(list)), defaultdict(lambda: defaultdict(list))
-    for i in inputs:
-        inputs_by_user[i.batch.user.username][str(i.batch)].append(i)
-    for l in labels:
-        labels_by_user[l.batch.user.username][str(l.batch)].append(l)
+        # Creating a project
+        p = Tm.Project.objects.create(
+            title=data['title'],
+            short_description=data['description'],
+            language=data['sourceLang'],
+            task_type='generic',
+            dt_publish=timezone.now(),
+            dt_finish=timezone.now() + dt.timedelta(days=7)
+        )
 
-    time_spent = defaultdict(lambda: defaultdict(int))
-    inputs_created = defaultdict(lambda: defaultdict(int))
-    labels_created = defaultdict(lambda: defaultdict(int))
-    data = [['User', 'Month', 'Time (h)', '# of inputs', '# of labels']]
-    for u in labels_by_user:
-        ll = list(labels_by_user[u].items())
-        calc_time(ll, labels_created)
+        # Creating a data source and connecting it to the project
+        lang_dict = dict(settings.LANGUAGES)
+        sconf_dict = settings.LANG_SEARCH_CONFIG
+        search_config = sconf_dict.get(
+            data['sourceLang'],
+            lang_dict.get(data['sourceLang'], 'english')
+        ).lower()
+        ds = Tm.DataSource.objects.create(
+            name=data['sourceName'],
+            language=data['sourceLang'],
+            search_config=search_config,
+            source_type=Tm.DataSource.INTERACTIVE,
+            formatting=data['sourceFormatting']
+        )
+        p.datasources.add(ds)
 
-    for u in inputs_by_user:
-        ll = list(inputs_by_user[u].items())
-        calc_time(ll, inputs_created)
+        # Connecting markers to the project
+        m2attr = {int(x['marker']): x for x in data['markerMapping'].values()}
+        markers = Tm.Marker.objects.filter(pk__in=m2attr.keys()).all()
+        for m in markers:
+            p.markers.add(m, through_defaults={
+                'anno_type': m2attr[m.pk]['anno'],
+                'choices': m2attr[m.pk]['choices'].split(",")
+            })
+        p.save()
 
-    for u, td in time_spent.items():
-        keys = sorted(td.keys())
-        year, month = keys[0].split('/')
-        data.append([u, f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[keys[0]], 2), inputs_created[u][keys[0]], labels_created[u][keys[0]]])
-        for k in keys[1:]:
-            year, month = k.split('/')
-            data.append(['', f"{MONTH_NAMES[int(month) - 1]} {year}", round(td[k], 2), inputs_created[u][k], labels_created[u][k]])
+        # Create the actual datapoints
+        text_keys = data["sourceFields"].split(",")
+        has_markers = p.markers.count() > 0
+        if has_markers:
+            m2mv = {x.marker.pk: x.pk for x in p.markervariant_set.all()}
+            mv_mapping = data['markerMapping']
+            for k in mv_mapping:
+                mv_mapping[k]['marker'] = m2mv[int(mv_mapping[k]['marker'])]
 
-    LIST_STYLE = TableStyle([
-        ('LINEABOVE', (0,0), (-1,0), 2, colors.black),
-        ('LINEABOVE', (0,1), (-1,-1), 0.25, colors.black),
-        ('LINEBELOW', (0,-1), (-1,-1), 2, colors.black),
-        ('ALIGN', (1,1), (-1,-1), 'RIGHT')]
-    )
+        inp_anno_types = dict(settings.INPUT_ANNOTATION_TYPES)
+        for i, obj in enumerate(file_data):
+            content = []
+            for tk in text_keys:
+                content.extend(list(Tvh.follow_json_path(obj, tk.strip().split("."))))
+            ctx, _ = Tm.Context.objects.get_or_create(
+                datasource=ds,
+                datapoint=i,
+                content="\n\n".join(content)
+            )
 
-    t = Table(data, colWidths=[110, 110, 70, 70, 70])
-    t.setStyle(LIST_STYLE)
-    w, h = t.wrapOn(p, 540, 720)
-    t.drawOn(p, A4[0] / 8, 0.8 * A4[1] - h)
+            mv_items = mv_mapping.items()
+            res = [list(Tvh.follow_json_path(obj, json_key.strip().split(".")))
+                   for json_key, spec in mv_items]
+            res.extend(
+                [list(Tvh.follow_json_path(obj, batch_extra.split(".")))
+                 for batch_extra in data["markerExtras"].split(",")]
+            )
 
-    # Close the PDF object cleanly, and we're done.
-    p.showPage()
-    p.save()
+            for batch_items in zip(*res):
+                batch = Tm.Batch.objects.create(user=request.user, uuid=uuid.uuid4())
+                for mv_no, (_, spec) in enumerate(mv_items):
+                    if spec['anno'] in inp_anno_types:
+                        # here the assumption is that each object in `res_node` is just a string
+                        Tm.Input.objects.create(
+                            content=batch_items[mv_no], marker_id=spec['marker'],
+                            context=ctx, batch=batch, extra=batch_items[-1]
+                        )
+                    else:
+                        # here the assumption is that each object in `res_node` is a dictionary
+                        # {
+                        #   "text": "", "start": x, "end": y
+                        # }
+                        if batch_items[mv_no] and "start" in batch_items[mv_no] and "end" in batch_items[mv_no]:
+                            m =Tm.Label.objects.create(
+                                start=batch_items[mv_no]["start"], end=batch_items[mv_no]["end"],
+                                marker_id=spec['marker'], context=ctx, batch=batch, extra=batch_items[-1]
+                            )
+                batch.extra = list(itertools.chain(*[list(Tvh.follow_json_path(obj, batch_extra.split(".")))
+                                for batch_extra in data["batchExtras"].split(",")]))
+                batch.save()
 
-    # FileResponse sets the Content-Disposition header so that browsers
-    # present the option to save the file.
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename='time_report.pdf')
+        return JsonResponse({})

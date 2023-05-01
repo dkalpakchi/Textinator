@@ -1,28 +1,41 @@
-{% for flagged in flagged_datapoints %}
-  {% set i = loop.index0 %}
-  {% if flagged.text_errors %}
-    <tr>
-      <td>{{ flagged.user.username }}</td>
-      <td>
-        {% for k in flagged.text_errors.keys()|sort|reverse %}
-          {% set v = flagged.text_errors[k] %}
-          <div{% if not loop.last %} class="mb-2"{% endif %}>
-            {% if k %}
-              <div class="is-size-7">
-                {{k|from_ts|naturaltime}}
-              </div>
-            {% endif %}
-            <div id="flagged_{{i}}_{{loop.index0}}"></div>
-            <script type="text/javascript">
-              var formatter_{{i}}_{{loop.index0}} = new JSONFormatter({{v|tojson|safe}});
-              document.querySelector("#flagged_{{i}}_{{loop.index0}}").appendChild(formatter_{{i}}_{{loop.index0}}.render());
-            </script>
-          </div>
-        {% endfor %}
-      </td>
-      <td>
-        <a target="_blank" href="{{ url('projects:get_data', kwargs={'source_id': flagged.datasource_id, 'dp_id': flagged.datapoint}) }}">Show text</a>
-      </td>
-    </tr>
-  {% endif %}
-{% endfor %}
+<span>{{flagged_datapoints.count()}} results</span>
+<div class="flagged-wrapper">
+  <table class="table is-fullwidth is-hoverable">
+    <thead>
+      <th style="width: 100px;">Action</th>
+      <th style="width: 100px;">User</th>
+      <th>Comment</th>
+    </thead>
+    <tbody>
+      {% for flagged in flagged_datapoints %}
+        {% set i = loop.index0 %}
+        {% if flagged.text_errors %}
+          <tr>
+            <td>
+              <a target="_blank" href="{{ url('projects:get_data', kwargs={'source_id': flagged.datasource_id, 'dp_id': flagged.datapoint}) }}">Show text</a><br>
+              <a target="_blank" href="{{ url('admin:projects_dataaccesslog_change', args=(flagged.pk,)) }}">Edit</a>
+            </td>
+            <td>{{ flagged.user.username }}</td>
+            <td>
+              {% for k in flagged.text_errors.keys()|sort|reverse %}
+                {% set v = flagged.text_errors[k] %}
+                <div{% if not loop.last %} class="mb-2"{% endif %}>
+                  {% if k %}
+                    <div class="is-size-7">
+                      {{k|from_ts|naturaltime}}
+                    </div>
+                  {% endif %}
+                  <div id="flagged_{{i}}_{{loop.index0}}"></div>
+                  <script type="text/javascript">
+                    var formatter_{{i}}_{{loop.index0}} = new JSONFormatter({{v|tojson|safe}});
+                    document.querySelector("#flagged_{{i}}_{{loop.index0}}").appendChild(formatter_{{i}}_{{loop.index0}}.render());
+                  </script>
+                </div>
+              {% endfor %}
+            </td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

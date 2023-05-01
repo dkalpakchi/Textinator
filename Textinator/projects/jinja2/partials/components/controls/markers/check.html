@@ -9,7 +9,7 @@
     </p>
     {% for c in marker.choices %}
       <label class="checkbox" for="{{marker.code}}_{{loop.index0}}">
-        <input id="{{marker.code}}_{{loop.index0}}"type="checkbox" name="{{marker.code}}" value="{{c}}">
+        <input id="{{marker.code}}_{{loop.index0}}"type="checkbox" name="{{marker.code}}" value="{{c|strip}}">
         {{c}}
       </label>
     {% endfor %}

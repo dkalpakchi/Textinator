@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block custom_styles %}
+  <link href="{{ static('jsoneditor/dist/jsoneditor.min.css') }}" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="{{ static('@creativebulma/bulma-collapsible/dist/css/bulma-collapsible.min.css') }}">
+{% endblock %}
+
+{% block custom_scripts %}
+  <script type="text/javascript" src="{{ static('@creativebulma/bulma-collapsible/dist/js/bulma-collapsible.min.js') }}"></script>
+  <script type="text/javascript" src="{{ static('jsoneditor/dist/jsoneditor.min.js') }}"></script>
+  <script type="text/javascript" src="{{ static('scripts/importer.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+  <div class="columns">
+    <div class="column">
+      <input id="dataSourceFile" type="file">
+      <div id="structureArea"></div>
+    </div>
+    <div id="stepsArea" class="column">
+      <form id="processForm" action="{{ url('projects:import') }}" method="POST">
+        {{ csrf_input }}
+        <button id="process" class="button is-primary">
+          <span class="icon">
+            <i class="fas fa-cog"></i>
+          </span>
+          <span>Process</span>
+        </button>
+        {% with allow_reset=True, name='Data source', id='dataSourceStep', active=True, content_template='partials/_importer_datasource.html', no_placeholder=True %}
+          {% include 'partials/_importer_step.html' %}
+        {% endwith %}
+        {% with allow_selection=True, allow_reset=True, name='Markers', id='markersStep' %}
+          {% include 'partials/_importer_step.html' %}
+        {% endwith %}
+        {% with allow_reset=True, name='Extra information', id='extraStep', content_template='partials/_importer_extras.html', no_placeholder=True %}
+          {% include 'partials/_importer_step.html' %}
+        {% endwith %}
+        {% with name='Project', id='projectStep', content_template='partials/_importer_project.html', no_placeholder=True %}
+          {% include 'partials/_importer_step.html' %}
+        {% endwith %}
+      </form>
+    </div>
+  </div>
+  <div class="is-hidden">
+    <select id="markerTemplate">
+      {% for marker in markers %}
+        <option value="{{marker.pk}}">{{marker.name}}</option>
+      {% endfor %}
+    </select>
+    <select id="annoTypeTemplate">
+      {% for atype, aname in anno_types %}
+        <option value="{{atype}}">{{aname}}</option>
+      {% endfor %}
+    </select>
+  </div>
+{% endblock %}

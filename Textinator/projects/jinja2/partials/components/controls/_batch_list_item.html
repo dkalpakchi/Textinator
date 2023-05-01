@@ -21,10 +21,17 @@
       {% endif %}
       {{title|truncate(40)}}
     </span>
-    <span>
+    <span class='is-hidden-touch'>
       {{batch.labels.count()}} span(s) &nbsp; | &nbsp; {% if is_admin %}{{batch.user.username}}, {% endif %}{{ batch.dt_created|naturaltime }}
     </span>
   </div>
+  {% if user.is_superuser %}
+    <a class="button is-small is-primary is-outlined" target="_blank" href="{{ url('admin:projects_batch_change', args=(batch.pk,)) }}">
+      <span class="icon is-small">
+        <i class="fas fa-pencil-alt"></i>
+      </span>
+    </a>
+  {% endif %}
   <div class="button is-small is-danger is-outlined{% if batch.is_flagged %} is-active{% endif %}" data-purpose='f'>
     <span class="icon is-small">
       <i class="fas fa-flag"></i>

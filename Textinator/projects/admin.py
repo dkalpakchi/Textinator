@@ -338,7 +338,8 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
         }),
         (_('settings').title(), {
             'fields': ('data_order', 'is_open', 'allow_selecting_labels', 'disable_submitted_labels',
-                'disjoint_annotation', 'auto_text_switch', 'allow_editing', 'editing_as_revision', 'allow_reviewing', 'editing_title_regex')
+                'disjoint_annotation', 'auto_text_switch', 'allow_editing', 'allow_post_editing',
+                'editing_as_revision', 'allow_reviewing', 'editing_title_regex')
         }),
         (_('administration').title(), {
             'fields': ('temporary_message',)
@@ -386,7 +387,8 @@ class ProjectAdmin(nested_admin.NestedModelAdmin):
 @admin.register(Tm.Context)
 class ContextAdmin(CommonModelAdmin):
     _list_filter = [
-        'datasource'
+        'datasource',
+        'datapoint'
     ]
     list_display = ['id', 'content']
     search_fields = ['content']
@@ -508,7 +510,9 @@ class DataSourceAdmin(CommonModelAdmin):
 class DataAccessLogAdmin(CommonModelAdmin):
     _list_filter = [
         'user',
-        'project'
+        'project',
+        'datapoint',
+        'datasource'
     ]
     list_display = ['id', 'user', 'project']
 
@@ -516,6 +520,8 @@ class DataAccessLogAdmin(CommonModelAdmin):
 @admin.register(Tm.Marker)
 class MarkerAdmin(CommonModelAdmin):
     exclude = ('suggestion_endpoint', 'code')
+    save_as = True
+    save_and_add = True
 
     def get_form(self, request, *args, **kwargs):
         form = super(MarkerAdmin, self).get_form(request, *args, **kwargs)

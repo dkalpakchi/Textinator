@@ -38,6 +38,8 @@ def user_settings(request):
             if lang_code and lang_code not in fluent_in:
                 fluent_in.append(lang_code)
             user.profile.fluent_in = ",".join(fluent_in)
+        enable_toolbox = request.POST.get('enable_toolbox') == 'on'
+        user.profile.enable_toolbox = enable_toolbox
         user.profile.save()
 
         return response

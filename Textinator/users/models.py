@@ -15,6 +15,7 @@ class Profile(models.Model):
     preferred_language = models.CharField(_("preferred language"), max_length=10, default='en', choices=settings.LANGUAGES)
     fluent_in = models.TextField(_("fluent in"), default='en',
         help_text=_("Comma-separated list of language codes, compliant with RFC 5646"))
+    enable_toolbox = models.BooleanField(_("enable toolbox?"), default=False)
 
     @property
     def fluent_languages(self):

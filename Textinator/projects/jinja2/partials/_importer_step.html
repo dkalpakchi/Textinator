@@ -1,0 +1,27 @@
+<div class="card">
+  <header class="card-header">
+    <p class="card-header-title">{{name}}</p>
+    <a href="#{{id}}" data-action="collapse" class="card-header-icon is-hidden-fullscreen" aria-label="more options">
+      <span class="icon">
+        <i class="fas fa-angle-down" aria-hidden="true"></i>
+      </span>
+    </a>
+  </header>
+  <div id="{{id}}" data-role='importerStep' class="is-collapsible{% if active %} is-active{% endif %}">
+    <div class="card-content"{% if no_placeholder %} no-placeholder="true"{% endif %}>
+      {% if content_template %}
+        {% include content_template %}
+      {% endif %}
+    </div>
+    {% if allow_selection or allow_reset %}
+    <footer class="card-footer">
+      {% if allow_selection %}
+      <a data-role="selector" data-href="{{id}}" class="card-footer-item">Use selected fields</a>
+      {% endif %}
+      {% if allow_reset %}
+      <a data-role="reset" data-href="{{id}}" class="card-footer-item">Reset</a>
+      {% endif %}
+    </footer>
+    {% endif %}
+  </div>
+</div>

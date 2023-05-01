@@ -17,10 +17,6 @@ import secrets
 
 from django.utils.translation import gettext_lazy as _
 
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -57,6 +53,8 @@ INSTALLED_APPS = [
     'django_registration',
     'tinymce',
     'projects',
+    'toolbox',
+    'toolbox.string_combinator',
     'rangefilter',
     # 'surveys'
     # 'django_extensions',
@@ -65,7 +63,9 @@ INSTALLED_APPS = [
     'users',
     'colorfield',
     'rosetta',
-    'guardian'
+    'guardian',
+    'pinax.announcements',
+    'maintenancemode'
 ]
 
 MIDDLEWARE = [
@@ -75,14 +75,19 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'maintenancemode.middleware.MaintenanceModeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Use python manage.py maintenance <on|off>
+MAINTENANCE_MODE = False
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'Textinator.backends.EmailAuthenticationBackend',
     'guardian.backends.ObjectPermissionBackend',
+    'pinax.announcements.auth_backends.AnnouncementPermissionsBackend'
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -102,7 +107,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'projects.context_processors.common_user_variables'
+                'projects.context_processors.common_user_variables',
+                'Textinator.context_processors.pinax_announcements'
             ]
         },
     },
@@ -198,6 +204,10 @@ LANGUAGES = [
     ('uk', 'Ukrainian')
 ]
 
+LANG_SEARCH_CONFIG = {
+    'en': 'english_lite'
+}
+
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ] + glob.glob(os.path.join(BASE_DIR, 'locale', 'custom', '*'))
@@ -263,11 +273,6 @@ TINYMCE_DEFAULT_CONFIG = {
 }
 
 FILEBROWSER_MAX_UPLOAD_SIZE = 20971520 # 20MB
-
-
-pdfmetrics.registerFont(TTFont('ROBOTECH GP',
-    os.path.join(BASE_DIR, 'static', 'styles', 'webfonts', 'ROBOTECH GP.ttf')))
-
 
 CHOICES_SEPARATOR = "|"
 
@@ -348,7 +353,9 @@ DATASOURCE_TYPES = [
     ('PlainText', 'Plain text'),
     ('TextFile', 'Plain text file(s)'),
     ('Json', 'JSON file(s)'),
-    ('TextsAPI', 'Texts API')
+    ('JsonLines', 'JSON lines'),
+    ('TextsAPI', 'Texts API'),
+    ('Interact', 'Interactive')
 ]
 
 FORMATTING_TYPES = [
@@ -384,5 +391,5 @@ FILEBROWSER_EXTENSIONS = {
 }
 
 # Celery configuration
-CELERY_BROKER_URL = 'redis://textinator_redis_1:6379/0'
+CELERY_BROKER_URL = 'redis://{}:6379/0'.format(os.getenv("REDIS_URL"))
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL

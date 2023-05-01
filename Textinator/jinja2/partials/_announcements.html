@@ -1,0 +1,20 @@
+{% if announcements %}
+  <div class="announcements">
+    {% for announcement in announcements %}
+      <article class="message is-warning announcement">
+        <div class="message-header">
+          <p>{{ announcement.title }}</p>
+          {% if announcement.dismiss_url() %}
+            <form class="form ajax" data-replace-closest=".announcement" action="{{ announcement.dismiss_url() }}" method="post">
+              {{ csrf_input }}
+              <button class="delete" aria-label="delete"></button>
+            </form>
+          {% endif %}
+        </div>
+        <div class="message-body">
+          {{ announcement.content }}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% endif %}

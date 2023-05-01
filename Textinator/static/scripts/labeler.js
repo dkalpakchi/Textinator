@@ -1,4 +1,4 @@
-(function ($, d3, tippy, django) {
+(function ($, d3, tippy, django, bulmaCollapsible) {
   const utils = {
     isDefined: function (x) {
       return x != null && x !== undefined;
@@ -42,7 +42,7 @@
     defaultobj: function (creator) {
       return new Proxy(Object(), {
         get(obj, prop) {
-          if (!obj.hasOwnProperty(prop)) obj[prop] = creator();
+          if (!utils.hasProp(obj, prop)) obj[prop] = creator();
           return obj[prop];
         },
       });
@@ -57,6 +57,9 @@
     },
     expandMode: function (m) {
       return m == "e" ? "editing" : "reviewing";
+    },
+    hasProp: function (obj, p) {
+      return Object.prototype.hasOwnProperty.call(obj, p);
     },
   };
 
@@ -94,7 +97,7 @@
       for (let i in arr) {
         let found = true;
         for (let k in obj) {
-          found = found && arr[i].hasOwnProperty(k) && obj[k] == arr[i][k];
+          found = found && utils.hasProp(arr[i], k) && obj[k] == arr[i][k];
           if (!found) break;
         }
         if (found) return true;
@@ -117,27 +120,42 @@
       }
     }
 
-    function getSelectionLength(range) {
-      return range.toString().length;
+    // This function was used before getRangeLength
+    // but it didn't work, because it turned out
+    // range.toString() doesn't care about newlines!
+    // See more:
+    // - https://github.com/timdown/rangy/issues/306
+    // - https://stackoverflow.com/questions/1146730/problem-detecting-newlines-in-javascript-range-object
+    //
+    // Solution: replaced with getRangeLength
+    //
+    // function getSelectionLength(range) {
+    //   return range.toString().length;
+    // }
+
+    function getRangeLength(range) {
+      let fragment = range.cloneContents();
+      let lens = Array.from(fragment.childNodes).map(getNodeLength);
+      return lens.reduce((a, b) => a + b, 0);
     }
 
     // hide those that will influence textContent
+    // crucial for making textContent handle newlines correctly!
     function showExtraElements(selectorArea, makeVisible) {
       let $sel = $(selectorArea),
-        $relNum = $sel.find('[data-m="r"]'),
-        $delBtn = $sel.find("button.delete"),
-        $meta = $sel.find("[data-meta]"),
-        $br = $sel.find("br"),
-        $pinned = $sel.find(".pinned");
+        $relNum = $sel.find('[data-m="r"]').addBack('[data-m="r"]'),
+        $delBtn = $sel.find("button.delete").addBack("button.delete"),
+        $meta = $sel.find("[data-meta]").addBack("[data-meta]"),
+        $br = $sel.find("br").addBack("br"),
+        $pinned = $sel.find(".pinned").addBack(".pinned");
 
       if (makeVisible) {
         $relNum.show();
         $delBtn.show();
         $meta.show();
         $br.each(function (i, x) {
-          x.previousSibling.remove();
+          x.textContent = "";
         });
-        $br.show();
         $pinned.each(function (i, x) {
           x.previousSibling.remove();
         });
@@ -145,10 +163,51 @@
         $relNum.hide();
         $delBtn.hide();
         $meta.hide();
-        $br.before(document.createTextNode("\n"));
-        $br.hide();
+        $br.each(function (i, x) {
+          x.textContent = "\n";
+        });
         $pinned.before(document.createTextNode("\n\n"));
       }
+      ui.extraElementsVisible = makeVisible;
+    }
+
+    function getNodeLength(node) {
+      /*
+       * This function calculates the length of the nodes textContent
+       * including possible newline characters.
+       */
+
+      let len = 0;
+      let originalVisibility = ui.extraElementsVisible;
+      if (originalVisibility) showExtraElements(node, false);
+
+      if (node.nodeType === 1) {
+        if (
+          (node.tagName == "SPAN" && node.classList.contains("tag")) ||
+          LINE_ENDING_TAGS.includes(node.tagName)
+        ) {
+          // if there is a label, need to remove the possible relation label
+          // This is why normally we would use innerText here and not textContent
+          // but now we hid extra elements already, we could just use textContent
+          // since it's faster
+          len += node.textContent.length;
+          // +1 because P is replaced by '\n'
+          if (LINE_ENDING_TAGS.includes(node.tagName)) len += 1;
+        } else if (node.tagName != "SCRIPT" && node.tagName != "BUTTON") {
+          // we don't need to account for invisible parts in any cases,
+          // other than the ones from the previous else if statement
+          // also sometimes a browser will correct typos like double spaces automatically
+          // but because .surroundContents happens on the TEXT_NODE with all
+          // typos included, we want the original TEXT_CONTENT to be here
+          len += node.textContent.length;
+        }
+      } else if (node.nodeType === 3) {
+        // TEXT_NODE
+        len += node.length;
+      }
+
+      if (originalVisibility) showExtraElements(node, originalVisibility);
+      return len;
     }
 
     function previousTextLength(node) {
@@ -156,31 +215,7 @@
         if (onlyElements === undefined) onlyElements = false;
         let len = 0;
         while (prev != null) {
-          if (prev.nodeType === 1) {
-            // ELEMENT_NODE
-            if (
-              (prev.tagName == "SPAN" && prev.classList.contains("tag")) ||
-              LINE_ENDING_TAGS.includes(prev.tagName)
-            ) {
-              // if there is a label, need to remove the possible relation label
-              // This is why normally we would use innerText here and not textContent
-              // but now we hid extra elements already, we could just use textContent
-              // since it's faster
-              len += prev.textContent.length;
-              // +1 because P is replaced by '\n'
-              if (LINE_ENDING_TAGS.includes(prev.tagName)) len += 1;
-            } else if (prev.tagName != "SCRIPT" && prev.tagName != "BUTTON") {
-              // we don't need to account for invisible parts in any cases,
-              // other than the ones from the previous else if statement
-              // also sometimes a browser will correct typos like double spaces automatically
-              // but because .surroundContents happens on the TEXT_NODE with all
-              // typos included, we want the original TEXT_CONTENT to be here
-              len += prev.textContent.length;
-            }
-          } else if (prev.nodeType === 3) {
-            // TEXT_NODE
-            len += prev.length;
-          }
+          len += getNodeLength(prev);
           prev = onlyElements
             ? prev.previousElementSibling
             : prev.previousSibling;
@@ -197,8 +232,9 @@
 
       // account for the previous text of the enclosing label
       let enclosingLabel = getEnclosingLabel(node);
-      if (enclosingLabel != null && enclosingLabel != node)
+      if (enclosingLabel != null && enclosingLabel != node) {
         textLength += getPrevLength(enclosingLabel.previousSibling);
+      }
 
       // account for nesting
       while (isLabel(node.parentNode) && node.parentNode != enclosingLabel) {
@@ -206,19 +242,22 @@
         textLength += getPrevLength(node.previousSibling);
       }
 
+      // TODO(dmytro): return to these parts in more details
+      //               which tags should be accepted here?
+      // NOTE: <p> tags will be phased out
       // Find previous <p> or <ul>
-      let parent = getEnclosingParagraph(node);
+      let par = getEnclosingParagraph(node);
 
-      if (parent != null && parent.tagName == "UL") textLength += 1; // because <ul> adds a newline character to the beginning of the string
+      if (par != null && par.tagName == "UL") textLength += 1; // because <ul> adds a newline character to the beginning of the string
 
+      // TODO(dmytro): also check this one together with the previous TODO
       // all text scope
-      if (parent != null) {
-        textLength += getPrevLength(parent.previousElementSibling, true);
-
-        if (parent.parentNode.tagName == "BLOCKQUOTE") {
+      if (par != null) {
+        textLength += getPrevLength(par.previousSibling, false);
+        if (par.parentNode.tagName == "BLOCKQUOTE") {
           // +1 because <blockquote> adds a newline char to the beginning of the string
           textLength +=
-            getPrevLength(parent.parentNode.previousElementSibling, true) + 1;
+            getPrevLength(par.parentNode.previousSibling, false) + 1;
         }
       }
 
@@ -315,6 +354,14 @@
       );
     }
 
+    function isScrollablePart(node) {
+      return (
+        utils.isDefined(node) &&
+        node.nodeName == "DIV" &&
+        node.className == "scrollable"
+      );
+    }
+
     function isPurposeNode(node) {
       return utils.isDefined(node) && node.hasAttribute("data-purpose");
     }
@@ -335,13 +382,19 @@
       return node == ancestorCand;
     }
 
+    function isFormField(node) {
+      return utils.isDefined(node) && node.classList.contains("field");
+    }
+
     function getEnclosing(node, isOfType) {
+      let prevNode = node;
       node = node.parentNode;
       while (isOfType(node)) {
         if (!utils.isDefined(node)) break;
+        prevNode = node;
         node = node.parentNode;
       }
-      return isOfType(node) ? node : null;
+      return isOfType(node) ? node : isOfType(prevNode) ? prevNode : null;
     }
 
     function getClosest(node, isOfType) {
@@ -354,6 +407,10 @@
 
     function getEnclosingLabel(node) {
       return getEnclosing(node, isLabel);
+    }
+
+    function getClosestFormField(node) {
+      return getClosest(node, isFormField);
     }
 
     function getClosestBatch(node) {
@@ -377,9 +434,9 @@
     }
 
     function getEnclosingParagraph(node) {
-      while (!["UL", "BODY", "P", "ARTICLE"].includes(node.tagName))
+      while (!["UL", "BODY", "P", "ARTICLE", "EM"].includes(node.tagName))
         node = node.parentNode;
-      return ["P", "UL", "ARTICLE"].includes(node.tagName) ? node : null;
+      return ["P", "UL", "EM"].includes(node.tagName) ? node : null;
     }
 
     function mergeDisjoint(node1, node2) {
@@ -599,11 +656,11 @@
       for (let c in chunks) {
         let chunk = chunks[c];
         if (
-          !chunk.hasOwnProperty("batch") &&
+          !utils.hasProp(chunk, "batch") &&
           !chunk.submittable &&
           !isInRelations(chunk)
         ) {
-          if (cnt.hasOwnProperty(chunk.label)) cnt[chunk.label]++;
+          if (utils.hasProp(cnt, chunk.label)) cnt[chunk.label]++;
           else cnt[chunk.label] = 1;
         }
       }
@@ -748,15 +805,47 @@
       else return node;
     }
 
-    return {
+    const ui = {
+      collapsibles: null,
+      extraElementsVisible: true,
+      getClosestBatch: getClosestBatch,
+      initCollapsibles: function () {
+        if (!utils.isDefined(this.collapsibles)) {
+          const collapsibles = bulmaCollapsible.attach();
+          this.collapsibles = collapsibles;
+        }
+
+        this.collapsibles.forEach(function (instance) {
+          instance.on("after:expand", function () {
+            // bug fix
+            instance._originalHeight = instance.element.scrollHeight + "px";
+          });
+          instance.on("after:collapse", function () {
+            // TODO: this is a bit of a hack, figure out why this hack is needed
+            let i = 0;
+            let handle = setInterval(function () {
+              labeler.fixUI();
+              i++;
+              if (i == 2) {
+                clearInterval(handle);
+              }
+            }, 200);
+          });
+        });
+      },
+    };
+
+    const labeler = {
       allowSelectingLabels: false,
-      disableSubmittedLabels: false,
+      diisableSubmittedLabels: false,
       drawingType: {},
+      ui: ui,
       initLineHeight: undefined,
       taskArea: null,
       textLabelsArea: null,
       markersArea: null,
       selectorArea: null, // the area where the article is
+      interactiveDataArea: null,
       markerGroupsArea: null,
       submitForm: null,
       contextMenuPlugins: { sharedBetweenMarkers: {} },
@@ -779,6 +868,9 @@
         this.actionsArea = this.taskArea.querySelector("#actionsArea");
         this.selectorArea = this.textArea.querySelector("#selector");
         this.textLabelsArea = this.taskArea.querySelector("#textLabels");
+        this.interactiveDataArea = document.querySelector(
+          "textarea#interactiveDataArea"
+        );
         resetTextHTML =
           this.selectorArea == null ? "" : this.selectorArea.innerHTML;
         resetText = this.getContextText(true);
@@ -830,8 +922,17 @@
             viewPortHeight - this.markersArea.offsetTop - 140 + "px";
         }
 
-        this.textArea.style.height =
-          viewPortHeight - this.textArea.offsetTop - 80 + "px";
+        if (this.interactiveDataArea == null) {
+          this.textArea.style.height =
+            viewPortHeight - this.textArea.offsetTop - 80 + "px";
+        } else {
+          this.textArea.style.height =
+            viewPortHeight -
+            this.textArea.offsetTop -
+            this.interactiveDataArea.clientHeight -
+            100 +
+            "px";
+        }
       },
       getContextText: function (forPresentation) {
         if (forPresentation === undefined) {
@@ -839,410 +940,454 @@
         }
 
         showExtraElements(this.selectorArea, false);
-        let ct =
-          this.selectorArea == null
-            ? ""
-            : forPresentation
-            ? this.selectorArea.innerText.trim()
-            : this.selectorArea.textContent.trim();
+        let ct = "";
+        if (utils.isDefined(this.selectorArea)) {
+          let scrollable = this.selectorArea.querySelector(".scrollable");
+          let hasScrollable = utils.isDefined(scrollable);
+          if (forPresentation) {
+            ct = (
+              hasScrollable ? scrollable : this.selectorArea
+            ).innerText.trim();
+          } else {
+            ct = (
+              hasScrollable ? scrollable : this.selectorArea
+            ).textContent.trim();
+          }
+        }
         showExtraElements(this.selectorArea, true);
         return ct;
       },
-      initEvents: function () {
-        // event delegation
-        if (this.selectorArea != null) {
-          let control = this;
-          this.textArea.addEventListener(
-            "click",
-            function (e) {
-              e.stopPropagation();
-              let target = e.target;
-              if (isDeleteButton(target)) {
-                control.labelDeleteHandler(e);
-                control.updateMarkAllCheckboxes();
-              } else if (isLabel(target)) {
-                if (control.allowSelectingLabels) {
-                  let $target = $(target);
-                  if (
-                    $target.prop("in_relation") &&
-                    !$target.prop("multiple_possible_relations")
-                  ) {
-                    control.showRelationGraph(
-                      parseInt(
-                        target.querySelector('[data-m="r"]').textContent,
-                        10
-                      )
-                    );
-                  } else if (!window.getSelection().toString()) {
-                    if (
-                      target.classList.contains("active") &&
-                      $target.prop("selected")
-                    ) {
-                      target.classList.remove("active");
-                      $target.prop("selected", false);
-                      $target.prop("ts", null);
-                    } else {
-                      target.classList.add("active");
-                      $target.prop("ts", Date.now());
-                      $target.prop("selected", true);
-                    }
-                  }
-                }
-              } else if (target.hasAttribute("data-rel")) {
-                control.showRelationGraph(
-                  parseInt(target.getAttribute("data-rel"), 10)
-                );
-              }
-            },
-            false
-          );
-
-          let deselectActionBtn;
-          if (utils.isDefined(this.actionsArea))
-            deselectActionBtn = this.actionsArea.querySelector(
-              "#deselectAllMarkers"
-            );
-
-          if (utils.isDefined(deselectActionBtn))
-            deselectActionBtn.addEventListener("click", function () {
-              control.textArea
-                .querySelectorAll(LABEL_CSS_SELECTOR)
-                .forEach((x) => x.classList.remove("active"));
-            });
-
-          this.selectorArea.addEventListener(
-            "mouseover",
-            function (e) {
-              let target = e.target;
-              if (isLabel(target)) {
-                if (labelerModule.allowSelectingLabels) {
-                  e.stopPropagation();
-                  if (target.classList.contains("tag"))
-                    if (!$(target).prop("selected")) {
-                      target.classList.add("active");
-                      $(
-                        '[data-i="' + target.getAttribute("data-i") + '"]'
-                      ).addClass("active");
-                    } else if (!$(target.parentNode).prop("selected")) {
-                      target.parentNode.classList.add("active");
-                      $(
-                        '[data-i="' +
-                          target.parentNode.getAttribute("data-i") +
-                          '"]'
-                      ).addClass("active");
-                    }
-                }
-              }
-            },
-            false
-          );
-
-          this.selectorArea.addEventListener(
-            "mouseout",
-            function (e) {
-              let target = e.target;
-              if (isLabel(target)) {
-                if (labelerModule.allowSelectingLabels) {
-                  e.stopPropagation();
-                  if (target.classList.contains("tag"))
-                    if (!$(target).prop("selected")) {
-                      target.classList.remove("active");
-                      $(
-                        '[data-i="' + target.getAttribute("data-i") + '"]'
-                      ).removeClass("active");
-                    } else if (!$(target.parentNode).prop("selected")) {
-                      target.parentNode.classList.remove("active");
-                      $(
-                        '[data-i="' +
-                          target.parentNode.getAttribute("data-i") +
-                          '"]'
-                      ).removeClass("active");
-                    }
-                }
-              }
-            },
-            false
-          );
-
-          // adding chunk if a piece of text was selected with a mouse
-          this.selectorArea.addEventListener(
-            "mouseup",
-            function (e) {
-              let isRightMB;
-              e = e || window.event;
-
-              if ("which" in e)
-                // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
-                isRightMB = e.which === 3;
-              else if ("button" in e)
-                // IE, Opera
-                isRightMB = e.button === 2;
-
-              if (!isRightMB) {
-                labelerModule.updateChunkFromSelection();
-              }
-            },
-            false
-          );
-
-          // TODO: might be potentially rewritten?
-          // adding chunk if a piece of text was selected with a keyboard
-          document.addEventListener(
-            "keyup",
-            function (e) {
-              let selection = window.getSelection();
-
-              if (selection && selection.anchorNode != null) {
-                let isArticleAncestor = isAncestor(
-                  selection.anchorNode,
-                  control.selectorArea
-                );
-
+      initTextAreaEvents: function () {
+        let control = this;
+        this.textArea.addEventListener(
+          "click",
+          function (e) {
+            e.stopPropagation();
+            let target = e.target;
+            if (isDeleteButton(target)) {
+              control.labelDeleteHandler(e);
+              control.updateMarkAllCheckboxes();
+            } else if (isLabel(target)) {
+              if (control.allowSelectingLabels) {
+                let $target = $(target);
                 if (
-                  e.shiftKey &&
-                  e.which >= 37 &&
-                  e.which <= 40 &&
-                  isArticleAncestor
+                  $target.prop("in_relation") &&
+                  !$target.prop("multiple_possible_relations")
                 ) {
-                  labelerModule.updateChunkFromSelection();
-                }
-              }
-              let s = String.fromCharCode(e.which).toUpperCase();
-              let shortcut = null;
-              if (s.trim()) {
-                if (e.shiftKey) {
-                  shortcut = document.querySelector(
-                    '[data-shortcut="SHIFT + ' + s + '"]'
+                  control.showRelationGraph(
+                    parseInt(
+                      target.querySelector('[data-m="r"]').textContent,
+                      10
+                    )
                   );
-                } else {
-                  shortcut = document.querySelector(
-                    '[data-shortcut="' + s + '"]'
-                  );
+                } else if (!window.getSelection().toString()) {
+                  if (
+                    target.classList.contains("active") &&
+                    $target.prop("selected")
+                  ) {
+                    target.classList.remove("active");
+                    $target.prop("selected", false);
+                    $target.prop("ts", null);
+                  } else {
+                    target.classList.add("active");
+                    $target.prop("ts", Date.now());
+                    $target.prop("selected", true);
+                  }
                 }
               }
-
-              if (shortcut != null) {
-                if (e.altKey && !e.shiftKey && !e.ctrlKey) {
-                  let input = shortcut.querySelector('input[type="checkbox"]');
-                  if (utils.isDefined(input)) {
-                    input.checked = !input.checked;
-                    const event = new Event("change", { bubbles: true });
-                    input.dispatchEvent(event);
-                  }
-                } else {
-                  shortcut.click();
-                }
-              }
-            },
-            false
-          );
-
-          if (utils.isDefined(this.markersArea)) {
-            this.markersArea.addEventListener(
-              "click",
-              function (e) {
-                let target = e.target;
-                if (target.nodeName != "INPUT") {
-                  let marker = getClosestMarker(target);
-
-                  if (utils.isDefined(marker)) {
-                    if (marker.getAttribute("data-scope") == "span") {
-                      let mmpi = control.markersArea.getAttribute("data-mmpi");
-                      control.mark(marker, mmpi);
-                      control.updateMarkAllCheckboxes();
-                    } else if (marker.getAttribute("data-scope") == "text") {
-                      control.select(marker);
-                    }
-                  }
-                } else if (target.getAttribute("type") == "radio") {
-                  if (!target.hasAttribute("required")) {
-                    let memoryInnerRb = control.checkedInnerRadio[target.name];
-                    if (
-                      utils.isDefined(memoryInnerRb) &&
-                      memoryInnerRb.checked
-                    ) {
-                      memoryInnerRb.checked = false;
-
-                      if (target.hasAttribute("data-group")) {
-                        let outerRadio = control.markersArea.querySelector(
-                          "#" + target.getAttribute("data-group")
-                        );
-
-                        // this will fire only when target.checked is true
-                        outerRadio.checked = memoryInnerRb.checked;
-                        delete control.checkedOuterRadio[outerRadio.name];
-                      }
-                      delete control.checkedInnerRadio[target.name];
-                    }
-
-                    let memoryOuterRb = control.checkedOuterRadio[target.name];
-                    if (
-                      utils.isDefined(memoryOuterRb) &&
-                      memoryOuterRb.checked
-                    ) {
-                      memoryOuterRb.checked = false;
-
-                      if (target.hasAttribute("data-for")) {
-                        let radioFor = target.getAttribute("data-for");
-
-                        if (
-                          utils.isDefined(control.checkedInnerRadio[radioFor])
-                        ) {
-                          control.checkedInnerRadio[radioFor].checked = false;
-                          delete control.checkedInnerRadio[radioFor];
-                        }
-                      }
-                      delete control.checkedOuterRadio[target.name];
-                    }
-                  }
-                }
-              },
-              false
-            );
-
-            this.markersArea.addEventListener(
-              "change",
-              function (e) {
+            } else if (target.hasAttribute("data-rel")) {
+              control.showRelationGraph(
+                parseInt(target.getAttribute("data-rel"), 10)
+              );
+            }
+          },
+          false
+        );
+      },
+      initSelectorAreaEvents: function () {
+        this.selectorArea.addEventListener(
+          "mouseover",
+          function (e) {
+            let target = e.target;
+            if (isLabel(target)) {
+              if (labelerModule.allowSelectingLabels) {
                 e.stopPropagation();
-                let target = e.target;
-                if (target.getAttribute("type") == "checkbox") {
-                  let marker = getClosestMarker(target);
-                  if (utils.isDefined(marker)) {
-                    control.selectorArea
-                      .querySelectorAll(
-                        '[data-s="' + marker.getAttribute("data-s") + '"]'
-                      )
-                      .forEach(function (x) {
-                        let $x = $(x);
-                        if (!$x.prop("in_relation") && !$x.prop("disabled")) {
-                          if (
-                            !target.checked &&
-                            x.classList.contains("active") &&
-                            $x.prop("selected")
-                          ) {
-                            x.classList.remove("active");
-                            $x.prop("selected", false);
-                          } else if (target.checked) {
-                            x.classList.add("active");
-                            $x.prop("selected", true);
-                          }
-                        }
-                      });
+                if (target.classList.contains("tag"))
+                  if (!$(target).prop("selected")) {
+                    target.classList.add("active");
+                    $(
+                      '[data-i="' + target.getAttribute("data-i") + '"]'
+                    ).addClass("active");
+                  } else if (!$(target.parentNode).prop("selected")) {
+                    target.parentNode.classList.add("active");
+                    $(
+                      '[data-i="' +
+                        target.parentNode.getAttribute("data-i") +
+                        '"]'
+                    ).addClass("active");
                   }
-                } else if (target.getAttribute("type") == "radio") {
-                  if (target.hasAttribute("data-for")) {
-                    let radioFor = target.getAttribute("data-for");
-                    let previousRadio = control.checkedOuterRadio[radioFor];
-                    if (
-                      utils.isDefined(previousRadio) &&
-                      previousRadio != target
-                    ) {
-                      // grab old outer checkbox and uncheck it
-                      previousRadio.checked = false;
-                    }
-                    // assign new outer checkbox
-                    control.checkedOuterRadio[radioFor] = target;
+              }
+            }
+          },
+          false
+        );
 
-                    if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
-                      control.checkedInnerRadio[radioFor].checked = false;
-                    }
-                    // this is to track unchecking
-                    control.checkedOuterRadio[target.name] = target;
-                  } else if (target.hasAttribute("data-group")) {
+        this.selectorArea.addEventListener(
+          "mouseout",
+          function (e) {
+            let target = e.target;
+            if (isLabel(target)) {
+              if (labelerModule.allowSelectingLabels) {
+                e.stopPropagation();
+                if (target.classList.contains("tag"))
+                  if (!$(target).prop("selected")) {
+                    target.classList.remove("active");
+                    $(
+                      '[data-i="' + target.getAttribute("data-i") + '"]'
+                    ).removeClass("active");
+                  } else if (!$(target.parentNode).prop("selected")) {
+                    target.parentNode.classList.remove("active");
+                    $(
+                      '[data-i="' +
+                        target.parentNode.getAttribute("data-i") +
+                        '"]'
+                    ).removeClass("active");
+                  }
+              }
+            }
+          },
+          false
+        );
+
+        // adding chunk if a piece of text was selected with a mouse
+        this.selectorArea.addEventListener(
+          "mouseup",
+          function (e) {
+            let isRightMB;
+            e = e || window.event;
+
+            if ("which" in e)
+              // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+              isRightMB = e.which === 3;
+            else if ("button" in e)
+              // IE, Opera
+              isRightMB = e.button === 2;
+
+            if (!isRightMB) {
+              labelerModule.updateChunkFromSelection();
+            }
+          },
+          false
+        );
+      },
+      initMarkerAreaOnClick: function () {
+        let control = this;
+        this.markersArea.addEventListener(
+          "click",
+          function (e) {
+            let target = e.target;
+            if (target.nodeName != "INPUT") {
+              let marker = getClosestMarker(target);
+
+              if (utils.isDefined(marker)) {
+                if (marker.getAttribute("data-scope") == "span") {
+                  let mmpi = control.markersArea.getAttribute("data-mmpi");
+                  control.mark(marker, mmpi);
+                  control.updateMarkAllCheckboxes();
+                } else if (marker.getAttribute("data-scope") == "text") {
+                  control.select(marker);
+                }
+              }
+            } else if (target.getAttribute("type") == "radio") {
+              if (!target.hasAttribute("required")) {
+                let memoryInnerRb = control.checkedInnerRadio[target.name];
+                if (utils.isDefined(memoryInnerRb) && memoryInnerRb.checked) {
+                  memoryInnerRb.checked = false;
+
+                  if (target.hasAttribute("data-group")) {
                     let outerRadio = control.markersArea.querySelector(
                       "#" + target.getAttribute("data-group")
                     );
 
                     // this will fire only when target.checked is true
-                    outerRadio.checked = target.checked;
-                    control.checkedOuterRadio[target.name] = outerRadio;
-                    control.checkedInnerRadio[target.name] = target;
-
-                    // this is to track unchecking
-                    control.checkedOuterRadio[outerRadio.name] = outerRadio;
-                  } else {
-                    control.checkedInnerRadio[target.name] = target;
+                    outerRadio.checked = memoryInnerRb.checked;
+                    delete control.checkedOuterRadio[outerRadio.name];
                   }
+                  delete control.checkedInnerRadio[target.name];
                 }
-              },
-              false
-            );
-          }
 
-          if (utils.isDefined(this.relationsArea)) {
-            this.relationsArea.addEventListener(
-              "click",
-              function (e) {
-                let relMarker = getClosestRelation(e.target);
+                let memoryOuterRb = control.checkedOuterRadio[target.name];
+                if (utils.isDefined(memoryOuterRb) && memoryOuterRb.checked) {
+                  memoryOuterRb.checked = false;
 
-                if (utils.isDefined(relMarker)) control.markRelation(relMarker);
-              },
-              false
-            );
-          }
+                  if (target.hasAttribute("data-for")) {
+                    let radioFor = target.getAttribute("data-for");
 
-          // editing & reviewing mode events
-          document.addEventListener(
-            "submit",
-            function (e) {
-              let $form = $(e.target);
-
-              let $main = $form.closest("nav").siblings("main");
-              $main.empty();
-              $main.append(
-                $(
-                  '<div class="lds-ring"><div></div><div></div><div></div><div></div></div>'
-                )
-              );
-              $main.addClass("has-text-centered");
-
-              if ($form.attr("id") == "editingSearchForm") {
-                e.preventDefault();
-                $.ajax({
-                  method: $form.method,
-                  url: $form.attr("action"),
-                  contentType: "application/json; charset=utf-8",
-                  dataType: "json",
-                  data: $form.serializeObject(),
-                  success: function (data) {
-                    let $editingBoard = $("#editingBoard");
-                    let $main = $editingBoard.find("main");
-                    $main.prop("innerHTML", data.template);
-                    $main.removeClass("has-text-centered");
-                    $editingBoard.attr("data-href", $form.attr("action"));
-                    labelerModule.fixUI();
-                  },
-                });
+                    if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
+                      control.checkedInnerRadio[radioFor].checked = false;
+                      delete control.checkedInnerRadio[radioFor];
+                    }
+                  }
+                  delete control.checkedOuterRadio[target.name];
+                }
               }
+            }
+          },
+          false
+        );
+      },
+      initMarkerAreaOnChange: function () {
+        let control = this;
+        this.markersArea.addEventListener(
+          "change",
+          function (e) {
+            e.stopPropagation();
+            let target = e.target;
+            if (target.getAttribute("type") == "checkbox") {
+              let marker = getClosestMarker(target);
+              if (utils.isDefined(marker)) {
+                control.selectorArea
+                  .querySelectorAll(
+                    '[data-s="' + marker.getAttribute("data-s") + '"]'
+                  )
+                  .forEach(function (x) {
+                    let $x = $(x);
+                    if (!$x.prop("in_relation") && !$x.prop("disabled")) {
+                      if (
+                        !target.checked &&
+                        x.classList.contains("active") &&
+                        $x.prop("selected")
+                      ) {
+                        x.classList.remove("active");
+                        $x.prop("selected", false);
+                      } else if (target.checked) {
+                        x.classList.add("active");
+                        $x.prop("selected", true);
+                      }
+                    }
+                  });
+              }
+            } else if (target.getAttribute("type") == "radio") {
+              if (target.hasAttribute("data-for")) {
+                let radioFor = target.getAttribute("data-for");
+                let previousRadio = control.checkedOuterRadio[radioFor];
+                if (utils.isDefined(previousRadio) && previousRadio != target) {
+                  // grab old outer checkbox and uncheck it
+                  previousRadio.checked = false;
+                }
+                // assign new outer checkbox
+                control.checkedOuterRadio[radioFor] = target;
+
+                if (utils.isDefined(control.checkedInnerRadio[radioFor])) {
+                  control.checkedInnerRadio[radioFor].checked = false;
+                }
+                // this is to track unchecking
+                control.checkedOuterRadio[target.name] = target;
+              } else if (target.hasAttribute("data-group")) {
+                let outerRadio = control.markersArea.querySelector(
+                  "#" + target.getAttribute("data-group")
+                );
+
+                // this will fire only when target.checked is true
+                outerRadio.checked = target.checked;
+                control.checkedOuterRadio[target.name] = outerRadio;
+                control.checkedInnerRadio[target.name] = target;
+
+                // this is to track unchecking
+                control.checkedOuterRadio[outerRadio.name] = outerRadio;
+              } else {
+                control.checkedInnerRadio[target.name] = target;
+              }
+            }
+          },
+          false
+        );
+      },
+      initMarkerAreaKeyboardEvents: function () {
+        // TODO: might be potentially rewritten?
+        // adding chunk if a piece of text was selected with a keyboard
+        let control = this;
+        document.addEventListener(
+          "keyup",
+          function (e) {
+            let target = e.target;
+
+            if (target.id == "goToPage" && e.keyCode == 13) {
+              document.querySelector('[data-page="#goToPage"]').click();
+              return;
+            }
+
+            let selection = window.getSelection();
+
+            if (selection && selection.anchorNode != null) {
+              let isArticleAncestor = isAncestor(
+                selection.anchorNode,
+                control.selectorArea
+              );
+
+              if (
+                e.shiftKey &&
+                e.which >= 37 &&
+                e.which <= 40 &&
+                isArticleAncestor
+              ) {
+                labelerModule.updateChunkFromSelection();
+              }
+            }
+            let s = String.fromCharCode(e.which).toUpperCase();
+            let shortcut = null;
+            if (s.trim()) {
+              if (e.shiftKey) {
+                shortcut = document.querySelector(
+                  '[data-shortcut="SHIFT + ' + s + '"]'
+                );
+              } else {
+                shortcut = document.querySelector(
+                  '[data-shortcut="' + s + '"]'
+                );
+              }
+            }
+
+            if (shortcut != null) {
+              if (e.altKey && !e.shiftKey && !e.ctrlKey) {
+                let input = shortcut.querySelector('input[type="checkbox"]');
+                if (utils.isDefined(input)) {
+                  input.checked = !input.checked;
+                  const event = new Event("change", { bubbles: true });
+                  input.dispatchEvent(event);
+                }
+              } else {
+                shortcut.click();
+              }
+            }
+          },
+          false
+        );
+      },
+      initMarkerAreaEvents: function () {
+        if (utils.isDefined(this.markersArea)) {
+          this.initMarkerAreaOnClick();
+          this.initMarkerAreaOnChange();
+          this.initMarkerAreaKeyboardEvents();
+        }
+      },
+      initRelationAreaEvents: function () {
+        if (utils.isDefined(this.relationsArea)) {
+          let control = this;
+          this.relationsArea.addEventListener(
+            "click",
+            function (e) {
+              let relMarker = getClosestRelation(e.target);
+
+              if (utils.isDefined(relMarker)) control.markRelation(relMarker);
             },
             false
           );
+        }
+      },
+      initEditingAndReviewingEvents: function () {
+        let control = this;
+        // editing & reviewing mode events
+        document.addEventListener(
+          "submit",
+          function (e) {
+            e.preventDefault();
 
-          document.addEventListener("click", function (e) {
-            let target = e.target,
-              closestBatch = getClosestBatch(target),
-              closestPsArea = getClosestPostSubmitArea(target);
+            let $form = $(e.target);
+            let data = $form.serializeObjectLists();
+            if (utils.hasProp(data, "random"))
+              data["random"] = data["random"][0];
 
-            if (target.tagName == "A" && target.hasAttribute("data-page")) {
+            let $main = $form.closest("nav").siblings("main");
+            $main.empty();
+            $main.append(
+              $(
+                '<div class="lds-ring"><div></div><div></div><div></div><div></div></div>'
+              )
+            );
+            $main.addClass("has-text-centered");
+
+            if ($form.attr("id") == "editingSearchForm") {
+              e.preventDefault();
+              $.ajax({
+                method: $form.method,
+                url: $form.attr("action"),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: data,
+                success: function (data) {
+                  let $editingBoard = $("#editingBoard");
+                  let $main = $editingBoard.find("main");
+                  $main.prop("innerHTML", data.template);
+                  $main.removeClass("has-text-centered");
+                  $editingBoard.attr("data-href", $form.attr("action"));
+                  labelerModule.fixUI();
+                },
+              });
+            }
+          },
+          false
+        );
+
+        document.addEventListener("click", function (e) {
+          let target = e.target,
+            closestBatch = getClosestBatch(target),
+            closestPsArea = getClosestPostSubmitArea(target);
+
+          if (target.tagName == "I") {
+            target = target.parentNode;
+            if (target.classList.contains("icon")) {
+              target = target.parentNode;
+            }
+          }
+
+          if (target.tagName == "A") {
+            e.preventDefault();
+            e.stopPropagation();
+            if (target.id == "addSearchClause") {
+              let esClauseTemplate = document.querySelector(
+                "#editingSearchClauseTemplate .field"
+              );
+              let clone = esClauseTemplate.cloneNode(true);
+              let settings = document.querySelector("#searchSettings form");
+              let submitSearchButton = settings.querySelector(
+                'input[type="submit"]'
+              );
+              settings.insertBefore(clone, submitSearchButton.parentNode);
+
+              if (utils.isDefined(control.ui.collapsibles)) {
+                control.ui.collapsibles.forEach(function (instance) {
+                  // bug fix
+                  instance._originalHeight =
+                    instance.element.scrollHeight + "px";
+                  instance.collapse();
+                  instance.expand();
+                });
+              }
+            } else if (target.getAttribute("data-action") == "removeClause") {
+              let fieldDiv = getClosestFormField(target);
+              if (utils.isDefined(fieldDiv)) fieldDiv.remove();
+            } else if (target.hasAttribute("data-page")) {
               // pagination events
               let mode = closestPsArea.getAttribute("data-mode");
               let searchForm = closestPsArea.querySelector(
                   "#" + mode + "SearchForm"
                 ),
                 searchData = {};
+              let page = target.getAttribute("data-page");
               if (utils.isDefined(searchForm))
-                searchData = $(searchForm).serializeObject();
+                searchData = $(searchForm).serializeObjectLists();
+
+              if (page == "#goToPage")
+                page = document.querySelector(page).value;
 
               $.ajax({
                 type: "GET",
-                url:
-                  closestPsArea.getAttribute("data-href") +
-                  "?p=" +
-                  target.getAttribute("data-page"),
+                url: closestPsArea.getAttribute("data-href") + "?p=" + page,
                 dataType: "json",
                 data: searchData,
                 success: function (d) {
-                  control.currentPage[mode] = target.getAttribute("data-page");
+                  control.currentPage[mode] = page;
                   if (d.partial) {
                     let mainPart = closestPsArea.querySelector("main");
                     mainPart.innerHTML = d.template;
@@ -1251,121 +1396,188 @@
                   }
 
                   control.fixUI();
+                  control.ui.collapsibles = null;
+                  control.ui.initCollapsibles();
                 },
                 error: function () {
                   console.log("Error while invoking editing mode!");
                 },
               });
-            } else if (utils.isDefined(closestBatch)) {
-              // clicked on one of the batches
-              let uuid = closestBatch.getAttribute("data-id"),
-                $psArea = $(closestPsArea),
-                $closestBatch = $(closestBatch);
+            }
+          } else if (utils.isDefined(closestBatch)) {
+            // clicked on one of the batches
+            let uuid = closestBatch.getAttribute("data-id"),
+              $psArea = $(closestPsArea),
+              $closestBatch = $(closestBatch);
 
-              let purposeNode = getClosestPurposeNode(target);
+            let purposeNode;
 
-              if (utils.isDefined(purposeNode)) {
-                let purpose = purposeNode.getAttribute("data-purpose");
-                if (purpose === "s") {
-                  // show batch
-                  let url = $psArea.attr("data-url"),
-                    $list = $('[id*="Board"] li'),
-                    clickedOnCurrent =
-                      $closestBatch.data("restored") !== undefined &&
-                      $closestBatch.data("restored");
+            if (isBatch(target)) {
+              purposeNode = target.querySelector("[data-purpose]");
+            } else {
+              purposeNode = getClosestPurposeNode(target);
+            }
 
-                  $list.find('[data-purpose="s"]').removeClass("is-hovered");
-                  if (clickedOnCurrent) {
-                    $closestBatch.data("restored", false);
-                    control.restoreOriginal();
-                    control.clearBatch();
-                  } else {
-                    purposeNode.classList.add("is-hovered");
-                    $list.each(
-                      (i, n) =>
-                        void (
-                          $(n).data("restored") !== undefined &&
-                          $(n).data("restored", false)
-                        )
-                    );
-                    // The code above is a shorthand for this code below. Note that `void` is necessary to force expression to be evaluated
-                    // and return `undefined` at the end.
-                    // $list.each(function(i, n) {
-                    //   if ($(n).data('restored') !== undefined) {
-                    //     $(n).data('restored', false);
-                    //   }
-                    // });
-                    if (utils.isDefined(uuid) && utils.isDefined(url)) {
-                      control.restoreBatch(uuid, url);
-                    }
-                    $closestBatch.data("restored", true);
+            if (utils.isDefined(purposeNode)) {
+              let purpose = purposeNode.getAttribute("data-purpose");
+              if (purpose === "s") {
+                // show batch
+                let url = $psArea.attr("data-url"),
+                  $list = $('[id*="Board"] li'),
+                  clickedOnCurrent =
+                    $closestBatch.data("restored") !== undefined &&
+                    $closestBatch.data("restored");
+
+                $list.find('[data-purpose="s"]').removeClass("is-hovered");
+                if (clickedOnCurrent) {
+                  $closestBatch.data("restored", false);
+                  control.restoreOriginal();
+                  control.clearBatch();
+                } else {
+                  purposeNode.classList.add("is-hovered");
+                  $list.each(
+                    (i, n) =>
+                      void (
+                        $(n).data("restored") !== undefined &&
+                        $(n).data("restored", false)
+                      )
+                  );
+                  // The code above is a shorthand for this code below. Note that `void` is necessary to force expression to be evaluated
+                  // and return `undefined` at the end.
+                  // $list.each(function(i, n) {
+                  //   if ($(n).data('restored') !== undefined) {
+                  //     $(n).data('restored', false);
+                  //   }
+                  // });
+                  if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                    control.restoreBatch(uuid, url);
                   }
-                } else if (purpose === "f") {
-                  // flag a batch as problematic
-                  let url = $psArea.attr("data-flag-url"),
-                    csrf = purposeNode.querySelector(
-                      'input[name="csrfmiddlewaretoken"]'
-                    ),
-                    batchButton =
-                      closestBatch.querySelector('[data-purpose="s"]');
+                  $closestBatch.data("restored", true);
+                }
+              } else if (purpose === "f") {
+                // flag a batch as problematic
+                let url = $psArea.attr("data-flag-url"),
+                  csrf = purposeNode.querySelector(
+                    'input[name="csrfmiddlewaretoken"]'
+                  ),
+                  batchButton =
+                    closestBatch.querySelector('[data-purpose="s"]');
 
-                  if (closestBatch.hasAttribute("data-flagged")) {
-                    if (closestBatch.getAttribute("data-flagged") == "true") {
-                      // unflag
-                      if (utils.isDefined(uuid) && utils.isDefined(url)) {
-                        control.changeBatchFlag(
-                          uuid,
-                          url,
-                          false,
-                          csrf.value,
-                          function () {
-                            batchButton.classList.remove("is-danger");
-                            if (
-                              closestPsArea.getAttribute("data-mode") ==
-                              "editing"
-                            )
-                              batchButton.classList.add("is-link");
-                            else if (
-                              closestPsArea.getAttribute("data-mode") ==
-                              "reviewing"
-                            )
-                              batchButton.classList.add("is-dark");
-                            closestBatch.setAttribute("data-flagged", false);
-                            purposeNode.classList.remove("is-active");
-                          }
-                        );
-                      }
-                    } else {
-                      // flag!!!
-                      if (utils.isDefined(uuid) && utils.isDefined(url)) {
-                        control.changeBatchFlag(
-                          uuid,
-                          url,
-                          true,
-                          csrf.value,
-                          function () {
-                            batchButton.classList.add("is-danger");
-                            if (
-                              closestPsArea.getAttribute("data-mode") ==
-                              "editing"
-                            )
-                              batchButton.classList.remove("is-link");
-                            else if (
-                              closestPsArea.getAttribute("data-mode") ==
-                              "reviewing"
-                            )
-                              batchButton.classList.remove("is-dark");
-                            closestBatch.setAttribute("data-flagged", true);
-                            purposeNode.classList.add("is-active");
-                          }
-                        );
-                      }
+                if (closestBatch.hasAttribute("data-flagged")) {
+                  if (closestBatch.getAttribute("data-flagged") == "true") {
+                    // unflag
+                    if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                      control.changeBatchFlag(
+                        uuid,
+                        url,
+                        false,
+                        csrf.value,
+                        function () {
+                          batchButton.classList.remove("is-danger");
+                          if (
+                            closestPsArea.getAttribute("data-mode") == "editing"
+                          )
+                            batchButton.classList.add("is-link");
+                          else if (
+                            closestPsArea.getAttribute("data-mode") ==
+                            "reviewing"
+                          )
+                            batchButton.classList.add("is-dark");
+                          closestBatch.setAttribute("data-flagged", false);
+                          purposeNode.classList.remove("is-active");
+                        }
+                      );
+                    }
+                  } else {
+                    // flag!!!
+                    if (utils.isDefined(uuid) && utils.isDefined(url)) {
+                      control.changeBatchFlag(
+                        uuid,
+                        url,
+                        true,
+                        csrf.value,
+                        function () {
+                          batchButton.classList.add("is-danger");
+                          if (
+                            closestPsArea.getAttribute("data-mode") == "editing"
+                          )
+                            batchButton.classList.remove("is-link");
+                          else if (
+                            closestPsArea.getAttribute("data-mode") ==
+                            "reviewing"
+                          )
+                            batchButton.classList.remove("is-dark");
+                          closestBatch.setAttribute("data-flagged", true);
+                          purposeNode.classList.add("is-active");
+                        }
+                      );
                     }
                   }
                 }
               }
             }
+          }
+        });
+      },
+      initInteractiveDataAreaEvents: function () {
+        if (this.interactiveDataArea != null) {
+          let control = this;
+          this.interactiveDataArea.addEventListener("input", function (e) {
+            let target = e.target;
+            control.selectorArea.innerHTML = target.value.replace(
+              /\n/gi,
+              "<br>"
+            );
+
+            if (target.value.length === 0) {
+              control.selectorArea.innerHTML = "No input";
+            }
+            control.restart();
           });
+        }
+      },
+      initEvents: function () {
+        // event delegation
+        if (this.selectorArea != null) {
+          let control = this;
+
+          this.initTextAreaEvents();
+
+          let deselectActionBtn;
+          let unmarkActionBtn;
+          if (utils.isDefined(this.actionsArea)) {
+            deselectActionBtn = this.actionsArea.querySelector(
+              "#deselectAllMarkers"
+            );
+            unmarkActionBtn =
+              this.actionsArea.querySelector("#removeAllMarkers");
+          }
+
+          if (utils.isDefined(deselectActionBtn)) {
+            deselectActionBtn.addEventListener("click", function () {
+              control.textArea
+                .querySelectorAll(LABEL_CSS_SELECTOR)
+                .forEach((x) => x.classList.remove("active"));
+            });
+          }
+
+          if (utils.isDefined(unmarkActionBtn)) {
+            unmarkActionBtn.addEventListener("click", function () {
+              control.selectorArea
+                .querySelectorAll("span.tag button.delete")
+                .forEach(function (x) {
+                  x.click();
+                });
+            });
+          }
+
+          this.initSelectorAreaEvents();
+
+          this.initMarkerAreaEvents();
+          this.initRelationAreaEvents();
+
+          this.initEditingAndReviewingEvents();
+          this.initInteractiveDataAreaEvents();
         }
       },
       register: function (plugin, label) {
@@ -1375,7 +1587,8 @@
           this.contextMenuPlugins[label] = {};
         if (plugin.storeFor == "relation") {
           if (
-            !this.contextMenuPlugins["sharedBetweenMarkers"].hasOwnProperty(
+            !utils.hasProp(
+              this.contextMenuPlugins["sharedBetweenMarkers"],
               plugin.name
             )
           )
@@ -1479,7 +1692,7 @@
         chunk["submittable"] = true; // whether it is possible to submit
         chunk["independent"] = marker.getAttribute("data-indep") === "true";
         chunk["start"] = previousTextLength(node, false);
-        chunk["end"] = chunk["start"] + node.textContent.length;
+        chunk["end"] = chunk["start"] + getNodeLength(node);
         chunks.push(chunk);
       },
       updateChunkFromSelection: function () {
@@ -1576,7 +1789,7 @@
             } else if (group[0].startContainer.nodeType === 3) {
               // means it's a text node, so the offset is the number of chars
               let startOffset = group[0].startOffset;
-              let startContLength = group[0].startContainer.textContent.length;
+              let startContLength = getNodeLength(group[0].startContainer);
 
               if (startOffset == startContLength) {
                 let startNode = findStartNode(group[0].startContainer);
@@ -1589,7 +1802,7 @@
               let endOffset = group[0].endOffset;
               let endNode = group[0].endContainer.childNodes[endOffset];
               let startOffset = group[0].startOffset;
-              let startContLength = group[0].startContainer.textContent.length;
+              let startContLength = getNodeLength(group[0].startContainer);
 
               if (isDeleteButton(endNode) && startOffset == startContLength) {
                 // effectively collapsed selection, because it starts at the end of the
@@ -1611,7 +1824,7 @@
                   if (endOffset - 1 >= 0) {
                     endNode =
                       group[N - 1].endContainer.childNodes[endOffset - 1];
-                    group[N - 1].setEnd(endNode, endNode.textContent.length);
+                    group[N - 1].setEnd(endNode, getNodeLength(endNode));
                   } else {
                     endNode = group[N - 1].endContainer.previousSibling;
                     if (!utils.isDefined(endNode)) continue;
@@ -1621,7 +1834,7 @@
             } else if (group[N - 1].endContainer.nodeType === 3) {
               // means it's a text node, so the offset is the number of chars
               let endOffset = group[N - 1].endOffset;
-              let endContLength = group[N - 1].endContainer.textContent.length;
+              let endContLength = getNodeLength(group[N - 1].endContainer);
 
               if (
                 endOffset == endContLength &&
@@ -1640,10 +1853,7 @@
                     // then just set the end after this start container or at the end of
                     // its text node
                     if (startNode.nodeType === 3)
-                      group[N - 1].setEnd(
-                        startNode,
-                        startNode.textContent.length
-                      );
+                      group[N - 1].setEnd(startNode, getNodeLength(startNode));
                     else if (startNode.nodeType === 1)
                       group[N - 1].setEndAfter(startNode);
                   } else {
@@ -1670,7 +1880,7 @@
                       if (startNode.nodeType === 3)
                         group[N - 1].setEnd(
                           startNode,
-                          startNode.textContent.length
+                          getNodeLength(startNode)
                         );
                       else if (startNode.nodeType === 1)
                         group[N - 1].setEndAfter(startNode);
@@ -1713,7 +1923,9 @@
             chunk["start"] = chunk["range"].startOffset;
             chunk["end"] =
               chunk["start"] +
-              group.map(getSelectionLength).reduce((a, b) => a + b, 0);
+              group.map(getRangeLength).reduce((a, b) => a + b, 0);
+            //group.map(getSelectionLength).reduce((a, b) => a + b, 0);
+            // range.toString() does not maintain newlines at all, so we
 
             chunk["marked"] = false;
             chunk["label"] = null;
@@ -1739,7 +1951,6 @@
       },
       mark: function (obj, max_markers) {
         // if there were problems with latest selection, we might want to try updating it!
-        let control = this;
         if (chunks.length > 0 && activeLabels < max_markers) {
           let chunk = this.getActiveChunk();
 
@@ -1772,7 +1983,7 @@
                 nodeAfterEnd = end.nextSibling;
               if (nodeAfterEnd != null) {
                 // means we're at the delete button
-                if (chunk["range"].endOffset == end.textContent.length) {
+                if (chunk["range"].endOffset == getNodeLength(end)) {
                   let start = chunk["range"].startContainer,
                     originalText = end.textContent,
                     startOffset = start == end ? chunk["range"].startOffset : 0,
@@ -2494,7 +2705,7 @@
       },
       updateRelationSwitcher: function (x, relationId, removeId) {
         let relSpan = undefined;
-        if (x.hasOwnProperty("dom")) relSpan = x.dom.querySelector("[data-m]");
+        if (utils.hasProp(x, "dom")) relSpan = x.dom.querySelector("[data-m]");
         else relSpan = x.querySelector("[data-m]");
 
         if (removeId < 0) removeId = undefined;
@@ -2521,7 +2732,7 @@
               relSpan.textContent = rr.length > 1 ? "+" : rr[0];
             else {
               relSpan.textContent = "";
-              let $x = $(x.hasOwnProperty("dom") ? x.dom : x);
+              let $x = $(utils.hasProp(x, "dom") ? x.dom : x);
               $x.prop("in_relation", false);
               $x.attr("id", "");
               $(relSpan).remove();
@@ -2547,7 +2758,7 @@
             relSpan._tippy.destroy();
           }
 
-          const instance = tippy(relSpan, {
+          tippy(relSpan, {
             content: content,
             interactive: true,
             placement: "bottom",
@@ -2659,7 +2870,7 @@
               checkForMultiplePossibleRelations(control.relationsArea, s)
             );
 
-            if (!nodes.hasOwnProperty(s)) {
+            if (!utils.hasProp(nodes, s)) {
               nodes[s] = [];
             }
             nodes[s].push({
@@ -2677,7 +2888,7 @@
                 otherNodes = relations[newRelationId].d3.nodes;
 
               for (let ons in otherNodes) {
-                if (!nodes.hasOwnProperty(ons)) nodes[ons] = [];
+                if (!utils.hasProp(nodes, ons)) nodes[ons] = [];
 
                 if (ons == s) {
                   for (let i in otherNodes[ons]) {
@@ -2731,14 +2942,14 @@
                 continue;
               }
 
-              if (!sketch.nodes.hasOwnProperty(between[i][from]))
+              if (!utils.hasProp(sketch.nodes, between[i][from]))
                 sketch.nodes[between[i][from]] = [];
               sketch.nodes[between[i][from]].push.apply(
                 sketch.nodes[between[i][from]],
                 nodes[between[i][from]]
               );
               if (nodes[between[i][from]] != nodes[between[i][to]]) {
-                if (!sketch.nodes.hasOwnProperty(between[i][to]))
+                if (!utils.hasProp(sketch.nodes, between[i][to]))
                   sketch.nodes[between[i][to]] = [];
                 sketch.nodes[between[i][to]].push.apply(
                   sketch.nodes[between[i][to]],
@@ -2781,7 +2992,7 @@
               j += sketches[i].nodes[key].length;
             }
 
-            if (relations.hasOwnProperty(newRelationId)) {
+            if (utils.hasProp(relations, newRelationId)) {
               for (let k in sketches[i].nodes) {
                 let nn = sketches[i].nodes[k];
                 for (let a = 0, len_a = nn.length; a < len_a; a++) {
@@ -2791,7 +3002,7 @@
                       nn[a]
                     )
                   ) {
-                    if (!relations[newRelationId].d3.nodes.hasOwnProperty(k))
+                    if (!utils.hasProp(relations[newRelationId].d3.nodes, k))
                       relations[newRelationId].d3.nodes[k] = [];
                     relations[newRelationId].d3.nodes[k].push(nn[a]);
                   }
@@ -3274,7 +3485,7 @@
                 ? x.name.replace("_ocat", "")
                 : x.name;
               if (x.hasAttribute("data-h")) {
-                if (radioButtons.hasOwnProperty(name)) {
+                if (utils.hasProp(radioButtons, name)) {
                   radioButtons[name].value += getRadioButtonValue(x);
                 } else {
                   radioButtons[name] = {
@@ -3283,7 +3494,7 @@
                   };
                 }
               } else {
-                if (radioButtons.hasOwnProperty(name)) {
+                if (utils.hasProp(radioButtons, name)) {
                   radioButtons[name] += getRadioButtonValue(x);
                 } else {
                   radioButtons[name] = getRadioButtonValue(x);
@@ -3296,7 +3507,7 @@
             .filter((i, x) => x.checked)
             .each(function (i, x) {
               // simulate serializeHashedObject here
-              if (!checkBoxes.hasOwnProperty(x.name)) {
+              if (!utils.hasProp(checkBoxes, x.name)) {
                 if (x.hasAttribute("data-h"))
                   checkBoxes[x.name] = {
                     hash: x.getAttribute("data-h"),
@@ -3325,7 +3536,7 @@
           sharedRelPlugins = {};
         for (let p in this.contextMenuPlugins["sharedBetweenMarkers"]) {
           let cp = this.contextMenuPlugins["sharedBetweenMarkers"][p];
-          if (cp.hasOwnProperty("storeFor")) {
+          if (utils.hasProp(cp, "storeFor")) {
             if (cp.storeFor == "label") {
               sharedLabelPlugins[p] = cp;
             } else if (cp.storeFor == "relation") {
@@ -3335,7 +3546,7 @@
         }
 
         for (let i = 0, len = submittableChunks.length; i < len; i++) {
-          if (!submittableChunks[i].hasOwnProperty("extra"))
+          if (!utils.hasProp(submittableChunks[i], "extra"))
             submittableChunks[i]["extra"] = {};
           let plugins = this.contextMenuPlugins[submittableChunks[i].label];
 
@@ -3509,8 +3720,7 @@
       restoreMarkedSpan: function (
         nodeStart,
         nodeEnd,
-        spanLabels,
-        labelId,
+        spanLabel,
         subValueStart,
         subValueEnd
       ) {
@@ -3521,7 +3731,7 @@
           let childLen = nodeStart.childNodes.length;
 
           for (let idx = 0; idx < childLen - 2; idx++) {
-            let diffLen = nodeStart.childNodes[idx].textContent.length;
+            let diffLen = getNodeLength(nodeStart.childNodes[idx]);
             subValueStart += diffLen;
             subValueEnd += diffLen;
           }
@@ -3530,65 +3740,113 @@
           nodeEnd = nodeEnd.childNodes[childLen - 2];
         }
 
-        let rStart = spanLabels[labelId]["start"] - subValueStart;
-        let rEnd = spanLabels[labelId]["end"] - subValueEnd;
+        let rStart = spanLabel["start"] - subValueStart;
+        let rEnd = spanLabel["end"] - subValueEnd;
 
-        if (rEnd > nodeEnd.textContent.length) {
+        if (rEnd > getNodeLength(nodeEnd)) {
           console.error(
             "Restoration Error: attempting to mark a span that is larger than the available size"
           );
-          return false;
+          return {
+            isRestored: false,
+            offStart: rStart,
+            offEnd: rEnd,
+          };
         }
 
         if (rStart < 0) {
           console.error(
             "Restoration Error: attempting to mark a span that starts before the given text node"
           );
-          return false;
+          return {
+            isRestored: false,
+            offStart: rStart,
+            offEnd: rEnd,
+          };
         }
 
-        if (rEnd - rStart < 0) {
+        if (nodeStart == nodeEnd && rEnd - rStart < 0) {
           console.error(
             "Restoration Error: attempting to mark a span of size " +
               (rEnd - rStart)
           );
-          return false;
+          return {
+            isRestored: false,
+            offStart: rStart,
+            offEnd: rEnd,
+          };
         }
 
+        if (nodeStart.tagName == "BR") nodeStart = nodeStart.nextSibling;
+
         range.setStart(nodeStart, rStart);
-        range.setEnd(nodeEnd, rEnd);
+        if (
+          isScrollablePart(nodeStart.parentNode) &&
+          nodeStart.parentNode != nodeEnd.parentNode
+        ) {
+          // means the label is at the end of the scrollable part
+          let scrollableChildren = nodeStart.parentNode.childNodes;
+          nodeEnd = scrollableChildren[scrollableChildren.length - 1];
+          range.setEndAfter(nodeEnd);
+        } else {
+          range.setEnd(nodeEnd, rEnd);
+        }
 
         window.getSelection().addRange(range);
         this.updateChunkFromSelection();
 
         let activeChunk = this.getActiveChunk();
-        activeChunk["hash"] = spanLabels[labelId]["hash"];
+        activeChunk["hash"] = spanLabel["hash"];
         activeChunk["updated"] = false;
 
-        let code = spanLabels[labelId]["marker"]["code"],
+        let code = spanLabel["marker"]["code"],
           mmpi = this.markersArea.getAttribute("data-mmpi");
         this.mark(
           this.markersArea.querySelector('.marker[data-s="' + code + '"]'),
           mmpi
         );
 
-        if (spanLabels[labelId].undone) {
+        if (spanLabel.undone) {
           this.disableChunk(this.getActiveChunk());
         }
-        return true;
+        return {
+          isRestored: true,
+          offStart: rStart,
+          offEnd: rEnd,
+        };
       },
-      getOverlappingSpans: function (state, spanLabels) {
+      checkFutureOverlap: function (state) {
+        return state.spanLabels
+          .filter(
+            (x) =>
+              !utils.hasProp(state.processed, x) || !state.processed[x].closed
+          )
+          .map(function (x) {
+            let s1 = state.spanLabels[state.curLabelId],
+              s2 = x;
+            return (
+              (s1["start"] >= s2["start"] && s1["end"] <= s2["end"]) ||
+              (s2["start"] >= s1["start"] && s2["end"] <= s1["end"]) ||
+              (s1["start"] <= s2["end"] && s2["start"] <= s1["start"]) ||
+              (s2["start"] <= s1["end"] && s1["start"] <= s2["start"])
+            );
+          })
+          .some((x) => x);
+      },
+      getOverlappingSpans: function (state) {
         return state.processed.map(function (x) {
-          let s1 = spanLabels[state.curLabelId],
-            s2 = spanLabels[x["id"]];
+          let s1 = state.spanLabels[state.curLabelId],
+            s2 = state.spanLabels[x["id"]];
           return (
             (s1["start"] >= s2["start"] && s1["end"] <= s2["end"]) ||
-            (s2["start"] >= s1["start"] && s2["end"] <= s1["end"])
+            (s2["start"] >= s1["start"] && s2["end"] <= s1["end"]) ||
+            (s1["start"] <= s2["end"] && s2["start"] <= s1["start"]) ||
+            (s2["start"] <= s1["end"] && s1["start"] <= s2["start"])
           );
         });
       },
-      updateProcessed: function (state, spanLabels, isMultiParagraph) {
-        let areOverlapping = this.getOverlappingSpans(state, spanLabels),
+      updateProcessed: function (state, isMultiParagraph) {
+        let areOverlapping = this.getOverlappingSpans(state, state.spanLabels),
           numOverlapping = areOverlapping.reduce((a, b) => a + b, 0);
 
         if (!utils.isDefined(isMultiParagraph)) isMultiParagraph = false;
@@ -3604,36 +3862,96 @@
           level: numOverlapping,
         };
       },
-      getTextNodeLength: function (node) {
-        let cLength = node.textContent.length;
-        if (cLength === 0 && node.tagName === "BR") cLength = 1;
-        return cLength;
-      },
-      getClosestTextNode: function (cnodes, id, spanLabels, labelId, iAcc) {
+      getClosestTextNode: function (
+        curNode,
+        spanLabel,
+        checkStart,
+        prevLength
+      ) {
+        if (!utils.isDefined(curNode))
+          return {
+            node: null,
+            acc: prevLength,
+            errors: 1,
+          };
+
         // this operates within paragraph only!
-        let control = this;
-        let textNode = cnodes[id];
-        let cLength = this.getTextNodeLength(textNode);
+        let cLength = getNodeLength(curNode);
         let errors = 0;
 
-        let cAcc = iAcc;
-        while (
-          textNode !== null &&
-          cAcc + cLength <= spanLabels[labelId]["start"]
+        if (!utils.isDefined(checkStart)) checkStart = true;
+
+        let cAcc = prevLength;
+        let prevNode;
+        if (
+          (checkStart && cAcc + cLength > spanLabel["start"]) ||
+          (!checkStart && cAcc + cLength >= spanLabel["end"])
         ) {
+          // if we are already in a suitable node, try to tighten the circle
+          while (
+            curNode !== null &&
+            ((checkStart && cAcc + cLength > spanLabel["start"]) ||
+              (!checkStart && cAcc + cLength >= spanLabel["end"]))
+          ) {
+            prevNode = curNode;
+            curNode = curNode.previousSibling;
+            cLength = utils.isDefined(curNode) ? getNodeLength(curNode) : null;
+            cAcc -= cLength;
+          }
           cAcc += cLength;
-          textNode = textNode.nextSibling;
-          cLength = control.getTextNodeLength(textNode);
+          curNode = prevNode;
+        } else {
+          // if we are not yet, go further to find one
+          while (
+            curNode !== null &&
+            ((checkStart && cAcc + cLength <= spanLabel["start"]) ||
+              (!checkStart && cAcc + cLength < spanLabel["end"]))
+          ) {
+            cAcc += cLength;
+            prevNode = curNode;
+            curNode = curNode.nextSibling;
+            cLength = utils.isDefined(curNode) ? getNodeLength(curNode) : null;
+          }
         }
 
-        if (textNode === null) {
-          console.error(
-            "Restoration Error: reached the end of the markable, while trying to find the closest text node"
+        if (curNode === null) {
+          let parNode = prevNode.parentNode;
+          if (
+            utils.isDefined(parNode) &&
+            utils.isDefined(parNode.nextSibling)
+          ) {
+            return this.getClosestTextNode(
+              parNode.nextSibling,
+              spanLabel,
+              checkStart,
+              cAcc
+            );
+          } else {
+            console.error(
+              "Unrecoverable Restoration Error: reached the end of the markable, while trying to find the closest text node"
+            );
+            errors++;
+          }
+        }
+
+        if (
+          utils.isDefined(curNode) &&
+          curNode.nodeType == 1 &&
+          curNode.childNodes.length > 0
+        ) {
+          // we are inside the label, find the closest text node inside
+          // so the label might end up being an overlapping one,
+          // hence find the text node inside the label that fits the best
+          return this.getClosestTextNode(
+            curNode.childNodes[0],
+            spanLabel,
+            checkStart,
+            cAcc
           );
         }
 
         return {
-          node: textNode,
+          node: curNode,
           acc: cAcc,
           errors: errors,
         };
@@ -3724,8 +4042,208 @@
           }
         }
       },
+      flattenNodes: function (cnodes) {
+        let flatCnodes = [],
+          acceptClassNames = ["scrollable"],
+          skipClassNames = ["pinned"];
+        for (let i = 0, len = cnodes.length; i < len; i++) {
+          if (skipClassNames.includes(cnodes[i].className)) continue;
+          if (
+            cnodes[i].tagName === "DIV" &&
+            acceptClassNames.includes(cnodes[i].className)
+          ) {
+            for (let j = 0, len2 = cnodes[i].childNodes.length; j < len2; j++) {
+              flatCnodes.push(cnodes[i].childNodes[j]);
+            }
+          }
+        }
+        return flatCnodes;
+      },
+      restoreMultipMarkers: function (state) {
+        let cId = state.cnodeId;
+        let control = this;
+        let keys2del = [];
+        for (let candLabelId in state.multip) {
+          let atTheEnd = state.multip[candLabelId].renderAtTheEnd;
+          if (
+            utils.isDefined(atTheEnd) &&
+            atTheEnd &&
+            cId < state.totalNodes - 1
+          )
+            continue;
+          if (
+            state.acc + state.cnodeLength >=
+              state.spanLabels[candLabelId]["end"] ||
+            (atTheEnd && cId >= state.totalNodes - 1)
+          ) {
+            // if the candLabelId label ends within this paragraph,
+            // we found the suitable paragraph to render it!
+            let multiData = state.multip[candLabelId],
+              startInfo = multiData["start"],
+              hasRestored = false,
+              restoredInfo = null,
+              startSearchRes,
+              endSearchRes;
+
+            if (!state.processed[candLabelId].closed) {
+              // TODO: return here
+              startSearchRes = control.getClosestTextNode(
+                atTheEnd
+                  ? control.selectorArea.childNodes[0]
+                  : state.cnodes[startInfo["nodeId"]],
+                state.spanLabels[candLabelId],
+                true,
+                atTheEnd ? 0 : startInfo["acc"]
+              );
+              endSearchRes = control.getClosestTextNode(
+                atTheEnd
+                  ? control.selectorArea.childNodes[0]
+                  : state.cnodes[cId],
+                state.spanLabels[candLabelId],
+                false,
+                atTheEnd ? 0 : state.acc
+              );
+              state.errors += startSearchRes.errors + endSearchRes.errors;
+
+              restoredInfo = control.restoreMarkedSpan(
+                startSearchRes.node,
+                endSearchRes.node,
+                state.spanLabels[candLabelId],
+                startSearchRes.acc,
+                endSearchRes.acc
+              );
+              hasRestored = restoredInfo.isRestored;
+            }
+
+            if (hasRestored || state.processed[candLabelId].closed) {
+              if (hasRestored) {
+                state.c2i[candLabelId] = control.getActiveChunk().id;
+                state.processed[candLabelId].closed = true;
+                state.numInner[cId]++;
+              }
+              keys2del.push(candLabelId);
+
+              for (let dId in multiData.delayed) {
+                // need to re-select tagItem on account of
+                // having added new spans in the previous iteration
+                let dInfo = multiData.delayed[dId];
+
+                if (state.processed[dInfo.id].closed) continue;
+
+                let tagItem = document.querySelector(
+                  'span.tag[data-i="' + state.c2i[candLabelId] + '"]'
+                );
+                let prevLength = previousTextLength(tagItem.childNodes[0]);
+
+                let dStartRes = control.getClosestTextNode(
+                  tagItem.childNodes[0],
+                  state.spanLabels[dInfo.id],
+                  true,
+                  prevLength
+                );
+                let dEndRes = control.getClosestTextNode(
+                  tagItem.childNodes[0],
+                  state.spanLabels[dInfo.id],
+                  false,
+                  prevLength
+                );
+                state.errors += dStartRes.errors + dEndRes.errors;
+
+                if (
+                  utils.isDefined(dStartRes.node) &&
+                  utils.isDefined(dEndRes.node)
+                ) {
+                  let restoredInfo = control.restoreMarkedSpan(
+                    dStartRes.node,
+                    dEndRes.node,
+                    state.spanLabels[dInfo.id],
+                    dStartRes.acc,
+                    dEndRes.acc
+                  );
+
+                  if (restoredInfo.isRestored) {
+                    state.c2i[dInfo.id] = control.getActiveChunk().id;
+
+                    state.processed[dInfo.id].closed = true;
+                  } else {
+                    state.likelyErrors++;
+                  }
+                } else {
+                  state.likelyErrors++;
+                }
+              }
+            } else {
+              state.likelyErrors++;
+            }
+          }
+        }
+
+        for (let keyId in keys2del) delete state.multip[keys2del[keyId]];
+      },
+      recordMultip: function (state) {
+        let overlap = this.updateProcessed(
+          state,
+          true // isMultiParagraph
+        );
+        let control = this;
+
+        if (overlap.level === 0) {
+          state.multip[state.curLabelId] = {
+            start: {
+              nodeId: state.cnodeId,
+              acc: state.acc,
+            },
+            delayed: [], // here we store nodes with rendering being delayed, because this multip-node was not been able to render
+          };
+        } else {
+          for (let i in overlap.mask) {
+            if (overlap.mask[i]) {
+              let proc = state.processed[i];
+              if (proc.closed) {
+                // if it was closed, this means that we found its starting
+                // paragraph, but not yet reached the ending one, so wait
+                let shouldRenderAtTheEnd = control.checkFutureOverlap(state);
+                state.multip[state.curLabelId] = {
+                  start: {
+                    nodeId: shouldRenderAtTheEnd ? 0 : state.cnodeId,
+                    acc: shouldRenderAtTheEnd ? 0 : state.acc,
+                  },
+                  delayed: [],
+                  renderAtTheEnd: shouldRenderAtTheEnd,
+                };
+              } else {
+                // if the overlapping marker was not yet closed
+                // add the current marker in into the delay list
+                // of the overlapping marker
+                if (utils.hasProp(state.multip, proc["id"])) {
+                  state.multip[proc["id"]].delayed.push({
+                    id: state.curLabelId,
+                  });
+                } else {
+                  // this means that the nested nodes probably start in the same node
+                  state.multip[proc["id"]] = {
+                    start: {
+                      nodeId: state.cnodeId,
+                      acc: state.acc,
+                    },
+                    delayed: [
+                      {
+                        id: state.curLabelId,
+                      },
+                    ],
+                  };
+                }
+              }
+            }
+          }
+        }
+      },
       restoreSpanMarkers: function (span_labels) {
+        let control = this;
         let state = {
+          cnodeId: 0, // current node ID
+          cnodeLength: 0, // length of text in the current node
+          totalNodes: 0, // number of total available nodes
           acc: 0, // the accumulator variable, pointing at where the current text node starts
           curLabelId: 0, // id of the current label
           processed: [], // labels that are not nested into one another
@@ -3733,15 +4251,15 @@
           multip: {}, // multi-paragraph nodes are stored here
           numInner: {},
           likelyErrors: 0,
+          spanLabels: span_labels,
+          numLabels: span_labels.length,
+          cnodes: control.selectorArea.childNodes,
         };
-        let numLabels = span_labels.length,
-          cnodes = this.selectorArea.childNodes,
-          control = this;
 
         // Step 1: define the order of re-labeling
         // - from top to bottom
         // - starting from the outer ones to the inner ones
-        span_labels.sort(function (x, y) {
+        state.spanLabels.sort(function (x, y) {
           if (x["start"] == y["start"]) {
             // otherwise, by length, with longest coming first
             return y["end"] - y["start"] - (x["end"] - x["start"]);
@@ -3752,187 +4270,61 @@
           }
         });
 
-        // Step 2: unfold scrollable and pinned parts -- these must be viewed as one text
-        let flatCnodes = [],
-          pinnedClassNames = ["scrollable", "pinned"];
-        for (let i = 0, len = cnodes.length; i < len; i++) {
-          if (
-            cnodes[i].tagName === "P" &&
-            pinnedClassNames.includes(cnodes[i].className)
-          ) {
-            for (let j = 0, len2 = cnodes[i].childNodes.length; j < len2; j++) {
-              flatCnodes.push(cnodes[i].childNodes[j]);
-            }
-          }
-        }
-        if (flatCnodes.length > 0) cnodes = flatCnodes;
+        // Step 2: unfold scrollable and skip pinned parts
+        let flatCnodes = this.flattenNodes(state.cnodes);
+        if (flatCnodes.length > 0) state.cnodes = flatCnodes;
+        state.totalNodes = state.cnodes.length;
 
         // Step 3: actually labeling
         // - labels within one paragraph are rendered directly as they are
         // - multi-paragraph labels (and those dependent on them) are rendered asap
         // - rendering should happen from the outer to the inner ones, from top to bottom
-        for (let cId = 0, len = cnodes.length; cId < len; cId++) {
+
+        // this provides a defense against infinite loops in case
+        // the annotations were saved in such a way that it's impossible to restore
+        // them or reach any other error
+        let loops = 0;
+        let loopTolerance = 10;
+        while (
+          (state.cnodeId < state.totalNodes ||
+            state.curLabelId < state.numLabels ||
+            Object.keys(state.multip).length > 0) &&
+          loops < loopTolerance
+        ) {
+          let cId = state.cnodeId;
           state.numInner[cId] = 0;
           if (
-            state.curLabelId < numLabels ||
+            state.curLabelId < state.numLabels ||
             Object.keys(state.multip).length > 0
           ) {
-            let cnodeLength = cnodes[cId].textContent.length;
-            if (cnodeLength === 0 && cnodes[cId].tagName === "BR") {
-              cnodeLength = 1;
+            state.cnodeLength =
+              cId >= state.totalNodes ? null : getNodeLength(state.cnodes[cId]);
 
-              for (let candLabelId in state.multip) {
-                if (!state.processed[candLabelId].closed) {
-                  state.multip[candLabelId].parBreaks.push(state.acc);
-                }
-              }
+            if (state.cnodeLength == null) {
+              loops++;
             }
 
             // Attempt to close a multi-paragraph marking
-            let keys2del = [];
-            for (let candLabelId in state.multip) {
-              if (state.acc + cnodeLength > span_labels[candLabelId]["end"]) {
-                // if the candLabelId label ends within this paragraph,
-                // we found the suitable paragraph to render it!
-                let multiData = state.multip[candLabelId],
-                  startInfo = multiData["start"];
-
-                // TODO: return here
-                let startSearchRes = control.getClosestTextNode(
-                  cnodes,
-                  startInfo["nodeId"],
-                  span_labels,
-                  candLabelId,
-                  startInfo["innerAcc"]
-                );
-                let endSearchRes = control.getClosestTextNode(
-                  cnodes,
-                  cId,
-                  span_labels,
-                  candLabelId,
-                  state.acc
-                );
-                state.errors += startSearchRes.errors + endSearchRes.errors;
-
-                let hasRestored = control.restoreMarkedSpan(
-                  startSearchRes.node,
-                  endSearchRes.node,
-                  span_labels,
-                  candLabelId,
-                  startSearchRes.acc,
-                  endSearchRes.acc
-                );
-
-                if (hasRestored) {
-                  state.c2i[candLabelId] = control.getActiveChunk().id;
-                  state.processed[candLabelId].closed = true;
-                  state.numInner[cId]++;
-                  keys2del.push(candLabelId);
-
-                  for (let dId in multiData.delayed) {
-                    // need to re-select tagItem on account of
-                    // having added new spans in the previous iteration
-                    let tagItem = document.querySelector(
-                      'span.tag[data-i="' + state.c2i[candLabelId] + '"]'
-                    );
-                    let tagNodes = tagItem.childNodes;
-
-                    let dInfo = multiData.delayed[dId];
-                    let dStart =
-                      span_labels[dInfo.id]["start"] - startInfo["innerAcc"];
-                    let dEnd =
-                      span_labels[dInfo.id]["end"] - startInfo["innerAcc"];
-                    let dAcc = 0,
-                      dStartNode = undefined,
-                      dEndNode = undefined,
-                      dStartNodeDefined = false,
-                      dEndNodeDefined = false,
-                      dStartAcc = 0,
-                      dEndAcc = 0;
-
-                    let pOffsetId = 0;
-                    for (let idt = 0; idt < tagNodes.length - 1; idt++) {
-                      let curIdtLength = tagNodes[idt].textContent.length;
-
-                      // this is most probably <br>, which was already accounted for
-                      if (curIdtLength === 0) continue;
-
-                      if (
-                        pOffsetId >= 0 &&
-                        dAcc + curIdtLength + startInfo["innerAcc"] >=
-                          multiData.parBreaks[pOffsetId]
-                      ) {
-                        curIdtLength += 1;
-                        if (pOffsetId + 1 < multiData.parBreaks.length)
-                          pOffsetId++;
-                        else pOffset = -100;
-                      }
-
-                      if (!dStartNodeDefined && dStart < dAcc + curIdtLength) {
-                        dStartNode = tagNodes[idt];
-                        dStartNodeDefined = true;
-                        dStartAcc = dAcc;
-                      }
-                      if (!dEndNodeDefined && dEnd <= dAcc + curIdtLength) {
-                        dEndNode = tagNodes[idt];
-                        dEndNodeDefined = true;
-                        dEndAcc = dAcc;
-                      }
-
-                      if (dStartNodeDefined && dEndNodeDefined) break;
-                      dAcc += curIdtLength;
-                    }
-
-                    if (
-                      utils.isDefined(dStartNode) &&
-                      utils.isDefined(dEndNode)
-                    ) {
-                      let isRestored = control.restoreMarkedSpan(
-                        dStartNode,
-                        dEndNode,
-                        span_labels,
-                        dInfo.id,
-                        dStartAcc + startInfo["innerAcc"],
-                        dEndAcc + startInfo["innerAcc"]
-                      );
-
-                      if (isRestored) {
-                        state.c2i[dInfo.id] = control.getActiveChunk().id;
-
-                        state.processed[dId].closed = true;
-                      } else {
-                        state.likelyErrors++;
-                      }
-                    }
-                  }
-                } else {
-                  state.likelyErrors++;
-                }
-              }
-            }
-
-            for (let keyId in keys2del) delete state.multip[keys2del[keyId]];
-
+            this.restoreMultipMarkers(state);
             if (
-              state.curLabelId >= numLabels &&
+              state.curLabelId >= state.numLabels &&
               Object.keys(state.multip).length == 0
             )
               break;
 
             if (
-              utils.isDefined(span_labels[state.curLabelId]) &&
-              state.acc + cnodeLength > span_labels[state.curLabelId]["start"]
+              utils.isDefined(state.spanLabels[state.curLabelId]) &&
+              state.acc + state.cnodeLength >
+                state.spanLabels[state.curLabelId]["start"]
             ) {
               // If the current markable starts within the current paragraph,
               // we might have found an element to mark!
 
-              // an inner accumulator to keep track of the beginning of the next available text node within this paragraph
-              let innerAcc = state.acc;
-
               while (
-                span_labels[state.curLabelId]["end"] >
-                  state.acc + cnodeLength &&
-                state.acc + cnodeLength > span_labels[state.curLabelId]["start"]
+                state.spanLabels[state.curLabelId]["end"] >
+                  state.acc + state.cnodeLength &&
+                state.acc + state.cnodeLength >
+                  state.spanLabels[state.curLabelId]["start"]
               ) {
                 // while the end of the current markable is not within the current paragraph,
                 // but the beginning of the markable is, keep iterating until finding
@@ -3941,99 +4333,76 @@
                 // If we are within this while-loop, it means it's a multi-paragraph node
                 // record this node keep iterating
 
-                let overlap = control.updateProcessed(
-                  state,
-                  span_labels,
-                  true // isMultiParagraph
-                );
-
-                if (overlap.level === 0) {
-                  state.multip[state.curLabelId] = {
-                    start: {
-                      nodeId: cId,
-                      innerAcc: innerAcc,
-                    },
-                    parBreaks: [], // where we store the breakpoints for the paragraphs, which this markable spans over
-                    delayed: [], // here we store nodes with rendering being delayed, because this multip-node was not been able to render
-                  };
-                } else {
-                  for (let i in overlap.mask) {
-                    if (overlap.mask[i]) {
-                      let proc = state.processed[i];
-                      if (proc.multip && !proc.closed) {
-                        state.multip[proc["id"]].delayed.push({
-                          id: state.curLabelId,
-                          acc: innerAcc,
-                        });
-                      }
-                    }
-                  }
-                }
+                control.recordMultip(state);
 
                 state.curLabelId++;
                 state.numInner[cId]++;
-                if (state.curLabelId >= numLabels) break;
+                if (state.curLabelId >= state.numLabels) break;
               }
 
               if (
-                state.curLabelId >= numLabels ||
-                state.acc + cnodeLength < span_labels[state.curLabelId]["start"]
+                state.curLabelId >= state.numLabels ||
+                state.acc + state.cnodeLength <
+                  state.spanLabels[state.curLabelId]["start"]
               ) {
                 // if the current markable is suddenly out of the current paragraph's bounds,
                 // advance the accumulator and move on
                 //
-                // NOTE: typically, advancing is done at the end of the loop's iteration,
+                // NOTE: typically, advancing acc is done at the end of the loop's iteration,
                 //       but here we force the iteration to finish, hence the update
-                state.acc += cnodeLength;
+                state.acc += state.cnodeLength;
+                if (state.cnodeId < state.totalNodes) state.cnodeId++;
                 continue;
               }
 
               while (
-                state.curLabelId < numLabels &&
-                span_labels[state.curLabelId]["end"] <= state.acc + cnodeLength
+                state.curLabelId < state.numLabels &&
+                state.spanLabels[state.curLabelId]["end"] <=
+                  state.acc + state.cnodeLength
               ) {
                 // If the current markable ends within bounds of this paragraph,
                 // we attempt to render all nodes within this paragraph.
                 // NOTE: some of them are impossible to render, because
                 //       their parents are multi-paragraph nodes,
                 //       in which case, store them as delayed
-                let overlap = control.updateProcessed(
-                  state,
-                  span_labels,
-                  false
-                );
+                let overlap = control.updateProcessed(state, false);
 
-                let textNode = undefined;
+                let startNode = undefined,
+                  endNode = undefined;
                 if (overlap.level === 0) {
                   // if no overlap, just select the text node and proceed
-                  if (state.numInner[cId] === 0) {
-                    if (cnodes[cId].nodeType === 1) {
-                      textNode =
-                        cnodes[cId].childNodes[
-                          cnodes[cId].childNodes.length - 1
-                        ];
-                    } else {
-                      textNode = cnodes[cId];
-                    }
+                  let anyMultip = state.processed
+                    .filter((x) => x.id < state.curLabelId)
+                    .map((x) => x.multip)
+                    .some((x) => x);
+                  let candNode;
+
+                  if (anyMultip) {
+                    candNode = control.selectorArea.childNodes[0];
                   } else {
-                    // this means something was already rendered within this paragarph,
-                    // so now the paragraph is split into multiple text nodes
-                    // if it were an overlap, it would come into a different branch
-                    // of the outer if-statement, so for this part, it means
-                    // that we're still within the same paragraph (initial cnodes[i])
-                    // but we need to grab the last text node of the original paragraph
-                    // that was created after the label split the original cnodes[i] up
-                    let searchRes = control.getClosestTextNode(
-                      cnodes,
-                      cId,
-                      span_labels,
-                      state.curLabelId,
-                      state.acc
-                    );
-                    textNode = searchRes.node;
-                    innerAcc = searchRes.acc;
-                    state.likelyErrors += searchRes.errors;
+                    candNode =
+                      state.cnodes[cId].nodeType === 1
+                        ? state.cnodes[cId].childNodes[0]
+                        : state.cnodes[cId];
                   }
+                  let prevLength = anyMultip
+                    ? previousTextLength(candNode)
+                    : state.acc;
+
+                  startNode = control.getClosestTextNode(
+                    candNode,
+                    state.spanLabels[state.curLabelId],
+                    true,
+                    prevLength
+                  );
+
+                  endNode = control.getClosestTextNode(
+                    candNode,
+                    state.spanLabels[state.curLabelId],
+                    false,
+                    prevLength
+                  );
+                  state.likelyErrors += startNode.errors + endNode.errors;
                 } else {
                   // if there is an overlap, find a parent,
                   // by finding a markable with the closest
@@ -4042,22 +4411,21 @@
                     minDist = Infinity,
                     sameLevelDist = Infinity,
                     sameLevelId = undefined;
+
                   overlap.mask.forEach(function (hasOverlap, i) {
-                    let label = span_labels[state.processed[i]["id"]],
+                    let label = state.spanLabels[state.processed[i]["id"]],
                       dist =
                         Math.abs(
-                          label["end"] - span_labels[state.curLabelId]["end"]
+                          label["end"] -
+                            state.spanLabels[state.curLabelId]["end"]
                         ) +
                         Math.abs(
                           label["start"] -
-                            span_labels[state.curLabelId]["start"]
+                            state.spanLabels[state.curLabelId]["start"]
                         );
 
                     if (hasOverlap) {
-                      if (
-                        dist < minDist &&
-                        state.processed[i]["ov"] == overlap.level - 1
-                      ) {
+                      if (dist < minDist) {
                         minDist = dist;
                         minDistId = state.processed[i]["id"];
                       }
@@ -4083,7 +4451,20 @@
 
                     if (utils.isDefined(tagItem)) {
                       let tagNodes = tagItem.childNodes;
-                      textNode = tagNodes[tagNodes.length - 2]; // exclude delete button
+                      let prevLength = previousTextLength(tagNodes[0]);
+
+                      startNode = control.getClosestTextNode(
+                        tagNodes[0],
+                        state.spanLabels[state.curLabelId],
+                        true,
+                        prevLength
+                      );
+                      endNode = control.getClosestTextNode(
+                        tagNodes[0],
+                        state.spanLabels[state.curLabelId],
+                        false,
+                        prevLength
+                      );
 
                       // this is to render nodes that are nested on the same level
                       if (
@@ -4095,18 +4476,27 @@
                             state.processed[i]["closed"] = true;
                           }
                         }
-
-                        if (span_labels[sameLevelId]["end"] > innerAcc)
-                          innerAcc = span_labels[sameLevelId]["end"];
                       }
                     } else if (!state.processed[minDistId].closed) {
                       // if current label depends on rendering a non-closed label,
                       // the non-closed one is either multi-paragraph (1st if)
                       // or depends on a multi-paragraph (2nd if)
                       if (state.processed[minDistId].multip) {
+                        if (!utils.hasProp(state.multip, minDistId)) {
+                          let shouldRenderAtTheEnd =
+                            control.checkFutureOverlap(state);
+                          state.multip[minDistId] = {
+                            start: {
+                              nodeId: shouldRenderAtTheEnd ? 0 : cId,
+                              acc: shouldRenderAtTheEnd ? 0 : state.acc,
+                            },
+                            delayed: [],
+                            renderAtTheEnd: shouldRenderAtTheEnd,
+                          };
+                        }
                         state.multip[minDistId].delayed.push({
                           id: state.curLabelId,
-                          acc: innerAcc,
+                          acc: state.acc,
                         });
                       } else {
                         for (let candMaster in state.multip) {
@@ -4117,7 +4507,7 @@
                           ) {
                             state.multip[candMaster].delayed.push({
                               id: state.curLabelId,
-                              acc: innerAcc,
+                              acc: state.acc,
                             });
                             break;
                           }
@@ -4126,51 +4516,56 @@
                     }
                   } else {
                     // if it's not defined, find the closest of the split nodes
+
                     let searchRes = control.getClosestTextNode(
-                      cnodes,
-                      cId,
-                      span_labels,
-                      state.curLabelId,
+                      state.cnodes[cId],
+                      state.spanLabels[state.curLabelId],
+                      true,
                       state.acc
                     );
-                    textNode = searchRes.node;
-                    innerAcc = searchRes.acc;
+                    startNode = searchRes;
+                    endNode = startNode;
                     state.likelyErrors += searchRes.errors;
                   }
                 }
 
-                if (utils.isDefined(textNode)) {
+                if (
+                  utils.isDefined(startNode) &&
+                  utils.isDefined(startNode.node) &&
+                  utils.isDefined(endNode) &&
+                  utils.isDefined(endNode.node)
+                ) {
                   // the only case when we don't come here
                   // is when the parent is a multi-paragraph label
                   // this is handled separately
-                  let hasRestored = control.restoreMarkedSpan(
-                    textNode,
-                    textNode,
-                    span_labels,
-                    state.curLabelId,
-                    innerAcc,
-                    innerAcc
+                  let restoredInfo = control.restoreMarkedSpan(
+                    startNode.node,
+                    endNode.node,
+                    state.spanLabels[state.curLabelId],
+                    startNode.acc,
+                    endNode.acc
                   );
 
-                  if (hasRestored) {
+                  if (restoredInfo.isRestored) {
                     state.numInner[cId]++; // a default counter for labels within this paragraph, nested or not
                     state.c2i[state.curLabelId] = control.getActiveChunk().id;
-                    innerAcc = span_labels[state.curLabelId]["start"];
+
+                    state.processed[state.curLabelId].closed = true;
                   } else {
                     state.likelyErrors++;
                   }
                 }
-
                 state.curLabelId++;
               }
             }
-            state.acc += cnodeLength;
+            state.acc += state.cnodeLength;
           } else {
             break;
           }
+          if (state.cnodeId < state.totalNodes) state.cnodeId++;
         }
 
-        if (state.likelyErrors > 0) {
+        if (state.likelyErrors > 0 || loops >= loopTolerance) {
           alert(
             "The annotations are likely to be restored incorrectly.\nPlease do NOT submit any edits for these annotations\nand report this by clicking the red flag button\nnear the selected annotation button."
           );
@@ -4280,6 +4675,7 @@
         });
       },
     };
+    return labeler;
   })();
 
   $(document).ready(function () {
@@ -4431,11 +4827,15 @@
         let inputFormData = $inputForm.serializeObject();
 
         // if there's an input form field, then create input_context
-        // the reason why we use false as a param to getContextText
-        // is to because sometimes browser will auto-correct small mistakes
+        // the reason why we use `false` as a param to getContextText
+        // (which makes us rely on `textContent` instaed of `innerText`)
+        // is because sometimes browser will auto-correct small mistakes
         // like double spaces, which are present in the data,
         // but when .surroundContext happens, it does so on the TEXT_NODE
-        // which contains the original uncorrected text
+        // which contains the original uncorrected text.
+        // The flip-side of the problem is that `textContent` removes
+        // the newlines, unlike `innerText`, but this is handled inside
+        // the `getContextText` function
         inputFormData["context"] = labelerModule.getContextText(false);
 
         $.extend(inputFormData, labelerModule.getSubmittableDict());
@@ -4448,6 +4848,13 @@
           labelerModule.getCurrentDatapoint(),
           10
         );
+
+        let editPageBtn = document.querySelector(
+          "#editingBoard a[data-page].is-current"
+        );
+
+        if (utils.isDefined(editPageBtn))
+          inputFormData["p"] = editPageBtn.getAttribute("data-page");
 
         if (labelerModule.hasNewInfo(inputFormData)) {
           labelerModule.getMarkerTypes().forEach(function (x) {
@@ -4463,7 +4870,13 @@
             if (utils.isDefined(searchForm)) {
               let searchData = $(searchForm).serializeObject();
               for (let key in searchData) inputFormData[key] = searchData[key];
-              console.log(inputFormData);
+
+              if (inputFormData["random"] == "on") {
+                // we want to keep exactly the same batches shown then
+                inputFormData["batch_ids"] = Array.from(
+                  document.querySelectorAll('li[data-mode="e"]')
+                ).map((x) => x.getAttribute("data-id"));
+              }
             }
 
             let curPage;
@@ -4539,17 +4952,67 @@
                   let closestPsArea = document.querySelector(
                     "#" + mode + "Board"
                   );
+                  let batch = null; // current batch
+                  let nextBatchId = null;
+
+                  let seqEditingHandle =
+                    document.querySelector("#sequentialEditing");
+                  let isSequentialEditing =
+                    utils.isDefined(seqEditingHandle) &&
+                    seqEditingHandle.checked;
+
+                  // Select next batch to be edited
+                  if (isSequentialEditing) {
+                    batch = closestPsArea.querySelector(
+                      '[data-id="' + labelerModule.getEditingBatch() + '"]'
+                    );
+                    let nextBatch = batch.nextElementSibling;
+                    if (utils.isDefined(nextBatch))
+                      nextBatchId = nextBatch.getAttribute("data-id");
+                  } else {
+                    nextBatchId = labelerModule.getEditingBatch();
+                  }
+
                   if (data.partial) {
                     let mainPart = closestPsArea.querySelector("main");
                     mainPart.innerHTML = data.template;
                   } else {
                     closestPsArea.outerHTML = data.template;
                   }
-                  $(closestPsArea)
-                    .find('[data-id="' + labelerModule.getEditingBatch() + '"]')
-                    .addClass("is-hovered");
+
+                  batch = closestPsArea.querySelector(
+                    '[data-id="' + labelerModule.getEditingBatch() + '"]'
+                  );
+                  if (utils.isDefined(batch)) batch.classList.add("is-hovered");
                   let item = data["mode"] == "e" ? "edit" : "review";
                   alert("Your " + item + " is successfully saved!");
+
+                  if (isSequentialEditing) {
+                    if (utils.isDefined(nextBatchId)) {
+                      let nextBatch = closestPsArea.querySelector(
+                        '[data-id="' + nextBatchId + '"]'
+                      );
+                      if (utils.isDefined(nextBatch)) {
+                        nextBatch.click();
+                        if (utils.isDefined(labelerModule.ui.collapsibles))
+                          labelerModule.ui.collapsibles.forEach(
+                            function (inst) {
+                              if (inst.element.id == "editingBody") {
+                                inst.collapse();
+                              }
+                            }
+                          );
+                      } else
+                        alert(
+                          "Error during editing, please, do NOT edit more before contacting your system administrator!"
+                        );
+                    } else
+                      alert(
+                        "You have finished the page! Please choose a new one."
+                      );
+                  } else {
+                    batch.scrollIntoView();
+                  }
                 }
               }
 
@@ -4634,7 +5097,7 @@
       let data = $form.serializeObject();
       let csrf = data["csrfmiddlewaretoken"];
 
-      if (data.hasOwnProperty("csrfmiddlewaretoken"))
+      if (utils.hasProp(data, "csrfmiddlewaretoken"))
         delete data["csrfmiddlewaretoken"];
 
       let keys = Object.keys(data);
@@ -4742,7 +5205,8 @@
                     "</span>"
                 )
               );
-              labelerModule.fixUI();
+
+              labelerModule.ui.initCollapsibles();
             },
             error: function () {
               console.log("Error while invoking " + actionTitle + " mode!");
@@ -4754,6 +5218,8 @@
           callbackOk($target, $lastCol, mode);
 
           labelerModule.currentPage[mode] = null;
+
+          labelerModule.ui.collapsibles = null;
 
           labelerModule.restoreOriginal();
           labelerModule.clearBatch();
@@ -4807,4 +5273,10 @@
       );
     });
   });
-})(window.jQuery, window.d3, window.tippy, window.django);
+})(
+  window.jQuery,
+  window.d3,
+  window.tippy,
+  window.django,
+  window.bulmaCollapsible
+);

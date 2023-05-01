@@ -1,40 +1,57 @@
 <article id="editingBoard" data-mode="editing" data-url="{{ url('projects:get_batch', kwargs={'proj': project.pk}) }}" data-flag-url="{{ url('projects:flag_batch', kwargs={'proj': project.pk}) }}" data-href="{{ url('projects:editing', kwargs={'proj': project.pk}) }}" class="editing-area message is-primary">
   <div class="message-header">
     <p>{{ _("editing")|capitalize }}</p>
+    <div>
+      <input id="sequentialEditing" type="checkbox">
+      Sequential
+    </div>
+    <a href="#editingBody" data-action="collapse" class="no-decoration is-hidden-fullscreen" aria-label="more options">
+      <span class="icon">
+        <i class="fas fa-angle-down" aria-hidden="true"></i>
+      </span>
+    </a>
   </div>
-  <nav class="search">
-    <form id="editingSearchForm" action="{{ url('projects:recorded_search', kwargs={'proj': project.pk }) }}" method="GET">
-      <div class="field has-addons">
-        <p class="control">
-          <span class="select is-small">
-            <select name="scope">
-              <option value="-1">Everything except text</option>
-              <option value="0">Text</option>
-              {% for m in project.input_markers %}
-                <option value="{{m.pk}}">{{ m.name }}</option>
-              {% endfor %}
-            </select>
-          </span>
-        </p>
-        <p class="control">
-          <span class="select is-small">
-            <select name="search_type">
-              <option value="phr">Phrase</option>
-              <option value="int">Keywords</option>
-              <option value="web">Web-like</option>
-            </select>
-          </span>
-        </p>
-        <div class="control is-expanded">
-          <input class="input is-small" type="text" placeholder="What do you want to search for?" name="query">
-        </div>
-        <div class="control">
-          <input type="submit" class="button is-info is-small" value="Search">
+  <div id="editingBody" class='is-collapsible is-active' aria-expanded='true'>
+    <nav class="search">
+      <div class="card">
+        <header data-action="collapse" class="card-header">
+          <p class="card-header-title is-size-7">Search settings</p>
+          <a href="#searchSettings" data-action="collapse" class="card-header-icon no-decoration is-hidden-fullscreen" aria-label="more options">
+            <span class="icon">
+              <i class="fas fa-angle-down" aria-hidden="true"></i>
+            </span>
+          </a>
+        </header>
+        <div id="searchSettings" class="is-collapsible" aria-expanded="false">
+          <div class="card-content">
+            <form id="editingSearchForm" action="{{ url('projects:recorded_search', kwargs={'proj': project.pk }) }}" method="GET">
+              <div class="control">
+                <label class="checkbox is-small">
+                  <input type="checkbox" name="search_flagged">
+                  Search only among flagged
+                </label>
+                <label class="checkbox is-small">
+                  <input type="checkbox" name="random">
+                  Sample 5 results
+                </label>
+              </div>
+              {% include 'partials/components/areas/_editing_search_clause.html' %}
+              <div class="control">
+                <input type="submit" class="button is-info is-small" value="Search">
+                <a id="addSearchClause" class="button is-warning is-small">Add AND clause</a>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </form>
-  </nav>
-  <main>
-    {% include 'partials/components/areas/_editing_body.html' %}
-  </main>
+    </nav>
+    <main>
+      {% include 'partials/components/areas/_editing_body.html' %}
+    </main>
+    <div id="editingSearchClauseTemplate" class='is-hidden'>
+      {% with has_remove=True %}
+        {% include 'partials/components/areas/_editing_search_clause.html' %}
+      {% endwith %}
+    </div>
+  </div>
 </article>

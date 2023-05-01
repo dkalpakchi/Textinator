@@ -1,0 +1,38 @@
+<table class="table is-fullwidth">
+  <thead>
+    <th>Property</th>
+    <th>Value</th>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Name</td>
+      <td>
+        <input type="text" name="sourceName">
+      </td>
+    </tr>
+    <tr>
+      <td>Language</td>
+      <td>
+        <input type="text" name="sourceLang">
+      </td>
+    </tr>
+    <tr>
+      <td>Source</td>
+      <td>
+        {% with href='sourceFields' %}
+          {% include 'partials/_importer_button.html' %}
+        {% endwith %}
+      </td>
+    </tr>
+    <tr>
+      <td>Formatting</td>
+      <td>
+        <select name="sourceFormatting">
+          {% for fmt, fmt_name in formats %}
+          <option value="{{fmt}}">{{fmt_name}}</option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+  </tbody>
+</table>

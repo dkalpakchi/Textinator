@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/dkalpakchi/Textinator#readme",
   "dependencies": {
+    "@creativebulma/bulma-collapsible": "^1.0.4",
     "@creativebulma/bulma-divider": "^1.1.0",
     "@eastdesire/jscolor": "^2.4.8",
     "@fortawesome/fontawesome-free": "^5.9.0",
@@ -33,6 +34,8 @@
     "jquery-ui-dist": "^1.13.0",
     "jquery-validation": "^1.19.5",
     "json-formatter-js": "^2.3.4",
+    "jsoneditor": "^9.9.2",
+    "masonry-layout": "^4.2.2",
     "medium-zoom": "^1.0.6",
     "shepherd.js": "^3.1.0",
     "tippy.js": "^6.3.7",

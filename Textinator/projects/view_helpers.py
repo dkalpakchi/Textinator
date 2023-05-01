@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import numbers
 from collections import defaultdict, OrderedDict
 
 from django.conf import settings
@@ -26,7 +27,7 @@ class BatchInfo:
         self.radios = json.loads(data['radio'])
         self.checkboxes = json.loads(data['checkboxes'])
         self.datapoint = str(data['datapoint'])
-        self.context = data.get('context')
+        self.context = data.get('context').replace("\r\n", "\n")
 
         try:
             self.project = Project.objects.get(pk=proj)
@@ -50,6 +51,9 @@ class BatchInfo:
             ('checkboxes', self.checkboxes)
         ]
 
+
+def listify(x):
+    return x if isinstance(x, list) else [x]
 
 def get_or_create_ctx(batch_info, ctx_cache):
     if ctx_cache:
@@ -113,18 +117,13 @@ def process_chunk(chunk, batch, batch_info, caches, ctx_cache=None):
         return (ctx_cache, label_cache), saved_labels
 
 
-def extract_ids(label_batches, input_batches):
-    if label_batches:
-        label_ids = label_batches.values_list('batch_id', flat=True)
+def extract_ids(batches):
+    if batches:
+        batch_ids = batches.values_list('batch_id', flat=True)
     else:
-        label_ids = []
+        batch_ids = []
 
-    if input_batches:
-        input_ids = input_batches.values_list('batch_id', flat=True)
-    else:
-        input_ids = []
-
-    return label_ids, input_ids
+    return batch_ids
 
 
 def verbalize_search_type(st):
@@ -135,10 +134,49 @@ def verbalize_search_type(st):
     elif st == "web":
         return "websearch" # web-like search with OR allowed
 
+def check_empty(var, default):
+    ban = set()
+    if var is None:
+        var = default
+    else:
+        for i, x in enumerate(var):
+            # to accommodate possibilities of 0-indexes
+            if not x and not isinstance(x, numbers.Number):
+                ban.add(i)
+    return var, ban
+
+def get_unbanned(lst, ban):
+    return [x for i, x in enumerate(lst) if i not in ban]
 
 def render_editing_board(request, project, user, page, template='partials/components/areas/editing.html', ds_id=None, dp_id=None,
-                         current_uuid=None, search_mv_pk=None, search_query=None, search_type="p"):
+                         current_uuid=None, search_dict=None):
     is_author, is_shared = project.author == user, project.shared_with(user)
+
+    if search_dict is None:
+        search_mv_pks, search_queries, search_types = [], [], []
+        is_random_order, search_flagged = False, False
+    else:
+        try:
+            is_random_order = search_dict['random'] == 'on'
+        except ValueError:
+            is_random_order = False
+        search_flagged = search_dict['search_flagged']
+
+        # TODO: if this every becomes a speed bottleneck, which I doubt
+        #       re-write and make a linear scan out of it
+        search_mv_pks, ban_mv = check_empty(search_dict['scope'], [])
+        search_queries, ban_q = check_empty(search_dict['query'], [])
+        search_types, ban_t = check_empty(search_dict['search_type'], ["phr"])
+        ban = set.union(ban_mv, ban_q, ban_t)
+
+        # if there is a non-empty search, unban it
+        if "nemp" in search_types:
+            nemp_index = {i for i, x in enumerate(search_types) if x == "nemp"}
+            ban = ban - nemp_index
+
+        search_mv_pks = get_unbanned(search_mv_pks, ban)
+        search_queries = get_unbanned(search_queries, ban)
+        search_types = get_unbanned(search_types, ban)
 
     if is_author or is_shared:
         label_batches = Label.objects.filter(marker__project=project).order_by('dt_created')
@@ -147,81 +185,143 @@ def render_editing_board(request, project, user, page, template='partials/compon
         label_batches = Label.objects.filter(batch__user=user, marker__project=project).order_by('dt_created')
         input_batches = Input.objects.filter(batch__user=user, marker__project=project).order_by('dt_created')
 
-    label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
+    label_batch_ids, input_batch_ids = extract_ids(label_batches), extract_ids(input_batches)
 
     # Here we don't use just dataset identifiers, because
     # there can, of course, be multiple datasets with the same
     # datapoint IDs
-    relevant_batches = Batch.objects.filter(
-        pk__in=set(label_batch_ids) | set(input_batch_ids)
-    ).annotate(
-        index=Window(
-            expression=RowNumber(),
-            order_by=F('dt_created').asc()
-        )
+    window_exp = Window(
+        expression=RowNumber(),
+        order_by=F('dt_created').asc()
     )
 
-    if ds_id and dp_id:
-        # reviewing
-        if ds_id > 0 and dp_id > 0:
-            label_batches = label_batches.filter(
-                context__datasource_id=ds_id,
-                context__datapoint=dp_id
-            )
-            input_batches = input_batches.filter(
-                context__datasource_id=ds_id,
-                context__datapoint=dp_id
-            )
-        else:
-            label_batches, input_batches = None, None
+    relevant_batches = Batch.objects.filter(
+        pk__in=set(label_batch_ids) | set(input_batch_ids)
+    ).annotate(index=window_exp)
 
-    lang_dict = dict(settings.LANGUAGES)
-    if project.language == 'en':
-        search_config = "{}_lite".format(lang_dict[project.language].lower())
-    else:
-        search_config = lang_dict[project.language].lower()
-
-    if search_query or search_mv_pk:
-        if search_mv_pk == 0:
-            vector = SearchVector("context__content", config=search_config)
-        else:
-            vector = SearchVector("content", config=search_config)
-
-        query = SearchQuery(
-            search_query,
-            search_type=verbalize_search_type(search_type),
-            config=search_config
-        )
-        if search_mv_pk and search_mv_pk > 0:
-            input_batches = input_batches.filter(marker_id=search_mv_pk)
-        if search_query:
-            if search_type == "phr":
-                # phrase queries
-                input_batches = input_batches.annotate(
-                    search=vector
-                ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
-            else:
-                input_batches = input_batches.annotate(
-                    rank=SearchRank(vector, query)
-                ).filter(rank__gt=1e-3) # some of them get like 1e-20, which is why > 0 doesn't work'
-
-    label_batch_ids, input_batch_ids = extract_ids(label_batches, input_batches)
-
-    if search_query or search_mv_pk:
-        batch_ids = set(input_batch_ids)
-    else:
-        batch_ids = set(label_batch_ids) | set(input_batch_ids)
-
-    if batch_ids:
+    if search_dict is not None and search_dict.get('batch_ids', []):
         sql_string, sql_params = relevant_batches.query.sql_with_params()
         batches = Batch.objects.raw(
-            "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
-                sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+            "SELECT * FROM ({}) t1 WHERE t1.uuid IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                sql_string, ", ".join(["%s" for _ in range(len(search_dict['batch_ids']))])
             ),
-            list(sql_params) + [str(x) for x in list(batch_ids)]
+            list(sql_params) + search_dict['batch_ids']
         )
+    elif -2 in search_mv_pks:
+        # search for specific annotation no.
+        sq_id = search_mv_pks.index(-2)
+        search_query = search_queries[sq_id]
+
+        sql_string, sql_params = relevant_batches.query.sql_with_params()
+        try:
+            search_indices = [int(x) for x in search_query.strip().split(",") if x.strip()]
+        except ValueError:
+            search_indices = []
+        if search_indices:
+            batches = Batch.objects.raw(
+                "SELECT * FROM ({}) t1 WHERE t1.index IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                    sql_string, ", ".join(["%s" for _ in range(len(search_indices))])
+                ),
+                list(sql_params) + search_indices
+            )
+        else:
+            batches = []
     else:
-        batches = []
+        if ds_id and dp_id:
+            # reviewing
+            if ds_id > 0 and dp_id > 0:
+                label_batches = label_batches.filter(
+                    context__datasource_id=ds_id,
+                    context__datapoint=dp_id
+                )
+                input_batches = input_batches.filter(
+                    context__datasource_id=ds_id,
+                    context__datapoint=dp_id
+                )
+            else:
+                label_batches, input_batches = None, None
+
+        lang_dict = dict(settings.LANGUAGES)
+        sconf_dict = settings.LANG_SEARCH_CONFIG
+        search_config = sconf_dict.get(
+            project.language,
+            lang_dict.get(project.language, 'english')
+        ).lower()
+
+        if search_flagged:
+            # means search only among flagged
+            input_batches = input_batches.filter(batch__is_flagged=True)
+            input_batch_ids = extract_ids(input_batches)
+
+        vector = None
+        if search_mv_pks or search_queries:
+            input_batch_ids = []
+            for search_mv_pk, search_query, search_type in zip(search_mv_pks, search_queries, search_types):
+                search_mv_pk = int(search_mv_pk)
+                if search_mv_pk is not None:
+                    if search_mv_pk == 0:
+                        vector = "context__content_vector"
+                        input_batches_clause = input_batches
+                    else:
+                        # -2 means search by annotation number
+                        vector = SearchVector("content", config=search_config)
+
+                    if search_mv_pk > 0:
+                        input_batches_clause = input_batches.filter(marker_id=search_mv_pk)
+                    elif search_mv_pk == -1:
+                        input_batches_clause = input_batches
+
+
+                if search_query and vector:
+                    if search_type == "nemp":
+                        # check non-empty ones
+                        input_batches_clause = input_batches_clause.exclude(vector__isnull=True)
+                    else:
+                        query = SearchQuery(
+                            search_query,
+                            search_type=verbalize_search_type(search_type),
+                            config=search_config
+                        )
+
+                        if search_type == "phr":
+                            # phrase queries
+                            if isinstance(vector, str):
+                                input_batches_clause = input_batches_clause.filter(**{vector: query}) # some of them get like 1e-20, which is why > 0 doesn't work'
+                            else:
+                                input_batches_clause = input_batches_clause.annotate(
+                                    search=vector
+                                ).filter(search=query) # some of them get like 1e-20, which is why > 0 doesn't work'
+                        else:
+                            input_batches_clause = input_batches_clause.annotate(
+                                rank=SearchRank(vector, query)
+                            ).filter(rank__gt=1e-3) # some of them get like 1e-20, which is why > 0 doesn't work'
+                ib_ids = extract_ids(input_batches_clause)
+                input_batch_ids.append(set(ib_ids))
+
+            batch_ids = set.intersection(*input_batch_ids) if input_batch_ids else set()
+        elif search_flagged:
+            batch_ids = set(input_batch_ids)
+        else:
+            batch_ids = set(label_batch_ids) | set(input_batch_ids)
+
+        if batch_ids:
+            sql_string, sql_params = relevant_batches.query.sql_with_params()
+            if is_random_order:
+                batches = Batch.objects.raw(
+                    "SELECT * FROM (SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY random() LIMIT 5) s ORDER BY s.dt_created DESC NULLS LAST;".format(
+                        sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+                    ),
+                    list(sql_params) + [str(x) for x in list(batch_ids)]
+                )
+            else:
+                batches = Batch.objects.raw(
+                    "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                        sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+                    ),
+                    list(sql_params) + [str(x) for x in list(batch_ids)]
+                )
+        else:
+            batches = []
 
     p = Paginator(batches, 30)
 
@@ -386,3 +486,67 @@ def process_text_markers(batch, batch_info, text_markers=None, ctx_cache=None):
                 if m.code == tm_code:
                     Label.objects.create(context=ctx, marker=m, batch=batch)
                     break
+
+
+def follow_json_path(obj, path):
+    if len(path) == 0:
+        yield obj
+        return
+
+    ARRAY_MARKER = "[ ]"
+    if path[0] == ARRAY_MARKER:
+        if not isinstance(obj, list): return
+        for x in obj:
+            batch = []
+            for r in follow_json_path(x, path[1:]):
+                batch.append(r)
+            yield batch[0] if len(batch) == 1 else batch
+    elif path[0] in obj:
+        yield from follow_json_path(obj[path[0]], path[1:])
+    else:
+        return
+
+
+def process_recorded_search_args(request_dict):
+    try:
+        page = int(request_dict.get("p", 1))
+        scope = request_dict.get("scope")
+        search_type = request_dict.get("search_type")
+        batch_ids = request_dict.get("batch_ids")
+        search_flagged = request_dict.get("search_flagged")
+    except ValueError:
+        page, scope, search_type, batch_ids = 1, -1, None, None
+    query = request_dict.get("query")
+
+    if scope is None:
+        scope = list(map(int, request_dict.getlist("scope[]", [])))
+    else:
+        scope = int(scope)
+
+    if search_type is None:
+        search_type = request_dict.getlist("search_type[]", "phr")
+
+    if search_flagged is None:
+        search_flagged = request_dict.getlist("search_flagged[]", ["off"])[0]
+
+    if query is None:
+        query = request_dict.getlist("query[]", "")
+
+    if batch_ids is None:
+        batch_ids = request_dict.getlist("batch_ids[]", [])
+
+    # Scope:
+    # -1 -- Everything except text (flagged or annotation no.)
+    # -2 -- Annotation no.
+    # -3 -- Limit to flagged only
+    return {
+        'page': page,
+        'search_dict': {
+            'scope': listify(scope),
+            'query': listify(query),
+            'search_type': listify(search_type),
+            'random': request_dict.get("random", 'off'),
+            'search_flagged': search_flagged == "on",
+            'batch_ids': batch_ids
+        }
+    }

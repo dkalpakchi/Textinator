@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block custom_styles %}
+  <link rel="stylesheet" href="{{ static('styles/toolbox/scombinator.css') }}">
+  <link href="{{ static('jsoneditor/dist/jsoneditor.min.css') }}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block custom_scripts %}
+  <script type="text/javascript" src="{{ static('jsoneditor/dist/jsoneditor.min.js') }}"></script>
+  <script type="text/javascript" src="{{ static('scripts/toolbox/scombinator.js') }}"></script>
+  <script id="dictionaryData" type="application/json">{{dictionary|safe}}</script>
+{% endblock %}
+
+{% block content %}
+<div class="tabs is-fixed-top is-centered is-small mb-2">
+  <ul>
+    <li data-tab="rule-builder" class="is-active"><a>Rule builder</a></li>
+    <li data-tab="generation-area"><a>Generation workshop</a></li>
+  </ul>
+</div>
+<div id="tabContent" class='is-fluid tab-content'>
+  <div data-content="rule-builder">
+    {% include 'scombinator/partials/_rule_builder.html' %}
+  </div>
+  <div data-content="generation-area">
+    {% include 'scombinator/partials/_generation_area.html' %}
+  </div>
+</div>
+{% endblock %}

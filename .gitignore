@@ -24,3 +24,5 @@ Textinator/.env.prod
 temp_scripts
 Textinator/projects/hooks.py
 *.log
+Textinator/static/nlp/
+*.swp

@@ -1,9 +1,26 @@
 # -*- coding: utf-8 -*-
+from collections import defaultdict, abc
+
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
+
 from .models import *
+
+
+# Taken from:
+# https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+def dict_update(d, u):
+    for k, v in u.items():
+        if isinstance(v, abc.Mapping):
+            d[k] = dict_update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
 
 
 def have_the_same_relation(group):
     return len(set([r['type'] for r in group])) == 1
+
 
 def merge2cluster(group):
     nodes = {}
@@ -13,9 +30,10 @@ def merge2cluster(group):
     return {
         'type': group[0]['type'],
         'nodes': list(nodes.values()),
-        'extra': group[0]['extra'],
-        "annotator": group[0]['annotator']
+        'extra': group[0]['extra'] if 'extra' in group[0] else '',
+        "annotator": group[0]['annotator'] if 'annotator' in group[0] else ''
     }
+
 
 def group2hash(group):
     if isinstance(group, list):
@@ -34,7 +52,9 @@ class AnnotationExporter:
         self.__project = project
         self.__config = {
             'consolidate_clusters': False,
-            'include_usernames': False
+            'include_usernames': False,
+            'include_batch_no': False,
+            'include_flags': False
         }
         self.__config.update(config)
 
@@ -240,6 +260,14 @@ class AnnotationExporter:
             ).values_list('batch', flat=True)
 
             batches = Batch.objects.filter(pk__in=set(label_batches) | set(input_batches)).prefetch_related('label_set', 'input_set')
+
+            if self.__config['include_batch_no']:
+                window_exp = Window(
+                    expression=RowNumber(),
+                    order_by=F('dt_created').asc()
+                )
+                batches = batches.annotate(index=window_exp)
+
             resp = {}
             for batch in batches:
                 labels = batch.label_set
@@ -248,11 +276,25 @@ class AnnotationExporter:
 
                 if labels.count() or inputs.count():
                     context_id = inputs.first().context_id if inputs.count() else labels.first().context_id
+
                     if context_id not in resp:
+                        ctx = inputs.first().context if inputs.count() else labels.first().context
                         resp[context_id] = {
-                            "context": inputs.first().context.content if inputs.count() else labels.first().context.content,
+                            "context": ctx.content,
                             "annotations": []
                         }
+                        if self.__config["include_flags"]:
+                            resp[context_id]["flags"] = {}
+                            dals = DataAccessLog.objects.filter(
+                                datapoint=ctx.datapoint, datasource_id=ctx.datasource_id,
+                                is_deleted=False
+                            )
+                            for dal in dals.all():
+                                resp[context_id]['flags'] = dict_update(
+                                    resp[context_id]['flags'], dal.flags
+                                )
+                        if self.__config["include_batch_no"]:
+                            resp[context_id]["num"] = batch.index
 
                     ann = {}
                     exclude_labels = set()
@@ -275,7 +317,6 @@ class AnnotationExporter:
                         ann["annotator"] = batch.user.username
 
                     resp[context_id]["annotations"].append(ann)
-
         return list(resp.values())
 
     def export(self):

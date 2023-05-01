@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block custom_styles %}
+{% endblock %}
+
+{% block custom_scripts %}
+{% endblock %}
+
+{% block content %}
+<article class="message is-warning">
+  <div class="message-body">
+    <p>This page provides a number of standalone experimental tools that are yet to be fully integrated into Textinator. Please note that any (all) of these tools could be removed/drastically changed in future versions of Textinator.</p>
+  </div>
+</article>
+<ul>
+  {% for tool in tools %}
+    <li>
+      <div class="card">
+        <header class="card-header">
+          <p class="card-header-title">
+            {{tool.verbose_short_name}}
+          </p>
+          <button class="card-header-icon" aria-label="more options">
+            <a href="{{ url(tool.name.replace(".", ":") + ":index") }}" class='button is-info'>Visit</a>
+          </button>
+        </header>
+        <div class="card-content">
+          <div class="content">
+            {{tool.description}}
+          </div>
+        </div>
+      </div>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

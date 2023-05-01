@@ -112,3 +112,20 @@ def custom_or_default(fallback, prop):
                 return default
         return _inner2
     return _inner
+
+
+def follow(dct, path, flat=False):
+    res = dct
+    if isinstance(dct, list):
+        # need to do for each element in array
+        res = []
+        for x in dct:
+            f_res = follow(x, path, flat=flat)
+            if flat and isinstance(f_res, list):
+                res.extend(f_res)
+            else:
+                res.append(f_res)
+    elif isinstance(dct, dict):
+        step, _, remainder = path.partition('.')
+        res = follow(dct[step], remainder, flat=flat)
+    return res

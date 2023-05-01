@@ -1,5 +1,5 @@
 .flagged-area {
-  max-height: 500px;
+  max-height: 600px;
   overflow-y: hidden;
 }
 
@@ -91,4 +91,12 @@ span.tag:hover {
   position: relative;
   height: 40vh;
   width: 30vw;
+}
+
+span.json-formatter-string {
+  display: inline-block;
+  max-width: 900px;
+  width: 70%;
+  overflow-x: clip;
+  text-overflow: ellipsis;
 }
