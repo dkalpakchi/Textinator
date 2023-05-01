@@ -1544,17 +1544,32 @@
           this.initTextAreaEvents();
 
           let deselectActionBtn;
-          if (utils.isDefined(this.actionsArea))
+          let unmarkActionBtn;
+          if (utils.isDefined(this.actionsArea)) {
             deselectActionBtn = this.actionsArea.querySelector(
               "#deselectAllMarkers"
             );
+            unmarkActionBtn =
+              this.actionsArea.querySelector("#removeAllMarkers");
+          }
 
-          if (utils.isDefined(deselectActionBtn))
+          if (utils.isDefined(deselectActionBtn)) {
             deselectActionBtn.addEventListener("click", function () {
               control.textArea
                 .querySelectorAll(LABEL_CSS_SELECTOR)
                 .forEach((x) => x.classList.remove("active"));
             });
+          }
+
+          if (utils.isDefined(unmarkActionBtn)) {
+            unmarkActionBtn.addEventListener("click", function () {
+              control.selectorArea
+                .querySelectorAll("span.tag button.delete")
+                .forEach(function (x) {
+                  x.click();
+                });
+            });
+          }
 
           this.initSelectorAreaEvents();
 
