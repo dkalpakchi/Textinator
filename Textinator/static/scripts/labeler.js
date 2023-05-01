@@ -3796,7 +3796,10 @@
       },
       checkFutureOverlap: function (state) {
         return state.spanLabels
-          .slice(state.curLabelId + 1)
+          .filter(
+            (x) =>
+              !utils.hasProp(state.processed, x) || !state.processed[x].closed
+          )
           .map(function (x) {
             let s1 = state.spanLabels[state.curLabelId],
               s2 = x;
@@ -3892,8 +3895,10 @@
 
         if (curNode === null) {
           let parNode = prevNode.parentNode;
-
-          if (utils.isDefined(parNode)) {
+          if (
+            utils.isDefined(parNode) &&
+            utils.isDefined(parNode.nextSibling)
+          ) {
             return this.getClosestTextNode(
               parNode.nextSibling,
               spanLabel,
@@ -3908,7 +3913,11 @@
           }
         }
 
-        if (utils.isDefined(curNode) && curNode.nodeType == 1) {
+        if (
+          utils.isDefined(curNode) &&
+          curNode.nodeType == 1 &&
+          curNode.childNodes.length > 0
+        ) {
           // we are inside the label, find the closest text node inside
           // so the label might end up being an overlapping one,
           // hence find the text node inside the label that fits the best
@@ -4043,7 +4052,8 @@
             continue;
           if (
             state.acc + state.cnodeLength >=
-            state.spanLabels[candLabelId]["end"]
+              state.spanLabels[candLabelId]["end"] ||
+            (atTheEnd && cId >= state.totalNodes - 1)
           ) {
             // if the candLabelId label ends within this paragraph,
             // we found the suitable paragraph to render it!
@@ -4085,9 +4095,11 @@
             }
 
             if (hasRestored || state.processed[candLabelId].closed) {
-              state.c2i[candLabelId] = control.getActiveChunk().id;
-              state.processed[candLabelId].closed = true;
-              state.numInner[cId]++;
+              if (hasRestored) {
+                state.c2i[candLabelId] = control.getActiveChunk().id;
+                state.processed[candLabelId].closed = true;
+                state.numInner[cId]++;
+              }
               keys2del.push(candLabelId);
 
               for (let dId in multiData.delayed) {
@@ -4259,7 +4271,8 @@
             state.curLabelId < state.numLabels ||
             Object.keys(state.multip).length > 0
           ) {
-            state.cnodeLength = getNodeLength(state.cnodes[cId]);
+            state.cnodeLength =
+              cId >= state.totalNodes ? null : getNodeLength(state.cnodes[cId]);
 
             // Attempt to close a multi-paragraph marking
             this.restoreMultipMarkers(state);
@@ -4380,10 +4393,7 @@
                         );
 
                     if (hasOverlap) {
-                      if (
-                        dist < minDist &&
-                        state.processed[i]["ov"] == overlap.level - 1
-                      ) {
+                      if (dist < minDist) {
                         minDist = dist;
                         minDistId = state.processed[i]["id"];
                       }
@@ -4440,12 +4450,7 @@
                       // the non-closed one is either multi-paragraph (1st if)
                       // or depends on a multi-paragraph (2nd if)
                       if (state.processed[minDistId].multip) {
-                        if (utils.hasProp(state.multip, minDistId)) {
-                          state.multip[minDistId].delayed.push({
-                            id: state.curLabelId,
-                            acc: state.acc,
-                          });
-                        } else {
+                        if (!utils.hasProp(state.multip, minDistId)) {
                           let shouldRenderAtTheEnd =
                             control.checkFutureOverlap(state);
                           state.multip[minDistId] = {
@@ -4457,6 +4462,10 @@
                             renderAtTheEnd: shouldRenderAtTheEnd,
                           };
                         }
+                        state.multip[minDistId].delayed.push({
+                          id: state.curLabelId,
+                          acc: state.acc,
+                        });
                       } else {
                         for (let candMaster in state.multip) {
                           if (
@@ -4475,6 +4484,7 @@
                     }
                   } else {
                     // if it's not defined, find the closest of the split nodes
+
                     let searchRes = control.getClosestTextNode(
                       state.cnodes[cId],
                       state.spanLabels[state.curLabelId],

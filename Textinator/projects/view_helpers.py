@@ -213,13 +213,19 @@ def render_editing_board(request, project, user, page, template='partials/compon
         search_query = search_queries[sq_id]
 
         sql_string, sql_params = relevant_batches.query.sql_with_params()
-        search_indices = [int(x) for x in search_query.strip().split(",") if x.strip()]
-        batches = Batch.objects.raw(
-            "SELECT * FROM ({}) t1 WHERE t1.index IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
-                sql_string, ", ".join(["%s" for _ in range(len(search_indices))])
-            ),
-            list(sql_params) + search_indices
-        )
+        try:
+            search_indices = [int(x) for x in search_query.strip().split(",") if x.strip()]
+        except ValueError:
+            search_indices = []
+        if search_indices:
+            batches = Batch.objects.raw(
+                "SELECT * FROM ({}) t1 WHERE t1.index IN ({}) ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                    sql_string, ", ".join(["%s" for _ in range(len(search_indices))])
+                ),
+                list(sql_params) + search_indices
+            )
+        else:
+            batches = []
     else:
         if ds_id and dp_id:
             # reviewing
