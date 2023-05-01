@@ -232,8 +232,9 @@
 
       // account for the previous text of the enclosing label
       let enclosingLabel = getEnclosingLabel(node);
-      if (enclosingLabel != null && enclosingLabel != node)
+      if (enclosingLabel != null && enclosingLabel != node) {
         textLength += getPrevLength(enclosingLabel.previousSibling);
+      }
 
       // account for nesting
       while (isLabel(node.parentNode) && node.parentNode != enclosingLabel) {
@@ -241,19 +242,22 @@
         textLength += getPrevLength(node.previousSibling);
       }
 
+      // TODO(dmytro): return to these parts in more details
+      //               which tags should be accepted here?
+      // NOTE: <p> tags will be phased out
       // Find previous <p> or <ul>
-      let parent = getEnclosingParagraph(node);
+      let par = getEnclosingParagraph(node);
 
-      if (parent != null && parent.tagName == "UL") textLength += 1; // because <ul> adds a newline character to the beginning of the string
+      if (par != null && par.tagName == "UL") textLength += 1; // because <ul> adds a newline character to the beginning of the string
 
+      // TODO(dmytro): also check this one together with the previous TODO
       // all text scope
-      if (parent != null) {
-        textLength += getPrevLength(parent.previousElementSibling, true);
-
-        if (parent.parentNode.tagName == "BLOCKQUOTE") {
+      if (par != null) {
+        textLength += getPrevLength(par.previousSibling, false);
+        if (par.parentNode.tagName == "BLOCKQUOTE") {
           // +1 because <blockquote> adds a newline char to the beginning of the string
           textLength +=
-            getPrevLength(parent.parentNode.previousElementSibling, true) + 1;
+            getPrevLength(par.parentNode.previousSibling, false) + 1;
         }
       }
 
@@ -383,12 +387,14 @@
     }
 
     function getEnclosing(node, isOfType) {
+      let prevNode = node;
       node = node.parentNode;
       while (isOfType(node)) {
         if (!utils.isDefined(node)) break;
+        prevNode = node;
         node = node.parentNode;
       }
-      return isOfType(node) ? node : null;
+      return isOfType(node) ? node : isOfType(prevNode) ? prevNode : null;
     }
 
     function getClosest(node, isOfType) {
@@ -428,9 +434,9 @@
     }
 
     function getEnclosingParagraph(node) {
-      while (!["UL", "BODY", "P", "ARTICLE"].includes(node.tagName))
+      while (!["UL", "BODY", "P", "ARTICLE", "EM"].includes(node.tagName))
         node = node.parentNode;
-      return ["P", "UL", "ARTICLE"].includes(node.tagName) ? node : null;
+      return ["P", "UL", "EM"].includes(node.tagName) ? node : null;
     }
 
     function mergeDisjoint(node1, node2) {
@@ -4258,10 +4264,17 @@
         // - labels within one paragraph are rendered directly as they are
         // - multi-paragraph labels (and those dependent on them) are rendered asap
         // - rendering should happen from the outer to the inner ones, from top to bottom
+
+        // this provides a defense against infinite loops in case
+        // the annotations were saved in such a way that it's impossible to restore
+        // them or reach any other error
+        let loops = 0;
+        let loopTolerance = 10;
         while (
-          state.cnodeId < state.totalNodes ||
-          state.curLabelId < state.numLabels ||
-          Object.keys(state.multip).length > 0
+          (state.cnodeId < state.totalNodes ||
+            state.curLabelId < state.numLabels ||
+            Object.keys(state.multip).length > 0) &&
+          loops < loopTolerance
         ) {
           let cId = state.cnodeId;
           state.numInner[cId] = 0;
@@ -4271,6 +4284,10 @@
           ) {
             state.cnodeLength =
               cId >= state.totalNodes ? null : getNodeLength(state.cnodes[cId]);
+
+            if (state.cnodeLength == null) {
+              loops++;
+            }
 
             // Attempt to close a multi-paragraph marking
             this.restoreMultipMarkers(state);
@@ -4339,35 +4356,37 @@
                   endNode = undefined;
                 if (overlap.level === 0) {
                   // if no overlap, just select the text node and proceed
-                  if (state.cnodes[cId].nodeType === 1) {
-                    startNode = control.getClosestTextNode(
-                      state.cnodes[cId].childNodes[0],
-                      state.spanLabels[state.curLabelId],
-                      true,
-                      state.acc
-                    );
+                  let anyMultip = state.processed
+                    .filter((x) => x.id < state.curLabelId)
+                    .map((x) => x.multip)
+                    .some((x) => x);
+                  let candNode;
 
-                    endNode = control.getClosestTextNode(
-                      state.cnodes[cId].childNodes[0],
-                      state.spanLabels[state.curLabelId],
-                      false,
-                      state.acc
-                    );
+                  if (anyMultip) {
+                    candNode = control.selectorArea.childNodes[0];
                   } else {
-                    startNode = control.getClosestTextNode(
-                      state.cnodes[cId],
-                      state.spanLabels[state.curLabelId],
-                      true,
-                      state.acc
-                    );
-
-                    endNode = control.getClosestTextNode(
-                      state.cnodes[cId],
-                      state.spanLabels[state.curLabelId],
-                      false,
-                      state.acc
-                    );
+                    candNode =
+                      state.cnodes[cId].nodeType === 1
+                        ? state.cnodes[cId].childNodes[0]
+                        : state.cnodes[cId];
                   }
+                  let prevLength = anyMultip
+                    ? previousTextLength(candNode)
+                    : state.acc;
+
+                  startNode = control.getClosestTextNode(
+                    candNode,
+                    state.spanLabels[state.curLabelId],
+                    true,
+                    prevLength
+                  );
+
+                  endNode = control.getClosestTextNode(
+                    candNode,
+                    state.spanLabels[state.curLabelId],
+                    false,
+                    prevLength
+                  );
                   state.likelyErrors += startNode.errors + endNode.errors;
                 } else {
                   // if there is an overlap, find a parent,
@@ -4531,7 +4550,7 @@
           if (state.cnodeId < state.totalNodes) state.cnodeId++;
         }
 
-        if (state.likelyErrors > 0) {
+        if (state.likelyErrors > 0 || loops >= loopTolerance) {
           alert(
             "The annotations are likely to be restored incorrectly.\nPlease do NOT submit any edits for these annotations\nand report this by clicking the red flag button\nnear the selected annotation button."
           );
