@@ -27,6 +27,8 @@ Here are credits to the OSS projects that are still used in the latest version o
 *   [django-registration](https://github.com/ubernostrum/django-registration/)
 *   [django-rosetta](https://pypi.org/project/django-rosetta/)
 *   [django-tinymce4-lite](https://github.com/romanvm/django-tinymce4-lite)
+*   [pinax-announcements](https://github.com/pinax/pinax-announcements)
+*   [django-maintenancemode](https://github.com/bashu/django-maintenancemode)
 
 ## Previous versions of Textinator
 Here are credits to the OSS projects that were used in the previous versions of Textinator
