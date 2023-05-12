@@ -12,7 +12,7 @@ django-modeltranslation==0.17.3
 django-nested-admin==3.3.3
 django-registration==3.1.2
 django-rosetta==0.9.8
-django-scientific-survey==0.3.1
+django-scientific-survey==0.3.2
 django-tinymce4-lite==1.8.0
 django_admin_rangefilter==0.6.1
 django_filebrowser_no_grappelli==3.8.0
