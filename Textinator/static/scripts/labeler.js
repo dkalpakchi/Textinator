@@ -3548,7 +3548,9 @@
         for (let i = 0, len = submittableChunks.length; i < len; i++) {
           if (!utils.hasProp(submittableChunks[i], "extra"))
             submittableChunks[i]["extra"] = {};
-          let plugins = this.contextMenuPlugins[submittableChunks[i].label];
+          let markerCode = submittableChunks[i].label;
+          let mIndex = markerCode.lastIndexOf("_");
+          let plugins = this.contextMenuPlugins[markerCode.substr(0, mIndex)];
 
           for (let name in plugins) {
             submittableChunks[i]["extra"][name] =
@@ -5180,7 +5182,7 @@
         );
 
       if (isOk) {
-        let $lastCol = $(labelerModule.taskArea).find(".column:last");
+        let $lastCol = $(labelerModule.taskArea).find(".column.is-half:last");
 
         if (mode === "o") {
           $.ajax({

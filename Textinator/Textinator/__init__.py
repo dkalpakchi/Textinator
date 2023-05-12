@@ -3,5 +3,5 @@ from .celery import app as celery_app
 
 __all__ = ('celery_app',)
 
-__version__ = '1.2.1'
+__version__ = '1.3.1'
 VERSION = __version__  # synonym
