@@ -276,6 +276,9 @@ def render_editing_board(request, project, user, page, template='partials/compon
                     if search_type == "nemp":
                         # check non-empty ones
                         input_batches_clause = input_batches_clause.exclude(vector__isnull=True)
+                    elif search_type == "ext":
+                        # exact match
+                        input_batches_clause = input_batches_clause.filter(content=search_query)
                     else:
                         query = SearchQuery(
                             search_query,
