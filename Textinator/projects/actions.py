@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponseRedirect
 
-import projects.views as Tv
-
 
 def clone_project(modeladmin, request, queryset):
     for proj in queryset:

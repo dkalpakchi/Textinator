@@ -6,7 +6,7 @@ import django.db.models.deletion
 
 
 def fix_access_logs(apps, schema_editor):
-    ProjectData = apps.get_model('projects', 'ProjectData')
+    apps.get_model('projects', 'ProjectData')
     DataAccessLog = apps.get_model('projects', 'DataAccessLog')
 
     for da in DataAccessLog.objects.all():

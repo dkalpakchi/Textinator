@@ -8,9 +8,9 @@ import django.db.models.deletion
 
 def fill_user_in_batches(apps, schema_editor):
     Batch = apps.get_model('projects', 'Batch')
-    Input = apps.get_model('projects', 'Input')
-    Label = apps.get_model('projects', 'Label')
-    LabelRelation = apps.get_model('projects', 'LabelRelation')
+    apps.get_model('projects', 'Input')
+    apps.get_model('projects', 'Label')
+    apps.get_model('projects', 'LabelRelation')
 
     for batch in Batch.objects.all().iterator():
         inp = batch.input_set.first()

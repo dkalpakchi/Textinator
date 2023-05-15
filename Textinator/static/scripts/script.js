@@ -79,10 +79,6 @@
 
     $("a#joinButton").on("click", joinFormSubmit);
 
-    $(".intro-button").on("click", function () {
-      tour.start();
-    });
-
     // var countdown = null,
     //     interval = null;
 

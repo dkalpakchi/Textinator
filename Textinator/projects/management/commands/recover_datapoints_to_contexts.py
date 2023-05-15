@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
 import string
-from datetime import timedelta
 
 from django.core.management.base import BaseCommand
-from django.db.models import F, Func
 
 from projects.models import Context, Project, Label, Input, DataSource
 

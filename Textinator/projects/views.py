@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import io
 import time
 import datetime as dt
 import uuid
@@ -9,12 +8,11 @@ import logging
 import itertools
 from collections import defaultdict
 
-from django.http import JsonResponse, Http404, FileResponse
+from django.http import JsonResponse, Http404
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
-from django.template import Context
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import caches
@@ -196,7 +194,6 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
                     logs = Tm.DataAccessLog.objects.filter(user=u, project=proj, datasource=d, is_submitted=True).count()
                 except Tm.DataAccessLog.DoesNotExist:
                     print("DataAccessLog does not exist")
-                    pass
 
         menu_items, project_markers = {}, Tm.MarkerVariant.objects.filter(project=proj)
         for m in project_markers:
@@ -205,7 +202,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         if dp_info.is_empty:
             text = render_to_string('partials/_great_job.html')
         else:
-            if type(dp_info.text) == Tds.TextDatapoint:
+            if isinstance(dp_info.text, Tds.TextDatapoint):
                 users = list(set([x['username'] for x in dp_info.text.meta if 'username' in x]))
                 text = render_to_string('partials/components/areas/dialogue_text.html', {
                     'dp_info': dp_info,
@@ -438,7 +435,7 @@ def record_datapoint(request, proj):
                 try:
                     kwargs['ds_id'] = int(data['datasource'])
                     kwargs['dp_id'] = int(data['datapoint'])
-                except Value:
+                except ValueError:
                     kwargs['ds_id'], kwargs['dp_id'] = -1, -1
 
             return JsonResponse({
@@ -901,7 +898,7 @@ def get_data(request, source_id, dp_id):
 def async_delete_input(request, proj, inp):
     try:
         Tm.Input.objects.filter(pk=inp).delete()
-    except:
+    except Tm.Input.DoesNotExist:
         pass
     return redirect(request.META.get('HTTP_REFERER', '/'))
 

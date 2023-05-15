@@ -32,7 +32,6 @@ def count_token_lengths(items, item_type):
 @shared_task
 def get_label_lengths_stats(project_pk):
     project = Tm.Project.objects.get(pk=project_pk)
-    participants = project.participants.all()
 
     labels = Tm.Label.objects.filter(
             marker__project__id=project_pk,

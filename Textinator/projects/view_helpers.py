@@ -5,7 +5,7 @@ from collections import defaultdict, OrderedDict
 
 from django.conf import settings
 from django.template.loader import render_to_string
-from django.db.models import F, Window, Subquery, OuterRef
+from django.db.models import F, Window
 from django.db.models.functions import RowNumber
 from django.core.paginator import Paginator
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank

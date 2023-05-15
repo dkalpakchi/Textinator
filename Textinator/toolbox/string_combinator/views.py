@@ -3,15 +3,12 @@ import json
 import uuid
 import traceback
 
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.template.loader import render_to_string
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.db.models import F, Window, Subquery, OuterRef
-from django.db.models.functions import RowNumber
-from django.core.paginator import Paginator
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
 import toolbox.string_combinator.models as SCm
@@ -60,7 +57,7 @@ def record_transformation(request):
         except SCm.StringTransformationRule.DoesNotExist:
             res['error'] = 'does_not_exist'
             traceback.print_exc()
-        except SCm.StringTransformationRule.MultipleObjectsReturned as e:
+        except SCm.StringTransformationRule.MultipleObjectsReturned:
             res['error'] = 'not_unique'
             traceback.print_exc()
     elif op == 'delete':

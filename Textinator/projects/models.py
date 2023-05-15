@@ -2,10 +2,8 @@
 import random
 import secrets
 import time
-import sys
 import logging
 import json
-import copy
 import hashlib
 from collections import defaultdict
 from itertools import groupby
@@ -13,13 +11,12 @@ from operator import itemgetter
 
 from django.db import models, transaction
 from django.conf import settings
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.cache import caches
-from django.db.models import signals
-from django.contrib.postgres.search import SearchVector, SearchVectorField
+from django.contrib.postgres.search import SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
 
 from tinymce import HTMLField
@@ -1100,8 +1097,8 @@ class MarkerVariant(CloneMixin, CommonModel):
             res['order'] = self.order_in_unit
         return res
 
-    def to_json(self):
-        res = self.marker.to_json()
+    def to_json(self, dt_format=None):
+        res = self.marker.to_json(dt_format=dt_format)
         if self.export_name:
             res['name'] = self.export_name
         res['order'] = self.order_in_unit

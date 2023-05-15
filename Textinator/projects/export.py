@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from collections import defaultdict, abc
+from collections import abc
 
 from django.db.models import F, Window
 from django.db.models.functions import RowNumber
