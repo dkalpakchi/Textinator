@@ -29,6 +29,7 @@ Here are credits to the OSS projects that are still used in the latest version o
 *   [django-tinymce4-lite](https://github.com/romanvm/django-tinymce4-lite)
 *   [pinax-announcements](https://github.com/pinax/pinax-announcements)
 *   [django-maintenancemode](https://github.com/bashu/django-maintenancemode)
+*   Supporting PostgreSQL's full-text search for Ukrainian with the help of [dict_uk](https://github.com/brown-uk/dict_uk)
 
 ## Previous versions of Textinator
 Here are credits to the OSS projects that were used in the previous versions of Textinator
