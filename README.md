@@ -10,6 +10,7 @@ Check out some introductory resources:
 
 *   [Documentation](https://textinator.readthedocs.io/en/latest/)
 *   [Video tutorials](https://www.youtube.com/channel/UCUVbyJJFIUwfl129FGhPGJw)
+*   Demo instance: https://textinator.dev/ (username: `demo`, password: `demo1234`)
 
 ## Try out Textinator on your own machine
 
