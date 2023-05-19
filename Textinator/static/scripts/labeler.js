@@ -940,22 +940,28 @@
         }
 
         showExtraElements(this.selectorArea, false);
-        let ct = "";
+        let ct = "",
+            pt = "";
         if (utils.isDefined(this.selectorArea)) {
           let scrollable = this.selectorArea.querySelector(".scrollable");
+          let pinned = this.selectorArea.querySelector(".pinned");
           let hasScrollable = utils.isDefined(scrollable);
+          let hasPinned = utils.isDefined(pinned);
           if (forPresentation) {
             ct = (
               hasScrollable ? scrollable : this.selectorArea
             ).innerText.trim();
+
+            pt = hasPinned ? pinned.innerText.trim() : "";
           } else {
             ct = (
               hasScrollable ? scrollable : this.selectorArea
             ).textContent.trim();
+            pt = hasPinned ? pinned.textContent.trim() : "";
           }
         }
         showExtraElements(this.selectorArea, true);
-        return ct;
+        return ct + (pt.length > 0 ? "\n\n>>pin<<\n" + pt : "");
       },
       initTextAreaEvents: function () {
         let control = this;

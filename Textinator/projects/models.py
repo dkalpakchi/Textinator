@@ -812,6 +812,13 @@ class Project(CloneMixin, CommonModel):
         else:
             return raw_cfg
 
+    @property
+    def batches(self):
+        inp_batches = Input.objects.filter(marker__project=self).values_list('batch_id', flat=True)
+        lab_batches = Label.objects.filter(marker__project=self).values_list('batch_id', flat=True)
+        batch_ids = set(inp_batches) | set(lab_batches)
+        return Batch.objects.filter(pk__in=batch_ids)
+
     def __str__(self):
         return self.title
 
