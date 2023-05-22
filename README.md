@@ -11,6 +11,7 @@ Check out some introductory resources:
 *   [Documentation](https://textinator.readthedocs.io/en/latest/)
 *   [Video tutorials](https://www.youtube.com/channel/UCUVbyJJFIUwfl129FGhPGJw)
 *   Demo instance: https://textinator.dev/ (username: `demo`, password: `demo1234`)
+*   Interested how Textinator compares to other Open Source annotation tools for NLP? Check our paper published at LREC 2022: https://aclanthology.org/2022.lrec-1.90.pdf
 
 ## Try out Textinator on your own machine
 
