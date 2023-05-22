@@ -48,3 +48,19 @@ Upcoming languages
 
 ## Credits
 Textinator depends on so many other wonderful open-source projects, that they deserve a special [Credits file](https://github.com/dkalpakchi/Textinator/blob/master/notes/CREDITS.md)
+
+## Cite Textinator
+```
+@inproceedings{kalpakchi-boye-2022-textinator,
+    title = "Textinator: an Internationalized Tool for Annotation and Human Evaluation in Natural Language Processing and Generation",
+    author = "Kalpakchi, Dmytro  and
+      Boye, Johan",
+    booktitle = "Proceedings of the Thirteenth Language Resources and Evaluation Conference",
+    month = jun,
+    year = "2022",
+    address = "Marseille, France",
+    publisher = "European Language Resources Association",
+    url = "https://aclanthology.org/2022.lrec-1.90",
+    pages = "856--866"
+}
+```
