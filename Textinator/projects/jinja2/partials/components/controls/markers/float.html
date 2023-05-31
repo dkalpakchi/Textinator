@@ -1,4 +1,4 @@
 <div class="control has-tag-left">
-  <input class='input' type="number" {% if marker.nrange and marker.nrange.min_value is not none %}min="{{marker.nrange.min_value}}"{% endif %} {% if marker.nrange and marker.nrange.max_value is not none %}max="{{marker.nrange.max_value}}"{% endif %} step={% if marker.nrange and marker.nrange.step is not none %}"{{marker.nrange.step}}"{% else %}"0.01"{% endif %}name="{{marker.code}}" placeholder="{{marker.name}}">
+  <input class='input' type="number" {% if marker.nrange and marker.nrange.min_value is not none %}min="{{marker.nrange.min_value}}"{% endif %} {% if marker.nrange and marker.nrange.max_value is not none %}max="{{marker.nrange.max_value}}"{% endif %} step={% if marker.nrange and marker.nrange.step is not none %}"{{marker.nrange.step}}"{% else %}"0.01"{% endif %}name="{% include 'partials/components/controls/markers/_code.html' %}" placeholder="{{marker.name}}">
   {% include 'partials/components/controls/markers/tag.html' %}
 </div>

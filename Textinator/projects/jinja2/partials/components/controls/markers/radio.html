@@ -1,7 +1,7 @@
 {% if marker.choices %}
   {% set is_required = marker.get_count_restrictions() == "eq1s" %}
   <div class="control is-marker-w90{% if marker.max_choice_len > 35 %} vertical-radio{% endif %}">
-    <p class="has-text-weight-bold" data-label-for="{{marker.code}}">
+    <p class="has-text-weight-bold" data-label-for="{% include 'partials/components/controls/markers/_code.html' %}">
       {{marker.name}}
       {% if is_required %}
         {% include 'partials/_form_required.html' %}
@@ -11,19 +11,19 @@
       {% if c|is_list %}
         {% set outer_loop = loop %}
         <label class="radio outer">
-          <input id="{{marker.code}}_{{outer_loop.index0}}" data-for="{{marker.code}}" name="{{marker.code}}_ocat" type="radio" value="{{outer_loop.index}}" {% if is_required %}required{% endif %}>
+          <input id="{% include 'partials/components/controls/markers/_code.html' %}_{{outer_loop.index0}}" data-for="{% include 'partials/components/controls/markers/_code.html' %}" name="{% include 'partials/components/controls/markers/_code.html' %}_ocat" type="radio" value="{{outer_loop.index}}" {% if is_required %}required{% endif %}>
           <div class="inner">
             {% for x in c %}
-              <label class="radio" for="{{marker.code}}_{{outer_loop.index0}}_{{loop.index0}}">
-                <input id="{{marker.code}}_{{outer_loop.index0}}_{{loop.index0}}" type="radio" name="{{marker.code}}" value="{{x}}" data-group="{{marker.code}}_{{outer_loop.index0}}" {% if is_required %}required{% endif %}>
+              <label class="radio" for="{% include 'partials/components/controls/markers/_code.html' %}_{{outer_loop.index0}}_{{loop.index0}}">
+                <input id="{% include 'partials/components/controls/markers/_code.html' %}_{{outer_loop.index0}}_{{loop.index0}}" type="radio" name="{% include 'partials/components/controls/markers/_code.html' %}" value="{{x}}" data-group="{% include 'partials/components/controls/markers/_code.html' %}_{{outer_loop.index0}}" {% if is_required %}required{% endif %}>
                 {{x}}
               </label>
             {% endfor %}
           </div>
         </label>
       {% else %}
-        <label class="radio" for="{{marker.code}}_{{loop.index0}}">
-          <input id="{{marker.code}}_{{loop.index0}}" type="radio" name="{{marker.code}}" value="{{c|strip}}"{% if is_required %}required{% endif %}>
+        <label class="radio" for="{% include 'partials/components/controls/markers/_code.html' %}_{{loop.index0}}">
+          <input id="{% include 'partials/components/controls/markers/_code.html' %}_{{loop.index0}}" type="radio" name="{% include 'partials/components/controls/markers/_code.html' %}" value="{{c|strip}}"{% if is_required %}required{% endif %}>
           {{c}}
         </label>
       {% endif %}

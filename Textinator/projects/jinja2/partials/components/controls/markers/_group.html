@@ -6,7 +6,6 @@
         {% set mv_min = marker.min() %}
         {% set mv_max = marker.max() %}
         {% set prefix = '{}_{}_'.format(marker.unit.name|replace("_",""), i) %}
-        {% set suffix = "_{}".format(loop.index) %}
         {% for k in range(mv_max) %}
           {% set req = (i < unit.minimum_required and k < mv_min)|bool2str %}
           {% set extra = 'data-required="{}"'.format(req) %}
@@ -19,7 +18,7 @@
             {% set placeholder = "{} ({})".format(placeholder, _("required")) %}
           {% endif %}
 
-          {{marker|display_marker(prefix=prefix,suffix=suffix,placeholder=placeholder,extra=extra)}}
+          {{marker|display_marker(prefix=prefix,placeholder=placeholder,extra=extra)}}
         {% endfor %}
       {% endfor %}
     </div>

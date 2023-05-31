@@ -333,7 +333,8 @@ def render_editing_board(request, project, user, page, template='partials/compon
         'page': page,
         'project': project,
         'is_admin': is_author or is_shared,
-        'current_uuid': current_uuid
+        'current_uuid': current_uuid,
+        'is_searched_for': len(search_queries) > 0
     }, request=request)
 
 
@@ -374,7 +375,11 @@ def process_inputs(batch, batch_info, short_text_markers=None, long_text_markers
                                 content=inp_string.strip(),
                                 marker=m,
                                 batch=batch,
-                                context=ctx
+                                context=ctx,
+                                revision_changes="Added a new marker of type {} [{}]".format(
+                                    m.name,
+                                    timezone.now().strftime('%Y-%m-%d %H:%M:%S %Z')
+                                )
                             )
                             break
 
@@ -418,8 +423,9 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
     if batch_info.marker_groups:
         marker_groups = OrderedDict()
         for k, v in batch_info.marker_groups.items():
+            print(k)
             name_parts = k.split("_")
-            unit, i, mv_code = name_parts[0], name_parts[1], "_".join(name_parts[2:-1])
+            unit, i, mv_code = name_parts[0], name_parts[1], "_".join(name_parts[2:])
             prefix = "{}_{}".format(unit, i)
             if prefix not in marker_groups:
                 marker_groups[prefix] = defaultdict(list)
@@ -451,11 +457,18 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
 
                     unit = prefix.split("_")[0]
 
+                    print(mv, mv.unit.name, unit)
                     if mv.unit.name != unit:
                         continue
 
-                    N = sum(map(bool, values))
-                    if N >= mv.min() and N <= mv.max():
+                    if mv.anno_type in ('radio', 'check'):
+                        # make "||" a setting and not only a variable in labeler.js
+                        unit_cache.append({
+                            'content': "||".join(values),
+                            'marker': mv,
+                            'group_order': i + 1
+                        })
+                    else:
                         for val in values:
                             if val:
                                 unit_cache.append({
@@ -463,13 +476,10 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                                     'marker': mv,
                                     'group_order': i + 1
                                 })
-                    else:
-                        unit_cache = []
-                        break
 
+                print(unit_cache)
                 for dct in unit_cache:
-                    if dct['marker'].is_free_text():
-                        Input.objects.create(context=ctx, batch=batch, **dct)
+                    Input.objects.create(context=ctx, batch=batch, **dct)
 
 
 def process_text_markers(batch, batch_info, text_markers=None, ctx_cache=None):

@@ -323,10 +323,13 @@ def record_datapoint(request, proj):
 
         if batch:
             if mode == "rev":
-                revised_batch = Tm.Batch.objects.create(
-                    uuid=uuid.uuid4(), user=batch_info.user,
-                    revision_of=batch
-                )
+                if batch.revision_of_id:
+                    revised_batch = batch
+                else:
+                    revised_batch = Tm.Batch.objects.create(
+                        uuid=uuid.uuid4(), user=batch_info.user,
+                        revision_of=batch
+                    )
             batch_inputs = {i.hash: i for i in Tm.Input.objects.filter(batch=batch)}
             batch_labels = {l.hash: l for l in Tm.Label.objects.filter(batch=batch)}
 
@@ -343,7 +346,8 @@ def record_datapoint(request, proj):
                                 inp.content = changed['value']
                                 if mode == "rev":
                                     old_pk = inp.pk
-                                    inp.pk = None
+                                    if not inp.revision_of_id:
+                                        inp.pk = None
                                     inp.batch = revised_batch
                                     inp.revision_of_id = old_pk
                                     inp.revision_changes += "\nChanged {} [{}]".format(
@@ -384,8 +388,10 @@ def record_datapoint(request, proj):
             # and there were no inputs, the batch self-destroys
             if mode == "e":
                 process_chunks_and_relations(batch, batch_info)
+                process_marker_groups(batch, batch_info)
             elif mode == "rev":
                 process_chunks_and_relations(revised_batch, batch_info)
+                process_marker_groups(revised_batch, batch_info)
 
             # Dealing with inputs that are deleted
             for ihash in batch_inputs:
@@ -398,7 +404,7 @@ def record_datapoint(request, proj):
                         revised_input.content = ""
                         revised_input.pk = None
                         revised_input.batch = revised_batch
-                        revised_input.revision_changes += "\nDeleted {} [{}]".format(
+                        revised_input.revision_changes = "Deleted {} [{}]".format(
                             batch_inputs[ihash].marker.name,
                             timezone.now().strftime('%Y-%m-%d %H:%M:%S %Z')
                         )
@@ -525,7 +531,7 @@ def get_batch(request, proj):
         input_types = ['free-text', 'lfree-text', 'integer', 'float', 'range', 'radio', 'check']
         for it in input_types:
             non_unit_markers[it.replace('-', '_')] = non_unit_markers_q.filter(marker__anno_type=it)
-        groups = inputs.exclude(marker__unit=None)
+        groups = inputs.exclude(marker__unit=None).order_by('marker__order_in_unit')
 
         span_labels = labels.filter(marker__anno_type='m-span')
         text_labels = labels.filter(marker__anno_type='m-text')
@@ -545,12 +551,23 @@ def get_batch(request, proj):
         else:
             context['content'] = post_processed_text
 
+        groups_json = []
+        for inp in groups:
+            inp_json = inp.to_short_json()
+            code = inp_json['marker']['code']
+            code = "{}_{}_{}".format(
+                inp.marker.unit.name, inp.group_order - 1, code
+            )
+            inp_json['marker']['code'] = code
+            inp_json['marker']['anno_type'] = inp_json['marker']['anno_type'].replace("-", '_')
+            groups_json.append(inp_json)
+
         return JsonResponse({
             'context': context,
             'span_labels': [s_label.to_short_json() for s_label in span_labels],
             'text_labels': [t_label.to_short_json() for t_label in text_labels],
             'non_unit_markers': {k: [i.to_short_json() for i in v] for k, v in non_unit_markers.items()},
-            'groups': [i.to_short_json() for i in groups]
+            'groups': groups_json
         })
     else:
         return JsonResponse({})

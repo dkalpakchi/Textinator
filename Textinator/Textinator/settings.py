@@ -274,7 +274,7 @@ TINYMCE_DEFAULT_CONFIG = {
 
 FILEBROWSER_MAX_UPLOAD_SIZE = 20971520 # 20MB
 
-CHOICES_SEPARATOR = "|"
+CHOICES_SEPARATOR = "||"
 
 JAZZMIN_SETTINGS = {
     # title of the window (Will default to current_admin_site.site_title if absent or None)

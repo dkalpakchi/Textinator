@@ -501,11 +501,9 @@ class Project(CloneMixin, CommonModel):
             display_groups = groupby(fm, lambda x: x.display_tab)
             tabs, groups = [], []
             for tab, f_groups in display_groups:
-                group = [tab, None]
                 anno_groups = groupby(list(f_groups), lambda x: x.anno_type)
-                group[1] = anno_groups
                 tabs.append(tab)
-                groups.append(group)
+                groups.append((tab, anno_groups))
             return tabs, groups
         else:
             return fm
@@ -520,13 +518,21 @@ class Project(CloneMixin, CommonModel):
         span_anno_types = map(itemgetter(0), settings.SPAN_ANNOTATION_TYPES)
         return self.markervariant_set.filter(anno_type__in=span_anno_types)
 
-    @property
-    def marker_groups(self):
+    def marker_groups(self, intelligent_groups=False):
         """
         Returns:
             QuerySet: The set of marker variants that belong to marker unit (order by annotation type)
         """
-        return self.markervariant_set.exclude(unit=None).order_by('anno_type')
+        mg = self.markervariant_set.exclude(unit=None).order_by('display_tab', 'anno_type')
+        if intelligent_groups:
+            tabs, groups = [], []
+            for tab, f_groups in groupby(mg, lambda x: x.display_tab):
+                anno_groups = [(k, list(v)) for k, v in groupby(list(f_groups), lambda x: x.unit)]
+                tabs.append(tab)
+                groups.append((tab, anno_groups))
+            return tabs, groups
+        else:
+            return mg
 
     def get_dp_from_log(self, log):
         ds_def = log.datasource
@@ -1096,12 +1102,14 @@ class MarkerVariant(CloneMixin, CommonModel):
     def __str__(self):
         return str(self.marker) + "<{}>".format(self.project.title)
 
-    def to_minimal_json(self, include_color=False):
+    def to_minimal_json(self, include_color=False, include_anno_type=False):
         res = self.marker.to_minimal_json(include_color=include_color)
         if self.export_name:
             res['name'] = self.export_name
         if self.order_in_unit:
             res['order'] = self.order_in_unit
+        if include_anno_type:
+            res['anno_type'] = self.anno_type
         return res
 
     def to_json(self, dt_format=None):
@@ -1110,6 +1118,7 @@ class MarkerVariant(CloneMixin, CommonModel):
             res['name'] = self.export_name
         res['order'] = self.order_in_unit
         res['code'] = self.code
+        res['anno_type'] = self.anno_type
         return res
 
 
@@ -1430,9 +1439,10 @@ class Batch(Revisable, CommonModel):
 
     @property
     def total_revision_changes(self):
-        input_changes = list(self.inputs.values_list('revision_changes', flat=True))
-        label_changes = list(self.labels.values_list('revision_changes', flat=True))
-        total_changes = [self.revision_changes] + input_changes + label_changes
+        self_changes = [self.revision_changes] if self.revision_changes else []
+        input_changes = [x for x in self.inputs.values_list('revision_changes', flat=True) if x]
+        label_changes = [x for x in self.labels.values_list('revision_changes', flat=True) if x]
+        total_changes = self_changes + input_changes + label_changes
         return "\n".join(total_changes).strip()
 
 
@@ -1491,10 +1501,10 @@ class Input(Orderable, Revisable, CloneMixin, CommonModel):
     def __str__(self):
         return truncate(self.content, 50)
 
-    def to_minimal_json(self, dt_format=None, include_user=False, include_color=False):
+    def to_minimal_json(self, dt_format=None, include_user=False, include_color=False, include_anno_type=False):
         res = super(Input, self).to_json(dt_format=dt_format)
         res['content'] = self.content
-        res['marker'] = self.marker.to_minimal_json(include_color=include_color)
+        res['marker'] = self.marker.to_minimal_json(include_color=include_color, include_anno_type=include_anno_type)
         if self.marker.unit:
             res['group_order'] = self.group_order
         return res

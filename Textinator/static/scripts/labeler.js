@@ -846,7 +846,6 @@
       markersArea: null,
       selectorArea: null, // the area where the article is
       interactiveDataArea: null,
-      markerGroupsArea: null,
       submitForm: null,
       contextMenuPlugins: { sharedBetweenMarkers: {} },
       checkedOuterRadio: {}, // to keep tracked of nested radio button groups
@@ -861,8 +860,6 @@
       init: function () {
         this.taskArea = document.querySelector("#taskArea");
         this.markersArea = this.taskArea.querySelector("#markersArea");
-        this.markerGroupsArea =
-          this.taskArea.querySelector("#markerGroupsArea");
         this.relationsArea = this.taskArea.querySelector("#relationsArea");
         this.textArea = this.taskArea.querySelector("#textArea");
         this.actionsArea = this.taskArea.querySelector("#actionsArea");
@@ -893,20 +890,16 @@
         this.fixUI();
       },
       fixUI: function () {
-        [this.markersArea, this.markerGroupsArea].forEach(function (area) {
-          if (utils.isDefined(area)) {
-            $(area)
-              .find(".control.has-tag-left")
-              .each(function (i, x) {
-                let $input = $(x).find("input"),
-                  $tag = $(x).find("span.tag");
+        if (utils.isDefined(this.markersArea)) {
+          $(this.markersArea)
+            .find(".control.has-tag-left")
+            .each(function (i, x) {
+              let $input = $(x).find("input"),
+                $tag = $(x).find("span.tag");
 
-                if ($input.length) {
-                  $input.css("padding-left", $tag.outerWidth() + 20);
-                }
-              });
-          }
-        });
+              $input.css("padding-left", $tag.outerWidth() + 20);
+            });
+        }
 
         let viewPortHeight = window.innerHeight;
 
@@ -1543,10 +1536,12 @@
         }
       },
       initEvents: function () {
-        // event delegation
-        if (this.selectorArea != null) {
-          let control = this;
+        let control = this;
+        document.addEventListener("Textinator:tab:switch", function() {
+          control.fixUI();
+        })
 
+        if (this.selectorArea != null) {
           this.initTextAreaEvents();
 
           let deselectActionBtn;
@@ -3444,8 +3439,8 @@
       getSubmittableDict: function (stringify) {
         if (!utils.isDefined(stringify)) stringify = false;
 
-        let markerGroups = utils.isDefined(this.markerGroupsArea)
-            ? $(this.markerGroupsArea)
+        let markerGroups = utils.isDefined(this.markersArea)
+            ? $(this.markersArea)
                 .find("form#markerGroups")
                 .serializeObject()
             : {},
@@ -3481,6 +3476,7 @@
             : {},
           submittableChunks = chunks.filter((c) => c.submittable);
 
+        console.log(markerGroups)
         if (utils.isDefined(this.markersArea)) {
           $(this.markersArea)
             .find('input[type="radio"]')
@@ -3964,78 +3960,94 @@
           errors: errors,
         };
       },
+      restoreInputMarker: function(k, el) {
+        let control = this;
+        let inps,
+            vals;
+        if (k == "lfree_text")
+          inps = control.markersArea.querySelectorAll(
+            'textarea[name="' + el.marker.code + '"]'
+          );
+        else if (k == "radio") {
+          if (el.content.includes("||")) {
+            inps = control.markersArea.querySelectorAll(
+              'input[type="radio"][name="' +
+                el.marker.code +
+                '_ocat"],' +
+                'input[type="radio"][name="' +
+                el.marker.code +
+                '"]'
+            );
+            vals = el.content.split(control.radioCheckSeparator);
+          } else {
+            inps = control.markersArea.querySelectorAll(
+              'input[type="radio"][name="' + el.marker.code + '"]'
+            );
+          }
+        } else if (k == "check") {
+          inps = control.markersArea.querySelectorAll(
+            'input[type="checkbox"][name="' + el.marker.code + '"]'
+          );
+          vals = el.content.split(control.radioCheckSeparator);
+        } else {
+          inps = control.markersArea.querySelectorAll(
+            'input[name="' + el.marker.code + '"]'
+          );
+        }
+        console.log(k, inps)
+        
+        if (inps) {
+          for (let i = 0, linps = inps.length; i < linps; i++) {
+            let inp = inps[i];
+            console.log("HERE")
+            console.log(el)
+            inp.setAttribute("data-h", el.hash);
+            if (k == "radio") {
+              if (utils.isDefined(vals)) {
+                for (let j = 0, lv = vals.length; j < lv; j++) {
+                  if (inp.value == vals[j]) {
+                    inp.checked = true;
+                  }
+                }
+              }
+              if (inp.value == el.content) {
+                inp.checked = true;
+                if (inp.hasAttribute("data-group")) {
+                  let outerRadio = control.markersArea.querySelector(
+                    "#" + inp.getAttribute("data-group")
+                  );
+
+                  if (utils.isDefined(outerRadio))
+                    outerRadio.checked = true;
+                }
+              }
+            } else if (k == "check") {
+              if (vals.includes(inp.value)) inp.checked = true;
+            } else {
+              inp.value = el.content;
+            }
+
+            if (inp.getAttribute("type") == "range") {
+              let event = new Event("input");
+              inp.dispatchEvent(event);
+            }
+          }
+        }
+      },
+      restoreGroups: function (groups) {
+        let control = this;
+        for (let i in groups) {
+          console.log(groups[i])
+          control.restoreInputMarker(groups[i]['marker']['anno_type'], groups[i])
+        }
+      },
       restoreNonUnitMarkers: function (non_unit_markers) {
         // restore markers, instantiated with inputs, which do not belong to any unit
         let control = this;
         for (let k in non_unit_markers) {
           for (let i = 0, len = non_unit_markers[k].length; i < len; i++) {
-            let el = non_unit_markers[k][i],
-              inps,
-              vals;
-            if (k == "lfree_text")
-              inps = control.markersArea.querySelectorAll(
-                'textarea[name="' + el.marker.code + '"]'
-              );
-            else if (k == "radio") {
-              if (el.content.includes("||")) {
-                inps = control.markersArea.querySelectorAll(
-                  'input[type="radio"][name="' +
-                    el.marker.code +
-                    '_ocat"],' +
-                    'input[type="radio"][name="' +
-                    el.marker.code +
-                    '"]'
-                );
-                vals = el.content.split(control.radioCheckSeparator);
-              } else {
-                inps = control.markersArea.querySelectorAll(
-                  'input[type="radio"][name="' + el.marker.code + '"]'
-                );
-              }
-            } else if (k == "check") {
-              inps = control.markersArea.querySelectorAll(
-                'input[type="checkbox"][name="' + el.marker.code + '"]'
-              );
-              vals = el.content.split(control.radioCheckSeparator);
-            } else
-              inps = control.markersArea.querySelectorAll(
-                'input[name="' + el.marker.code + '"]'
-              );
-            if (inps) {
-              for (let i = 0, linps = inps.length; i < linps; i++) {
-                let inp = inps[i];
-                inp.setAttribute("data-h", el.hash);
-                if (k == "radio") {
-                  if (utils.isDefined(vals)) {
-                    for (let j = 0, lv = vals.length; j < lv; j++) {
-                      if (inp.value == vals[j]) {
-                        inp.checked = true;
-                      }
-                    }
-                  }
-                  if (inp.value == el.content) {
-                    inp.checked = true;
-                    if (inp.hasAttribute("data-group")) {
-                      let outerRadio = control.markersArea.querySelector(
-                        "#" + inp.getAttribute("data-group")
-                      );
-
-                      if (utils.isDefined(outerRadio))
-                        outerRadio.checked = true;
-                    }
-                  }
-                } else if (k == "check") {
-                  if (vals.includes(inp.value)) inp.checked = true;
-                } else {
-                  inp.value = el.content;
-                }
-
-                if (inp.getAttribute("type") == "range") {
-                  let event = new Event("input");
-                  inp.dispatchEvent(event);
-                }
-              }
-            }
+            let el = non_unit_markers[k][i];
+            control.restoreInputMarker(k, el);
           }
         }
       },
@@ -4597,6 +4609,7 @@
             success: function (d) {
               control.clearBatch();
               control.postSubmitHandler();
+              console.log(d)
 
               chunks = [];
 
@@ -4617,6 +4630,7 @@
               control.restart();
 
               control.restoreNonUnitMarkers(d.non_unit_markers);
+              control.restoreGroups(d.groups);
               control.restoreTextMarkers(d.text_labels);
               control.restoreSpanMarkers(d.span_labels);
             },
@@ -4630,15 +4644,6 @@
         $(this.markersArea)
           .find(
             'input[type="text"],input[type="radio"],input[type="checkbox"],textarea'
-          )
-          .each(function (i, x) {
-            x.removeAttribute("data-h");
-            if (x.type != "radio" && x.type != "checkbox") x.value = "";
-            if (x.type == "radio" || x.type == "checkbox") x.checked = false;
-          });
-        $(this.markerGroupsArea)
-          .find(
-            '#markerGroups input[type="text"],input[type="radio"],input[type="checkbox"]'
           )
           .each(function (i, x) {
             x.removeAttribute("data-h");
@@ -4793,7 +4798,6 @@
 
               $(labelerModule.markersArea).remove();
               $(labelerModule.relationsArea).remove();
-              $(labelerModule.markerGroupsArea).remove();
               $(labelerModule.actionsArea).remove();
             } else {
               $selector.html(d.text);
@@ -4917,11 +4921,6 @@
                     .each(function (i, x) {
                       $(x).val("");
                     });
-                  $(labelerModule.markerGroupsArea)
-                    .find("#markerGroups textarea")
-                    .each(function (i, x) {
-                      $(x).val("");
-                    });
                   $(labelerModule.markersArea)
                     .find("input")
                     .each(function (i, x) {
@@ -4936,16 +4935,6 @@
                         x.checked = false;
                     });
                   $(labelerModule.markersArea)
-                    .find("output")
-                    .each(function (i, x) {
-                      $(x).text("???");
-                    }); // labels for input[type="range"]
-                  $(labelerModule.markerGroupsArea)
-                    .find("#markerGroups input")
-                    .each(function (i, x) {
-                      $(x).val("");
-                    });
-                  $(labelerModule.markerGroupsArea)
                     .find("output")
                     .each(function (i, x) {
                       $(x).text("???");

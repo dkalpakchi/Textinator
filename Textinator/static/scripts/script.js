@@ -38,6 +38,8 @@
         "is-active"
       );
       $('div[data-content="' + tab + '"]').addClass("is-active");
+      const ev = new Event("Textinator:tab:switch");
+      document.dispatchEvent(ev);
     });
 
     // Check for click events on the navbar burger icon

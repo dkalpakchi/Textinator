@@ -1,22 +1,29 @@
-{% if project.free_markers().count() > 0 %}
+{% set num_free_markers = project.free_markers().count() %}
+{% set num_marker_groups = project.marker_groups().count() %}
+{% if num_free_markers > 0 or num_marker_groups > 0 %}
   <article id="markersArea" class="markers message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
     <div class="message-header">
       <p>{{ _("markers")|capitalize }}</p>
     </div>
     <div class="message-body">
-      {% set tabs, grouped_markers = project.free_markers(intelligent_groups=True) %}
-      {% if tabs|length > 1%}
+      {% set fm_tabs, grouped_free_markers = project.free_markers(intelligent_groups=True) %}
+      {% set mg_tabs, grouped_marker_groups = project.marker_groups(intelligent_groups=True) %}
+      {% if fm_tabs|length > 1 or mg_tabs|length > 1 %}
         <div class="tabs" data-for="markersTabContent">
           <ul>
-            {% for tab in tabs %}
-              <li{% if loop.index0 == 0 %} class="is-active"{% endif %} data-tab="{{tab}}">
-                <a class="no-decoration">{{tab}}</a>
-              </li>
+            {% for tabs in (fm_tabs, mg_tabs) %}
+              {% set outer = loop %} 
+              {% for tab in tabs %}
+                <li{% if outer.index0 == 0 and loop.index0 == 0 %} class="is-active"{% endif %} data-tab="{{tab}}">
+                  <a class="no-decoration">{{tab}}</a>
+                </li>
+              {% endfor %}
             {% endfor %}
           </ul>
         </div>
       {% endif %}
-      {% for tab, tab_groups in grouped_markers %}
+      {% set tabs = fm_tabs + mg_tabs %}
+      {% for tab, tab_groups in grouped_free_markers %}
         <div data-from="markersTabContent" data-content="{{ tab }}"{% if tab == tabs[0] %} class="is-active"{% endif %}>
         {% for key, group in tab_groups %}
           <div class="field is-grouped is-grouped-multiline{% if key == 'range' %} has-addons is-align-items-center{% endif %}">
@@ -30,23 +37,17 @@
         {% endfor %}
         </div>
       {% endfor %}
-    </div>
-  </article>
-{% endif %}
-
-{% if project.marker_groups.count() > 0 %}
-  <article id="markerGroupsArea" class="marker groups message" data-mmpi="{{project.max_markers_per_input or 'Infinity'}}" data-select="{{project.allow_selecting_labels|bool2str}}" data-disable="{{project.disable_submitted_labels|bool2str}}">
-    <div class="message-header">
-      <p>{{ _("marker groups")|capitalize }}</p>
-    </div>
-    <div class="message-body">
-      <form id="markerGroups" data-toggle="formcache">
-        <ul id="sortable">
-          {% for unit, markers in project.marker_groups|groupby("unit") %}
-            {% include 'partials/components/controls/markers/_group.html' %}
-          {% endfor %}
-        </ul>
-      </form>
+      {% for tab, tab_group in grouped_marker_groups %}
+        <div data-from="markersTabContent" data-content="{{ tab }}"{% if tab == tabs[0] %} class="is-active"{% endif %}>
+          <form id="markerGroups" data-toggle="formcache">
+            <ul id="sortable">
+              {% for unit, markers in tab_group %}
+                {% include 'partials/components/controls/markers/_group.html' %}
+              {% endfor %}
+            </ul>
+          </form>
+        </div>
+      {% endfor %}
     </div>
   </article>
 {% endif %}

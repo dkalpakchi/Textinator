@@ -1,5 +1,5 @@
 <div class="control">
-  <div class="marker tags has-addons" data-s="{{marker.code}}" data-color="{{marker.color}}" data-text-color="{{text_color}}" data-res="{{marker.get_count_restrictions()}}" data-shortcut="{{marker.shortcut|upper}}" data-indep="{% if not marker.is_part_of_relation() %}true{% else %}false{% endif %}" data-scope="span" data-dt="{{marker.display_type}}">
+  <div class="marker tags has-addons" data-s="{% include 'partials/components/controls/markers/_code.html' %}" data-color="{{marker.color}}" data-text-color="{{text_color}}" data-res="{{marker.get_count_restrictions()}}" data-shortcut="{{marker.shortcut|upper}}" data-indep="{% if not marker.is_part_of_relation() %}true{% else %}false{% endif %}" data-scope="span" data-dt="{{marker.display_type}}">
     {% if marker.is_part_of_relation() %}
       <span class="tag arrow is-grey"><input type="checkbox"></span>
     {% endif %}
