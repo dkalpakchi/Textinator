@@ -423,14 +423,15 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
     if batch_info.marker_groups:
         marker_groups = OrderedDict()
         for k, v in batch_info.marker_groups.items():
-            print(k)
             name_parts = k.split("_")
             unit, i, mv_code = name_parts[0], name_parts[1], "_".join(name_parts[2:])
             prefix = "{}_{}".format(unit, i)
             if prefix not in marker_groups:
                 marker_groups[prefix] = defaultdict(list)
             if v:
-                if isinstance(v, list):
+                if isinstance(v, dict):
+                    marker_groups[prefix][mv_code] = []
+                elif isinstance(v, list):
                     marker_groups[prefix][mv_code].extend(v)
                 else:
                     marker_groups[prefix][mv_code].append(v)
@@ -442,6 +443,7 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
             for i, (prefix, v) in enumerate(marker_groups.items()):
                 unit_cache = []
                 for code, values in v.items():
+                    if not values: continue
                     marker_code = "_".join(code.split("_")[:-1])
                     if marker_code not in mv_map:
                         marker_variants = MarkerVariant.objects.filter(
@@ -457,14 +459,13 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
 
                     unit = prefix.split("_")[0]
 
-                    print(mv, mv.unit.name, unit)
                     if mv.unit.name != unit:
                         continue
 
                     if mv.anno_type in ('radio', 'check'):
                         # make "||" a setting and not only a variable in labeler.js
                         unit_cache.append({
-                            'content': "||".join(values),
+                            'content': "||".join(values) if isinstance(values, list) else values,
                             'marker': mv,
                             'group_order': i + 1
                         })
@@ -477,7 +478,6 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                                     'group_order': i + 1
                                 })
 
-                print(unit_cache)
                 for dct in unit_cache:
                     Input.objects.create(context=ctx, batch=batch, **dct)
 

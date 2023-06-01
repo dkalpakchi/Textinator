@@ -18,6 +18,13 @@ body .container:first-of-type {
   margin: 0 !important;
 }
 
+.is-sticky {
+  position: sticky;
+  top: -1.25em;
+  z-index: 10;
+  background: #f5f5f5;
+}
+
 .margin-center {
   margin: 0 auto;
 }

@@ -3439,14 +3439,19 @@
       getSubmittableDict: function (stringify) {
         if (!utils.isDefined(stringify)) stringify = false;
 
+        let $mgForm = $(this.markersArea).find("form#markerGroups");
+        let mgArray = Array.from($mgForm.find('input,textarea'));
+        
         let markerGroups = utils.isDefined(this.markersArea)
-            ? $(this.markersArea)
-                .find("form#markerGroups")
-                .serializeObject()
+            ? utils.serializeHashedObject(
+                $mgForm.find('input[type="text"],input[type="number"],textarea')
+              ) 
             : {},
           shortTextMarkers = utils.isDefined(this.markersArea)
             ? utils.serializeHashedObject(
-                $(this.markersArea).find('input[type="text"]')
+                $(this.markersArea).find('input[type="text"]').filter( function(i, x) {
+                  return mgArray.indexOf(x) < 0;
+                })
               )
             : {},
           submitRelations = [],
@@ -3457,13 +3462,18 @@
           ).map((x) => x.getAttribute("data-s")),
           numbers = utils.isDefined(this.markersArea)
             ? utils.serializeHashedObject(
-                $(this.markersArea).find('input[type="number"]')
+                $(this.markersArea).find('input[type="number"]').filter( function(i, x) {
+                  return mgArray.indexOf(x) < 0;
+                })
               )
             : {},
           ranges = utils.isDefined(this.markersArea)
             ? utils.serializeHashedObject(
                 $(this.markersArea)
                   .find('input[type="range"]')
+                  .filter( function(i, x) {
+                    return mgArray.indexOf(x) < 0;
+                  })
                   .filter(
                     (i, x) => $('output[for="' + x.id + '"]').text() != "???"
                   )
@@ -3472,11 +3482,14 @@
           radioButtons = {},
           checkBoxes = {},
           longTextMarkers = utils.isDefined(this.markersArea)
-            ? utils.serializeHashedObject($(this.markersArea).find("textarea"))
+            ? utils.serializeHashedObject(
+                $(this.markersArea).find("textarea").filter( function(i, x) {
+                  return mgArray.indexOf(x) < 0;
+                })
+              )
             : {},
           submittableChunks = chunks.filter((c) => c.submittable);
 
-        console.log(markerGroups)
         if (utils.isDefined(this.markersArea)) {
           $(this.markersArea)
             .find('input[type="radio"]')
@@ -3486,20 +3499,21 @@
               let name = x.name.endsWith("_ocat")
                 ? x.name.replace("_ocat", "")
                 : x.name;
+              let rbStore = mgArray.indexOf(x) < 0 ? radioButtons : markerGroups;
               if (x.hasAttribute("data-h")) {
-                if (utils.hasProp(radioButtons, name)) {
-                  radioButtons[name].value += getRadioButtonValue(x);
+                if (utils.hasProp(rbStore, name)) {
+                  rbStore[name].value += getRadioButtonValue(x);
                 } else {
-                  radioButtons[name] = {
+                  rbStore[name] = {
                     hash: x.getAttribute("data-h"),
                     value: getRadioButtonValue(x),
                   };
                 }
               } else {
-                if (utils.hasProp(radioButtons, name)) {
-                  radioButtons[name] += getRadioButtonValue(x);
+                if (utils.hasProp(rbStore, name)) {
+                  rbStore[name] += getRadioButtonValue(x);
                 } else {
-                  radioButtons[name] = getRadioButtonValue(x);
+                  rbStore[name] = getRadioButtonValue(x);
                 }
               }
             });
@@ -3509,17 +3523,18 @@
             .filter((i, x) => x.checked)
             .each(function (i, x) {
               // simulate serializeHashedObject here
-              if (!utils.hasProp(checkBoxes, x.name)) {
+              let cbStore = mgArray.indexOf(x) < 0 ? checkBoxes : markerGroups;
+              if (!utils.hasProp(cbStore, x.name)) {
                 if (x.hasAttribute("data-h"))
-                  checkBoxes[x.name] = {
+                  cbStore[x.name] = {
                     hash: x.getAttribute("data-h"),
                     value: [],
                   };
-                else checkBoxes[x.name] = [];
+                else cbStore[x.name] = [];
               }
               if (x.hasAttribute("data-h"))
-                checkBoxes[x.name].value.push(x.value);
-              else checkBoxes[x.name].push(x.value);
+                cbStore[x.name].value.push(x.value);
+              else cbStore[x.name].push(x.value);
             });
 
           var ctx = this;
@@ -3994,13 +4009,10 @@
             'input[name="' + el.marker.code + '"]'
           );
         }
-        console.log(k, inps)
         
         if (inps) {
           for (let i = 0, linps = inps.length; i < linps; i++) {
             let inp = inps[i];
-            console.log("HERE")
-            console.log(el)
             inp.setAttribute("data-h", el.hash);
             if (k == "radio") {
               if (utils.isDefined(vals)) {
@@ -4037,7 +4049,6 @@
       restoreGroups: function (groups) {
         let control = this;
         for (let i in groups) {
-          console.log(groups[i])
           control.restoreInputMarker(groups[i]['marker']['anno_type'], groups[i])
         }
       },
@@ -4609,7 +4620,6 @@
             success: function (d) {
               control.clearBatch();
               control.postSubmitHandler();
-              console.log(d)
 
               chunks = [];
 

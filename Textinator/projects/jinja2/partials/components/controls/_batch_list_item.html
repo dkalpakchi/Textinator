@@ -1,7 +1,7 @@
 <li data-mode='e' data-id="{{batch.uuid}}" data-flagged="{{batch.is_flagged|bool2str}}">
   <div class="button is-small is-fullwidth {% if batch.is_flagged %}is-danger{% else %}{% if mode == 'review' %}is-dark{% else %}is-link{% endif %}{% endif %} is-outlined{% if batch.uuid == current_uuid %} is-hovered{% endif %}" data-purpose='s'>
     {% if scope == "revision" %}
-      {% set title=batch.total_revision_changes %}
+      {% set title=batch.total_revision_changes or "Revised" %}
     {% else %}
       {% if project.editing_title_regex %}
         {% set title=batch.get_title(regex=project.editing_title_regex) %}

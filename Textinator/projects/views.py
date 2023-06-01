@@ -335,21 +335,34 @@ def record_datapoint(request, proj):
 
             # Dealing with inputs
             inputs, processed_hashes = [], set()
-            for input_type, changed_inputs in batch_info.inputs():
+            inputs2process = batch_info.inputs()
+            inputs2process.append(
+                ('m_groups', batch_info.marker_groups)
+            )
+
+            for input_type, changed_inputs in inputs2process:
                 for name, changed in changed_inputs.items():
+                    if input_type == 'm_groups':
+                        name = "_".join(name.split("_")[2:])
                     if isinstance(changed, dict):
                         # this means we have changed a previous value
                         try:
                             inp = batch_inputs[changed['hash']]
                             processed_hashes.add(changed['hash'])
                             if inp.marker.code == name and inp.content != changed['value']:
-                                inp.content = changed['value']
+                                if inp.marker.anno_type in ('radio', 'check') and\
+                                        isinstance(changed['value'], list):
+                                    inp.content = "||".join(changed['value'])
+                                else:
+                                    inp.content = changed['value']
                                 if mode == "rev":
-                                    old_pk = inp.pk
-                                    if not inp.revision_of_id:
+                                    if not batch.revision_of_id:
+                                        old_pk = inp.pk
                                         inp.pk = None
-                                    inp.batch = revised_batch
-                                    inp.revision_of_id = old_pk
+                                        inp.revision_of_id = old_pk
+                                        inp.batch = revised_batch
+                                    if not inp.revision_changes:
+                                        inp.revision_changes = ""
                                     inp.revision_changes += "\nChanged {} [{}]".format(
                                         inp.marker.name,
                                         timezone.now().strftime('%Y-%m-%d %H:%M:%S %Z')
@@ -358,7 +371,7 @@ def record_datapoint(request, proj):
                         except KeyError:
                             # smth is wrong
                             pass
-                    elif isinstance(changed, str):
+                    elif isinstance(changed, str) and input_type != 'm_groups':
                         # we create a value of a new parameter altogether
                         try:
                             data_source = Tm.DataSource.objects.get(pk=data['datasource'])
@@ -378,7 +391,7 @@ def record_datapoint(request, proj):
                                 process_inputs(revised_batch, batch_info, **kwargs)
 
             if inputs:
-                if mode == "e":
+                if mode == "e" or batch.revision_of_id is not None:
                     Tm.Input.objects.bulk_update(inputs, ['content'])
                 elif mode == "rev":
                     Tm.Input.objects.bulk_create(inputs)
@@ -397,14 +410,16 @@ def record_datapoint(request, proj):
             for ihash in batch_inputs:
                 if ihash not in processed_hashes:
                     # means it was deleted
-                    if mode == "e":
+                    if mode == "e" or batch.revision_of_id is not None:
                         batch_inputs[ihash].delete()
                     elif mode == "rev":
                         revised_input = batch_inputs[ihash]
                         revised_input.content = ""
                         revised_input.pk = None
                         revised_input.batch = revised_batch
-                        revised_input.revision_changes = "Deleted {} [{}]".format(
+                        if not revised_input.revision_changes:
+                            revised_input.revision_changes = ""
+                        revised_input.revision_changes += "\nDeleted {} [{}]".format(
                             batch_inputs[ihash].marker.name,
                             timezone.now().strftime('%Y-%m-%d %H:%M:%S %Z')
                         )
@@ -415,14 +430,16 @@ def record_datapoint(request, proj):
                 if chunk.get('deleted', False):
                     chunk_hash = chunk.get('hash')
                     if chunk_hash and chunk_hash in batch_labels:
-                        if mode == "e":
+                        if mode == "e" or batch.revision_of_id is not None:
                             batch_labels[chunk_hash].delete()
                         elif mode == "rev":
                             revised_label = batch_labels[chunk_hash]
                             revised_label.pk = None
                             revised_label.batch = revised_batch
                             revised_label.undone = True
-                            revised_label.revision_changes = "Deleted {}".format(batch_labels[chunk_hash].marker.name)
+                            if not revised_input.revision_changes:
+                                revised_input.revision_changes = ""
+                            revised_label.revision_changes += "\nDeleted {}".format(batch_labels[chunk_hash].marker.name)
                             revised_label.save()
 
 
