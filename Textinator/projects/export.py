@@ -261,14 +261,13 @@ class AnnotationExporter:
 
             batches = Batch.objects.filter(pk__in=set(label_batches) | set(input_batches)).prefetch_related('label_set', 'input_set')
 
-            if self.__config['include_batch_no']:
-                window_exp = Window(
-                    expression=RowNumber(),
-                    order_by=F('dt_created').asc()
-                )
-                batches = batches.annotate(index=window_exp)
+            window_exp = Window(
+                expression=RowNumber(),
+                order_by=F('dt_created').asc()
+            )
+            batches = batches.annotate(index=window_exp)
 
-            resp = {}
+            resp = defaultdict(dict)
             for batch in batches:
                 labels = batch.label_set
                 inputs = batch.input_set
@@ -277,24 +276,24 @@ class AnnotationExporter:
                 if labels.count() or inputs.count():
                     context_id = inputs.first().context_id if inputs.count() else labels.first().context_id
 
-                    if context_id not in resp:
+                    if context_id not in resp or batch.index not in resp[context_id]:
                         ctx = inputs.first().context if inputs.count() else labels.first().context
-                        resp[context_id] = {
+                        resp[context_id][batch.index] = {
                             "context": ctx.content,
                             "annotations": []
                         }
                         if self.__config["include_flags"]:
-                            resp[context_id]["flags"] = {}
+                            resp[context_id][batch.index]["flags"] = {}
                             dals = DataAccessLog.objects.filter(
                                 datapoint=ctx.datapoint, datasource_id=ctx.datasource_id,
                                 is_deleted=False
                             )
                             for dal in dals.all():
-                                resp[context_id]['flags'] = dict_update(
-                                    resp[context_id]['flags'], dal.flags
+                                resp[context_id][batch.index]['flags'] = dict_update(
+                                    resp[context_id][batch.index]['flags'], dal.flags
                                 )
                         if self.__config["include_batch_no"]:
-                            resp[context_id]["num"] = batch.index
+                            resp[context_id][batch.index]["num"] = batch.index
 
                     ann = {}
                     exclude_labels = set()
@@ -316,8 +315,12 @@ class AnnotationExporter:
                     if self.__config["include_usernames"]:
                         ann["annotator"] = batch.user.username
 
-                    resp[context_id]["annotations"].append(ann)
-        return list(resp.values())
+                    resp[context_id][batch.index]["annotations"].append(ann)
+
+        final_res = []
+        for d in resp.values():
+            final_res.extend(d.values())
+        return final_res
 
     def export(self):
         return getattr(self, "_export_{}".format(self.__project.task_type))()
