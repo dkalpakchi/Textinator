@@ -440,7 +440,9 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
             ctx = get_or_create_ctx(batch_info, ctx_cache)
 
             mv_map = {}
-            for i, (prefix, v) in enumerate(marker_groups.items()):
+            for prefix, v in marker_groups.items():
+                unit, group_idx = prefix.split("_")
+                group_idx = int(group_idx)
                 unit_cache = []
                 for code, values in v.items():
                     if not values: continue
@@ -457,8 +459,6 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                             mv = m
                             break
 
-                    unit = prefix.split("_")[0]
-
                     if mv.unit.name != unit:
                         continue
 
@@ -467,7 +467,10 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                         unit_cache.append({
                             'content': "||".join(values) if isinstance(values, list) else values,
                             'marker': mv,
-                            'group_order': i + 1
+                            # TODO: potentially move to 0-based later?
+                            # Depends on if the end-uses should be exposed to this number
+                            # or not. The initial idea was that they might, but should they really?
+                            'group_order': group_idx + 1 # from 0-based to 1-based
                         })
                     else:
                         for val in values:
@@ -475,9 +478,8 @@ def process_marker_groups(batch, batch_info, ctx_cache=None):
                                 unit_cache.append({
                                     'content': val,
                                     'marker': mv,
-                                    'group_order': i + 1
+                                    'group_order': group_idx + 1
                                 })
-
                 for dct in unit_cache:
                     Input.objects.create(context=ctx, batch=batch, **dct)
 
