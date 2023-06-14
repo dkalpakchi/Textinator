@@ -66,11 +66,19 @@ def get_or_create_ctx(batch_info, ctx_cache):
             )
             ctx_cache.set(ctx.content_hash, ctx.pk, 3600)
     else:
-        ctx, _ = Context.objects.get_or_create(
-            datasource=batch_info.data_source,
-            datapoint=batch_info.datapoint,
-            content=batch_info.context
-        )
+        try:
+            ctx, _ = Context.objects.get_or_create(
+                datasource=batch_info.data_source,
+                datapoint=batch_info.datapoint,
+                content=batch_info.context
+            )
+        except Context.MultipleObjectsReturned:
+            # this should not happen
+            ctx = Context.objects.filter(
+                datasource=batch_info.data_source,
+                datapoint=batch_info.datapoint,
+                content=batch_info.context
+            ).first()
     return ctx
 
 

@@ -437,8 +437,8 @@ def record_datapoint(request, proj):
                             revised_label.pk = None
                             revised_label.batch = revised_batch
                             revised_label.undone = True
-                            if not revised_input.revision_changes:
-                                revised_input.revision_changes = ""
+                            if not revised_label.revision_changes:
+                                revised_label.revision_changes = ""
                             revised_label.revision_changes += "\nDeleted {}".format(batch_labels[chunk_hash].marker.name)
                             revised_label.save()
 
