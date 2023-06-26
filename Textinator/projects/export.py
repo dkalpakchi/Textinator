@@ -248,6 +248,60 @@ class AnnotationExporter:
     def _export_mt(self):
         return self._export_mcqar()
 
+    def __export_batch(self, batch, is_revision=False):
+        labels = batch.label_set
+        inputs = batch.input_set
+        relations = batch.labelrelation_set
+        res = {
+            "annotations": []
+        }
+
+        if not is_revision:
+            res['context'] = None
+
+        if labels.count() or inputs.count():
+            context_id = inputs.first().context_id if inputs.count() else labels.first().context_id
+            if not is_revision and res['context'] is None:
+                ctx = inputs.first().context if inputs.count() else labels.first().context
+                res["context"] = ctx.content
+                # TODO: should revisions allow for flags?
+                if self.__config["include_flags"]:
+                    res["flags"] = {}
+                    dals = DataAccessLog.objects.filter(
+                        datapoint=ctx.datapoint, datasource_id=ctx.datasource_id,
+                        is_deleted=False
+                    )
+                    for dal in dals.all():
+                        res['flags'] = dict_update(res['flags'], dal.flags)
+                if self.__config["include_batch_no"]:
+                    res["num"] = batch.index
+
+            ann = {}
+            exclude_labels = set()
+            if relations.count():
+                ann["relations"] = []
+                for r in relations.all():
+                    ann["relations"].append(r.to_minimal_json())
+                    exclude_labels.add(r.first_label)
+                    exclude_labels.add(r.second_label)
+
+            if labels.count():
+                ann["labels"] = [l.to_minimal_json() for l in labels.all() if l not in exclude_labels]
+                if not ann["labels"]:
+                    del ann["labels"]
+
+            if inputs.count():
+                ann["inputs"] = [i.to_minimal_json() for i in inputs.all()]
+
+            if self.__config["include_usernames"]:
+                ann["annotator"] = batch.user.username
+
+            res["annotations"].append(ann)
+            return context_id, res
+        else:
+            return None, None
+
+
     def _export_generic(self):
         if self.__config['consolidate_clusters']:
             return self._export_corr()
@@ -259,7 +313,11 @@ class AnnotationExporter:
                 marker__project=self.__project
             ).values_list('batch', flat=True)
 
-            batches = Batch.objects.filter(pk__in=set(label_batches) | set(input_batches)).prefetch_related('label_set', 'input_set')
+            batches = Batch.objects.filter(
+                pk__in=set(label_batches) | set(input_batches)
+            ).filter(
+                revision_of__isnull=True
+            ).prefetch_related('label_set', 'input_set')
 
             window_exp = Window(
                 expression=RowNumber(),
@@ -267,55 +325,20 @@ class AnnotationExporter:
             )
             batches = batches.annotate(index=window_exp)
 
-            resp = defaultdict(dict)
+            resp = defaultdict(lambda: defaultdict(dict))
             for batch in batches:
-                labels = batch.label_set
-                inputs = batch.input_set
-                relations = batch.labelrelation_set
+                context_id, res = self.__export_batch(batch)
+                resp[context_id][batch.index] = dict_update(
+                    resp[context_id][batch.index], res
+                )
+                if batch.revisions.count() > 0:
+                    rev = []
+                    for rb in batch.revisions.all():
+                        _, rb_res = self.__export_batch(rb, is_revision=True)
+                        if rb_res is None: continue
+                        rev.append(rb_res)
+                    resp[context_id][batch.index]["_rev"] = rev
 
-                if labels.count() or inputs.count():
-                    context_id = inputs.first().context_id if inputs.count() else labels.first().context_id
-
-                    if context_id not in resp or batch.index not in resp[context_id]:
-                        ctx = inputs.first().context if inputs.count() else labels.first().context
-                        resp[context_id][batch.index] = {
-                            "context": ctx.content,
-                            "annotations": []
-                        }
-                        if self.__config["include_flags"]:
-                            resp[context_id][batch.index]["flags"] = {}
-                            dals = DataAccessLog.objects.filter(
-                                datapoint=ctx.datapoint, datasource_id=ctx.datasource_id,
-                                is_deleted=False
-                            )
-                            for dal in dals.all():
-                                resp[context_id][batch.index]['flags'] = dict_update(
-                                    resp[context_id][batch.index]['flags'], dal.flags
-                                )
-                        if self.__config["include_batch_no"]:
-                            resp[context_id][batch.index]["num"] = batch.index
-
-                    ann = {}
-                    exclude_labels = set()
-                    if relations.count():
-                        ann["relations"] = []
-                        for r in relations.all():
-                            ann["relations"].append(r.to_minimal_json())
-                            exclude_labels.add(r.first_label)
-                            exclude_labels.add(r.second_label)
-
-                    if labels.count():
-                        ann["labels"] = [l.to_minimal_json() for l in labels.all() if l not in exclude_labels]
-                        if not ann["labels"]:
-                            del ann["labels"]
-
-                    if inputs.count():
-                        ann["inputs"] = [i.to_minimal_json() for i in inputs.all()]
-
-                    if self.__config["include_usernames"]:
-                        ann["annotator"] = batch.user.username
-
-                    resp[context_id][batch.index]["annotations"].append(ann)
 
         final_res = []
         for d in resp.values():
