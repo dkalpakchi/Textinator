@@ -318,16 +318,18 @@ def render_editing_board(request, project, user, page, template='partials/compon
         if batch_ids:
             sql_string, sql_params = relevant_batches.query.sql_with_params()
             if is_random_order:
+                exclude_rev_clause = "WHERE s.revision_of_id IS NULL" if search_dict is None else ""
                 batches = Batch.objects.raw(
-                    "SELECT * FROM (SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY random() LIMIT 5) s WHERE s.revision_of_id IS NULL ORDER BY s.dt_created DESC NULLS LAST;".format(
-                        sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+                    "SELECT * FROM (SELECT * FROM ({}) t1 WHERE t1.id IN ({}) ORDER BY random() LIMIT 5) s {} ORDER BY s.dt_created DESC NULLS LAST;".format(
+                        sql_string, ", ".join(["%s" for _ in range(len(batch_ids))]), exclude_rev_clause
                     ),
                     list(sql_params) + [str(x) for x in list(batch_ids)]
                 )
             else:
+                exclude_rev_clause = "AND t1.revision_of_id IS NULL" if search_dict is None else ""
                 batches = Batch.objects.raw(
-                    "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) AND t1.revision_of_id is NULL ORDER BY t1.dt_created DESC NULLS LAST;".format(
-                        sql_string, ", ".join(["%s" for _ in range(len(batch_ids))])
+                    "SELECT * FROM ({}) t1 WHERE t1.id IN ({}) {} ORDER BY t1.dt_created DESC NULLS LAST;".format(
+                        sql_string, ", ".join(["%s" for _ in range(len(batch_ids))]), exclude_rev_clause
                     ),
                     list(sql_params) + [str(x) for x in list(batch_ids)]
                 )
