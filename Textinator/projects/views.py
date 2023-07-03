@@ -453,6 +453,7 @@ def record_datapoint(request, proj):
                 'template': 'partials/components/areas/_editing_body.html',
                 'search_dict': params['search_dict']
             }
+            
             if mode == "rev":
                 kwargs['template'] = 'partials/components/areas/_reviewing_body.html'
                 try:

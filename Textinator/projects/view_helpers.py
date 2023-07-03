@@ -222,7 +222,7 @@ def render_editing_board(request, project, user, page, template='partials/compon
 
         sql_string, sql_params = relevant_batches.query.sql_with_params()
         try:
-            search_indices = [int(x) for x in search_query.strip().split(",") if x.strip()]
+            search_indices = [int(x.strip()) for x in search_query.strip().split(",") if x.strip()]
         except ValueError:
             search_indices = []
         if search_indices:
@@ -560,13 +560,13 @@ def process_recorded_search_args(request_dict):
     if batch_ids is None:
         batch_ids = request_dict.getlist("batch_ids[]", [])
 
-    # Scope:
-    # -1 -- Everything except text (flagged or annotation no.)
-    # -2 -- Annotation no.
-    # -3 -- Limit to flagged only
-    return {
-        'page': page,
-        'search_dict': {
+    if len([x for x in query if x]) == 0 and\
+        not request_dict.get('random') and\
+        search_flagged != "on" and\
+        not batch_ids:
+        search_dict = None
+    else:
+        search_dict = {
             'scope': listify(scope),
             'query': listify(query),
             'search_type': listify(search_type),
@@ -574,4 +574,13 @@ def process_recorded_search_args(request_dict):
             'search_flagged': search_flagged == "on",
             'batch_ids': batch_ids
         }
+
+
+    # Scope:
+    # -1 -- Everything except text (flagged or annotation no.)
+    # -2 -- Annotation no.
+    # -3 -- Limit to flagged only
+    return {
+        'page': page,
+        'search_dict': search_dict
     }
