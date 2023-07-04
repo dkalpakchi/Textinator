@@ -279,12 +279,12 @@ def render_editing_board(request, project, user, page, template='partials/compon
                     elif search_mv_pk == -1:
                         input_batches_clause = input_batches
 
+                if search_type == "nemp":
+                    # check non-empty ones
+                    input_batches_clause = input_batches_clause.exclude(content__isnull=True)
 
                 if search_query and vector:
-                    if search_type == "nemp":
-                        # check non-empty ones
-                        input_batches_clause = input_batches_clause.exclude(vector__isnull=True)
-                    elif search_type == "ext":
+                    if search_type == "ext":
                         # exact match
                         input_batches_clause = input_batches_clause.filter(content=search_query)
                     else:
@@ -561,6 +561,7 @@ def process_recorded_search_args(request_dict):
         batch_ids = request_dict.getlist("batch_ids[]", [])
 
     if len([x for x in query if x]) == 0 and\
+        "nemp" not in search_type and\
         not request_dict.get('random') and\
         search_flagged != "on" and\
         not batch_ids:
