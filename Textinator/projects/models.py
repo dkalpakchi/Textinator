@@ -10,13 +10,14 @@ from itertools import groupby
 from operator import itemgetter
 
 from django.db import models, transaction
+from django.db.models.sql.where import ExtraWhere, AND
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.cache import caches
-from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 
 from tinymce import HTMLField
@@ -1360,6 +1361,20 @@ class Context(CommonModel):
             "content": self.content
         }
 
+def update_search_config(sender, **kwargs):
+    inst = kwargs['instance']
+    c = Context.objects.filter(
+        datasource=inst
+    ).first()
+
+    if c.search_config != inst.search_config:
+        Context.objects.filter(datasource=inst).update(
+            search_config=inst.search_config,
+            content_vector=SearchVector('content', config=inst.search_config)
+        )
+
+    
+models.signals.post_save.connect(update_search_config, sender=DataSource, dispatch_uid='project.models.update_search_config')
 
 class Batch(Revisable, CommonModel):
     """
