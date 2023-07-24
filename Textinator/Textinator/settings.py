@@ -205,7 +205,8 @@ LANGUAGES = [
 ]
 
 LANG_SEARCH_CONFIG = {
-    'en': 'english_lite'
+    'en': 'english_lite',
+    'uk': 'ukrainian_lite'
 }
 
 LOCALE_PATHS = [
