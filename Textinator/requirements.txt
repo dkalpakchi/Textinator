@@ -1,7 +1,7 @@
 Babel==2.9.1
 beautifulsoup4==4.9.3
 Celery==5.2.7
-Django==3.2.19
+Django==3.2.20
 django-clone==3.0.6
 django-colorfield==0.4.5
 django-compressor==3.0
@@ -29,4 +29,4 @@ python-magic==0.4.25
 pytz==2021.3
 pyyaml==6.0.1
 redis==4.4.4
-requests==2.22.0
+requests==2.31.0
