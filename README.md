@@ -4,6 +4,9 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1ac2ba5f4bc14883a02cd395df913859)](https://www.codacy.com/gh/dkalpakchi/Textinator/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dkalpakchi/Textinator&amp;utm_campaign=Badge_Grade)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
+| :memo:        | The editing functionality is currently not working properly for coreference resolution task   |
+|---------------|--------------------------|
+| :exclamation: | I expect to have time closer to December-January to work on it |
 ## New here?
 
 Check out some introductory resources:
