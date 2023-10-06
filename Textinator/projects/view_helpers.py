@@ -26,7 +26,11 @@ class BatchInfo:
         self.text_markers = json.loads(data['text_markers'])
         self.radios = json.loads(data['radio'])
         self.checkboxes = json.loads(data['checkboxes'])
-        self.datapoint = str(data['datapoint'])
+        try:
+            self.datapoint = int(data['datapoint'])
+        except ValueError:
+            self.datapoint = -1
+
         self.context = data.get('context').replace("\r\n", "\n")
 
         try:

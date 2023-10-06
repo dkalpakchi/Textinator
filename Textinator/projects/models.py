@@ -1363,15 +1363,16 @@ class Context(CommonModel):
 
 def update_search_config(sender, **kwargs):
     inst = kwargs['instance']
-    c = Context.objects.filter(
-        datasource=inst
-    ).first()
+    if inst is not None:
+        c = Context.objects.filter(
+            datasource=inst
+        ).first()
 
-    if c.search_config != inst.search_config:
-        Context.objects.filter(datasource=inst).update(
-            search_config=inst.search_config,
-            content_vector=SearchVector('content', config=inst.search_config)
-        )
+        if c is not None and c.search_config != inst.search_config:
+            Context.objects.filter(datasource=inst).update(
+                search_config=inst.search_config,
+                content_vector=SearchVector('content', config=inst.search_config)
+            )
 
     
 models.signals.post_save.connect(update_search_config, sender=DataSource, dispatch_uid='project.models.update_search_config')
