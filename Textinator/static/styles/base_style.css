@@ -933,6 +933,11 @@ label.help.is-danger {
 /*
  * Radio buttons
  */
+
+.compact-radio > .radio:first-of-type {
+  margin-left: 0.75em;
+}
+
 .vertical-radio .radio {
   display: flex;
   margin-left: 0;
@@ -943,10 +948,17 @@ label.help.is-danger {
   margin-right: 5px;
 }
 
-.outer.radio {
+.outer.radio, .compact-radio {
   display: inline-flex;
   justify-content: flex-start;
+}
+
+.outer.radio {
   align-items: start;
+}
+
+.compact-radio {
+  align-items: center;
 }
 
 .outer.radio:not(:last-of-type),
