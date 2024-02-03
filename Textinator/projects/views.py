@@ -538,6 +538,8 @@ def get_batch(request, proj):
         labels = Tm.Label.objects.filter(batch__uuid=uuid, marker__project_id=proj)
         inputs = Tm.Input.objects.filter(batch__uuid=uuid, marker__project_id=proj)
 
+        relations = Tm.LabelRelation.objects.filter(batch__uuid=uuid)
+
         context = None
         if labels.count():
             context = labels.first().context.to_json()
@@ -585,7 +587,8 @@ def get_batch(request, proj):
             'span_labels': [s_label.to_short_json() for s_label in span_labels],
             'text_labels': [t_label.to_short_json() for t_label in text_labels],
             'non_unit_markers': {k: [i.to_short_json() for i in v] for k, v in non_unit_markers.items()},
-            'groups': groups_json
+            'groups': groups_json,
+            'relations': [x.to_short_json() for x in relations]
         })
     else:
         return JsonResponse({})

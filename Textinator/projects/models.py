@@ -1316,6 +1316,11 @@ class RelationVariant(CommonModel):
 
     def to_minimal_json(self):
         return self.relation.to_minimal_json()
+    
+    def to_short_json(self):
+        res = self.relation.to_json()
+        res['between'] = self.between
+        return res
 
 
 class Context(CommonModel):
@@ -1696,7 +1701,7 @@ class LabelRelation(CommonModel):
     def to_short_json(self, dt_format=None):
         res = super(LabelRelation, self).to_json(dt_format=dt_format)
         res.update({
-            'rule': self.rule.to_json(),
+            'rule': self.rule.to_short_json(),
             'first': self.first_label.to_short_json(),
             'second': self.second_label.to_short_json(),
             'user': self.batch.user.username,

@@ -3736,6 +3736,18 @@
           "checkboxes",
         ];
       },
+      restoreRelations: function(relations) {
+        let control = this;
+        for (let i = 0, len = relations.length; i < len; i++) {
+          let first = relations[i].first;
+          let second = relations[i].second;
+          let relMarker = control.relationsArea.querySelector('[data-b="' + relations[i].rule.between + '"]')
+
+          control.textArea.querySelector('[data-h="' + first.hash + '"]').click();
+          control.textArea.querySelector('[data-h="' + second.hash + '"]').click();
+          control.markRelation(relMarker);
+        }
+      },
       restoreMarkedSpan: function (
         nodeStart,
         nodeEnd,
@@ -4643,6 +4655,7 @@
               control.restoreGroups(d.groups);
               control.restoreTextMarkers(d.text_labels);
               control.restoreSpanMarkers(d.span_labels);
+              control.restoreRelations(d.relations);
             },
             error: function () {
               console.log("ERROR!");

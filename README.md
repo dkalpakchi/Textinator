@@ -4,16 +4,14 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1ac2ba5f4bc14883a02cd395df913859)](https://www.codacy.com/gh/dkalpakchi/Textinator/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dkalpakchi/Textinator&amp;utm_campaign=Badge_Grade)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-| :memo:        | The editing functionality is currently not working properly for coreference resolution task   |
-|---------------|--------------------------|
-| :exclamation: | I expect to have time closer to December-January to work on it |
+:warning: This project's functionality has grown quite rapidly at some point to the point that some previous funcationality has stopped working. To keep it running, the project needs a major refactoring, and a lot of testing, which at this point is simply too much work. Instead Textinator will get a spiritual successor keeping all the advantages of the current project: internationalization, customizable project setup, flexible labeling system supporting nested and overlapping labeling (although, not perfectly due to introduced bugs that need fixing), focus on both annotation and human evaluation. At the same time, the lessons learnt during developing Textinator will hopefully result in a more maintainable code base (in particular with easy-to-test front-end). I'm truly grateful to all open-source projects (and their developers and maintainers) for letting me embark on this fun journey with Textinator. Thank you!
+
 ## New here?
 
 Check out some introductory resources:
 
 *   [Documentation](https://textinator.readthedocs.io/en/latest/)
 *   [Video tutorials](https://www.youtube.com/channel/UCUVbyJJFIUwfl129FGhPGJw)
-*   Demo instance: https://textinator.dev/ (username: `demo`, password: `demo1234`)
 *   Interested how Textinator compares to other Open Source annotation tools for NLP? Check our paper published at LREC 2022: https://aclanthology.org/2022.lrec-1.90.pdf
 
 ## Try out Textinator on your own machine
