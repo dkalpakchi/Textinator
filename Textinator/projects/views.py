@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from django.http import JsonResponse, Http404
 from django.db.models import Q
+from django.db.models.fields.json import KeyTransform
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.conf import settings
@@ -19,7 +20,6 @@ from django.core.cache import caches
 from django.template.loader import render_to_string, get_template
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
-from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.utils import timezone
 
 from celery.result import AsyncResult

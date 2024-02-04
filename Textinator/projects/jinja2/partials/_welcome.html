@@ -48,7 +48,7 @@
         {{ _("If you are here to help <u>evaluating</u>, here are some other tips:") }}
         <ul>
           <li>{{ _("If you have signed up to take part in a specific evaluation effort, please click on the {} and see if your survey is ready If you don't see your survey, please contact your project manager.").format('<a href="{}">{}</a>'.format(
-            url('survey-list'), _('"Survey" tab') )|safe) }}</li>
+            'survey-url')|safe) }}</li>
           <li>{{ _("If you have signed up out of curiosity, please click on the {} and see if there are any surveys open to general public.").format('<a href="{}">{}</a>'.format(url('survey-list'), _('"Survey" tab') )|safe) }} {{ _("We urge you to read the instructions carefully to check that you understand them and are indeed eligible to take part. Please contact the project responsible if any questions arise.") }}</li>
         </ul>
       </p>

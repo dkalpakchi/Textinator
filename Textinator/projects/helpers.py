@@ -64,7 +64,7 @@ def filter_wiki_markup(markup):
     # parse Wikimedia markup
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     r = requests.post('http://localhost:3000', data=json.dumps({'wikitext': markup}), headers=headers)
-    wiki_text = re.sub('(""|\'\'|\*(?=\n+))', '', re.sub('\n{3,}', '\n', r.text))
+    wiki_text = re.sub('(""|\'\'|*(?=\n+))', '', re.sub('\n{3,}', '\n', r.text))
     return wiki_text
 
 
@@ -75,8 +75,9 @@ def remove_empty_lines(text):
 
 def apply_premarkers(proj, text):
     punct = string.punctuation
+    # Escape special characters
     for c in list("\\$[]()*+/?-.\"\'|^"):
-        punct = punct.replace(c, "\{}".format(c))
+        punct = punct.replace(c, "\\{}".format(c))
 
     premarker_tmpl = "<span class='tag is-medium' data-s='{}' data-i='NA' style='background-color:{}; color: {}'>{}<button class='delete is-small'></button></span>"
     for pm in proj.premarker_set.all():

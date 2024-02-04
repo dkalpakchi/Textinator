@@ -7,7 +7,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 import filebrowser.fields
-import tinymce.models
 
 
 class Migration(migrations.Migration):
@@ -521,11 +520,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='project',
-            name='guidelines',
-            field=tinymce.models.HTMLField(blank=True, help_text='Guidelines for the annotation task', null=True, verbose_name='guidelines'),
-        ),
-        migrations.AlterField(
-            model_name='project',
             name='has_intro_tour',
             field=models.BooleanField(default=False, help_text='WARNING: Intro tours are currently in beta', verbose_name='should the project include intro tour?'),
         ),
@@ -571,11 +565,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='project',
-            name='reminders',
-            field=tinymce.models.HTMLField(blank=True, help_text='Reminders for essential parts of guidelines (keep them short and on point)', null=True, verbose_name='reminders'),
-        ),
-        migrations.AlterField(
-            model_name='project',
             name='round_length',
             field=models.PositiveIntegerField(blank=True, help_text='The number of text snippets consituting one round of the game', null=True, verbose_name='round length'),
         ),
@@ -603,11 +592,6 @@ class Migration(migrations.Migration):
             model_name='project',
             name='task_type',
             field=models.CharField(choices=[('qa', 'Question Answering'), ('ner', 'Named Entity Recognition'), ('corr', 'Coreference Resolution'), ('generic', 'Generic'), ('ranking', 'Ranking')], max_length=10, verbose_name='type of the annotation task'),
-        ),
-        migrations.AlterField(
-            model_name='project',
-            name='temporary_message',
-            field=tinymce.models.HTMLField(blank=True, help_text='A temporary message for urgent communication with annotators (e.g., about maintenance work)', null=True, verbose_name='temporary message'),
         ),
         migrations.AlterField(
             model_name='project',

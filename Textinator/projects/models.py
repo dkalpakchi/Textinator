@@ -20,7 +20,6 @@ from django.core.cache import caches
 from django.contrib.postgres.search import SearchVectorField, SearchVector
 from django.contrib.postgres.indexes import GinIndex
 
-from tinymce import HTMLField
 from filebrowser.fields import FileBrowseField
 from colorfield.fields import ColorField
 from model_clone import CloneMixin
@@ -393,11 +392,11 @@ class Project(CloneMixin, CommonModel):
         help_text=_("Institution responsible for the project"))
     supported_by = models.CharField(_("supported by"), max_length=1000, null=True, blank=True,
         help_text=_("The name of the organization supporting the project financially (if applicable)"))
-    guidelines = HTMLField(_("guidelines"), null=True, blank=True,
+    guidelines = models.TextField(_("guidelines"), null=True, blank=True,
         help_text=_("Guidelines for the annotation task"))
-    reminders = HTMLField(_("reminders"), null=True, blank=True,
+    reminders = models.TextField(_("reminders"), null=True, blank=True,
         help_text=_("Reminders for essential parts of guidelines (keep them short and on point)"))
-    temporary_message = HTMLField(_("temporary message"), null=True, blank=True,
+    temporary_message = models.TextField(_("temporary message"), null=True, blank=True,
         help_text=_("A temporary message for urgent communication with annotators (e.g., about maintenance work)"))
     data_order = models.CharField(
         _("in what order should the data be presented?"), max_length=2, default='r',

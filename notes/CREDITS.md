@@ -26,8 +26,6 @@ Here are credits to the OSS projects that are still used in the latest version o
 *   [django-nested-admin](https://github.com/theatlantic/django-nested-admin)
 *   [django-registration](https://github.com/ubernostrum/django-registration/)
 *   [django-rosetta](https://pypi.org/project/django-rosetta/)
-*   [django-tinymce4-lite](https://github.com/romanvm/django-tinymce4-lite)
-*   [pinax-announcements](https://github.com/pinax/pinax-announcements)
 *   [django-maintenancemode](https://github.com/bashu/django-maintenancemode)
 *   Supporting PostgreSQL's full-text search for Ukrainian with the help of [dict_uk](https://github.com/brown-uk/dict_uk)
 
@@ -39,3 +37,5 @@ Here are credits to the OSS projects that were used in the previous versions of 
 *   [django-sass-processor](https://github.com/jrief/django-sass-processor) (up to v1.1.0)
 *   [django-chartjs](https://github.com/peopledoc/django-chartjs) (up to v1.2.0)
 *   reportlab (up to v1.2.1)
+*   [django-tinymce4-lite](https://github.com/romanvm/django-tinymce4-lite) (up to v1.3.7)
+*   [pinax-announcements](https://github.com/pinax/pinax-announcements) (up to v1.3.7)

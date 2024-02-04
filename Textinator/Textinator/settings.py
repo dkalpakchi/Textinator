@@ -36,7 +36,6 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
     'filebrowser',
     'modeltranslation',
     'django.contrib.admin',
@@ -51,7 +50,6 @@ INSTALLED_APPS = [
     "compressor",
     # 'prettyjson',
     'django_registration',
-    'tinymce',
     'projects',
     'toolbox',
     'toolbox.string_combinator',
@@ -59,12 +57,11 @@ INSTALLED_APPS = [
     # 'surveys'
     # 'django_extensions',
     'nested_admin',
-    'scientific_survey',
+    # 'scientific_survey',
     'users',
     'colorfield',
     'rosetta',
     'guardian',
-    'pinax.announcements',
     'maintenancemode'
 ]
 
@@ -87,7 +84,6 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'Textinator.backends.EmailAuthenticationBackend',
     'guardian.backends.ObjectPermissionBackend',
-    'pinax.announcements.auth_backends.AnnouncementPermissionsBackend'
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -107,8 +103,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'projects.context_processors.common_user_variables',
-                'Textinator.context_processors.pinax_announcements'
+                'projects.context_processors.common_user_variables'
             ]
         },
     },
@@ -126,7 +121,7 @@ TEMPLATES = [
             ],
             'libraries': {
                 'common_extras': 'Textinator.templatetags.common_extras',
-                'survey_extras': 'scientific_survey.templatetags.survey_extras'
+                # 'survey_extras': 'scientific_survey.templatetags.survey_extras'
             },
         },
     }
@@ -251,80 +246,9 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder'
 ]
 
-TINYMCE_DEFAULT_CONFIG = {
-    'height': 400,
-    'width': '90%',
-    'cleanup_on_startup': True,
-    'custom_undo_redo_levels': 20,
-    'selector': 'textarea',
-    'theme': 'modern',
-    'plugins':'''
-            textcolor save link image media preview table lists fullscreen insertdatetime
-            contextmenu directionality searchreplace wordcount code fullscreen autolink lists charmap print
-            ''',
-    'toolbar1': '''
-            fullscreen preview bold italic underline | fontselect,
-            fontsizeselect  | forecolor backcolor | alignleft alignright |
-            aligncenter alignjustify | indent outdent | bullist numlist table |
-            | link image media | charmap |
-            ''',
-    'menubar': True,
-    'statusbar': True,
-    'relative_urls': False
-}
-
 FILEBROWSER_MAX_UPLOAD_SIZE = 20971520 # 20MB
 
 CHOICES_SEPARATOR = "||"
-
-JAZZMIN_SETTINGS = {
-    # title of the window (Will default to current_admin_site.site_title if absent or None)
-    "site_title": "Textinator Admin",
-    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
-    "site_header": "Textinator Admin",
-    # Copyright on the footer
-    "copyright": "Dmytro Kalpakchi",
-    # Links to put along the top menu
-    "topmenu_links": [
-
-        # Url that gets reversed (Permissions can be added)
-        {"name": _("Back to the site"),  "url": '/{}'.format(ROOT_URLPATH)}#reverse('projects:index')},
-    ],
-    "language_chooser": True,
-}
-
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": False,
-    "accent": "accent-lightblue",
-    "navbar": "navbar-info navbar-dark",
-    "no_navbar_border": False,
-    "navbar_fixed": True,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": True,
-    "sidebar": "sidebar-dark-primary",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": False,
-    "sidebar_nav_compact_style": False,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
-    "theme": "default",
-    "dark_mode_theme": "darkly",
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-outline-info",
-        "warning": "btn-outline-warning",
-        "danger": "btn-outline-danger",
-        "success": "btn-outline-success"
-    },
-    "actions_sticky_top": True
-}
 
 # Textinator settings
 DATA_DIRS = [
