@@ -20,7 +20,7 @@ html2markdown==0.1.7
 jinja2==3.0.3
 jsonlines==3.0.0
 Markdown==3.1.1
-Pillow==10.0.1
+Pillow==10.2.0
 pinax-announcements==4.0.0
 psycopg2-binary
 pymemcache==3.5.2
