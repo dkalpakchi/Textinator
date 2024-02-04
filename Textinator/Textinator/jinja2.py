@@ -13,7 +13,8 @@ from django.utils import translation
 from django.template.loader import get_template
 
 
-from jinja2 import Environment, Template, Markup
+from jinja2 import Environment, Template
+from markupsafe import Markup
 
 
 INSIDE_PROJECT_RE = re.compile(r"/projects/\d+/?$")
@@ -169,7 +170,6 @@ def strip(x):
 def environment(**options):
     extensions = [] if 'extensions' not in options else options['extensions']
     extensions.append('jinja2.ext.i18n')
-    extensions.append('jinja2.ext.with_')
     options['extensions'] = extensions
     options['autoescape'] = True
     env = Environment(**options)
