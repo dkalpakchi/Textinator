@@ -4,7 +4,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/1ac2ba5f4bc14883a02cd395df913859)](https://www.codacy.com/gh/dkalpakchi/Textinator/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dkalpakchi/Textinator&amp;utm_campaign=Badge_Grade)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-:warning: This project's functionality has grown quite rapidly some time ago to the point that some previous functionality has stopped working. To keep it running, the project needs a major refactoring, and a lot of testing, which at this point is simply too much work. Instead Textinator will get a spiritual successor keeping all the advantages of the current project: internationalization, customizable project setup, flexible labeling system supporting nested and overlapping labeling (although, not perfectly due to introduced bugs that need fixing), focus on both annotation and human evaluation. At the same time, the lessons learnt during developing Textinator will hopefully result in a more maintainable code base (in particular with easy-to-test front-end). I'm truly grateful to all open-source projects (and their developers and maintainers) for letting me embark on this fun journey with Textinator. Thank you!
+:warning: The project undergoes major refactoring. The changes in the new version are likely to be breaking and the dumps from the old versions will not be compatible. :warning:
 
 ## New here?
 
